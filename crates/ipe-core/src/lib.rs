@@ -11,6 +11,10 @@ pub mod parser;
 #[cfg(feature = "jit")]
 pub mod jit;
 
+// Test utilities (available in tests and when used as a dependency with dev profile)
+#[cfg(any(test, feature = "testing"))]
+pub mod testing;
+
 pub use ast::{Policy, Condition, Requirements};
 pub use compiler::{PolicyCompiler, CompileError};
 pub use engine::{PolicyEngine, Decision, DecisionKind};
