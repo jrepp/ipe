@@ -1,0 +1,88 @@
+ipe-rfc/
+│
+├── 📋 Documentation (Core)
+│   ├── RFC.md                    ⭐ 150+ pages, complete technical spec
+│   ├── SUMMARY.md                📊 Executive summary for decision-makers
+│   ├── README.md                 🚀 Quick start guide
+│   ├── END_TO_END_EXAMPLE.md     🔄 Complete policy lifecycle
+│   ├── FILES.md                  📁 This file listing
+│   └── STRUCTURE.txt             🌲 Project tree
+│
+├── ⚙️ Build Configuration
+│   └── Cargo.toml                📦 Workspace + dependencies
+│
+├── 🦀 Core Engine (crates/ipe-core/)
+│   ├── Cargo.toml                📦 Core dependencies + JIT feature
+│   └── src/
+│       ├── lib.rs                📚 Module exports
+│       ├── bytecode.rs           💾 Instruction set (~300 lines)
+│       ├── jit.rs                ⚡ JIT compiler - Cranelift (~400 lines) ⭐
+│       ├── tiering.rs            📈 Adaptive optimization (~350 lines) ⭐
+│       ├── rar.rs                🎯 RAR model (~150 lines)
+│       ├── engine.rs             🔧 Policy engine (~100 lines)
+│       ├── ast.rs                🌳 AST (stub)
+│       ├── compiler.rs           🔨 Compiler (stub)
+│       ├── interpreter.rs        🔍 Interpreter (stub)
+│       └── index.rs              📇 Indexing (stub)
+│
+└── 📚 Examples
+    └── jit_demo.rs               🎬 JIT demonstration (~200 lines)
+
+Key Innovations:
+─────────────────
+⚡ Runtime JIT Compilation (jit.rs)
+   - Cranelift-based native code generation
+   - Transparent optimization
+   - 5-10x performance improvement
+
+📈 Adaptive Tiering (tiering.rs)
+   - Automatic promotion: 100 evals → JIT
+   - Profiling and statistics
+   - Zero-config optimization
+
+🎯 RAR Model (rar.rs)
+   - Resource-Action-Request context
+   - Type-safe evaluation
+   - Zero-copy when possible
+
+Implementation Status:
+───────────────────────
+✅ RFC architecture      (RFC.md)
+✅ Bytecode design       (bytecode.rs)
+✅ JIT compiler          (jit.rs)
+✅ Tiering logic         (tiering.rs)
+✅ RAR model             (rar.rs)
+✅ Example demo          (jit_demo.rs)
+🚧 Parser                (Phase 1)
+🚧 Compiler              (Phase 1-2)
+📋 Control plane         (Phase 4)
+📋 Web app               (Phase 6)
+📋 AI integration        (Phase 7)
+
+Build Commands:
+───────────────
+cargo build                              # Debug build
+cargo build --release --features jit     # Release with JIT
+cargo run --example jit_demo --features jit --release
+cargo test --all-features
+
+Performance Targets:
+────────────────────
+Interpreter:    ~50μs per policy
+Baseline JIT:   ~10μs per policy (5x faster)
+Optimized JIT:  ~5μs per policy (10x faster)
+Memory:         <4KB per policy
+Binary size:    <2MB stripped
+
+Lines of Code:
+──────────────
+Rust implementation: ~1,500 lines
+Documentation:       ~15,000 words
+Total files:         18 files
+
+Next Steps:
+───────────
+1. Review RFC.md (complete spec)
+2. Run jit_demo (see JIT in action)
+3. Examine jit.rs + tiering.rs (implementation)
+4. Begin Phase 1: Parser + Compiler

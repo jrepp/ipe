@@ -1,0 +1,49 @@
+[package]
+name = "ipe-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+bumpalo = { workspace = true }
+arc-swap = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+lru = { workspace = true }
+memmap2 = { workspace = true }
+bincode = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+
+# JIT compilation (optional feature)
+cranelift = { workspace = true, optional = true }
+cranelift-jit = { workspace = true, optional = true }
+cranelift-module = { workspace = true, optional = true }
+cranelift-native = { workspace = true, optional = true }
+cranelift-codegen = { workspace = true, optional = true }
+target-lexicon = { workspace = true, optional = true }
+region = { workspace = true, optional = true }
+
+[features]
+default = ["jit"]
+jit = [
+    "cranelift",
+    "cranelift-jit",
+    "cranelift-module",
+    "cranelift-native",
+    "cranelift-codegen",
+    "target-lexicon",
+    "region"
+]
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "evaluation"
+harness = false
