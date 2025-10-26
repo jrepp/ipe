@@ -498,10 +498,10 @@ mod tests {
                 assert_eq!(snap.version, 1);
                 assert_eq!(snap.len(), 1);
                 assert!(snap.get_policy("test_policy").is_some());
-            }
+            },
             UpdateResult::Error { message } => {
                 panic!("Update failed: {}", message);
-            }
+            },
         }
     }
 
@@ -523,9 +523,8 @@ mod tests {
         });
 
         // Remove policy
-        let result = store.update_sync(UpdateRequest::RemovePolicy {
-            name: "test_policy".to_string(),
-        });
+        let result =
+            store.update_sync(UpdateRequest::RemovePolicy { name: "test_policy".to_string() });
 
         match result {
             UpdateResult::Success { version } => {
@@ -534,10 +533,10 @@ mod tests {
                 assert_eq!(snap.version, 2);
                 assert_eq!(snap.len(), 0);
                 assert!(snap.get_policy("test_policy").is_none());
-            }
+            },
             UpdateResult::Error { message } => {
                 panic!("Update failed: {}", message);
-            }
+            },
         }
     }
 
@@ -572,10 +571,10 @@ mod tests {
                 assert_eq!(snap.len(), 2);
                 assert!(snap.get_policy("policy1").is_some());
                 assert!(snap.get_policy("policy2").is_some());
-            }
+            },
             UpdateResult::Error { message } => {
                 panic!("Update failed: {}", message);
-            }
+            },
         }
     }
 
@@ -653,10 +652,10 @@ mod tests {
         match result {
             UpdateResult::Success { .. } => {
                 panic!("Should have failed with parse error");
-            }
+            },
             UpdateResult::Error { message } => {
                 assert!(message.contains("parse"));
-            }
+            },
         }
 
         // Store should remain unchanged
@@ -719,9 +718,7 @@ mod tests {
 
         let _ = store.snapshot();
 
-        let _ = store.update_sync(UpdateRequest::RemovePolicy {
-            name: "policy1".to_string(),
-        });
+        let _ = store.update_sync(UpdateRequest::RemovePolicy { name: "policy1".to_string() });
 
         let stats = store.stats();
         assert_eq!(stats.reads, 3);

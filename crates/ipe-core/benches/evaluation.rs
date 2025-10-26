@@ -17,15 +17,20 @@ use std::time::Duration;
 fn create_sample_context() -> EvaluationContext {
     let mut resource_attrs = HashMap::new();
     resource_attrs.insert("type".to_string(), AttributeValue::String("Deployment".to_string()));
-    resource_attrs.insert("environment".to_string(), AttributeValue::String("production".to_string()));
+    resource_attrs
+        .insert("environment".to_string(), AttributeValue::String("production".to_string()));
     resource_attrs.insert("risk_level".to_string(), AttributeValue::String("high".to_string()));
 
     let mut principal_attrs = HashMap::new();
     principal_attrs.insert("role".to_string(), AttributeValue::String("developer".to_string()));
-    principal_attrs.insert("department".to_string(), AttributeValue::String("engineering".to_string()));
+    principal_attrs
+        .insert("department".to_string(), AttributeValue::String("engineering".to_string()));
 
     EvaluationContext {
-        resource: Resource { type_id: ipe_core::rar::ResourceTypeId(1), attributes: resource_attrs },
+        resource: Resource {
+            type_id: ipe_core::rar::ResourceTypeId(1),
+            attributes: resource_attrs,
+        },
         action: Action {
             operation: Operation::Deploy,
             target: "production/us-east-1".to_string(),
