@@ -1,4 +1,6 @@
-use crate::bytecode::{CompOp, CompiledPolicy, Instruction, Value};
+#[cfg(test)]
+use crate::bytecode::CompOp;
+use crate::bytecode::{CompiledPolicy, Instruction, Value};
 use crate::rar::EvaluationContext;
 
 /// Maximum stack size to prevent stack overflow

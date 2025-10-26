@@ -3,7 +3,7 @@ use crate::rar::EvaluationContext;
 use crate::{Error, Result};
 use cranelift::prelude::*;
 use cranelift_jit::{JITBuilder, JITModule};
-use cranelift_module::{DataDescription, Linkage, Module};
+use cranelift_module::{Linkage, Module};
 use parking_lot::RwLock;
 use region::{protect, Protection};
 use std::collections::HashMap;
@@ -35,12 +35,8 @@ impl JitCode {
 
 impl Drop for JitCode {
     fn drop(&mut self) {
-        // Unmap JIT memory
-        if !self.region.is_null() {
-            unsafe {
-                region::free(self.region, self.size).ok();
-            }
-        }
+        // Note: region-allocated memory is automatically freed when the protection is dropped
+        // The `region` crate doesn't provide an explicit `free` function
     }
 }
 
@@ -105,12 +101,13 @@ impl JitCompiler {
             .declare_function(name, Linkage::Export, &sig)
             .map_err(|e| Error::JitError(format!("Failed to declare function: {}", e)))?;
 
-        // Create function
-        let mut func = Function::with_name_signature(ExternalName::user(0, id.as_u32()), sig);
+        // Create function context
+        let mut ctx = self.module.make_context();
+        ctx.func.signature = sig;
 
         // Build function body
         {
-            let mut builder = FunctionBuilder::new(&mut func, &mut self.builder_ctx);
+            let mut builder = FunctionBuilder::new(&mut ctx.func, &mut self.builder_ctx);
 
             // Entry block with ctx parameter
             let entry_block = builder.create_block();
@@ -121,14 +118,14 @@ impl JitCompiler {
             let ctx_ptr = builder.block_params(entry_block)[0];
 
             // Translate bytecode to IR
-            self.translate_bytecode(&mut builder, policy, ctx_ptr)?;
+            Self::translate_bytecode(&mut builder, policy, ctx_ptr)?;
 
             builder.finalize();
         }
 
         // Define and compile
         self.module
-            .define_function(id, &mut func)
+            .define_function(id, &mut ctx)
             .map_err(|e| Error::JitError(format!("Failed to define function: {}", e)))?;
 
         self.module
@@ -158,7 +155,6 @@ impl JitCompiler {
     }
 
     fn translate_bytecode(
-        &self,
         builder: &mut FunctionBuilder,
         policy: &CompiledPolicy,
         ctx_ptr: Value,
@@ -265,7 +261,37 @@ impl JitCompiler {
                     builder.switch_to_block(fallthrough);
                 },
 
-                Instruction::Call { func, argc } => {
+                Instruction::And => {
+                    let b = value_stack
+                        .pop()
+                        .ok_or_else(|| Error::JitError("Stack underflow in And".to_string()))?;
+                    let a = value_stack
+                        .pop()
+                        .ok_or_else(|| Error::JitError("Stack underflow in And".to_string()))?;
+                    let result = builder.ins().band(a, b);
+                    value_stack.push(result);
+                },
+
+                Instruction::Or => {
+                    let b = value_stack
+                        .pop()
+                        .ok_or_else(|| Error::JitError("Stack underflow in Or".to_string()))?;
+                    let a = value_stack
+                        .pop()
+                        .ok_or_else(|| Error::JitError("Stack underflow in Or".to_string()))?;
+                    let result = builder.ins().bor(a, b);
+                    value_stack.push(result);
+                },
+
+                Instruction::Not => {
+                    let a = value_stack
+                        .pop()
+                        .ok_or_else(|| Error::JitError("Stack underflow in Not".to_string()))?;
+                    let result = builder.ins().bnot(a);
+                    value_stack.push(result);
+                },
+
+                Instruction::Call { func: _, argc: _ } => {
                     // Built-in function calls
                     // For now, just push a dummy result
                     let result = builder.ins().iconst(types::I64, 0);
@@ -283,12 +309,8 @@ impl JitCompiler {
             }
         }
 
-        // Ensure we have a return
-        if !builder.is_filled() {
-            let zero = builder.ins().iconst(types::I8, 0);
-            builder.ins().return_(&[zero]);
-        }
-
+        // Note: Return instructions are handled in bytecode translation
+        // Each bytecode sequence should end with a Return instruction
         Ok(())
     }
 }

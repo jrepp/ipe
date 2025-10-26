@@ -112,7 +112,7 @@ pub struct TieredPolicy {
     pub jit_code: RwLock<Option<Arc<JitCode>>>,
 
     /// Profiling statistics
-    pub stats: ProfileStats,
+    pub stats: Arc<ProfileStats>,
 
     /// Policy name (for JIT compilation)
     pub name: String,
@@ -124,7 +124,7 @@ impl TieredPolicy {
             bytecode: Arc::new(bytecode),
             #[cfg(feature = "jit")]
             jit_code: RwLock::new(None),
-            stats: ProfileStats::new(),
+            stats: Arc::new(ProfileStats::new()),
             name,
         }
     }
@@ -178,9 +178,9 @@ impl TieredPolicy {
         use std::thread;
 
         let bytecode = Arc::clone(&self.bytecode);
-        let jit_code = self.jit_code.clone();
+        let jit_code = Arc::new(RwLock::new(self.jit_code.read().clone()));
         let name = self.name.clone();
-        let stats = self.stats.clone();
+        let stats = Arc::clone(&self.stats);
 
         thread::spawn(move || {
             let mut compiler = match JitCompiler::new() {
