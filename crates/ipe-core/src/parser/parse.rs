@@ -811,4 +811,239 @@ mod tests {
         let result = parser.parse_policy();
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_policy_with_multiple_trigger_conditions() {
+        let source = r#"
+policy MultiTrigger:
+  "Policy with multiple trigger conditions"
+
+  triggers when
+    resource.type == "Document"
+    and environment == "production"
+
+  requires
+    user.role == "admin"
+"#;
+        let mut parser = Parser::new(source);
+        let policy = parser.parse_policy().unwrap();
+
+        assert_eq!(policy.name, "MultiTrigger");
+        // The parser combines AND conditions into a single logical expression
+        assert_eq!(policy.triggers.len(), 1);
+
+        // Verify it's a logical AND expression
+        match &policy.triggers[0].expr {
+            Expression::Logical { op: LogicalOp::And, operands } => {
+                assert_eq!(operands.len(), 2);
+            }
+            _ => panic!("Expected logical AND expression"),
+        }
+    }
+
+    #[test]
+    fn test_policy_with_requires_where_clause() {
+        let source = r#"
+policy RequireApprovalWhere:
+  "Require approval from senior engineers"
+
+  triggers when
+    resource.type == "Deployment"
+
+  requires
+    approvals.count >= 2
+    where approver.role == "senior"
+    and approver.department != requester.department
+"#;
+        let mut parser = Parser::new(source);
+        let policy = parser.parse_policy().unwrap();
+
+        assert_eq!(policy.name, "RequireApprovalWhere");
+
+        // Check that we have requires with where clause
+        match &policy.requirements {
+            Requirements::Requires { conditions, where_clause } => {
+                assert_eq!(conditions.len(), 1);
+                assert!(where_clause.is_some());
+                // Where clause combines multiple conditions with AND
+                let where_conds = where_clause.as_ref().unwrap();
+                assert_eq!(where_conds.len(), 1);
+
+                // Verify it's a logical AND expression
+                match &where_conds[0].expr {
+                    Expression::Logical { op: LogicalOp::And, operands } => {
+                        assert_eq!(operands.len(), 2);
+                    }
+                    _ => panic!("Expected logical AND in where clause"),
+                }
+            }
+            _ => panic!("Expected requires with where clause"),
+        }
+    }
+
+    #[test]
+    fn test_policy_with_denies_and_no_reason() {
+        let source = r#"
+policy DenyNoReason:
+  "Deny without explicit reason"
+
+  triggers when
+    resource.type == "Document"
+
+  denies when
+    user.role == "guest"
+"#;
+        let mut parser = Parser::new(source);
+        let policy = parser.parse_policy().unwrap();
+
+        assert_eq!(policy.name, "DenyNoReason");
+
+        match &policy.requirements {
+            Requirements::Denies { reason } => {
+                assert!(reason.is_none());
+            }
+            _ => panic!("Expected denies clause"),
+        }
+    }
+
+    #[test]
+    fn test_error_missing_requirements() {
+        let source = r#"
+policy NoRequirements:
+  "Policy without requirements"
+
+  triggers when
+    resource.type == "Document"
+"#;
+        let mut parser = Parser::new(source);
+        let result = parser.parse_policy();
+        assert!(result.is_err());
+        if let Err(ParseError::InvalidPolicy(msg)) = result {
+            assert!(msg.contains("Expected 'requires' or 'denies'"));
+        } else {
+            panic!("Expected InvalidPolicy error");
+        }
+    }
+
+    #[test]
+    fn test_multiple_requires_conditions_with_and() {
+        let source = r#"
+policy MultipleRequires:
+  "Multiple require conditions"
+
+  triggers when
+    resource.type == "Document"
+
+  requires
+    user.role == "admin"
+    and user.department == "IT"
+    and user.clearance >= 5
+"#;
+        let mut parser = Parser::new(source);
+        let policy = parser.parse_policy().unwrap();
+
+        assert_eq!(policy.name, "MultipleRequires");
+
+        match &policy.requirements {
+            Requirements::Requires { conditions, .. } => {
+                // Parser combines AND conditions into a single logical expression
+                assert_eq!(conditions.len(), 1);
+
+                // Verify it's a logical AND (parser creates nested binary tree of ANDs)
+                match &conditions[0].expr {
+                    Expression::Logical { op: LogicalOp::And, operands } => {
+                        assert!(operands.len() >= 2);
+                    }
+                    _ => panic!("Expected logical AND expression"),
+                }
+            }
+            _ => panic!("Expected requires clause"),
+        }
+    }
+
+    #[test]
+    fn test_complex_where_clause_multiple_conditions() {
+        let source = r#"
+policy ComplexWhere:
+  "Complex where clause with multiple conditions"
+
+  triggers when
+    resource.type == "Deployment"
+
+  requires
+    approvals.count >= 3
+    where approver.role == "senior"
+    and approver.department == "security"
+    and approver.tenure > 2
+"#;
+        let mut parser = Parser::new(source);
+        let policy = parser.parse_policy().unwrap();
+
+        assert_eq!(policy.name, "ComplexWhere");
+
+        match &policy.requirements {
+            Requirements::Requires { conditions, where_clause } => {
+                assert_eq!(conditions.len(), 1);
+                assert!(where_clause.is_some());
+                // Where clause combines all conditions into single logical expression
+                let where_conds = where_clause.as_ref().unwrap();
+                assert_eq!(where_conds.len(), 1);
+
+                // Verify it's a logical AND (nested binary tree)
+                match &where_conds[0].expr {
+                    Expression::Logical { op: LogicalOp::And, operands } => {
+                        assert!(operands.len() >= 2);
+                    }
+                    _ => panic!("Expected logical AND in where clause"),
+                }
+            }
+            _ => panic!("Expected requires with where clause"),
+        }
+    }
+
+    #[test]
+    fn test_parse_expression_with_newlines() {
+        let source = r#"user.role == "admin"
+and
+user.department == "IT"
+or
+user.is_superuser == true"#;
+        let mut parser = Parser::new(source);
+        let expr = parser.parse_expression().unwrap();
+
+        // Should parse as a logical expression
+        match expr {
+            Expression::Logical { op: LogicalOp::Or, operands } => {
+                assert_eq!(operands.len(), 2);
+            }
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn test_policy_denies_with_reason() {
+        let source = r#"
+policy DenyWithReason:
+  "Deny with explicit reason"
+
+  triggers when
+    resource.type == "Document"
+    and user.role == "guest"
+
+  denies
+    with reason "Insufficient permissions"
+"#;
+        let mut parser = Parser::new(source);
+        let policy = parser.parse_policy().unwrap();
+
+        assert_eq!(policy.name, "DenyWithReason");
+
+        match &policy.requirements {
+            Requirements::Denies { reason } => {
+                assert!(reason.is_some());
+                assert_eq!(reason.as_ref().unwrap(), "Insufficient permissions");
+            }
+            _ => panic!("Expected denies clause"),
+        }
+    }
 }

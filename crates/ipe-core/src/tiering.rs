@@ -283,12 +283,192 @@ mod tests {
     #[test]
     fn test_avg_latency_calculation() {
         let stats = ProfileStats::new();
-        
+
         stats.record_evaluation(Duration::from_micros(10));
         stats.record_evaluation(Duration::from_micros(20));
         stats.record_evaluation(Duration::from_micros(30));
-        
+
         let avg = stats.avg_latency_ns();
         assert_eq!(avg, 20_000); // 20μs
+    }
+
+    #[test]
+    fn test_avg_latency_with_no_evaluations() {
+        let stats = ProfileStats::new();
+        assert_eq!(stats.avg_latency_ns(), 0);
+    }
+
+    #[test]
+    fn test_profile_stats_default() {
+        let stats = ProfileStats::default();
+        assert_eq!(stats.eval_count.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.total_latency_ns.load(Ordering::Relaxed), 0);
+        assert_eq!(*stats.current_tier.read(), ExecutionTier::Interpreter);
+    }
+
+    #[test]
+    fn test_promotion_to_baseline_jit() {
+        let stats = ProfileStats::new();
+
+        // Record 100 evaluations
+        for _ in 0..100 {
+            stats.record_evaluation(Duration::from_micros(50));
+        }
+
+        // Should not promote immediately (cooldown)
+        assert!(!stats.should_promote());
+
+        // Manually set last_promoted to past
+        *stats.last_promoted.write() = Instant::now() - Duration::from_secs(11);
+
+        // Should promote now
+        assert!(stats.should_promote());
+        let new_tier = stats.promote();
+        assert_eq!(new_tier, ExecutionTier::BaselineJIT);
+        assert_eq!(*stats.current_tier.read(), ExecutionTier::BaselineJIT);
+    }
+
+    #[test]
+    fn test_promotion_to_optimized_jit() {
+        let stats = ProfileStats::new();
+
+        // Start at BaselineJIT
+        *stats.current_tier.write() = ExecutionTier::BaselineJIT;
+        *stats.last_promoted.write() = Instant::now() - Duration::from_secs(11);
+
+        // Record 10k evaluations with high latency (>20μs)
+        for _ in 0..10_000 {
+            stats.record_evaluation(Duration::from_micros(25));
+        }
+
+        // Should promote to OptimizedJIT
+        assert!(stats.should_promote());
+        let new_tier = stats.promote();
+        assert_eq!(new_tier, ExecutionTier::OptimizedJIT);
+        assert_eq!(*stats.current_tier.read(), ExecutionTier::OptimizedJIT);
+    }
+
+    #[test]
+    fn test_no_promotion_from_optimized_jit() {
+        let stats = ProfileStats::new();
+
+        // Start at OptimizedJIT
+        *stats.current_tier.write() = ExecutionTier::OptimizedJIT;
+        *stats.last_promoted.write() = Instant::now() - Duration::from_secs(11);
+
+        // Record many evaluations
+        for _ in 0..20_000 {
+            stats.record_evaluation(Duration::from_micros(5));
+        }
+
+        // Should not promote further
+        assert!(!stats.should_promote());
+    }
+
+    #[test]
+    fn test_no_promotion_baseline_jit_low_latency() {
+        let stats = ProfileStats::new();
+
+        // Start at BaselineJIT
+        *stats.current_tier.write() = ExecutionTier::BaselineJIT;
+        *stats.last_promoted.write() = Instant::now() - Duration::from_secs(11);
+
+        // Record 10k evaluations with LOW latency (<20μs)
+        for _ in 0..10_000 {
+            stats.record_evaluation(Duration::from_micros(10));
+        }
+
+        // Should NOT promote (latency too low)
+        assert!(!stats.should_promote());
+    }
+
+    #[test]
+    fn test_no_promotion_native_aot() {
+        let stats = ProfileStats::new();
+
+        // Start at NativeAOT
+        *stats.current_tier.write() = ExecutionTier::NativeAOT;
+        *stats.last_promoted.write() = Instant::now() - Duration::from_secs(11);
+
+        // Record many evaluations
+        for _ in 0..20_000 {
+            stats.record_evaluation(Duration::from_micros(5));
+        }
+
+        // Should not promote further
+        assert!(!stats.should_promote());
+    }
+
+    #[test]
+    fn test_promote_stays_at_top_tier() {
+        let stats = ProfileStats::new();
+
+        // Start at OptimizedJIT
+        *stats.current_tier.write() = ExecutionTier::OptimizedJIT;
+
+        // Try to promote (should stay at OptimizedJIT)
+        let new_tier = stats.promote();
+        assert_eq!(new_tier, ExecutionTier::OptimizedJIT);
+    }
+
+    #[test]
+    fn test_tiered_policy_creation() {
+        use crate::testing::simple_policy;
+
+        let bytecode = simple_policy(1, true);
+        let policy = TieredPolicy::new(bytecode, "TestPolicy".to_string());
+
+        assert_eq!(policy.name, "TestPolicy");
+        assert_eq!(*policy.stats.current_tier.read(), ExecutionTier::Interpreter);
+    }
+
+    #[test]
+    fn test_tiered_policy_evaluate() {
+        use crate::testing::simple_policy;
+        use crate::rar::{EvaluationContext, ResourceTypeId};
+
+        let bytecode = simple_policy(1, true);
+        let policy = TieredPolicy::new(bytecode, "TestPolicy".to_string());
+        let mut ctx = EvaluationContext::default();
+        ctx.resource.type_id = ResourceTypeId(1);
+
+        // Evaluate the policy
+        let result = policy.evaluate(&ctx);
+        assert!(result.is_ok());
+
+        // Stats should be updated
+        assert_eq!(policy.stats.eval_count.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn test_tiered_policy_manager_creation() {
+        let manager = TieredPolicyManager::new();
+        assert!(manager.is_ok());
+    }
+
+    #[test]
+    fn test_tiered_policy_manager_default() {
+        let manager = TieredPolicyManager::default();
+        // Should not panic, just verify it was created
+        let _ = manager;
+    }
+
+    #[test]
+    fn test_tiered_policy_manager_create_policy() {
+        use crate::testing::simple_policy;
+
+        let manager = TieredPolicyManager::new().unwrap();
+        let bytecode = simple_policy(1, true);
+        let policy = manager.create_policy(bytecode, "TestPolicy".to_string());
+
+        assert_eq!(policy.name, "TestPolicy");
+    }
+
+    #[test]
+    fn test_execution_tier_ordering() {
+        // Test that tiers are ordered correctly
+        assert!(ExecutionTier::Interpreter < ExecutionTier::BaselineJIT);
+        assert!(ExecutionTier::BaselineJIT < ExecutionTier::OptimizedJIT);
+        assert!(ExecutionTier::OptimizedJIT < ExecutionTier::NativeAOT);
     }
 }
