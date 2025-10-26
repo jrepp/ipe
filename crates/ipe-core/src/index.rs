@@ -1,5 +1,5 @@
 use crate::bytecode::CompiledPolicy;
-use crate::interpreter::{FieldMapping, Interpreter};
+use crate::interpreter::FieldMapping;
 use crate::rar::ResourceTypeId;
 use std::collections::HashMap;
 

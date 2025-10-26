@@ -285,7 +285,6 @@ impl Default for PolicyCompiler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::nodes::Path;
 
     fn create_simple_policy(requirements: Requirements) -> Policy {
         Policy::new("TestPolicy".to_string(), "Test intent".to_string(), vec![], requirements)

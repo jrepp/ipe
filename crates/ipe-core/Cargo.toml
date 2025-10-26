@@ -32,6 +32,7 @@ region = { workspace = true, optional = true }
 
 [features]
 default = []
+testing = []
 jit = [
     "cranelift",
     "cranelift-jit",
