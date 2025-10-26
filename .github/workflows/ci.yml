@@ -211,8 +211,10 @@ jobs:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install cargo-minimal-versions
-        run: cargo install cargo-minimal-versions
+      - name: Install cargo-hack and cargo-minimal-versions
+        run: |
+          cargo install cargo-hack
+          cargo install cargo-minimal-versions
 
       - name: Check minimal versions
         run: cargo minimal-versions check --all-features
