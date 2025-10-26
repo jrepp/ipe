@@ -1,0 +1,54 @@
+# Codecov configuration for IPE
+
+coverage:
+  status:
+    project:
+      default:
+        target: 90%  # Overall coverage target
+        threshold: 2%  # Allow 2% drop
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: 85%  # New code coverage target
+        if_ci_failed: error
+
+  precision: 2
+  round: down
+  range: "70...100"
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+ignore:
+  - "tests/**/*"
+  - "benches/**/*"
+  - "examples/**/*"
+  - "**/*test.rs"
+  - "**/*tests.rs"
+
+# Flag specific coverage requirements
+flags:
+  core:
+    paths:
+      - crates/ipe-core/src/
+    target: 95%  # Core engine needs highest coverage
+
+  parser:
+    paths:
+      - crates/ipe-core/src/parser/
+    target: 92%
+
+  interpreter:
+    paths:
+      - crates/ipe-core/src/interpreter/
+    target: 100%  # Critical path - must have 100% coverage
+
+  engine:
+    paths:
+      - crates/ipe-core/src/engine/
+    target: 100%  # Critical path - must have 100% coverage

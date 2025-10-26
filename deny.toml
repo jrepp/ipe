@@ -1,0 +1,82 @@
+# cargo-deny configuration for IPE
+# Security and license policy enforcement
+
+# Note that all fields that take a lint level have these possible values:
+# * deny - An error will be produced and the check will fail
+# * warn - A warning will be produced, but the check will not fail
+# * allow - No warning or error will be produced, though in some cases a note will be
+
+[advisories]
+version = 2
+# The path where the advisory database is cloned/fetched into
+db-path = "~/.cargo/advisory-db"
+# The url(s) of the advisory databases to use
+db-urls = ["https://github.com/rustsec/advisory-db"]
+# Vulnerability level to deny
+vulnerability = "deny"
+# Unmaintained crates
+unmaintained = "warn"
+# Crates with security notices
+notice = "warn"
+# Yanked crates
+yanked = "deny"
+# Ignore specific advisories (use only when necessary)
+ignore = [
+    # Example: "RUSTSEC-2020-0001"
+]
+
+[licenses]
+version = 2
+# We want very high confidence when inferring licenses from text
+confidence-threshold = 0.93
+# Licenses we allow
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+]
+# Licenses we explicitly deny
+deny = [
+    "GPL-2.0",
+    "GPL-3.0",
+    "AGPL-3.0",
+]
+# We want to be notified of copyleft licenses
+copyleft = "warn"
+# Blanket approval or denial for OSI-approved or FSF Free/Libre licenses
+allow-osi-fsf-free = "both"
+# Clarifications for specific crates
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 }
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "warn"
+highlight = "all"
+# Certain crates/versions that will be skipped when doing duplicate detection
+skip = []
+# Similarly named crates that are not the same
+skip-tree = []
+
+[sources]
+# Lint level for what to happen when a crate from a crate registry that is not in the allow list is encountered
+unknown-registry = "deny"
+# Lint level for what to happen when a crate from a git repository that is not in the allow list is encountered
+unknown-git = "deny"
+# List of URLs for allowed crate registries. Defaults to the crates.io index if not specified
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# List of URLs for allowed Git repositories
+allow-git = []
+
+[sources.allow-org]
+github = []
+gitlab = []
+bitbucket = []

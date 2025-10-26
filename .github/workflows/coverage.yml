@@ -1,0 +1,133 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: Generate Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov
+
+      - name: Generate coverage
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+      - name: Generate HTML report
+        run: cargo llvm-cov --all-features --workspace --html
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/llvm-cov/html/
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Check coverage threshold
+        run: |
+          # Extract overall coverage percentage
+          coverage=$(cargo llvm-cov --all-features --workspace --summary-only | grep -oP 'TOTAL.*\K\d+\.\d+' | head -1)
+          echo "Overall coverage: $coverage%"
+
+          # Require >90% coverage
+          threshold=90.0
+          if (( $(echo "$coverage < $threshold" | bc -l) )); then
+            echo "❌ Coverage $coverage% is below threshold $threshold%"
+            exit 1
+          else
+            echo "✅ Coverage $coverage% meets threshold $threshold%"
+          fi
+
+  coverage-per-crate:
+    name: Per-Crate Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        crate: [ipe-core]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov
+
+      - name: Generate coverage for ${{ matrix.crate }}
+        run: |
+          cd crates/${{ matrix.crate }}
+          cargo llvm-cov --all-features --summary-only
+
+      - name: Check critical path coverage
+        run: |
+          cd crates/${{ matrix.crate }}
+          # Generate detailed coverage report
+          cargo llvm-cov --all-features --text > coverage.txt
+
+          # Check that critical files have 100% coverage
+          critical_files=(
+            "src/interpreter/vm.rs"
+            "src/engine/policy_db.rs"
+            "src/rar/context.rs"
+          )
+
+          for file in "${critical_files[@]}"; do
+            if [ -f "$file" ]; then
+              coverage=$(grep "$file" coverage.txt | grep -oP '\d+\.\d+%' | head -1 || echo "0.0%")
+              echo "$file: $coverage"
+
+              # Require 100% coverage for critical paths
+              if [[ ! "$coverage" =~ ^100\.0% ]]; then
+                echo "❌ Critical file $file has insufficient coverage: $coverage"
+                exit 1
+              fi
+            fi
+          done
+
+          echo "✅ All critical paths have 100% coverage"

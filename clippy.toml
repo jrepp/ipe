@@ -1,0 +1,33 @@
+# Clippy Configuration for IPE
+# Strict linting for security-critical policy engine
+
+# Avoid needlessly complex expressions
+cognitive-complexity-threshold = 25
+
+# Doc requirements
+missing-docs-in-crate-items = true
+
+# Type complexity
+type-complexity-threshold = 250
+
+# Vec capacity
+vec-box-size-threshold = 4096
+
+# Literal representation
+literal-representation-threshold = 65536
+
+# Single char pattern
+single-char-binding-names-threshold = 4
+
+# Too many arguments
+too-many-arguments-threshold = 7
+
+# Too many lines
+too-many-lines-threshold = 200
+
+# Allowed lints (use sparingly)
+# Allow complex types in some cases (e.g., engine internals)
+# allow-mixed-uninlined-format-args = true
+
+# Warn on common mistakes
+warn-on-all-wildcard-imports = true

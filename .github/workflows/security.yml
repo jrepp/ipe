@@ -1,0 +1,133 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+  schedule:
+    # Run security audit daily at 00:00 UTC
+    - cron: '0 0 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cargo-audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit
+
+      - name: Run cargo audit (JSON output)
+        run: cargo audit --json > audit-report.json
+        continue-on-error: true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: audit-report.json
+
+  cargo-deny:
+    name: Cargo Deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Run cargo deny
+        run: cargo deny check
+
+  miri:
+    name: Miri (Undefined Behavior Detection)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly with miri
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup miri
+        run: cargo miri setup
+
+      - name: Run miri tests
+        run: cargo miri test --all-features
+        env:
+          MIRIFLAGS: "-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check"
+
+  sanitizers:
+    name: Sanitizers
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sanitizer: [address, leak, thread]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run tests with ${{ matrix.sanitizer }} sanitizer
+        run: |
+          export RUSTFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
+          export RUSTDOCFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
+          cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features
+        env:
+          ASAN_OPTIONS: detect_leaks=1
+          LSAN_OPTIONS: suppressions=lsan-suppressions.txt
+
+  supply-chain:
+    name: Supply Chain Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-geiger
+        run: cargo install cargo-geiger
+
+      - name: Run cargo-geiger (unsafe code detection)
+        run: cargo geiger --all-features
+
+      - name: Verify no unsafe code in core
+        run: |
+          # Ensure core crates have zero unsafe blocks
+          if cargo geiger --all-features | grep -A 5 "ipe-core" | grep -q "🔒"; then
+            echo "✅ No unsafe code in ipe-core"
+          else
+            echo "❌ Unsafe code detected in ipe-core"
+            exit 1
+          fi
