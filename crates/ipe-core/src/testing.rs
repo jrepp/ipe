@@ -111,10 +111,7 @@ pub fn policy_db_with_policy(
 pub fn field_mapping_from_paths(paths: &[(u16, Vec<&str>)]) -> FieldMapping {
     let mut mapping = FieldMapping::new();
     for (offset, path) in paths {
-        mapping.insert(
-            *offset,
-            path.iter().map(|s| s.to_string()).collect(),
-        );
+        mapping.insert(*offset, path.iter().map(|s| s.to_string()).collect());
     }
     mapping
 }
@@ -142,9 +139,7 @@ pub struct PolicyBuilder {
 impl PolicyBuilder {
     /// Create a new policy builder
     pub fn new(policy_id: u64) -> Self {
-        Self {
-            policy: CompiledPolicy::new(policy_id),
-        }
+        Self { policy: CompiledPolicy::new(policy_id) }
     }
 
     /// Load a field from the evaluation context
@@ -235,12 +230,8 @@ mod tests {
     #[test]
     fn test_policy_db_with_policy() {
         let policy = simple_policy(1, true);
-        let db = policy_db_with_policy(
-            "test",
-            policy,
-            FieldMapping::new(),
-            vec![ResourceTypeId(1)],
-        );
+        let db =
+            policy_db_with_policy("test", policy, FieldMapping::new(), vec![ResourceTypeId(1)]);
         assert_eq!(db.len(), 1);
         assert!(db.get_policy_by_name("test").is_some());
     }

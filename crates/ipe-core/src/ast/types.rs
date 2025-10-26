@@ -1,6 +1,6 @@
 //! Type system for IPE policies
 
-use super::nodes::{Expression, Value, Condition};
+use super::nodes::{Condition, Expression, Value};
 use std::collections::HashMap;
 
 /// Type information
@@ -44,7 +44,7 @@ impl Type {
                 } else {
                     Type::Array(Box::new(Type::from_value(&arr[0])))
                 }
-            }
+            },
         }
     }
 }
@@ -58,9 +58,7 @@ pub struct TypeEnv {
 impl TypeEnv {
     /// Create a new type environment
     pub fn new() -> Self {
-        Self {
-            variables: HashMap::new(),
-        }
+        Self { variables: HashMap::new() }
     }
 
     /// Add a variable binding
@@ -98,10 +96,7 @@ pub struct TypeChecker {
 impl TypeChecker {
     /// Create a new type checker
     pub fn new(env: TypeEnv) -> Self {
-        Self {
-            env,
-            errors: Vec::new(),
-        }
+        Self { env, errors: Vec::new() }
     }
 
     /// Check the type of an expression
@@ -116,7 +111,7 @@ impl TypeChecker {
                 } else {
                     Type::Any
                 }
-            }
+            },
 
             Expression::Binary { left, op: _, right } => {
                 let left_type = self.check_expression(left);
@@ -132,7 +127,7 @@ impl TypeChecker {
 
                 // Binary comparisons return bool
                 Type::Bool
-            }
+            },
 
             Expression::Logical { op: _, operands } => {
                 // Check all operands are boolean
@@ -143,24 +138,24 @@ impl TypeChecker {
                     }
                 }
                 Type::Bool
-            }
+            },
 
             Expression::In { expr, list: _ } => {
                 // Check expr type matches list element type
                 let _expr_type = self.check_expression(expr);
                 // TODO: Check list element types
                 Type::Bool
-            }
+            },
 
             Expression::Aggregate { .. } => {
                 // Aggregate functions return their specific type
                 Type::Int // Most aggregates return numbers
-            }
+            },
 
             Expression::Call { name, args } => {
                 // Check built-in functions
                 self.check_function_call(name, args)
-            }
+            },
         }
     }
 
@@ -351,10 +346,7 @@ mod tests {
 
         let expr = Expression::in_list(
             Expression::literal(Value::String("prod".to_string())),
-            vec![
-                Value::String("prod".to_string()),
-                Value::String("staging".to_string()),
-            ],
+            vec![Value::String("prod".to_string()), Value::String("staging".to_string())],
         );
 
         let typ = checker.check_expression(&expr);

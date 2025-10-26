@@ -1,4 +1,4 @@
-use crate::bytecode::{Value, Instruction, CompiledPolicy, CompOp};
+use crate::bytecode::{CompOp, CompiledPolicy, Instruction, Value};
 use crate::rar::EvaluationContext;
 
 /// Maximum stack size to prevent stack overflow
@@ -90,10 +90,7 @@ pub struct Interpreter {
 impl Interpreter {
     /// Create a new interpreter with the given field mapping
     pub fn new(field_map: FieldMapping) -> Self {
-        Self {
-            stack: Stack::new(),
-            field_map,
-        }
+        Self { stack: Stack::new(), field_map }
     }
 
     /// Evaluate a compiled policy against an evaluation context
@@ -116,7 +113,7 @@ impl Interpreter {
                 Instruction::LoadField { offset } => {
                     let value = self.load_field(*offset, ctx)?;
                     self.stack.push(value)?;
-                }
+                },
 
                 Instruction::LoadConst { idx } => {
                     // Keep bounds check for LoadConst - constant pool size varies
@@ -126,43 +123,43 @@ impl Interpreter {
                         .ok_or_else(|| format!("Invalid constant index: {}", idx))?
                         .clone();
                     self.stack.push(value)?;
-                }
+                },
 
                 Instruction::Compare { op } => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
                     let result = a.compare(&b, *op)?;
                     self.stack.push(Value::Bool(result))?;
-                }
+                },
 
                 Instruction::And => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
                     let result = a.is_truthy() && b.is_truthy();
                     self.stack.push(Value::Bool(result))?;
-                }
+                },
 
                 Instruction::Or => {
                     let b = self.stack.pop()?;
                     let a = self.stack.pop()?;
                     let result = a.is_truthy() || b.is_truthy();
                     self.stack.push(Value::Bool(result))?;
-                }
+                },
 
                 Instruction::Not => {
                     let a = self.stack.pop()?;
                     let result = !a.is_truthy();
                     self.stack.push(Value::Bool(result))?;
-                }
+                },
 
                 Instruction::Return { value } => {
                     return Ok(*value);
-                }
+                },
 
                 Instruction::Jump { offset } => {
                     pc = (pc as i32 + *offset as i32) as usize;
                     continue;
-                }
+                },
 
                 Instruction::JumpIfFalse { offset } => {
                     let cond = self.stack.pop()?;
@@ -170,11 +167,14 @@ impl Interpreter {
                         pc = (pc as i32 + *offset as i32) as usize;
                         continue;
                     }
-                }
+                },
 
                 Instruction::Call { func, argc } => {
-                    return Err(format!("Function calls not yet supported: func={}, argc={}", func, argc));
-                }
+                    return Err(format!(
+                        "Function calls not yet supported: func={}, argc={}",
+                        func, argc
+                    ));
+                },
             }
 
             pc += 1;
@@ -208,7 +208,11 @@ impl Interpreter {
     }
 
     #[inline]
-    fn access_resource(&self, path: &[String], resource: &crate::rar::Resource) -> Result<Value, String> {
+    fn access_resource(
+        &self,
+        path: &[String],
+        resource: &crate::rar::Resource,
+    ) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Resource path cannot be empty".to_string());
         }
@@ -221,12 +225,16 @@ impl Interpreter {
                     .get(attr_name)
                     .ok_or_else(|| format!("Attribute not found: {}", attr_name))?;
                 self.attr_to_value(attr)
-            }
+            },
         }
     }
 
     #[inline]
-    fn access_action(&self, path: &[String], _action: &crate::rar::Action) -> Result<Value, String> {
+    fn access_action(
+        &self,
+        path: &[String],
+        _action: &crate::rar::Action,
+    ) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Action path cannot be empty".to_string());
         }
@@ -236,7 +244,11 @@ impl Interpreter {
     }
 
     #[inline]
-    fn access_request(&self, path: &[String], request: &crate::rar::Request) -> Result<Value, String> {
+    fn access_request(
+        &self,
+        path: &[String],
+        request: &crate::rar::Request,
+    ) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Request path cannot be empty".to_string());
         }
@@ -247,19 +259,23 @@ impl Interpreter {
                     return Err("Principal path too short".to_string());
                 }
                 self.access_principal(&path[1..], &request.principal)
-            }
+            },
             attr_name => {
                 let attr = request
                     .metadata
                     .get(attr_name)
                     .ok_or_else(|| format!("Request metadata not found: {}", attr_name))?;
                 self.attr_to_value(attr)
-            }
+            },
         }
     }
 
     #[inline]
-    fn access_principal(&self, path: &[String], principal: &crate::rar::Principal) -> Result<Value, String> {
+    fn access_principal(
+        &self,
+        path: &[String],
+        principal: &crate::rar::Principal,
+    ) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Principal path cannot be empty".to_string());
         }
@@ -272,7 +288,7 @@ impl Interpreter {
                     .get(attr_name)
                     .ok_or_else(|| format!("Principal attribute not found: {}", attr_name))?;
                 self.attr_to_value(attr)
-            }
+            },
         }
     }
 
@@ -412,7 +428,7 @@ mod tests {
     }
 
     // Interpreter tests
-    use crate::rar::{EvaluationContext, AttributeValue, ResourceTypeId};
+    use crate::rar::{AttributeValue, EvaluationContext, ResourceTypeId};
 
     #[test]
     fn test_interpreter_load_const() {
@@ -549,16 +565,12 @@ mod tests {
         let mut interp = Interpreter::new(field_map);
 
         let mut ctx = EvaluationContext::default();
-        ctx.resource.attributes.insert(
-            "name".to_string(),
-            AttributeValue::String("test-resource".to_string()),
-        );
+        ctx.resource
+            .attributes
+            .insert("name".to_string(), AttributeValue::String("test-resource".to_string()));
 
         interp.evaluate(&policy, &ctx).unwrap();
-        assert_eq!(
-            *interp.stack.peek().unwrap(),
-            Value::String("test-resource".to_string())
-        );
+        assert_eq!(*interp.stack.peek().unwrap(), Value::String("test-resource".to_string()));
     }
 
     #[test]
@@ -576,10 +588,7 @@ mod tests {
         ctx.request.principal.id = "user-123".to_string();
 
         interp.evaluate(&policy, &ctx).unwrap();
-        assert_eq!(
-            *interp.stack.peek().unwrap(),
-            Value::String("user-123".to_string())
-        );
+        assert_eq!(*interp.stack.peek().unwrap(), Value::String("user-123".to_string()));
     }
 
     #[test]
@@ -615,7 +624,9 @@ mod tests {
 
         let mut ctx = EvaluationContext::default();
         ctx.resource.attributes.insert("priority".to_string(), AttributeValue::Int(5));
-        ctx.resource.attributes.insert("enabled".to_string(), AttributeValue::Bool(true));
+        ctx.resource
+            .attributes
+            .insert("enabled".to_string(), AttributeValue::Bool(true));
 
         interp.evaluate(&policy, &ctx).unwrap();
         assert_eq!(*interp.stack.peek().unwrap(), Value::Bool(true));

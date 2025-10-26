@@ -1,6 +1,6 @@
 use crate::bytecode::CompiledPolicy;
+use crate::interpreter::{FieldMapping, Interpreter};
 use crate::rar::ResourceTypeId;
-use crate::interpreter::{Interpreter, FieldMapping};
 use std::collections::HashMap;
 
 /// Policy database with indexing capabilities
@@ -45,21 +45,13 @@ impl PolicyDB {
                 .push(policy_idx);
         }
 
-        self.policies.push(StoredPolicy {
-            name,
-            policy,
-            field_map,
-            resource_types,
-        });
+        self.policies.push(StoredPolicy { name, policy, field_map, resource_types });
     }
 
     /// Get policies matching a specific resource type
     pub fn get_policies_for_resource(&self, resource_type: ResourceTypeId) -> Vec<&StoredPolicy> {
         if let Some(indices) = self.index_by_resource_type.get(&resource_type) {
-            indices
-                .iter()
-                .filter_map(|idx| self.policies.get(*idx))
-                .collect()
+            indices.iter().filter_map(|idx| self.policies.get(*idx)).collect()
         } else {
             Vec::new()
         }
@@ -147,12 +139,7 @@ mod tests {
         let field_map = FieldMapping::new();
 
         // Policy 1 applies to resource type 1
-        db.add_policy(
-            "policy1".to_string(),
-            policy1,
-            field_map.clone(),
-            vec![ResourceTypeId(1)],
-        );
+        db.add_policy("policy1".to_string(), policy1, field_map.clone(), vec![ResourceTypeId(1)]);
 
         // Policy 2 applies to resource types 1 and 2
         db.add_policy(
@@ -188,19 +175,9 @@ mod tests {
 
         let field_map = FieldMapping::new();
 
-        db.add_policy(
-            "policy1".to_string(),
-            policy1,
-            field_map.clone(),
-            vec![ResourceTypeId(1)],
-        );
+        db.add_policy("policy1".to_string(), policy1, field_map.clone(), vec![ResourceTypeId(1)]);
 
-        db.add_policy(
-            "policy2".to_string(),
-            policy2,
-            field_map,
-            vec![ResourceTypeId(2)],
-        );
+        db.add_policy("policy2".to_string(), policy2, field_map, vec![ResourceTypeId(2)]);
 
         let all_policies = db.get_all_policies();
         assert_eq!(all_policies.len(), 2);

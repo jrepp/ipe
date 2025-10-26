@@ -1,6 +1,6 @@
 //! Visitor pattern for traversing AST
 
-use super::nodes::{Policy, Condition, Expression, Requirements, Path, Value};
+use super::nodes::{Condition, Expression, Path, Policy, Requirements, Value};
 
 /// Visitor trait for AST traversal
 pub trait Visitor: Sized {
@@ -49,10 +49,7 @@ pub fn walk_policy<V: Visitor>(visitor: &mut V, policy: &Policy) {
 /// Walk requirements
 pub fn walk_requirements<V: Visitor>(visitor: &mut V, requirements: &Requirements) {
     match requirements {
-        Requirements::Requires {
-            conditions,
-            where_clause,
-        } => {
+        Requirements::Requires { conditions, where_clause } => {
             for cond in conditions {
                 visitor.visit_condition(cond);
             }
@@ -61,10 +58,10 @@ pub fn walk_requirements<V: Visitor>(visitor: &mut V, requirements: &Requirement
                     visitor.visit_condition(cond);
                 }
             }
-        }
+        },
         Requirements::Denies { .. } => {
             // No sub-nodes to visit
-        }
+        },
     }
 }
 
@@ -78,39 +75,39 @@ pub fn walk_expression<V: Visitor>(visitor: &mut V, expr: &Expression) {
     match expr {
         Expression::Literal(value) => {
             visitor.visit_value(value);
-        }
+        },
 
         Expression::Path(path) => {
             visitor.visit_path(path);
-        }
+        },
 
         Expression::Binary { left, right, .. } => {
             visitor.visit_expression(left);
             visitor.visit_expression(right);
-        }
+        },
 
         Expression::Logical { operands, .. } => {
             for operand in operands {
                 visitor.visit_expression(operand);
             }
-        }
+        },
 
         Expression::In { expr, list } => {
             visitor.visit_expression(expr);
             for value in list {
                 visitor.visit_value(value);
             }
-        }
+        },
 
         Expression::Aggregate { condition, .. } => {
             visitor.visit_condition(condition);
-        }
+        },
 
         Expression::Call { args, .. } => {
             for arg in args {
                 visitor.visit_expression(arg);
             }
-        }
+        },
     }
 }
 
@@ -266,10 +263,7 @@ mod tests {
 
         let trigger2 = Condition::new(Expression::in_list(
             Expression::path(vec!["environment".to_string()]),
-            vec![
-                Value::String("prod".to_string()),
-                Value::String("staging".to_string()),
-            ],
+            vec![Value::String("prod".to_string()), Value::String("staging".to_string())],
         ));
 
         let requirement = Condition::new(Expression::binary(

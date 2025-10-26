@@ -17,24 +17,15 @@ use std::time::Duration;
 fn create_sample_context() -> EvaluationContext {
     let mut resource_attrs = HashMap::new();
     resource_attrs.insert("type".to_string(), Value::String("Deployment".to_string()));
-    resource_attrs.insert(
-        "environment".to_string(),
-        Value::String("production".to_string()),
-    );
+    resource_attrs.insert("environment".to_string(), Value::String("production".to_string()));
     resource_attrs.insert("risk_level".to_string(), Value::String("high".to_string()));
 
     let mut principal_attrs = HashMap::new();
     principal_attrs.insert("role".to_string(), Value::String("developer".to_string()));
-    principal_attrs.insert(
-        "department".to_string(),
-        Value::String("engineering".to_string()),
-    );
+    principal_attrs.insert("department".to_string(), Value::String("engineering".to_string()));
 
     EvaluationContext {
-        resource: Resource {
-            type_id: 1,
-            attributes: resource_attrs,
-        },
+        resource: Resource { type_id: 1, attributes: resource_attrs },
         action: Action {
             operation: "Deploy".to_string(),
             target: "production/us-east-1".to_string(),
@@ -60,9 +51,7 @@ fn create_sample_policy() -> CompiledPolicy {
         code: vec![
             Instruction::LoadField { offset: 0 },
             Instruction::LoadConst { idx: 0 },
-            Instruction::Compare {
-                op: ipe_core::bytecode::CompOp::Eq,
-            },
+            Instruction::Compare { op: ipe_core::bytecode::CompOp::Eq },
             Instruction::Return { value: true },
         ],
         constants: vec![Value::String("Deployment".to_string())],

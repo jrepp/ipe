@@ -1,12 +1,12 @@
 use crate::bytecode::CompiledPolicy;
-use crate::rar::EvaluationContext;
-use crate::{Decision, Result};
 #[cfg(feature = "jit")]
 use crate::jit::{JitCode, JitCompiler};
+use crate::rar::EvaluationContext;
+use crate::{Decision, Result};
+use parking_lot::RwLock;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use parking_lot::RwLock;
 
 /// Execution tier for a policy
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -43,12 +43,12 @@ impl ProfileStats {
             current_tier: RwLock::new(ExecutionTier::Interpreter),
         }
     }
-    
+
     pub fn record_evaluation(&self, latency: Duration) {
         self.eval_count.fetch_add(1, Ordering::Relaxed);
         self.total_latency_ns.fetch_add(latency.as_nanos() as u64, Ordering::Relaxed);
     }
-    
+
     pub fn avg_latency_ns(&self) -> u64 {
         let count = self.eval_count.load(Ordering::Relaxed);
         if count == 0 {
@@ -56,34 +56,34 @@ impl ProfileStats {
         }
         self.total_latency_ns.load(Ordering::Relaxed) / count
     }
-    
+
     pub fn should_promote(&self) -> bool {
         let count = self.eval_count.load(Ordering::Relaxed);
         let avg_latency = self.avg_latency_ns();
         let tier = *self.current_tier.read();
         let time_since_promotion = self.last_promoted.read().elapsed();
-        
+
         // Require some cooldown between promotions
         if time_since_promotion < Duration::from_secs(10) {
             return false;
         }
-        
+
         match tier {
             ExecutionTier::Interpreter => {
                 // Promote to baseline JIT after 100 evaluations
                 count >= 100
-            }
+            },
             ExecutionTier::BaselineJIT => {
                 // Promote to optimized JIT after 10k evals AND avg latency > 20μs
                 count >= 10_000 && avg_latency > 20_000
-            }
+            },
             ExecutionTier::OptimizedJIT | ExecutionTier::NativeAOT => {
                 // Already at top tier
                 false
-            }
+            },
         }
     }
-    
+
     pub fn promote(&self) -> ExecutionTier {
         let mut tier = self.current_tier.write();
         *tier = match *tier {
@@ -106,14 +106,14 @@ impl Default for ProfileStats {
 pub struct TieredPolicy {
     /// Policy bytecode (always available)
     pub bytecode: Arc<CompiledPolicy>,
-    
+
     /// JIT-compiled native code (optional)
     #[cfg(feature = "jit")]
     pub jit_code: RwLock<Option<Arc<JitCode>>>,
-    
+
     /// Profiling statistics
     pub stats: ProfileStats,
-    
+
     /// Policy name (for JIT compilation)
     pub name: String,
 }
@@ -128,11 +128,11 @@ impl TieredPolicy {
             name,
         }
     }
-    
+
     /// Evaluate the policy, using JIT code if available
     pub fn evaluate(&self, ctx: &EvaluationContext) -> Result<Decision> {
         let start = Instant::now();
-        
+
         // Try JIT path first
         #[cfg(feature = "jit")]
         {
@@ -143,12 +143,12 @@ impl TieredPolicy {
                 return Ok(Decision::from_bool(result));
             }
         }
-        
+
         // Fallback to interpreter
         let result = self.interpret(ctx)?;
         let latency = start.elapsed();
         self.stats.record_evaluation(latency);
-        
+
         // Check if we should promote to JIT
         #[cfg(feature = "jit")]
         {
@@ -157,10 +157,10 @@ impl TieredPolicy {
                 self.trigger_jit_compilation();
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// Interpret the bytecode (slow path)
     fn interpret(&self, _ctx: &EvaluationContext) -> Result<Decision> {
         // TODO: Implement interpreter
@@ -171,35 +171,35 @@ impl TieredPolicy {
             matched_policies: vec![],
         })
     }
-    
+
     /// Trigger JIT compilation in background
     #[cfg(feature = "jit")]
     fn trigger_jit_compilation(&self) {
         use std::thread;
-        
+
         let bytecode = Arc::clone(&self.bytecode);
         let jit_code = self.jit_code.clone();
         let name = self.name.clone();
         let stats = self.stats.clone();
-        
+
         thread::spawn(move || {
             let mut compiler = match JitCompiler::new() {
                 Ok(c) => c,
                 Err(e) => {
                     tracing::error!("Failed to create JIT compiler: {}", e);
                     return;
-                }
+                },
             };
-            
+
             match compiler.compile(&bytecode, &name) {
                 Ok(compiled) => {
                     *jit_code.write() = Some(compiled);
                     stats.promote();
                     tracing::info!("JIT compiled policy: {}", name);
-                }
+                },
                 Err(e) => {
                     tracing::error!("JIT compilation failed for {}: {}", name, e);
-                }
+                },
             }
         });
     }
@@ -218,12 +218,12 @@ impl TieredPolicyManager {
             compiler: RwLock::new(JitCompiler::new()?),
         })
     }
-    
+
     /// Create a tiered policy from bytecode
     pub fn create_policy(&self, bytecode: CompiledPolicy, name: String) -> TieredPolicy {
         TieredPolicy::new(bytecode, name)
     }
-    
+
     /// Synchronously compile a policy to JIT (for critical policies)
     #[cfg(feature = "jit")]
     pub fn compile_sync(&self, policy: &TieredPolicy) -> Result<()> {
@@ -232,7 +232,7 @@ impl TieredPolicyManager {
         *policy.stats.current_tier.write() = ExecutionTier::BaselineJIT;
         Ok(())
     }
-    
+
     /// Get statistics for all policies
     pub fn get_stats(&self) -> Vec<PolicyStats> {
         // TODO: Track all policies and return their stats
@@ -258,28 +258,28 @@ pub struct PolicyStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_promotion_thresholds() {
         let stats = ProfileStats::new();
-        
+
         // Should not promote immediately
         assert!(!stats.should_promote());
-        
+
         // Simulate 100 evaluations
         for _ in 0..100 {
             stats.record_evaluation(Duration::from_micros(50));
         }
-        
+
         // Wait for cooldown
         std::thread::sleep(Duration::from_millis(11000));
-        
+
         // Should promote to baseline JIT
         assert!(stats.should_promote());
         stats.promote();
         assert_eq!(*stats.current_tier.read(), ExecutionTier::BaselineJIT);
     }
-    
+
     #[test]
     fn test_avg_latency_calculation() {
         let stats = ProfileStats::new();
@@ -424,8 +424,8 @@ mod tests {
 
     #[test]
     fn test_tiered_policy_evaluate() {
-        use crate::testing::simple_policy;
         use crate::rar::{EvaluationContext, ResourceTypeId};
+        use crate::testing::simple_policy;
 
         let bytecode = simple_policy(1, true);
         let policy = TieredPolicy::new(bytecode, "TestPolicy".to_string());

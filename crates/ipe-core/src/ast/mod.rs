@@ -7,8 +7,8 @@ pub mod types;
 pub mod visitor;
 
 pub use nodes::{
-    Policy, Condition, Expression, Requirements, Metadata, Path, Value, BinaryOp, LogicalOp,
-    ComparisonOp, AggregateFunc,
+    AggregateFunc, BinaryOp, ComparisonOp, Condition, Expression, LogicalOp, Metadata, Path,
+    Policy, Requirements, Value,
 };
 pub use types::{Type, TypeChecker};
-pub use visitor::{Visitor, walk_policy};
+pub use visitor::{walk_policy, Visitor};

@@ -5,31 +5,31 @@ use serde::{Deserialize, Serialize};
 pub enum Instruction {
     /// Load a field from the evaluation context
     LoadField { offset: u16 },
-    
+
     /// Load a constant from the constant pool
     LoadConst { idx: u16 },
-    
+
     /// Compare two values on the stack
     Compare { op: CompOp },
-    
+
     /// Unconditional jump
     Jump { offset: i16 },
-    
+
     /// Jump if top of stack is false
     JumpIfFalse { offset: i16 },
-    
+
     /// Call a built-in function
     Call { func: u8, argc: u8 },
-    
+
     /// Return from policy evaluation
     Return { value: bool },
-    
+
     /// Logical AND of two boolean values
     And,
-    
+
     /// Logical OR of two boolean values
     Or,
-    
+
     /// Logical NOT of a boolean value
     Not,
 }
@@ -37,12 +37,12 @@ pub enum Instruction {
 /// Comparison operators
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CompOp {
-    Eq,   // ==
-    Neq,  // !=
-    Lt,   // <
-    Lte,  // <=
-    Gt,   // >
-    Gte,  // >=
+    Eq,  // ==
+    Neq, // !=
+    Lt,  // <
+    Lte, // <=
+    Gt,  // >
+    Gte, // >=
 }
 
 /// Runtime values
@@ -86,7 +86,9 @@ impl Value {
     pub fn compare(&self, other: &Value, op: CompOp) -> Result<bool, String> {
         match (self, other) {
             (Value::Int(a), Value::Int(b)) => Ok(Self::compare_int(*a, *b, op)),
-            (Value::String(a), Value::String(b)) => Ok(Self::compare_ordered(a.as_str(), b.as_str(), op)),
+            (Value::String(a), Value::String(b)) => {
+                Ok(Self::compare_ordered(a.as_str(), b.as_str(), op))
+            },
             (Value::Bool(a), Value::Bool(b)) => Ok(Self::compare_bools(*a, *b, op)),
             _ => Err(format!("Cannot compare {:?} with {:?}", self, other)),
         }
@@ -134,7 +136,7 @@ impl Value {
 #[repr(C)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolicyHeader {
-    pub magic: [u8; 4],      // "IPE\0"
+    pub magic: [u8; 4], // "IPE\0"
     pub version: u32,
     pub policy_id: u64,
     pub code_size: u32,
@@ -164,13 +166,13 @@ impl CompiledPolicy {
             constants: Vec::new(),
         }
     }
-    
+
     /// Add an instruction to the bytecode
     pub fn emit(&mut self, instr: Instruction) {
         self.code.push(instr);
         self.header.code_size += 1;
     }
-    
+
     /// Add a constant to the constant pool
     pub fn add_constant(&mut self, value: Value) -> u16 {
         let idx = self.constants.len() as u16;
@@ -178,26 +180,30 @@ impl CompiledPolicy {
         self.header.const_size += 1;
         idx
     }
-    
+
     /// Serialize to bytes (for storage)
     pub fn to_bytes(&self) -> bincode::Result<Vec<u8>> {
         bincode::serialize(self)
     }
-    
+
     /// Deserialize from bytes
     pub fn from_bytes(bytes: &[u8]) -> bincode::Result<Self> {
         bincode::deserialize(bytes)
     }
-    
+
     /// Get the size in bytes
     pub fn size_bytes(&self) -> usize {
         std::mem::size_of::<PolicyHeader>()
             + self.code.len() * std::mem::size_of::<Instruction>()
-            + self.constants.iter().map(|v| match v {
-                Value::Int(_) => 8,
-                Value::Bool(_) => 1,
-                Value::String(s) => s.len(),
-            }).sum::<usize>()
+            + self
+                .constants
+                .iter()
+                .map(|v| match v {
+                    Value::Int(_) => 8,
+                    Value::Bool(_) => 1,
+                    Value::String(s) => s.len(),
+                })
+                .sum::<usize>()
     }
 }
 

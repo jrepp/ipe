@@ -18,12 +18,7 @@ pub struct Token {
 impl Token {
     /// Create a new token
     pub fn new(kind: TokenKind, text: String, line: usize, column: usize) -> Self {
-        Self {
-            kind,
-            text,
-            line,
-            column,
-        }
+        Self { kind, text, line, column }
     }
 }
 
@@ -46,12 +41,12 @@ pub enum TokenKind {
     In,
 
     // Comparison operators
-    Eq,       // ==
-    Neq,      // !=
-    Lt,       // <
-    Gt,       // >
-    LtEq,     // <=
-    GtEq,     // >=
+    Eq,   // ==
+    Neq,  // !=
+    Lt,   // <
+    Gt,   // >
+    LtEq, // <=
+    GtEq, // >=
 
     // Literals
     StringLit(String),
@@ -63,15 +58,15 @@ pub enum TokenKind {
     Ident(String),
 
     // Punctuation
-    Colon,       // :
-    Comma,       // ,
-    Dot,         // .
-    LParen,      // (
-    RParen,      // )
-    LBracket,    // [
-    RBracket,    // ]
-    LBrace,      // {
-    RBrace,      // }
+    Colon,    // :
+    Comma,    // ,
+    Dot,      // .
+    LParen,   // (
+    RParen,   // )
+    LBracket, // [
+    RBracket, // ]
+    LBrace,   // {
+    RBrace,   // }
 
     // Special
     Newline,
@@ -253,10 +248,7 @@ mod tests {
 
     #[test]
     fn test_token_kind_display_literals() {
-        assert_eq!(
-            TokenKind::StringLit("hello".to_string()).to_string(),
-            "\"hello\""
-        );
+        assert_eq!(TokenKind::StringLit("hello".to_string()).to_string(), "\"hello\"");
         assert_eq!(TokenKind::IntLit(42).to_string(), "42");
         assert_eq!(TokenKind::IntLit(-100).to_string(), "-100");
         assert_eq!(TokenKind::FloatLit(3.14).to_string(), "3.14");
@@ -267,14 +259,8 @@ mod tests {
 
     #[test]
     fn test_token_kind_display_identifiers() {
-        assert_eq!(
-            TokenKind::Ident("foo".to_string()).to_string(),
-            "foo"
-        );
-        assert_eq!(
-            TokenKind::Ident("myVariable".to_string()).to_string(),
-            "myVariable"
-        );
+        assert_eq!(TokenKind::Ident("foo".to_string()).to_string(), "foo");
+        assert_eq!(TokenKind::Ident("myVariable".to_string()).to_string(), "myVariable");
     }
 
     #[test]

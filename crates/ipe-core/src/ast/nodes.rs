@@ -54,10 +54,7 @@ impl Policy {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Requirements {
     /// Allow if conditions are met
-    Requires {
-        conditions: Vec<Condition>,
-        where_clause: Option<Vec<Condition>>,
-    },
+    Requires { conditions: Vec<Condition>, where_clause: Option<Vec<Condition>> },
     /// Deny with optional reason
     Denies { reason: Option<String> },
 }
@@ -65,10 +62,7 @@ pub enum Requirements {
 impl Requirements {
     /// Create a requires clause
     pub fn requires(conditions: Vec<Condition>) -> Self {
-        Self::Requires {
-            conditions,
-            where_clause: None,
-        }
+        Self::Requires { conditions, where_clause: None }
     }
 
     /// Create a requires clause with where
@@ -120,36 +114,19 @@ pub enum Expression {
     Path(Path),
 
     /// Binary operation (e.g., x == y)
-    Binary {
-        left: Box<Expression>,
-        op: BinaryOp,
-        right: Box<Expression>,
-    },
+    Binary { left: Box<Expression>, op: BinaryOp, right: Box<Expression> },
 
     /// Logical operation (and, or, not)
-    Logical {
-        op: LogicalOp,
-        operands: Vec<Expression>,
-    },
+    Logical { op: LogicalOp, operands: Vec<Expression> },
 
     /// Membership test (x in [a, b, c])
-    In {
-        expr: Box<Expression>,
-        list: Vec<Value>,
-    },
+    In { expr: Box<Expression>, list: Vec<Value> },
 
     /// Aggregate function (count, any, all, etc.)
-    Aggregate {
-        path: Path,
-        func: AggregateFunc,
-        condition: Box<Condition>,
-    },
+    Aggregate { path: Path, func: AggregateFunc, condition: Box<Condition> },
 
     /// Function call
-    Call {
-        name: String,
-        args: Vec<Expression>,
-    },
+    Call { name: String, args: Vec<Expression> },
 }
 
 impl Expression {
@@ -174,18 +151,12 @@ impl Expression {
 
     /// Create a logical AND
     pub fn and(operands: Vec<Expression>) -> Self {
-        Self::Logical {
-            op: LogicalOp::And,
-            operands,
-        }
+        Self::Logical { op: LogicalOp::And, operands }
     }
 
     /// Create a logical OR
     pub fn or(operands: Vec<Expression>) -> Self {
-        Self::Logical {
-            op: LogicalOp::Or,
-            operands,
-        }
+        Self::Logical { op: LogicalOp::Or, operands }
     }
 
     /// Create a NOT expression
@@ -198,10 +169,7 @@ impl Expression {
 
     /// Create an IN expression
     pub fn in_list(expr: Expression, list: Vec<Value>) -> Self {
-        Self::In {
-            expr: Box::new(expr),
-            list,
-        }
+        Self::In { expr: Box::new(expr), list }
     }
 }
 
@@ -219,9 +187,7 @@ impl Path {
 
     /// Create a simple path with one segment
     pub fn simple(segment: String) -> Self {
-        Self {
-            segments: vec![segment],
-        }
+        Self { segments: vec![segment] }
     }
 
     /// Get the first segment
@@ -368,10 +334,7 @@ impl Metadata {
 
     /// Get a field value
     pub fn get(&self, key: &str) -> Option<&Value> {
-        self.fields
-            .iter()
-            .find(|(k, _)| k == key)
-            .map(|(_, v)| v)
+        self.fields.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 }
 
@@ -391,22 +354,14 @@ pub struct SourceLocation {
 
 impl Default for SourceLocation {
     fn default() -> Self {
-        Self {
-            line: 0,
-            column: 0,
-            length: 0,
-        }
+        Self { line: 0, column: 0, length: 0 }
     }
 }
 
 impl SourceLocation {
     /// Create a new source location
     pub fn new(line: usize, column: usize, length: usize) -> Self {
-        Self {
-            line,
-            column,
-            length,
-        }
+        Self { line, column, length }
     }
 }
 
@@ -431,8 +386,8 @@ mod tests {
 
     #[test]
     fn test_policy_with_metadata() {
-        let metadata = Metadata::new()
-            .add_field("severity".to_string(), Value::String("high".to_string()));
+        let metadata =
+            Metadata::new().add_field("severity".to_string(), Value::String("high".to_string()));
 
         let policy = Policy::new(
             "Test".to_string(),
@@ -480,7 +435,7 @@ mod tests {
                 assert_eq!(path.segments.len(), 2);
                 assert_eq!(path.segments[0], "resource");
                 assert_eq!(path.segments[1], "type");
-            }
+            },
             _ => panic!("Expected path expression"),
         }
     }
@@ -489,14 +444,15 @@ mod tests {
     fn test_expression_binary() {
         let left = Expression::literal(Value::Int(1));
         let right = Expression::literal(Value::Int(2));
-        let expr = Expression::binary(left.clone(), BinaryOp::Comparison(ComparisonOp::Lt), right.clone());
+        let expr =
+            Expression::binary(left.clone(), BinaryOp::Comparison(ComparisonOp::Lt), right.clone());
 
         match expr {
             Expression::Binary { left: l, op, right: r } => {
                 assert_eq!(*l, left);
                 assert_eq!(*r, right);
                 assert_eq!(op, BinaryOp::Comparison(ComparisonOp::Lt));
-            }
+            },
             _ => panic!("Expected binary expression"),
         }
     }
@@ -511,7 +467,7 @@ mod tests {
             Expression::Logical { op, operands } => {
                 assert_eq!(op, LogicalOp::And);
                 assert_eq!(operands.len(), 2);
-            }
+            },
             _ => panic!("Expected logical expression"),
         }
     }
@@ -537,7 +493,7 @@ mod tests {
             Expression::Logical { op, operands } => {
                 assert_eq!(op, LogicalOp::Not);
                 assert_eq!(operands.len(), 1);
-            }
+            },
             _ => panic!("Expected logical NOT"),
         }
     }
@@ -545,17 +501,14 @@ mod tests {
     #[test]
     fn test_expression_in() {
         let expr = Expression::path(vec!["env".to_string()]);
-        let values = vec![
-            Value::String("prod".to_string()),
-            Value::String("staging".to_string()),
-        ];
+        let values = vec![Value::String("prod".to_string()), Value::String("staging".to_string())];
         let in_expr = Expression::in_list(expr.clone(), values.clone());
 
         match in_expr {
             Expression::In { expr: e, list } => {
                 assert_eq!(*e, expr);
                 assert_eq!(list, values);
-            }
+            },
             _ => panic!("Expected IN expression"),
         }
     }
@@ -635,14 +588,8 @@ mod tests {
             .add_field("severity".to_string(), Value::String("high".to_string()))
             .add_field("owner".to_string(), Value::String("security-team".to_string()));
 
-        assert_eq!(
-            metadata.get("severity"),
-            Some(&Value::String("high".to_string()))
-        );
-        assert_eq!(
-            metadata.get("owner"),
-            Some(&Value::String("security-team".to_string()))
-        );
+        assert_eq!(metadata.get("severity"), Some(&Value::String("high".to_string())));
+        assert_eq!(metadata.get("owner"), Some(&Value::String("security-team".to_string())));
         assert_eq!(metadata.get("nonexistent"), None);
     }
 
@@ -665,10 +612,7 @@ mod tests {
 
         let trigger2 = Condition::new(Expression::in_list(
             Expression::path(vec!["environment".to_string()]),
-            vec![
-                Value::String("prod".to_string()),
-                Value::String("staging".to_string()),
-            ],
+            vec![Value::String("prod".to_string()), Value::String("staging".to_string())],
         ));
 
         let requirement = Condition::new(Expression::binary(
@@ -698,7 +642,7 @@ mod tests {
         match requirements {
             Requirements::Denies { reason } => {
                 assert_eq!(reason, Some("Access denied".to_string()));
-            }
+            },
             _ => panic!("Expected denies"),
         }
     }
@@ -711,13 +655,10 @@ mod tests {
         let requirements = Requirements::requires_where(conditions.clone(), where_clause.clone());
 
         match requirements {
-            Requirements::Requires {
-                conditions: c,
-                where_clause: Some(w),
-            } => {
+            Requirements::Requires { conditions: c, where_clause: Some(w) } => {
                 assert_eq!(c.len(), 1);
                 assert_eq!(w.len(), 1);
-            }
+            },
             _ => panic!("Expected requires with where"),
         }
     }
