@@ -20,6 +20,8 @@ bincode = { workspace = true }
 chrono = { workspace = true }
 tracing = { workspace = true }
 crossbeam-channel = { workspace = true }
+# Fix minimal versions check - ahash 0.8.4 has a bug with stdsimd feature
+ahash = ">=0.8.6"
 
 # JIT compilation (optional feature)
 cranelift = { workspace = true, optional = true }
