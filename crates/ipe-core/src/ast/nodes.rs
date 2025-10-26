@@ -550,7 +550,7 @@ mod tests {
     fn test_value_type_name() {
         assert_eq!(Value::String("test".to_string()).type_name(), "String");
         assert_eq!(Value::Int(42).type_name(), "Int");
-        assert_eq!(Value::Float(3.14).type_name(), "Float");
+        assert_eq!(Value::Float(3.15).type_name(), "Float");
         assert_eq!(Value::Bool(true).type_name(), "Bool");
         assert_eq!(Value::Array(vec![]).type_name(), "Array");
     }

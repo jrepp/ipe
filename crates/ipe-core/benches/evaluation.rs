@@ -6,9 +6,9 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ipe_core::{
-    bytecode::{CompiledPolicy, Instruction, Value},
-    engine::{Decision, PolicyEngine},
-    rar::{Action, EvaluationContext, Principal, Request, Resource},
+    bytecode::{CompiledPolicy, Instruction, PolicyHeader, Value},
+    engine::Decision,
+    rar::{Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource},
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -16,18 +16,18 @@ use std::time::Duration;
 /// Create a sample RAR context for testing
 fn create_sample_context() -> EvaluationContext {
     let mut resource_attrs = HashMap::new();
-    resource_attrs.insert("type".to_string(), Value::String("Deployment".to_string()));
-    resource_attrs.insert("environment".to_string(), Value::String("production".to_string()));
-    resource_attrs.insert("risk_level".to_string(), Value::String("high".to_string()));
+    resource_attrs.insert("type".to_string(), AttributeValue::String("Deployment".to_string()));
+    resource_attrs.insert("environment".to_string(), AttributeValue::String("production".to_string()));
+    resource_attrs.insert("risk_level".to_string(), AttributeValue::String("high".to_string()));
 
     let mut principal_attrs = HashMap::new();
-    principal_attrs.insert("role".to_string(), Value::String("developer".to_string()));
-    principal_attrs.insert("department".to_string(), Value::String("engineering".to_string()));
+    principal_attrs.insert("role".to_string(), AttributeValue::String("developer".to_string()));
+    principal_attrs.insert("department".to_string(), AttributeValue::String("engineering".to_string()));
 
     EvaluationContext {
-        resource: Resource { type_id: 1, attributes: resource_attrs },
+        resource: Resource { type_id: ipe_core::rar::ResourceTypeId(1), attributes: resource_attrs },
         action: Action {
-            operation: "Deploy".to_string(),
+            operation: Operation::Deploy,
             target: "production/us-east-1".to_string(),
         },
         request: Request {
@@ -36,25 +36,33 @@ fn create_sample_context() -> EvaluationContext {
                 roles: vec!["developer".to_string(), "senior-engineer".to_string()],
                 attributes: principal_attrs,
             },
-            timestamp: chrono::Utc::now(),
+            timestamp: chrono::Utc::now().timestamp(),
             source_ip: Some("10.0.1.42".parse().unwrap()),
             metadata: HashMap::new(),
         },
-        history: None,
     }
 }
 
 /// Create a simple compiled policy for benchmarking
 fn create_sample_policy() -> CompiledPolicy {
+    let code = vec![
+        Instruction::LoadField { offset: 0 },
+        Instruction::LoadConst { idx: 0 },
+        Instruction::Compare { op: ipe_core::bytecode::CompOp::Eq },
+        Instruction::Return { value: true },
+    ];
+    let constants = vec![Value::String("Deployment".to_string())];
+
     CompiledPolicy {
-        name: "TestPolicy".to_string(),
-        code: vec![
-            Instruction::LoadField { offset: 0 },
-            Instruction::LoadConst { idx: 0 },
-            Instruction::Compare { op: ipe_core::bytecode::CompOp::Eq },
-            Instruction::Return { value: true },
-        ],
-        constants: vec![Value::String("Deployment".to_string())],
+        header: PolicyHeader {
+            magic: *b"IPE\0",
+            version: 1,
+            policy_id: 1,
+            code_size: code.len() as u32,
+            const_size: constants.len() as u32,
+        },
+        code,
+        constants,
     }
 }
 
@@ -69,7 +77,7 @@ fn bench_single_policy_interpreter(c: &mut Criterion) {
             // Note: This is a placeholder - actual implementation needed
             black_box(&policy);
             black_box(&context);
-            Decision::Allow
+            Decision::allow()
         })
     });
 }
@@ -86,7 +94,7 @@ fn bench_single_policy_jit(c: &mut Criterion) {
             // Note: This is a placeholder - actual implementation needed
             black_box(&policy);
             black_box(&context);
-            Decision::Allow
+            Decision::allow()
         })
     });
 }

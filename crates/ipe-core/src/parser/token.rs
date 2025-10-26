@@ -199,7 +199,7 @@ mod tests {
     fn test_token_kind_is_literal() {
         assert!(TokenKind::StringLit("test".to_string()).is_literal());
         assert!(TokenKind::IntLit(42).is_literal());
-        assert!(TokenKind::FloatLit(3.14).is_literal());
+        assert!(TokenKind::FloatLit(3.15).is_literal());
         assert!(TokenKind::BoolLit(true).is_literal());
         assert!(!TokenKind::Ident("foo".to_string()).is_literal());
     }
@@ -251,7 +251,7 @@ mod tests {
         assert_eq!(TokenKind::StringLit("hello".to_string()).to_string(), "\"hello\"");
         assert_eq!(TokenKind::IntLit(42).to_string(), "42");
         assert_eq!(TokenKind::IntLit(-100).to_string(), "-100");
-        assert_eq!(TokenKind::FloatLit(3.14).to_string(), "3.14");
+        assert_eq!(TokenKind::FloatLit(3.15).to_string(), "3.15");
         assert_eq!(TokenKind::FloatLit(-2.5).to_string(), "-2.5");
         assert_eq!(TokenKind::BoolLit(true).to_string(), "true");
         assert_eq!(TokenKind::BoolLit(false).to_string(), "false");
