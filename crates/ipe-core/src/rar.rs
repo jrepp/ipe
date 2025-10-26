@@ -2,21 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Complete evaluation context for a policy decision
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EvaluationContext {
     pub resource: Resource,
     pub action: Action,
     pub request: Request,
-}
-
-impl Default for EvaluationContext {
-    fn default() -> Self {
-        Self {
-            resource: Resource::default(),
-            action: Action::default(),
-            request: Request::default(),
-        }
-    }
 }
 
 /// Resource being accessed
@@ -88,21 +78,11 @@ impl Default for Request {
 }
 
 /// Principal (user/service) making the request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Principal {
     pub id: String,
     pub roles: Vec<String>,
     pub attributes: HashMap<String, AttributeValue>,
-}
-
-impl Default for Principal {
-    fn default() -> Self {
-        Self {
-            id: String::new(),
-            roles: Vec::new(),
-            attributes: HashMap::new(),
-        }
-    }
 }
 
 /// Attribute values (typed)
