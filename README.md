@@ -2,6 +2,9 @@
 
 **A high-performance, AI-native policy engine built in Rust**
 
+[![Tests](https://img.shields.io/badge/tests-248%20passing-success)](https://github.com/jrepp/ipe)
+[![Coverage](https://img.shields.io/badge/coverage-93.67%25-success)](https://github.com/jrepp/ipe)
+[![Build](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=master)](https://github.com/jrepp/ipe/actions)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 
 ## What is IPE?
@@ -26,6 +29,43 @@ IPE (Intent Policy Engine) is a policy evaluation engine that compiles human-rea
 ---
 
 ## Architecture
+
+```mermaid
+graph TB
+    subgraph "Policy Pipeline"
+        Source[Policy Source] --> Parser
+        Parser --> AST[Abstract Syntax Tree]
+        AST --> Compiler
+        Compiler --> Bytecode
+    end
+
+    subgraph "Execution Tiers"
+        Bytecode --> Interpreter[Interpreter<br/>Baseline]
+        Bytecode --> BaselineJIT[Baseline JIT<br/>100+ evals]
+        Bytecode --> OptimizedJIT[Optimized JIT<br/>10k+ evals]
+    end
+
+    subgraph "Data Store"
+        Store[PolicyDataStore<br/>Lock-Free Reads] -.Arc Clone.-> Snapshot[PolicySnapshot<br/>Immutable]
+        Snapshot --> Index[Resource Index]
+    end
+
+    subgraph "Evaluation"
+        Engine[PolicyEngine]
+        Context[EvaluationContext<br/>Resource/Action/Request]
+        Interpreter --> Engine
+        BaselineJIT --> Engine
+        OptimizedJIT --> Engine
+        Index --> Engine
+        Context --> Engine
+        Engine --> Decision[Decision<br/>Allow/Deny]
+    end
+
+    style Source fill:#e1f5ff
+    style Bytecode fill:#fff4e1
+    style Store fill:#f0f0f0
+    style Decision fill:#e8f5e9
+```
 
 IPE uses a multi-tier execution model:
 
