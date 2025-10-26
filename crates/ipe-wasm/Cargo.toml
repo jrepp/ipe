@@ -1,0 +1,10 @@
+[package]
+name = "ipe-wasm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+wasm-bindgen = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
