@@ -14,3 +14,13 @@ Cargo.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary development files
+COPY_COMMANDS.txt
+EXTRACT_FILES.sh
+FILES_AS_TEXT.txt
+GITHUB_INSTRUCTIONS.md
+PUSH_TO_GITHUB.sh
+STATUS.txt
+*.bak
+TDD_PROGRESS*.md
