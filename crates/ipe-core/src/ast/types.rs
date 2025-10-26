@@ -213,7 +213,7 @@ mod tests {
     fn test_type_from_value() {
         assert_eq!(Type::from_value(&Value::String("test".to_string())), Type::String);
         assert_eq!(Type::from_value(&Value::Int(42)), Type::Int);
-        assert_eq!(Type::from_value(&Value::Float(3.14)), Type::Float);
+        assert_eq!(Type::from_value(&Value::Float(3.15)), Type::Float);
         assert_eq!(Type::from_value(&Value::Bool(true)), Type::Bool);
     }
 

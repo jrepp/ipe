@@ -466,11 +466,11 @@ mod tests {
 
     #[test]
     fn test_float_literals() {
-        let input = "3.14 0.5 42.0 123.456";
+        let input = "3.15 0.5 42.0 123.456";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize();
 
-        assert_eq!(tokens[0].kind, TokenKind::FloatLit(3.14));
+        assert_eq!(tokens[0].kind, TokenKind::FloatLit(3.15));
         assert_eq!(tokens[1].kind, TokenKind::FloatLit(0.5));
         assert_eq!(tokens[2].kind, TokenKind::FloatLit(42.0));
         assert_eq!(tokens[3].kind, TokenKind::FloatLit(123.456));

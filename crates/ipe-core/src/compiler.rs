@@ -597,7 +597,7 @@ mod tests {
 
     #[test]
     fn test_error_unsupported_float() {
-        let condition = Condition::new(Expression::literal(Value::Float(3.14)));
+        let condition = Condition::new(Expression::literal(Value::Float(3.15)));
         let policy = create_simple_policy(Requirements::requires(vec![condition]));
 
         let compiler = PolicyCompiler::new(1);
