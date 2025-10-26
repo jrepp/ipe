@@ -50,6 +50,8 @@ region = "3.0"  # Memory protection for JIT pages
 tonic = { version = "0.10", features = ["transport"] }
 prost = "0.12"
 tonic-build = "0.10"
+# Fix minimal versions - tonic 0.10.0 requires async-stream >=0.3.5
+async-stream = ">=0.3.5"
 
 # WASM
 wasm-bindgen = "0.2"
