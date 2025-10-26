@@ -27,6 +27,8 @@ anyhow = "1.0"
 # Parser
 nom = "7.1"
 logos = "0.13"
+# Fix minimal versions - logos-codegen 0.13.0 requires regex-syntax >=0.6.26
+regex-syntax = ">=0.6.26"
 
 # Performance
 bumpalo = { version = "3.14", features = ["collections"] }
