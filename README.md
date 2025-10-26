@@ -4,73 +4,57 @@
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 
-## ELI5 for Developers
+## What is IPE?
 
-**What is IPE?**
-IPE is like an "if statement as a service" but ridiculously fast. Write rules in plain-ish English, compile them to bytecode, evaluate millions of decisions per second.
+IPE (Intent Policy Engine) is a policy evaluation engine that compiles human-readable policy rules into optimized bytecode. Policies define access control, workflow validation, and business logic that changes frequently.
 
-**Why would I use this?**
-You have rules like "prod deploys need 2 approvals" or "admin can delete if not Friday". Instead of hardcoding `if` statements everywhere, you write policies that non-engineers can read. Change the rules without redeploying your app.
+### Key Capabilities
 
-**How fast is it?**
-- Cold path: ~50μs per decision
-- Hot path (JIT): ~10μs per decision
-- 10,000 policies: ~100μs total (indexed lookups)
+- **Declarative Policy Language**: Write rules that describe intent, not imperative code
+- **Bytecode Compilation**: Policies compile to a compact bytecode representation
+- **Lock-Free Reads**: Atomic snapshots enable concurrent policy evaluation without blocking
+- **Zero-Downtime Updates**: Swap policy sets atomically while serving requests
+- **Embedded**: Small binary footprint for integration into existing systems
 
-**What's the trick?**
-1. Compile policies to bytecode (like JVM/CLR)
-2. Interpret bytecode (fast enough for most cases)
-3. JIT compile hot policies to native code (5-10x faster)
-4. Use atomic snapshots for zero-lock reads
+### Use Cases
 
-**Is it actually fast?**
-Yes. Lock-free reads, inline hints, unsafe optimizations (proven safe), pre-compiled policies, indexed lookups. Built for <50μs p99 latency at scale.
-
-**Can I embed it?**
-Yes. Rust lib, C FFI, Python, Node.js, WASM. <2MB binary.
-
-**TL;DR:** Express business rules as code, evaluate them in microseconds, update without downtime.
+- Access control: "production deployments require 2 senior engineer approvals"
+- Workflow validation: "tickets must have priority assigned before closing"
+- Rate limiting: "API calls limited to 1000/hour per tier"
+- Dynamic configuration: Change rules without redeploying services
 
 ---
 
-## Overview
+## Architecture
 
-Intent Policy Engine (IPE) is a declarative policy language and evaluation engine designed for DevOps/SecOps workflows. It combines human readability with extreme performance through:
+IPE uses a multi-tier execution model:
 
-- **Natural language intent** + structured logic
-- **Bytecode compilation** with runtime JIT optimization
-- **<50μs p99 latency** for 10k+ policies
-- **Zero-downtime updates** via atomic policy swapping
-- **AI-native** semantic layer for queries and generation
+1. **Parse**: Policy source → AST
+2. **Compile**: AST → Bytecode
+3. **Interpret**: Bytecode execution (baseline performance)
+4. **JIT** (optional): Hot policies compile to native code
+5. **Store**: Atomic snapshots for lock-free reads
 
-## Key Features
+## Features
 
-### 🚀 Performance
-- Bytecode interpretation: ~50μs per policy
-- JIT compilation (Cranelift): ~10μs per policy (5-10x faster)
-- Adaptive tiering: automatic optimization of hot policies
-- Zero-copy evaluation with arena allocation
+### Performance
+- Bytecode interpretation for fast baseline execution
+- Optional JIT compilation via Cranelift for hot paths
+- Adaptive tiering automatically optimizes frequently-evaluated policies
+- Lock-free reads using atomic snapshots
 - Memory-mapped policy storage
 
-### 📝 Developer Experience
-- Natural language intent as first-class documentation
-- Visual policy editor with real-time validation
-- SQL/Go-like syntax (no YAML indentation hell)
-- Git-friendly diffs
-- Comprehensive error messages
+### Developer Experience
+- Natural language intent strings for documentation
+- SQL/Go-like syntax for familiarity
+- Comprehensive error messages with source locations
+- Git-friendly text format
 
-### 🤖 AI Integration
-- Bidirectional translation (natural language ↔ policy code)
-- Semantic queries over policy corpus
-- Conflict detection and resolution
-- Policy effectiveness analytics
-
-### 🔧 Embeddable
-- Native libs (C FFI)
-- Python bindings (PyO3)
-- Node.js bindings (napi-rs)
-- WebAssembly (browser + server)
-- <2MB binary footprint
+### Embeddable
+- Rust library with C FFI
+- Python bindings (planned)
+- Node.js bindings (planned)
+- WebAssembly support (planned)
 
 ## Quick Start
 
@@ -114,24 +98,17 @@ if decision.kind == DecisionKind::Allow {
 }
 ```
 
-### JIT Compilation Demo
+### Running Examples
 
 ```bash
-cd ipe-rfc
-cargo run --example jit_demo --features jit --release
-```
+# Run basic tests
+cargo test --lib --package ipe-core
 
-Expected output:
-```
-Phase 1: Interpreter Mode (Cold Start)
-  Average: 47.32μs
+# Run with JIT features (requires Cranelift)
+cargo test --all-features
 
-Phase 2: Triggering JIT Compilation
-  Waiting for JIT compilation...
-
-Phase 3: JIT Mode (Hot Path)
-  Average: 8.15μs
-  Speedup: 5.8x
+# Build release
+cargo build --release
 ```
 
 ## Architecture
@@ -156,11 +133,15 @@ Phase 3: JIT Mode (Hot Path)
 
 ### Tiered Execution
 
-| Tier | When | Compile Time | Eval Latency |
-|------|------|--------------|--------------|
-| Interpreter | Default | 0 (pre-compiled) | ~50μs |
-| Baseline JIT | >100 evals | ~500μs | ~10μs |
-| Optimized JIT | >10k evals | ~5ms | ~5μs |
+IPE uses adaptive tiering to automatically optimize frequently-used policies:
+
+| Tier | Trigger | Compilation | Notes |
+|------|---------|-------------|-------|
+| Interpreter | Default | Pre-compiled bytecode | Baseline performance |
+| Baseline JIT | 100+ evaluations | Fast compilation | Performance boost |
+| Optimized JIT | 10k+ evaluations | Full optimization | Maximum speed |
+
+Performance metrics will be added after comprehensive benchmarking with profile-guided optimization.
 
 ## Project Structure
 
@@ -225,16 +206,15 @@ cargo bench
 
 See [RFC.md](RFC.md) for detailed roadmap and milestones.
 
-## Performance Targets
+## Performance
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| Single policy eval (interpreter) | <50μs | TBD |
-| Single policy eval (JIT) | <10μs | TBD |
-| 10k policies (indexed) | <100μs | TBD |
-| Policy compilation | <10ms | TBD |
-| Atomic policy swap | <5μs | TBD |
-| Binary size | <2MB | TBD |
+Performance benchmarks will be added after:
+1. Comprehensive benchmark suite with criterion.rs
+2. Profile-guided optimization (PGO) compilation
+3. Validation on representative workloads
+4. Multiple hardware configurations
+
+Current test suite: 248 tests, 93.67% code coverage
 
 ## Contributing
 
