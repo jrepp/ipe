@@ -183,6 +183,13 @@ IPE uses adaptive tiering to automatically optimize frequently-used policies:
 
 Performance metrics will be added after comprehensive benchmarking with profile-guided optimization.
 
+## Documentation
+
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - Complete system architecture with diagrams
+- **[AST Documentation](docs/AST.md)** - Abstract syntax tree structure and type system
+- **[Bytecode Documentation](docs/BYTECODE.md)** - Instruction set and execution model
+- **[RFC](RFC.md)** - Complete technical specification and roadmap
+
 ## Project Structure
 
 ```
