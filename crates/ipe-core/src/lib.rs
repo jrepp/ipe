@@ -6,6 +6,7 @@ pub mod bytecode;
 pub mod rar;
 pub mod interpreter;
 pub mod tiering;
+pub mod parser;
 
 #[cfg(feature = "jit")]
 pub mod jit;

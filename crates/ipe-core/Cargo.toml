@@ -30,7 +30,7 @@ target-lexicon = { workspace = true, optional = true }
 region = { workspace = true, optional = true }
 
 [features]
-default = ["jit"]
+default = []
 jit = [
     "cranelift",
     "cranelift-jit",

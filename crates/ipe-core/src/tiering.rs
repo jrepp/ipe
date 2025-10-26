@@ -1,6 +1,6 @@
 use crate::bytecode::CompiledPolicy;
 use crate::rar::EvaluationContext;
-use crate::{Decision, Error, Result};
+use crate::{Decision, Result};
 #[cfg(feature = "jit")]
 use crate::jit::{JitCode, JitCompiler};
 use std::sync::atomic::{AtomicU64, Ordering};
