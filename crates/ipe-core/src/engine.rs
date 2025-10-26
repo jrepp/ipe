@@ -1,6 +1,6 @@
-use crate::{EvaluationContext, Result, Error};
 use crate::index::PolicyDB;
 use crate::interpreter::Interpreter;
+use crate::{Error, EvaluationContext, Result};
 use serde::{Deserialize, Serialize};
 
 /// Policy decision result
@@ -63,9 +63,7 @@ pub struct PolicyEngine {
 impl PolicyEngine {
     /// Create a new empty policy engine
     pub fn new() -> Self {
-        Self {
-            policy_db: PolicyDB::new(),
-        }
+        Self { policy_db: PolicyDB::new() }
     }
 
     /// Create a policy engine with the given policy database
@@ -90,7 +88,9 @@ impl PolicyEngine {
 
         if policies.is_empty() {
             // No policies found - default deny
-            return Ok(Decision::deny().with_reason("No policies found for resource type".to_string()));
+            return Ok(
+                Decision::deny().with_reason("No policies found for resource type".to_string())
+            );
         }
 
         let mut decision = Decision::deny();
@@ -111,13 +111,13 @@ impl PolicyEngine {
                         // Policy denies
                         any_deny = true;
                     }
-                }
+                },
                 Err(e) => {
                     return Err(Error::EvaluationError(format!(
                         "Policy '{}' evaluation failed: {}",
                         stored_policy.name, e
                     )));
-                }
+                },
             }
         }
 
@@ -136,7 +136,7 @@ impl PolicyEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bytecode::{CompiledPolicy, Instruction, Value, CompOp};
+    use crate::bytecode::{CompOp, CompiledPolicy, Instruction, Value};
     use crate::interpreter::FieldMapping;
     use crate::rar::{AttributeValue, ResourceTypeId};
 
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn test_engine_simple_allow_policy() {
-        use crate::testing::{simple_policy, policy_db_with_policy, test_context_with_resource};
+        use crate::testing::{policy_db_with_policy, simple_policy, test_context_with_resource};
         use std::collections::HashMap;
 
         let policy = simple_policy(1, true);
@@ -201,16 +201,12 @@ mod tests {
 
     #[test]
     fn test_engine_simple_deny_policy() {
-        use crate::testing::{simple_policy, policy_db_with_policy, test_context_with_resource};
+        use crate::testing::{policy_db_with_policy, simple_policy, test_context_with_resource};
         use std::collections::HashMap;
 
         let policy = simple_policy(1, false);
-        let db = policy_db_with_policy(
-            "deny-all",
-            policy,
-            FieldMapping::new(),
-            vec![ResourceTypeId(1)],
-        );
+        let db =
+            policy_db_with_policy("deny-all", policy, FieldMapping::new(), vec![ResourceTypeId(1)]);
 
         let engine = PolicyEngine::with_policy_db(db);
         let ctx = test_context_with_resource(ResourceTypeId(1), HashMap::new());
@@ -232,19 +228,14 @@ mod tests {
 
         // Jump if false to deny
         policy.emit(Instruction::JumpIfFalse { offset: 2 }); // Skip allow return
-        policy.emit(Instruction::Return { value: true });    // Allow
-        policy.emit(Instruction::Return { value: false });   // Deny
+        policy.emit(Instruction::Return { value: true }); // Allow
+        policy.emit(Instruction::Return { value: false }); // Deny
 
         let mut field_map = FieldMapping::new();
         field_map.insert(0, vec!["resource".to_string(), "priority".to_string()]);
 
         let mut db = PolicyDB::new();
-        db.add_policy(
-            "priority-check".to_string(),
-            policy,
-            field_map,
-            vec![ResourceTypeId(1)],
-        );
+        db.add_policy("priority-check".to_string(), policy, field_map, vec![ResourceTypeId(1)]);
 
         let engine = PolicyEngine::with_policy_db(db);
 
@@ -341,20 +332,15 @@ mod tests {
 
         // Jump if false to deny
         policy.emit(Instruction::JumpIfFalse { offset: 2 }); // Skip allow return
-        policy.emit(Instruction::Return { value: true });    // Allow
-        policy.emit(Instruction::Return { value: false });   // Deny
+        policy.emit(Instruction::Return { value: true }); // Allow
+        policy.emit(Instruction::Return { value: false }); // Deny
 
         let mut field_map = FieldMapping::new();
         field_map.insert(0, vec!["resource".to_string(), "priority".to_string()]);
         field_map.insert(1, vec!["resource".to_string(), "enabled".to_string()]);
 
         let mut db = PolicyDB::new();
-        db.add_policy(
-            "complex-policy".to_string(),
-            policy,
-            field_map,
-            vec![ResourceTypeId(1)],
-        );
+        db.add_policy("complex-policy".to_string(), policy, field_map, vec![ResourceTypeId(1)]);
 
         let engine = PolicyEngine::with_policy_db(db);
 
@@ -362,7 +348,9 @@ mod tests {
         let mut ctx1 = EvaluationContext::default();
         ctx1.resource.type_id = ResourceTypeId(1);
         ctx1.resource.attributes.insert("priority".to_string(), AttributeValue::Int(5));
-        ctx1.resource.attributes.insert("enabled".to_string(), AttributeValue::Bool(true));
+        ctx1.resource
+            .attributes
+            .insert("enabled".to_string(), AttributeValue::Bool(true));
 
         let decision1 = engine.evaluate(&ctx1).unwrap();
         assert_eq!(decision1.kind, DecisionKind::Allow);
@@ -371,7 +359,9 @@ mod tests {
         let mut ctx2 = EvaluationContext::default();
         ctx2.resource.type_id = ResourceTypeId(1);
         ctx2.resource.attributes.insert("priority".to_string(), AttributeValue::Int(2));
-        ctx2.resource.attributes.insert("enabled".to_string(), AttributeValue::Bool(true));
+        ctx2.resource
+            .attributes
+            .insert("enabled".to_string(), AttributeValue::Bool(true));
 
         let decision2 = engine.evaluate(&ctx2).unwrap();
         assert_eq!(decision2.kind, DecisionKind::Deny);
@@ -380,7 +370,9 @@ mod tests {
         let mut ctx3 = EvaluationContext::default();
         ctx3.resource.type_id = ResourceTypeId(1);
         ctx3.resource.attributes.insert("priority".to_string(), AttributeValue::Int(5));
-        ctx3.resource.attributes.insert("enabled".to_string(), AttributeValue::Bool(false));
+        ctx3.resource
+            .attributes
+            .insert("enabled".to_string(), AttributeValue::Bool(false));
 
         let decision3 = engine.evaluate(&ctx3).unwrap();
         assert_eq!(decision3.kind, DecisionKind::Deny);

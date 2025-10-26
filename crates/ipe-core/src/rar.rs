@@ -97,15 +97,14 @@ pub enum AttributeValue {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_context_creation() {
         let mut ctx = EvaluationContext::default();
-        ctx.resource.attributes.insert(
-            "name".to_string(),
-            AttributeValue::String("test-deployment".to_string())
-        );
-        
+        ctx.resource
+            .attributes
+            .insert("name".to_string(), AttributeValue::String("test-deployment".to_string()));
+
         assert_eq!(ctx.resource.attributes.len(), 1);
     }
 }

@@ -3,8 +3,8 @@
 use super::lexer::Lexer;
 use super::token::{Token, TokenKind};
 use crate::ast::nodes::{
-    BinaryOp, ComparisonOp, Condition, Expression, Metadata, Policy,
-    Requirements, SourceLocation, Value,
+    BinaryOp, ComparisonOp, Condition, Expression, Metadata, Policy, Requirements, SourceLocation,
+    Value,
 };
 use thiserror::Error;
 
@@ -40,10 +40,7 @@ impl Parser {
     pub fn new(source: &str) -> Self {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize();
-        Self {
-            tokens,
-            position: 0,
-        }
+        Self { tokens, position: 0 }
     }
 
     /// Parse a complete policy
@@ -187,9 +184,7 @@ impl Parser {
 
             Ok(Requirements::denies(reason))
         } else {
-            Err(ParseError::InvalidPolicy(
-                "Expected 'requires' or 'denies'".to_string(),
-            ))
+            Err(ParseError::InvalidPolicy("Expected 'requires' or 'denies'".to_string()))
         }
     }
 
@@ -211,7 +206,10 @@ impl Parser {
             self.skip_newlines();
 
             // Check if there are more fields
-            if self.is_at_end() || !self.current().kind.is_literal() && !matches!(self.current().kind, TokenKind::Ident(_)) {
+            if self.is_at_end()
+                || !self.current().kind.is_literal()
+                    && !matches!(self.current().kind, TokenKind::Ident(_))
+            {
                 break;
             }
         }
@@ -300,19 +298,19 @@ impl Parser {
             TokenKind::StringLit(s) => {
                 self.advance();
                 Ok(Expression::literal(Value::String(s)))
-            }
+            },
             TokenKind::IntLit(n) => {
                 self.advance();
                 Ok(Expression::literal(Value::Int(n)))
-            }
+            },
             TokenKind::FloatLit(f) => {
                 self.advance();
                 Ok(Expression::literal(Value::Float(f)))
-            }
+            },
             TokenKind::BoolLit(b) => {
                 self.advance();
                 Ok(Expression::literal(Value::Bool(b)))
-            }
+            },
 
             // Identifiers and paths
             TokenKind::Ident(_) => self.parse_path_or_call(),
@@ -323,19 +321,16 @@ impl Parser {
                 let expr = self.parse_expression()?;
                 self.expect_token(TokenKind::RParen)?;
                 Ok(expr)
-            }
+            },
 
             // NOT operator
             TokenKind::Not => {
                 self.advance();
                 let operand = self.parse_primary()?;
                 Ok(Expression::not(operand))
-            }
+            },
 
-            _ => Err(ParseError::InvalidExpression(format!(
-                "Unexpected token: {}",
-                token_kind
-            ))),
+            _ => Err(ParseError::InvalidExpression(format!("Unexpected token: {}", token_kind))),
         }
     }
 
@@ -372,10 +367,7 @@ impl Parser {
             }
 
             self.expect_token(TokenKind::RParen)?;
-            Ok(Expression::Call {
-                name: segments[0].clone(),
-                args,
-            })
+            Ok(Expression::Call { name: segments[0].clone(), args })
         } else {
             Ok(Expression::path(segments))
         }
@@ -388,23 +380,23 @@ impl Parser {
             TokenKind::StringLit(s) => {
                 self.advance();
                 Ok(Value::String(s))
-            }
+            },
             TokenKind::IntLit(n) => {
                 self.advance();
                 Ok(Value::Int(n))
-            }
+            },
             TokenKind::FloatLit(f) => {
                 self.advance();
                 Ok(Value::Float(f))
-            }
+            },
             TokenKind::BoolLit(b) => {
                 self.advance();
                 Ok(Value::Bool(b))
-            }
+            },
             TokenKind::Ident(s) => {
                 self.advance();
                 Ok(Value::String(s))
-            }
+            },
             TokenKind::LBracket => {
                 self.advance();
                 let mut values = Vec::new();
@@ -423,11 +415,8 @@ impl Parser {
 
                 self.expect_token(TokenKind::RBracket)?;
                 Ok(Value::Array(values))
-            }
-            _ => Err(ParseError::InvalidExpression(format!(
-                "Expected value, got {}",
-                token_kind
-            ))),
+            },
+            _ => Err(ParseError::InvalidExpression(format!("Expected value, got {}", token_kind))),
         }
     }
 
@@ -495,7 +484,7 @@ impl Parser {
                 let result = s.clone();
                 self.advance();
                 Ok(result)
-            }
+            },
             _ => Err(ParseError::UnexpectedToken {
                 expected: "identifier".to_string(),
                 got: format!("{}", self.current().kind),
@@ -509,7 +498,7 @@ impl Parser {
                 let result = s.clone();
                 self.advance();
                 Ok(result)
-            }
+            },
             _ => Err(ParseError::UnexpectedToken {
                 expected: "string literal".to_string(),
                 got: format!("{}", self.current().kind),
@@ -565,7 +554,7 @@ mod tests {
             Expression::Path(path) => {
                 assert_eq!(path.segments.len(), 1);
                 assert_eq!(path.segments[0], "resource");
-            }
+            },
             _ => panic!("Expected path"),
         }
     }
@@ -579,7 +568,7 @@ mod tests {
                 assert_eq!(path.segments.len(), 2);
                 assert_eq!(path.segments[0], "resource");
                 assert_eq!(path.segments[1], "type");
-            }
+            },
             _ => panic!("Expected path"),
         }
     }
@@ -591,7 +580,7 @@ mod tests {
         match expr {
             Expression::Binary { op, .. } => {
                 assert_eq!(op, BinaryOp::Comparison(ComparisonOp::Eq));
-            }
+            },
             _ => panic!("Expected binary expression"),
         }
     }
@@ -603,7 +592,7 @@ mod tests {
         match expr {
             Expression::Binary { op, .. } => {
                 assert_eq!(op, BinaryOp::Comparison(ComparisonOp::Lt));
-            }
+            },
             _ => panic!("Expected binary expression"),
         }
     }
@@ -616,7 +605,7 @@ mod tests {
             Expression::Logical { op, operands } => {
                 assert_eq!(op, LogicalOp::And);
                 assert_eq!(operands.len(), 2);
-            }
+            },
             _ => panic!("Expected logical AND"),
         }
     }
@@ -629,7 +618,7 @@ mod tests {
             Expression::Logical { op, operands } => {
                 assert_eq!(op, LogicalOp::Or);
                 assert_eq!(operands.len(), 2);
-            }
+            },
             _ => panic!("Expected logical OR"),
         }
     }
@@ -642,7 +631,7 @@ mod tests {
             Expression::Logical { op, operands } => {
                 assert_eq!(op, LogicalOp::Not);
                 assert_eq!(operands.len(), 1);
-            }
+            },
             _ => panic!("Expected logical NOT"),
         }
     }
@@ -654,7 +643,7 @@ mod tests {
         match expr {
             Expression::In { list, .. } => {
                 assert_eq!(list.len(), 2);
-            }
+            },
             _ => panic!("Expected IN expression"),
         }
     }
@@ -674,7 +663,7 @@ mod tests {
             Expression::Call { name, args } => {
                 assert_eq!(name, "count");
                 assert_eq!(args.len(), 0);
-            }
+            },
             _ => panic!("Expected function call"),
         }
     }
@@ -687,7 +676,7 @@ mod tests {
             Expression::Call { name, args } => {
                 assert_eq!(name, "max");
                 assert_eq!(args.len(), 3);
-            }
+            },
             _ => panic!("Expected function call"),
         }
     }
@@ -700,7 +689,7 @@ mod tests {
             Expression::Logical { op, operands } => {
                 assert_eq!(op, LogicalOp::And);
                 assert_eq!(operands.len(), 2);
-            }
+            },
             _ => panic!("Expected logical AND with two comparisons"),
         }
     }
@@ -743,7 +732,7 @@ mod tests {
         match policy.requirements {
             Requirements::Denies { reason } => {
                 assert_eq!(reason, Some("Not authorized".to_string()));
-            }
+            },
             _ => panic!("Expected denies"),
         }
     }
@@ -769,10 +758,7 @@ mod tests {
 
         assert!(policy.metadata.is_some());
         let metadata = policy.metadata.unwrap();
-        assert_eq!(
-            metadata.get("severity"),
-            Some(&Value::String("critical".to_string()))
-        );
+        assert_eq!(metadata.get("severity"), Some(&Value::String("critical".to_string())));
     }
 
     #[test]
@@ -836,7 +822,7 @@ policy MultiTrigger:
         match &policy.triggers[0].expr {
             Expression::Logical { op: LogicalOp::And, operands } => {
                 assert_eq!(operands.len(), 2);
-            }
+            },
             _ => panic!("Expected logical AND expression"),
         }
     }
@@ -873,10 +859,10 @@ policy RequireApprovalWhere:
                 match &where_conds[0].expr {
                     Expression::Logical { op: LogicalOp::And, operands } => {
                         assert_eq!(operands.len(), 2);
-                    }
+                    },
                     _ => panic!("Expected logical AND in where clause"),
                 }
-            }
+            },
             _ => panic!("Expected requires with where clause"),
         }
     }
@@ -901,7 +887,7 @@ policy DenyNoReason:
         match &policy.requirements {
             Requirements::Denies { reason } => {
                 assert!(reason.is_none());
-            }
+            },
             _ => panic!("Expected denies clause"),
         }
     }
@@ -953,10 +939,10 @@ policy MultipleRequires:
                 match &conditions[0].expr {
                     Expression::Logical { op: LogicalOp::And, operands } => {
                         assert!(operands.len() >= 2);
-                    }
+                    },
                     _ => panic!("Expected logical AND expression"),
                 }
-            }
+            },
             _ => panic!("Expected requires clause"),
         }
     }
@@ -993,10 +979,10 @@ policy ComplexWhere:
                 match &where_conds[0].expr {
                     Expression::Logical { op: LogicalOp::And, operands } => {
                         assert!(operands.len() >= 2);
-                    }
+                    },
                     _ => panic!("Expected logical AND in where clause"),
                 }
-            }
+            },
             _ => panic!("Expected requires with where clause"),
         }
     }
@@ -1015,8 +1001,8 @@ user.is_superuser == true"#;
         match expr {
             Expression::Logical { op: LogicalOp::Or, operands } => {
                 assert_eq!(operands.len(), 2);
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -1042,7 +1028,7 @@ policy DenyWithReason:
             Requirements::Denies { reason } => {
                 assert!(reason.is_some());
                 assert_eq!(reason.as_ref().unwrap(), "Insufficient permissions");
-            }
+            },
             _ => panic!("Expected denies clause"),
         }
     }

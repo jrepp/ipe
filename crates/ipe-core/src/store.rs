@@ -33,11 +33,11 @@ use crate::interpreter::{FieldMapping, Interpreter};
 use crate::parser::parse::Parser;
 use crate::rar::{EvaluationContext, ResourceTypeId};
 use crate::{Decision, Result};
+use crossbeam_channel::{unbounded, Receiver, Sender};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::thread;
-use crossbeam_channel::{Sender, Receiver, unbounded};
 
 /// Immutable snapshot of all policies and pre-compiled data
 #[derive(Debug, Clone)]
@@ -88,20 +88,14 @@ impl PolicySnapshot {
             }
         }
 
-        Self {
-            version,
-            policies,
-            index,
-        }
+        Self { version, policies, index }
     }
 
     /// Get all policies that apply to a resource type
     #[inline]
     pub fn policies_for_resource(&self, resource_type: ResourceTypeId) -> Vec<&PolicyEntry> {
         if let Some(indices) = self.index.get(&resource_type) {
-            indices.iter()
-                .filter_map(|&idx| self.policies.get(idx))
-                .collect()
+            indices.iter().filter_map(|&idx| self.policies.get(idx)).collect()
         } else {
             Vec::new()
         }
@@ -129,21 +123,13 @@ impl PolicySnapshot {
 #[derive(Debug, Clone)]
 pub enum UpdateRequest {
     /// Add a new policy
-    AddPolicy {
-        name: String,
-        source: String,
-        resource_types: Vec<ResourceTypeId>,
-    },
+    AddPolicy { name: String, source: String, resource_types: Vec<ResourceTypeId> },
 
     /// Remove a policy by name
-    RemovePolicy {
-        name: String,
-    },
+    RemovePolicy { name: String },
 
     /// Replace all policies
-    ReplaceAll {
-        policies: Vec<(String, String, Vec<ResourceTypeId>)>,
-    },
+    ReplaceAll { policies: Vec<(String, String, Vec<ResourceTypeId>)> },
 }
 
 /// Result of an update operation
@@ -208,11 +194,7 @@ impl PolicyDataStore {
                 .expect("Failed to spawn validation worker");
         }
 
-        Self {
-            snapshot,
-            update_tx,
-            stats,
-        }
+        Self { snapshot, update_tx, stats }
     }
 
     /// Get current snapshot (lock-free read via Arc::clone)
@@ -229,7 +211,9 @@ impl PolicyDataStore {
         let policies = snap.policies_for_resource(ctx.resource.type_id);
 
         if policies.is_empty() {
-            return Ok(Decision::deny().with_reason("No policies found for resource type".to_string()));
+            return Ok(
+                Decision::deny().with_reason("No policies found for resource type".to_string())
+            );
         }
 
         // Evaluate all applicable policies
@@ -244,13 +228,13 @@ impl PolicyDataStore {
                         allow = true;
                         matched_policies.push(policy_entry.name.clone());
                     }
-                }
+                },
                 Err(e) => {
                     return Err(crate::Error::EvaluationError(format!(
                         "Policy '{}' failed: {}",
                         policy_entry.name, e
                     )));
-                }
+                },
             }
         }
 
@@ -292,11 +276,11 @@ impl PolicyDataStore {
                 Ok(new_version) => {
                     stats.current_version.store(new_version, Ordering::Relaxed);
                     UpdateResult::Success { version: new_version }
-                }
+                },
                 Err(e) => {
                     stats.update_failures.fetch_add(1, Ordering::Relaxed);
                     UpdateResult::Error { message: e.to_string() }
-                }
+                },
             };
 
             let _ = result_tx.send(result);
@@ -320,15 +304,12 @@ impl PolicyDataStore {
                 let mut policies = current.policies.clone();
                 policies.push(entry);
                 policies
-            }
+            },
 
             UpdateRequest::RemovePolicy { name } => {
                 // Remove policy by name
-                current.policies.iter()
-                    .filter(|p| p.name != name)
-                    .cloned()
-                    .collect()
-            }
+                current.policies.iter().filter(|p| p.name != name).cloned().collect()
+            },
 
             UpdateRequest::ReplaceAll { policies: new_policy_specs } => {
                 // Compile all new policies
@@ -338,7 +319,7 @@ impl PolicyDataStore {
                     policies.push(entry);
                 }
                 policies
-            }
+            },
         };
 
         // Create new snapshot
@@ -361,9 +342,18 @@ impl PolicyDataStore {
             crate::Error::ParseError(format!("Failed to parse policy '{}': {}", name, e))
         })?;
 
-        let mut compiler = PolicyCompiler::new();
-        let bytecode = compiler.compile(&ast)?;
-        let field_mapping = compiler.field_mappings().clone();
+        // Use a random policy ID (or could hash the name)
+        let policy_id = 0; // TODO: use proper ID generation
+        let compiler = PolicyCompiler::new(policy_id);
+        let bytecode = compiler.compile(&ast).map_err(|e| {
+            crate::Error::CompilationError(format!("Failed to compile policy '{}': {}", name, e))
+        })?;
+        let field_mapping = bytecode
+            .constants
+            .iter()
+            .enumerate()
+            .map(|(idx, _)| (idx as u16, vec![]))
+            .collect();
 
         Ok(PolicyEntry {
             name: name.to_string(),

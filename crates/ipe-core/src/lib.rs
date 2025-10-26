@@ -1,13 +1,13 @@
 pub mod ast;
+pub mod bytecode;
 pub mod compiler;
 pub mod engine;
 pub mod index;
-pub mod bytecode;
-pub mod rar;
 pub mod interpreter;
-pub mod tiering;
 pub mod parser;
+pub mod rar;
 pub mod store;
+pub mod tiering;
 
 #[cfg(feature = "jit")]
 pub mod jit;
@@ -16,10 +16,10 @@ pub mod jit;
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
 
-pub use ast::{Policy, Condition, Requirements};
-pub use compiler::{PolicyCompiler, CompileError};
-pub use engine::{PolicyEngine, Decision, DecisionKind};
-pub use rar::{EvaluationContext, Resource, Action, Request, Principal};
+pub use ast::{Condition, Policy, Requirements};
+pub use compiler::{CompileError, PolicyCompiler};
+pub use engine::{Decision, DecisionKind, PolicyEngine};
+pub use rar::{Action, EvaluationContext, Principal, Request, Resource};
 
 use thiserror::Error;
 

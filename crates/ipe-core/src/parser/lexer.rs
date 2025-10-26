@@ -219,12 +219,7 @@ impl Lexer {
         // Parse number
         if is_float {
             match number_str.parse::<f64>() {
-                Ok(n) => Token::new(
-                    TokenKind::FloatLit(n),
-                    number_str,
-                    start_line,
-                    start_column,
-                ),
+                Ok(n) => Token::new(TokenKind::FloatLit(n), number_str, start_line, start_column),
                 Err(_) => Token::new(
                     TokenKind::Error(format!("Invalid float literal: {}", number_str)),
                     number_str,
@@ -234,12 +229,7 @@ impl Lexer {
             }
         } else {
             match number_str.parse::<i64>() {
-                Ok(n) => Token::new(
-                    TokenKind::IntLit(n),
-                    number_str,
-                    start_line,
-                    start_column,
-                ),
+                Ok(n) => Token::new(TokenKind::IntLit(n), number_str, start_line, start_column),
                 Err(_) => Token::new(
                     TokenKind::Error(format!("Invalid integer literal: {}", number_str)),
                     number_str,
@@ -303,19 +293,19 @@ impl Lexer {
                 "==" => {
                     self.advance();
                     Some(TokenKind::Eq)
-                }
+                },
                 "!=" => {
                     self.advance();
                     Some(TokenKind::Neq)
-                }
+                },
                 "<=" => {
                     self.advance();
                     Some(TokenKind::LtEq)
-                }
+                },
                 ">=" => {
                     self.advance();
                     Some(TokenKind::GtEq)
-                }
+                },
                 _ => None,
             };
 

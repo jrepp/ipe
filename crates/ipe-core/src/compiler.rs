@@ -75,10 +75,7 @@ impl PolicyCompiler {
         // For now, we compile the requirements section
         // In a full implementation, we'd also handle triggers
         match &policy.requirements {
-            Requirements::Requires {
-                conditions,
-                where_clause,
-            } => {
+            Requirements::Requires { conditions, where_clause } => {
                 // Compile all conditions with AND logic
                 for (i, condition) in conditions.iter().enumerate() {
                     self.compile_condition(condition)?;
@@ -99,11 +96,11 @@ impl PolicyCompiler {
 
                 // Return true if all conditions passed
                 self.policy.emit(Instruction::Return { value: true });
-            }
+            },
             Requirements::Denies { .. } => {
                 // Denies always returns false
                 self.policy.emit(Instruction::Return { value: false });
-            }
+            },
         }
 
         Ok(self.policy)
@@ -123,7 +120,7 @@ impl PolicyCompiler {
                 let offset = self.context.get_or_allocate_field(&path_str);
                 self.policy.emit(Instruction::LoadField { offset });
                 Ok(())
-            }
+            },
 
             Expression::Binary { left, op, right } => {
                 // Compile left and right expressions
@@ -143,9 +140,9 @@ impl PolicyCompiler {
                         };
                         self.policy.emit(Instruction::Compare { op });
                         Ok(())
-                    }
+                    },
                 }
-            }
+            },
 
             Expression::Logical { op, operands } => {
                 match op {
@@ -158,7 +155,7 @@ impl PolicyCompiler {
                             }
                         }
                         Ok(())
-                    }
+                    },
                     LogicalOp::Or => {
                         // Compile all operands and OR them together
                         for (i, operand) in operands.iter().enumerate() {
@@ -168,7 +165,7 @@ impl PolicyCompiler {
                             }
                         }
                         Ok(())
-                    }
+                    },
                     LogicalOp::Not => {
                         // Compile operand and NOT it
                         if let Some(operand) = operands.first() {
@@ -180,9 +177,9 @@ impl PolicyCompiler {
                                 "NOT requires an operand".to_string(),
                             ))
                         }
-                    }
+                    },
                 }
-            }
+            },
 
             Expression::In { expr, list } => {
                 // For IN expressions, we generate comparison logic
@@ -190,7 +187,7 @@ impl PolicyCompiler {
                 self.compile_expression(expr)?;
 
                 // Load first value and compare
-                if let Some(first) = list.first() {
+                if let Some(_first) = list.first() {
                     // Duplicate the expression result for multiple comparisons
                     for (i, value) in list.iter().enumerate() {
                         if i > 0 {
@@ -212,7 +209,7 @@ impl PolicyCompiler {
                     self.policy.emit(Instruction::LoadConst { idx });
                     Ok(())
                 }
-            }
+            },
 
             Expression::Call { name, args } => {
                 // Compile arguments
@@ -231,15 +228,12 @@ impl PolicyCompiler {
                             "Unknown function: {}",
                             name
                         )))
-                    }
+                    },
                 };
 
-                self.policy.emit(Instruction::Call {
-                    func: func_id,
-                    argc: args.len() as u8,
-                });
+                self.policy.emit(Instruction::Call { func: func_id, argc: args.len() as u8 });
                 Ok(())
-            }
+            },
 
             Expression::Aggregate { .. } => Err(CompileError::UnsupportedAggregate(
                 "Aggregate functions require special handling".to_string(),
@@ -256,12 +250,12 @@ impl PolicyCompiler {
                 return Err(CompileError::UnsupportedExpression(
                     "Float literals not yet supported in bytecode".to_string(),
                 ))
-            }
+            },
             Value::Array(_) => {
                 return Err(CompileError::UnsupportedExpression(
                     "Array literals not yet supported in bytecode".to_string(),
                 ))
-            }
+            },
         };
 
         let idx = self.add_constant(bytecode_value)?;
@@ -294,12 +288,7 @@ mod tests {
     use crate::ast::nodes::Path;
 
     fn create_simple_policy(requirements: Requirements) -> Policy {
-        Policy::new(
-            "TestPolicy".to_string(),
-            "Test intent".to_string(),
-            vec![],
-            requirements,
-        )
+        Policy::new("TestPolicy".to_string(), "Test intent".to_string(), vec![], requirements)
     }
 
     #[test]
@@ -312,14 +301,8 @@ mod tests {
 
         // Should have: LoadConst, Return
         assert_eq!(compiled.code.len(), 2);
-        assert!(matches!(
-            compiled.code[0],
-            Instruction::LoadConst { idx: 0 }
-        ));
-        assert!(matches!(
-            compiled.code[1],
-            Instruction::Return { value: true }
-        ));
+        assert!(matches!(compiled.code[0], Instruction::LoadConst { idx: 0 }));
+        assert!(matches!(compiled.code[1], Instruction::Return { value: true }));
         assert_eq!(compiled.constants.len(), 1);
         assert_eq!(compiled.constants[0], BytecodeValue::Int(42));
     }
@@ -343,10 +326,7 @@ mod tests {
         let compiler = PolicyCompiler::new(1);
         let compiled = compiler.compile(&policy).unwrap();
 
-        assert_eq!(
-            compiled.constants[0],
-            BytecodeValue::String("test".to_string())
-        );
+        assert_eq!(compiled.constants[0], BytecodeValue::String("test".to_string()));
     }
 
     #[test]
@@ -359,10 +339,7 @@ mod tests {
 
         // Should have: LoadField, Return
         assert_eq!(compiled.code.len(), 2);
-        assert!(matches!(
-            compiled.code[0],
-            Instruction::LoadField { offset: 0 }
-        ));
+        assert!(matches!(compiled.code[0], Instruction::LoadField { offset: 0 }));
     }
 
     #[test]
@@ -380,22 +357,10 @@ mod tests {
 
         // Should have: LoadField, LoadConst, Compare, Return
         assert_eq!(compiled.code.len(), 4);
-        assert!(matches!(
-            compiled.code[0],
-            Instruction::LoadField { offset: 0 }
-        ));
-        assert!(matches!(
-            compiled.code[1],
-            Instruction::LoadConst { idx: 0 }
-        ));
-        assert!(matches!(
-            compiled.code[2],
-            Instruction::Compare { op: CompOp::Eq }
-        ));
-        assert!(matches!(
-            compiled.code[3],
-            Instruction::Return { value: true }
-        ));
+        assert!(matches!(compiled.code[0], Instruction::LoadField { offset: 0 }));
+        assert!(matches!(compiled.code[1], Instruction::LoadConst { idx: 0 }));
+        assert!(matches!(compiled.code[2], Instruction::Compare { op: CompOp::Eq }));
+        assert!(matches!(compiled.code[3], Instruction::Return { value: true }));
     }
 
     #[test]
@@ -478,10 +443,7 @@ mod tests {
         // env in ["prod", "staging"]
         let condition = Condition::new(Expression::in_list(
             Expression::path(vec!["env".to_string()]),
-            vec![
-                Value::String("prod".to_string()),
-                Value::String("staging".to_string()),
-            ],
+            vec![Value::String("prod".to_string()), Value::String("staging".to_string())],
         ));
         let policy = create_simple_policy(Requirements::requires(vec![condition]));
 
@@ -492,9 +454,7 @@ mod tests {
         // LoadField(env), LoadConst("prod"), Compare(Eq), LoadField(env), LoadConst("staging"), Compare(Eq), Or, Return
         assert!(compiled.code.len() > 5);
         assert!(compiled.constants.contains(&BytecodeValue::String("prod".to_string())));
-        assert!(compiled
-            .constants
-            .contains(&BytecodeValue::String("staging".to_string())));
+        assert!(compiled.constants.contains(&BytecodeValue::String("staging".to_string())));
     }
 
     #[test]
@@ -518,11 +478,7 @@ mod tests {
         let compiled = compiler.compile(&policy).unwrap();
 
         // Should have AND between the two conditions
-        let and_count = compiled
-            .code
-            .iter()
-            .filter(|i| matches!(i, Instruction::And))
-            .count();
+        let and_count = compiled.code.iter().filter(|i| matches!(i, Instruction::And)).count();
         assert_eq!(and_count, 1);
     }
 
@@ -535,10 +491,7 @@ mod tests {
 
         // Should just have Return(false)
         assert_eq!(compiled.code.len(), 1);
-        assert!(matches!(
-            compiled.code[0],
-            Instruction::Return { value: false }
-        ));
+        assert!(matches!(compiled.code[0], Instruction::Return { value: false }));
     }
 
     #[test]
@@ -546,28 +499,21 @@ mod tests {
         let conditions = vec![Condition::new(Expression::literal(Value::Bool(true)))];
         let where_clause = vec![Condition::new(Expression::literal(Value::Bool(true)))];
 
-        let policy =
-            create_simple_policy(Requirements::requires_where(conditions, where_clause));
+        let policy = create_simple_policy(Requirements::requires_where(conditions, where_clause));
 
         let compiler = PolicyCompiler::new(1);
         let compiled = compiler.compile(&policy).unwrap();
 
         // Should have AND to combine main conditions with where clause
-        let and_count = compiled
-            .code
-            .iter()
-            .filter(|i| matches!(i, Instruction::And))
-            .count();
+        let and_count = compiled.code.iter().filter(|i| matches!(i, Instruction::And)).count();
         assert!(and_count > 0);
     }
 
     #[test]
     fn test_compile_function_call() {
         // count()
-        let condition = Condition::new(Expression::Call {
-            name: "count".to_string(),
-            args: vec![],
-        });
+        let condition =
+            Condition::new(Expression::Call { name: "count".to_string(), args: vec![] });
         let policy = create_simple_policy(Requirements::requires(vec![condition]));
 
         let compiler = PolicyCompiler::new(1);
@@ -585,10 +531,7 @@ mod tests {
         // max(1, 2)
         let condition = Condition::new(Expression::Call {
             name: "count".to_string(),
-            args: vec![
-                Expression::literal(Value::Int(1)),
-                Expression::literal(Value::Int(2)),
-            ],
+            args: vec![Expression::literal(Value::Int(1)), Expression::literal(Value::Int(2))],
         });
         let policy = create_simple_policy(Requirements::requires(vec![condition]));
 
@@ -596,10 +539,7 @@ mod tests {
         let compiled = compiler.compile(&policy).unwrap();
 
         // Should compile arguments and have Call with argc=2
-        assert!(compiled
-            .code
-            .iter()
-            .any(|i| matches!(i, Instruction::Call { argc: 2, .. })));
+        assert!(compiled.code.iter().any(|i| matches!(i, Instruction::Call { argc: 2, .. })));
     }
 
     #[test]
@@ -630,10 +570,7 @@ mod tests {
         let compiled = compiler.compile(&policy).unwrap();
 
         // Should have both AND and OR instructions
-        assert!(compiled
-            .code
-            .iter()
-            .any(|i| matches!(i, Instruction::And)));
+        assert!(compiled.code.iter().any(|i| matches!(i, Instruction::And)));
         assert!(compiled.code.iter().any(|i| matches!(i, Instruction::Or)));
     }
 
@@ -710,10 +647,7 @@ mod tests {
             ),
             Expression::in_list(
                 Expression::path(vec!["environment".to_string()]),
-                vec![
-                    Value::String("production".to_string()),
-                    Value::String("staging".to_string()),
-                ],
+                vec![Value::String("production".to_string()), Value::String("staging".to_string())],
             ),
         ]);
 
@@ -735,9 +669,6 @@ mod tests {
 
         // Should successfully compile
         assert!(!compiled.code.is_empty());
-        assert!(compiled
-            .code
-            .iter()
-            .any(|i| matches!(i, Instruction::Return { value: true })));
+        assert!(compiled.code.iter().any(|i| matches!(i, Instruction::Return { value: true })));
     }
 }
