@@ -49,9 +49,10 @@ target-lexicon = "0.12"
 region = "3.0"  # Memory protection for JIT pages
 
 # gRPC
-tonic = { version = "0.10", features = ["transport"] }
+# Fix minimal versions - tonic 0.10 has issues, use 0.11+
+tonic = { version = "0.11", features = ["transport"] }
 prost = "0.12"
-tonic-build = "0.10"
+tonic-build = "0.11"
 
 # WASM
 wasm-bindgen = "0.2"
