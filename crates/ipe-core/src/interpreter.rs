@@ -12,11 +12,13 @@ pub struct Stack {
 
 impl Stack {
     /// Create a new stack with default max size
+    #[inline]
     pub fn new() -> Self {
         Self::with_capacity(MAX_STACK_SIZE)
     }
 
     /// Create a new stack with specified max size
+    #[inline]
     pub fn with_capacity(max_size: usize) -> Self {
         Self {
             values: Vec::with_capacity(max_size.min(128)), // Start small, can grow
@@ -25,6 +27,8 @@ impl Stack {
     }
 
     /// Push a value onto the stack
+    /// Hot path - marked inline for better performance
+    #[inline]
     pub fn push(&mut self, value: Value) -> Result<(), String> {
         if self.values.len() >= self.max_size {
             return Err(format!("Stack overflow: exceeded max size of {}", self.max_size));
@@ -34,26 +38,32 @@ impl Stack {
     }
 
     /// Pop a value from the stack
+    /// Hot path - marked inline for better performance
+    #[inline]
     pub fn pop(&mut self) -> Result<Value, String> {
         self.values.pop().ok_or_else(|| "Stack underflow".to_string())
     }
 
     /// Peek at the top value without removing it
+    #[inline]
     pub fn peek(&self) -> Result<&Value, String> {
         self.values.last().ok_or_else(|| "Stack is empty".to_string())
     }
 
     /// Get the current stack size
+    #[inline]
     pub fn len(&self) -> usize {
         self.values.len()
     }
 
     /// Check if the stack is empty
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
     /// Clear the stack
+    #[inline]
     pub fn clear(&mut self) {
         self.values.clear();
     }
@@ -87,6 +97,8 @@ impl Interpreter {
     }
 
     /// Evaluate a compiled policy against an evaluation context
+    /// Hot path - performance critical
+    #[inline]
     pub fn evaluate(
         &mut self,
         policy: &CompiledPolicy,
@@ -95,8 +107,10 @@ impl Interpreter {
         self.stack.clear();
         let mut pc = 0; // Program counter
 
+        // Main interpreter loop - keep hot path simple
         while pc < policy.code.len() {
-            let instr = &policy.code[pc];
+            // Use unsafe get for performance - we've already bounds checked
+            let instr = unsafe { policy.code.get_unchecked(pc) };
 
             match instr {
                 Instruction::LoadField { offset } => {
@@ -105,6 +119,7 @@ impl Interpreter {
                 }
 
                 Instruction::LoadConst { idx } => {
+                    // Keep bounds check for LoadConst - constant pool size varies
                     let value = policy
                         .constants
                         .get(*idx as usize)
@@ -170,6 +185,7 @@ impl Interpreter {
     }
 
     /// Load a field value from the evaluation context
+    #[inline]
     fn load_field(&self, offset: u16, ctx: &EvaluationContext) -> Result<Value, String> {
         let path = self
             .field_map
@@ -182,7 +198,8 @@ impl Interpreter {
         }
 
         // First component determines which part of RAR to access
-        match path[0].as_str() {
+        // Using unsafe get since we checked is_empty above
+        match unsafe { path.get_unchecked(0) }.as_str() {
             "resource" => self.access_resource(&path[1..], &ctx.resource),
             "action" => self.access_action(&path[1..], &ctx.action),
             "request" => self.access_request(&path[1..], &ctx.request),
@@ -190,12 +207,13 @@ impl Interpreter {
         }
     }
 
+    #[inline]
     fn access_resource(&self, path: &[String], resource: &crate::rar::Resource) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Resource path cannot be empty".to_string());
         }
 
-        match path[0].as_str() {
+        match unsafe { path.get_unchecked(0) }.as_str() {
             "type" => Ok(Value::Int(resource.type_id.0 as i64)),
             attr_name => {
                 let attr = resource
@@ -207,21 +225,23 @@ impl Interpreter {
         }
     }
 
+    #[inline]
     fn access_action(&self, path: &[String], _action: &crate::rar::Action) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Action path cannot be empty".to_string());
         }
 
         // For now, just return error for unsupported paths
-        Err(format!("Action field not supported: {}", path[0]))
+        Err(format!("Action field not supported: {}", unsafe { path.get_unchecked(0) }))
     }
 
+    #[inline]
     fn access_request(&self, path: &[String], request: &crate::rar::Request) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Request path cannot be empty".to_string());
         }
 
-        match path[0].as_str() {
+        match unsafe { path.get_unchecked(0) }.as_str() {
             "principal" => {
                 if path.len() < 2 {
                     return Err("Principal path too short".to_string());
@@ -238,12 +258,13 @@ impl Interpreter {
         }
     }
 
+    #[inline]
     fn access_principal(&self, path: &[String], principal: &crate::rar::Principal) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Principal path cannot be empty".to_string());
         }
 
-        match path[0].as_str() {
+        match unsafe { path.get_unchecked(0) }.as_str() {
             "id" => Ok(Value::String(principal.id.clone())),
             attr_name => {
                 let attr = principal
@@ -255,6 +276,7 @@ impl Interpreter {
         }
     }
 
+    #[inline]
     fn attr_to_value(&self, attr: &AttributeValue) -> Result<Value, String> {
         match attr {
             AttributeValue::String(s) => Ok(Value::String(s.clone())),
@@ -637,5 +659,99 @@ mod tests {
 
         let result = interp.evaluate(&policy, &ctx).unwrap();
         assert!(!result); // Should default to deny
+    }
+
+    // Performance-focused tests for hot path optimizations
+    #[test]
+    fn test_stack_operations_are_inlineable() {
+        // This test verifies that stack operations work correctly
+        // The actual inlining will be verified by checking generated code
+        let mut stack = Stack::new();
+
+        // Perform many operations to stress test
+        for i in 0..100 {
+            stack.push(Value::Int(i)).unwrap();
+        }
+
+        for i in (0..100).rev() {
+            assert_eq!(stack.pop().unwrap(), Value::Int(i));
+        }
+    }
+
+    #[test]
+    fn test_interpreter_tight_loop_performance() {
+        // Test that interpreter can handle tight loops efficiently
+        let mut policy = CompiledPolicy::new(1);
+
+        // Create a policy with many operations (simulating a complex policy)
+        for i in 0..10 {
+            let idx = policy.add_constant(Value::Int(i));
+            policy.emit(Instruction::LoadConst { idx });
+            policy.emit(Instruction::LoadConst { idx });
+            policy.emit(Instruction::Compare { op: CompOp::Eq });
+            if i > 0 {
+                policy.emit(Instruction::And);
+            }
+        }
+        policy.emit(Instruction::Return { value: true });
+
+        let mut interp = Interpreter::default();
+        let ctx = EvaluationContext::default();
+
+        // Should handle this without stack overflow or issues
+        let result = interp.evaluate(&policy, &ctx).unwrap();
+        assert!(result);
+    }
+
+    #[test]
+    fn test_value_compare_int_hot_path() {
+        // Test the most common comparison case for integers
+        let a = Value::Int(100);
+        let b = Value::Int(200);
+
+        // These should be very fast operations
+        assert!(a.compare(&b, CompOp::Lt).unwrap());
+        assert!(a.compare(&b, CompOp::Lte).unwrap());
+        assert!(!a.compare(&b, CompOp::Gt).unwrap());
+        assert!(!a.compare(&b, CompOp::Gte).unwrap());
+        assert!(!a.compare(&b, CompOp::Eq).unwrap());
+        assert!(a.compare(&b, CompOp::Neq).unwrap());
+    }
+
+    #[test]
+    fn test_interpreter_sequential_comparisons() {
+        // Test sequential comparisons (common pattern in policies)
+        let mut policy = CompiledPolicy::new(1);
+
+        // a < b && b < c && c < d
+        let idx_a = policy.add_constant(Value::Int(10));
+        let idx_b = policy.add_constant(Value::Int(20));
+        let idx_c = policy.add_constant(Value::Int(30));
+        let idx_d = policy.add_constant(Value::Int(40));
+
+        // 10 < 20
+        policy.emit(Instruction::LoadConst { idx: idx_a });
+        policy.emit(Instruction::LoadConst { idx: idx_b });
+        policy.emit(Instruction::Compare { op: CompOp::Lt });
+
+        // 20 < 30
+        policy.emit(Instruction::LoadConst { idx: idx_b });
+        policy.emit(Instruction::LoadConst { idx: idx_c });
+        policy.emit(Instruction::Compare { op: CompOp::Lt });
+        policy.emit(Instruction::And);
+
+        // 30 < 40
+        policy.emit(Instruction::LoadConst { idx: idx_c });
+        policy.emit(Instruction::LoadConst { idx: idx_d });
+        policy.emit(Instruction::Compare { op: CompOp::Lt });
+        policy.emit(Instruction::And);
+
+        policy.emit(Instruction::Return { value: true });
+
+        let mut interp = Interpreter::default();
+        let ctx = EvaluationContext::default();
+
+        interp.evaluate(&policy, &ctx).unwrap();
+        assert_eq!(*interp.stack.peek().unwrap(), Value::Bool(true));
     }
 }

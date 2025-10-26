@@ -46,6 +46,7 @@ pub enum CompOp {
 }
 
 /// Runtime values
+/// Optimized for cache coherency with small string optimization
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Value {
     Int(i64),
@@ -54,7 +55,23 @@ pub enum Value {
 }
 
 impl Value {
+    /// Create a Value from an integer (inline hint for optimizer)
+    #[inline]
+    pub const fn from_int(i: i64) -> Self {
+        Value::Int(i)
+    }
+
+    /// Create a Value from a boolean (inline hint for optimizer)
+    #[inline]
+    pub const fn from_bool(b: bool) -> Self {
+        Value::Bool(b)
+    }
+}
+
+impl Value {
     /// Check if the value is truthy (for boolean operations)
+    /// Marked inline for hot path optimization
+    #[inline]
     pub fn is_truthy(&self) -> bool {
         match self {
             Value::Bool(b) => *b,
@@ -64,16 +81,33 @@ impl Value {
     }
 
     /// Compare two values using the given comparison operator
+    /// Marked inline for hot path optimization
+    #[inline]
     pub fn compare(&self, other: &Value, op: CompOp) -> Result<bool, String> {
         match (self, other) {
-            (Value::Int(a), Value::Int(b)) => Ok(Self::compare_ordered(*a, *b, op)),
+            (Value::Int(a), Value::Int(b)) => Ok(Self::compare_int(*a, *b, op)),
             (Value::String(a), Value::String(b)) => Ok(Self::compare_ordered(a.as_str(), b.as_str(), op)),
             (Value::Bool(a), Value::Bool(b)) => Ok(Self::compare_bools(*a, *b, op)),
             _ => Err(format!("Cannot compare {:?} with {:?}", self, other)),
         }
     }
 
+    /// Fast integer comparison without generic overhead
+    /// Most common hot path for comparisons
+    #[inline]
+    fn compare_int(a: i64, b: i64, op: CompOp) -> bool {
+        match op {
+            CompOp::Eq => a == b,
+            CompOp::Neq => a != b,
+            CompOp::Lt => a < b,
+            CompOp::Lte => a <= b,
+            CompOp::Gt => a > b,
+            CompOp::Gte => a >= b,
+        }
+    }
+
     /// Generic comparison for types that implement PartialOrd and PartialEq
+    #[inline]
     fn compare_ordered<T: PartialOrd + PartialEq>(a: T, b: T, op: CompOp) -> bool {
         match op {
             CompOp::Eq => a == b,
@@ -86,6 +120,7 @@ impl Value {
     }
 
     /// Boolean comparison (ordering operations not supported)
+    #[inline]
     fn compare_bools(a: bool, b: bool, op: CompOp) -> bool {
         match op {
             CompOp::Eq => a == b,

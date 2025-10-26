@@ -7,6 +7,7 @@ pub mod rar;
 pub mod interpreter;
 pub mod tiering;
 pub mod parser;
+pub mod store;
 
 #[cfg(feature = "jit")]
 pub mod jit;
@@ -26,20 +27,23 @@ use thiserror::Error;
 pub enum Error {
     #[error("Policy not found: {0}")]
     PolicyNotFound(String),
-    
+
     #[error("Evaluation error: {0}")]
     EvaluationError(String),
-    
+
     #[error("Compilation error: {0}")]
     CompilationError(String),
-    
+
+    #[error("Parse error: {0}")]
+    ParseError(String),
+
     #[cfg(feature = "jit")]
     #[error("JIT compilation error: {0}")]
     JitError(String),
-    
+
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
-    
+
     #[error("Serialization error: {0}")]
     SerializationError(#[from] bincode::Error),
 }

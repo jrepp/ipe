@@ -19,6 +19,7 @@ memmap2 = { workspace = true }
 bincode = { workspace = true }
 chrono = { workspace = true }
 tracing = { workspace = true }
+crossbeam-channel = { workspace = true }
 
 # JIT compilation (optional feature)
 cranelift = { workspace = true, optional = true }
