@@ -87,6 +87,10 @@ chrono = { version = "0.4", features = ["serde"] }
 # FFI
 libc = "0.2"
 
+# Dependency constraints for compatibility
+# tower 0.4 requires indexmap 1.x (incompatible with 2.x when using sanitizers)
+indexmap = "1.9"
+
 [profile.release]
 opt-level = 3
 lto = "fat"
@@ -96,13 +100,3 @@ strip = true
 
 [profile.bench]
 inherits = "release"
-
-# Patches to fix dependency compatibility issues
-[patch.crates-io]
-# tower 0.4.13 is incompatible with indexmap 2.x when building with sanitizers
-# Pin to indexmap 1.9 which is compatible
-indexmap = { version = "=1.9.3" }
-
-# Force all dependencies to use region 3.0+ which may have better Miri support
-# cranelift-jit 0.102 uses region 2.2.0, but 3.0 should be compatible
-region = { version = "3.0" }
