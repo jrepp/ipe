@@ -32,8 +32,6 @@ allow = [
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
-    "ISC",
-    "Unicode-DFS-2016",
 ]
 # Note: In cargo-deny v2, only explicitly allowed licenses are permitted by default.
 # The deny, copyleft, allow-osi-fsf-free, and unlicensed fields have been removed.
