@@ -33,6 +33,8 @@ allow = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "Unicode-3.0",
+    "MPL-2.0",  # Project license
+    "Zlib",     # foldhash crate
 ]
 # Note: In cargo-deny v2, only explicitly allowed licenses are permitted by default.
 # The deny, copyleft, allow-osi-fsf-free, and unlicensed fields have been removed.
