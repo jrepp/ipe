@@ -2,10 +2,12 @@
 
 **A high-performance, AI-native policy engine built in Rust**
 
-[![Tests](https://img.shields.io/badge/tests-248%20passing-success)](https://github.com/jrepp/ipe)
-[![Coverage](https://img.shields.io/badge/coverage-93.67%25-success)](https://github.com/jrepp/ipe)
 [![Build](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=master)](https://github.com/jrepp/ipe/actions)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-248%20passing-success)](https://github.com/jrepp/ipe)
+[![Clippy](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=master&label=clippy)](https://github.com/jrepp/ipe/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jrepp/ipe/branch/master/graph/badge.svg)](https://codecov.io/gh/jrepp/ipe)
+[![dependency status](https://deps.rs/repo/github/jrepp/ipe/status.svg)](https://deps.rs/repo/github/jrepp/ipe)
+[![License](https://img.shields.io/badge/license-MPLv2-blue.svg)](LICENSE)
 
 ## What is IPE?
 
@@ -269,12 +271,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
-- MIT license ([LICENSE-MIT](LICENSE-MIT))
-
-at your option.
+Licensed under the Mozilla Public License Version 2.0 ([LICENSE](LICENSE) or https://www.mozilla.org/en-US/MPL/2.0/).
 
 ## Acknowledgments
 
