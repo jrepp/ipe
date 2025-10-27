@@ -9,3 +9,4 @@ license.workspace = true
 wasm-bindgen = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
 syn = { workspace = true }
+js-sys = { workspace = true }
