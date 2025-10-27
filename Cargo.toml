@@ -56,6 +56,8 @@ region = "3.0"  # Memory protection for JIT pages
 tonic = { version = "0.14", features = ["transport"] }
 prost = "0.13"
 tonic-build = "0.14"
+# Fix minimal versions - tonic 0.14 requires http 1.2+ for try_insert method
+http = "1.2"
 
 # WASM
 # Fix minimal versions - wasm-bindgen 0.2.88+ required for current Rust versions
