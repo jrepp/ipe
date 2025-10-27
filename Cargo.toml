@@ -66,8 +66,9 @@ web-sys = "0.3"
 
 # Web
 axum = { version = "0.7", features = ["ws", "macros"] }
-tower = "0.4"
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+# tower 0.4 is incompatible with indexmap 1.9+, upgrade to 0.5
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
 hyper = "1.0"
 
 # Storage
@@ -86,10 +87,6 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # FFI
 libc = "0.2"
-
-# Dependency constraints for compatibility
-# tower 0.4 requires indexmap 1.x (incompatible with 2.x when using sanitizers)
-indexmap = "1.9"
 
 [profile.release]
 opt-level = 3
