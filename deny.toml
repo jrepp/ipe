@@ -12,18 +12,14 @@ version = 2
 db-path = "~/.cargo/advisory-db"
 # The url(s) of the advisory databases to use
 db-urls = ["https://github.com/rustsec/advisory-db"]
-# Vulnerability level to deny
-vulnerability = "deny"
-# Unmaintained crates - check all dependencies
-unmaintained = "all"
-# Crates with security notices
-notice = "all"
 # Yanked crates
 yanked = "deny"
 # Ignore specific advisories (use only when necessary)
 ignore = [
     # Example: "RUSTSEC-2020-0001"
 ]
+# Note: vulnerability, unmaintained, and notice fields have been removed in cargo-deny v2
+# Vulnerabilities are now always checked against the advisory database
 
 [licenses]
 version = 2
@@ -39,16 +35,12 @@ allow = [
     "ISC",
     "Unicode-DFS-2016",
 ]
-# Licenses we explicitly deny
-deny = [
-    "GPL-2.0",
-    "GPL-3.0",
-    "AGPL-3.0",
-]
-# We want to be notified of copyleft licenses
-copyleft = "warn"
-# Blanket approval or denial for OSI-approved or FSF Free/Libre licenses
-allow-osi-fsf-free = "both"
+# Lint level for crates which do not have a detectable license
+unlicensed = "deny"
+# Note: In cargo-deny v2, only explicitly allowed licenses are permitted by default.
+# The deny, copyleft, and allow-osi-fsf-free fields have been removed.
+# Any license not in the allow list will be flagged.
+
 # Clarifications for specific crates
 [[licenses.clarify]]
 name = "ring"
