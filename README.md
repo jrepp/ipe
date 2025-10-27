@@ -187,10 +187,26 @@ Performance metrics will be added after comprehensive benchmarking with profile-
 
 ## Documentation
 
-- **[Architecture Overview](docs/ARCHITECTURE.md)** - Complete system architecture with diagrams
-- **[AST Documentation](docs/AST.md)** - Abstract syntax tree structure and type system
-- **[Bytecode Documentation](docs/BYTECODE.md)** - Instruction set and execution model
-- **[RFC](RFC.md)** - Complete technical specification and roadmap
+**📚 [Documentation Index](docs/INDEX.md)** - Start here for guided navigation
+
+### Quick Links
+
+- **[QUICKSTART](QUICKSTART.md)** - Get running in 5 minutes
+- **[SUMMARY](SUMMARY.md)** - Executive summary and vision
+- **[END_TO_END_EXAMPLE](END_TO_END_EXAMPLE.md)** - Complete usage walkthrough
+
+### Technical Reference
+
+- **[ARCHITECTURE](docs/ARCHITECTURE.md)** - System architecture with diagrams
+- **[AST](docs/AST.md)** - Abstract syntax tree specification
+- **[BYTECODE](docs/BYTECODE.md)** - Instruction set and execution model
+- **[RFCs](rfcs/INDEX.md)** - Design proposals and specifications
+
+### New: Sidecar Architecture RFCs
+
+- **[RFC-001](rfcs/001-sidecar-service-architecture.md)** - Minimal sidecar service (<50MB)
+- **[RFC-002](rfcs/002-sse-json-protocol.md)** - SSE/JSON protocol (MCP-inspired)
+- **[RFC-003](rfcs/003-policy-tree-storage.md)** - Content-addressable policy storage
 
 ## Project Structure
 
