@@ -25,6 +25,8 @@ thiserror = "1.0"
 anyhow = "1.0"
 # Fix minimal versions - tonic requires async-stream 0.3.5+
 async-stream = "0.3.5"
+# Fix minimal versions - wasm-bindgen 0.2.83 requires syn 1.0.99+ for parse_quote_spanned!
+syn = "1.0.99"
 
 # Parser
 nom = "7.1"

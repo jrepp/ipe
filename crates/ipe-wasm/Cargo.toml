@@ -8,3 +8,4 @@ license.workspace = true
 [dependencies]
 wasm-bindgen = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
+syn = { workspace = true }
