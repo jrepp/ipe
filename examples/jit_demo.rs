@@ -1,7 +1,7 @@
 // Example: JIT Compilation and Tiering
 //
-// This example demonstrates how the Intent Policy Engine uses adaptive
-// JIT compilation to optimize hot policies at runtime.
+// This example demonstrates how the Idempotent Predicate Engine uses adaptive
+// JIT compilation to optimize hot predicates at runtime.
 
 use ipe_core::bytecode::{CompiledPolicy, Instruction, Value, CompOp};
 use ipe_core::tiering::{TieredPolicy, TieredPolicyManager};
@@ -13,10 +13,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
     
-    println!("=== Intent Policy Engine: JIT Compilation Demo ===\n");
-    
-    // Create a sample policy bytecode
-    // This policy checks if resource.risk_level >= 3
+    println!("=== Idempotent Predicate Engine: JIT Compilation Demo ===\n");
+
+    // Create a sample predicate bytecode
+    // This predicate checks if resource.risk_level >= 3
     let mut policy = CompiledPolicy::new(1);
     
     // Load resource.risk_level field (assume offset 16)
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Return the comparison result
     policy.emit(Instruction::Return { value: true });
     
-    println!("Created policy bytecode with {} instructions\n", policy.code.len());
+    println!("Created predicate bytecode with {} instructions\n", policy.code.len());
     
     // Create tiered policy manager
     let manager = TieredPolicyManager::new()?;
