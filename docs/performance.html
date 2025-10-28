@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPE Predicate Execution Performance Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            padding: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        select, button {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select {
+            background: white;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9em;
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .axis-label {
+            font-size: 0.9em;
+            fill: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px;
+            font-size: 1.5em;
+            color: #667eea;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #dc3545;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 IPE Predicate Execution Performance Dashboard</h1>
+            <div class="subtitle">Interactive Performance Analysis & Visualization</div>
+        </header>
+
+        <div class="dashboard">
+            <div id="loading" class="loading">Loading performance data...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="content" style="display: none;">
+                <!-- Summary Stats -->
+                <div class="stats-grid" id="stats-grid"></div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="executor-filter">Executor</label>
+                        <select id="executor-filter">
+                            <option value="all">All</option>
+                            <option value="interpreter">Interpreter</option>
+                            <option value="jit">JIT</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="workload-filter">Workload</label>
+                        <select id="workload-filter">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="metric-select">Metric</label>
+                        <select id="metric-select">
+                            <option value="p99">p99 Latency</option>
+                            <option value="p95">p95 Latency</option>
+                            <option value="p50">p50 Latency</option>
+                            <option value="mean">Mean Latency</option>
+                            <option value="throughput">Throughput</option>
+                        </select>
+                    </div>
+                    <button onclick="updateVisualizations()">Update Charts</button>
+                    <button onclick="exportData()">Export Data</button>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="grid">
+                    <div class="chart-container">
+                        <div class="chart-title">📊 Latency Comparison</div>
+                        <div id="latency-chart" class="chart"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-title">⚡ Throughput Comparison</div>
+                        <div id="throughput-chart" class="chart"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-title">📈 Latency Distribution</div>
+                        <div id="distribution-chart" class="chart"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-title">🎯 JIT Cache Hit Rate</div>
+                        <div id="cache-chart" class="chart"></div>
+                    </div>
+
+                    <div class="chart-container full-width">
+                        <div class="chart-title">🔬 Detailed Performance Heatmap</div>
+                        <div id="heatmap-chart" class="chart" style="height: 500px;"></div>
+                    </div>
+
+                    <div class="chart-container full-width">
+                        <div class="chart-title">⚖️ JIT vs Interpreter Speedup</div>
+                        <div id="speedup-chart" class="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Global data storage
+        let perfData = null;
+        let filteredData = null;
+
+        // Color schemes
+        const colors = {
+            interpreter: '#667eea',
+            jit: '#764ba2',
+            cache: '#f093fb',
+            accent: '#4facfe'
+        };
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('perftest-results.json');
+                if (!response.ok) throw new Error('Failed to load data');
+
+                perfData = await response.json();
+                filteredData = perfData.results;
+
+                initializeFilters();
+                updateSummaryStats();
+                updateVisualizations();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent =
+                    `Error loading data: ${error.message}. Make sure perftest-results.json exists in the same directory.`;
+            }
+        }
+
+        function initializeFilters() {
+            // Populate workload filter
+            const workloads = [...new Set(perfData.results.map(r => r.workload))];
+            const workloadSelect = document.getElementById('workload-filter');
+            workloads.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w;
+                option.textContent = w.replace(/_/g, ' ');
+                workloadSelect.appendChild(option);
+            });
+        }
+
+        function filterData() {
+            const executorFilter = document.getElementById('executor-filter').value;
+            const workloadFilter = document.getElementById('workload-filter').value;
+
+            filteredData = perfData.results.filter(r => {
+                const executorMatch = executorFilter === 'all' || r.executor === executorFilter;
+                const workloadMatch = workloadFilter === 'all' || r.workload === workloadFilter;
+                return executorMatch && workloadMatch;
+            });
+        }
+
+        function updateSummaryStats() {
+            const stats = calculateSummaryStats();
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Tests</div>
+                    <div class="stat-value">${perfData.total_tests}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Duration</div>
+                    <div class="stat-value">${perfData.total_duration_secs.toFixed(1)}s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Throughput</div>
+                    <div class="stat-value">${stats.avgThroughput.toFixed(0)}</div>
+                    <div class="stat-label">ops/sec</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Best p99</div>
+                    <div class="stat-value">${stats.bestP99.toFixed(2)}</div>
+                    <div class="stat-label">µs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">JIT Speedup</div>
+                    <div class="stat-value">${stats.jitSpeedup.toFixed(1)}x</div>
+                </div>
+            `;
+        }
+
+        function calculateSummaryStats() {
+            const avgThroughput = d3.mean(perfData.results, d => d.statistics.throughput) || 0;
+            const bestP99 = d3.min(perfData.results, d => d.statistics.p99) || 0;
+
+            const interpreterResults = perfData.results.filter(r => r.executor === 'interpreter');
+            const jitResults = perfData.results.filter(r => r.executor === 'jit');
+
+            let jitSpeedup = 1;
+            if (interpreterResults.length > 0 && jitResults.length > 0) {
+                const avgInterpreter = d3.mean(interpreterResults, d => d.statistics.throughput);
+                const avgJit = d3.mean(jitResults, d => d.statistics.throughput);
+                jitSpeedup = avgJit / avgInterpreter;
+            }
+
+            return { avgThroughput, bestP99, jitSpeedup };
+        }
+
+        function updateVisualizations() {
+            filterData();
+            drawLatencyChart();
+            drawThroughputChart();
+            drawDistributionChart();
+            drawCacheChart();
+            drawHeatmap();
+            drawSpeedupChart();
+        }
+
+        function drawLatencyChart() {
+            const container = d3.select('#latency-chart');
+            container.selectAll('*').remove();
+
+            const margin = {top: 20, right: 30, bottom: 70, left: 60};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const metric = document.getElementById('metric-select').value;
+
+            const x = d3.scaleBand()
+                .domain(filteredData.map((d, i) => d.name))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(filteredData, d => d.statistics[metric])])
+                .nice()
+                .range([height, 0]);
+
+            // Bars
+            svg.selectAll('.bar')
+                .data(filteredData)
+                .enter().append('rect')
+                .attr('class', 'bar')
+                .attr('x', (d, i) => x(d.name))
+                .attr('y', d => y(d.statistics[metric]))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d.statistics[metric]))
+                .attr('fill', d => d.executor === 'jit' ? colors.jit : colors.interpreter)
+                .attr('opacity', 0.8)
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('opacity', 1);
+                    showTooltip(event, d);
+                })
+                .on('mouseout', function() {
+                    d3.select(this).attr('opacity', 0.8);
+                    hideTooltip();
+                });
+
+            // Axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end')
+                .style('font-size', '10px');
+
+            svg.append('g')
+                .call(d3.axisLeft(y));
+
+            // Y axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', 0 - margin.left)
+                .attr('x', 0 - (height / 2))
+                .attr('dy', '1em')
+                .style('text-anchor', 'middle')
+                .text(`${metric.toUpperCase()} (µs)`);
+        }
+
+        function drawThroughputChart() {
+            const container = d3.select('#throughput-chart');
+            container.selectAll('*').remove();
+
+            const margin = {top: 20, right: 30, bottom: 70, left: 80};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(filteredData.map(d => d.name))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(filteredData, d => d.statistics.throughput)])
+                .nice()
+                .range([height, 0]);
+
+            svg.selectAll('.bar')
+                .data(filteredData)
+                .enter().append('rect')
+                .attr('x', d => x(d.name))
+                .attr('y', d => y(d.statistics.throughput))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d.statistics.throughput))
+                .attr('fill', d => d.executor === 'jit' ? colors.jit : colors.interpreter)
+                .attr('opacity', 0.8)
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('opacity', 1);
+                    showTooltip(event, d, 'throughput');
+                })
+                .on('mouseout', function() {
+                    d3.select(this).attr('opacity', 0.8);
+                    hideTooltip();
+                });
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end')
+                .style('font-size', '10px');
+
+            svg.append('g')
+                .call(d3.axisLeft(y).tickFormat(d3.format('.2s')));
+
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', 0 - margin.left)
+                .attr('x', 0 - (height / 2))
+                .attr('dy', '1em')
+                .style('text-anchor', 'middle')
+                .text('Throughput (ops/sec)');
+        }
+
+        function drawDistributionChart() {
+            const container = d3.select('#distribution-chart');
+            container.selectAll('*').remove();
+
+            const margin = {top: 20, right: 30, bottom: 50, left: 60};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Box plot data
+            const boxData = filteredData.map(d => ({
+                name: d.workload,
+                executor: d.executor,
+                min: d.statistics.min,
+                q25: d.statistics.p50 - (d.statistics.p50 - d.statistics.min) / 2,
+                median: d.statistics.p50,
+                q75: d.statistics.p95,
+                max: d.statistics.max
+            }));
+
+            const x = d3.scaleBand()
+                .domain(boxData.map(d => d.name + '-' + d.executor))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(boxData, d => d.max)])
+                .nice()
+                .range([height, 0]);
+
+            // Draw box plots
+            boxData.forEach(d => {
+                const xPos = x(d.name + '-' + d.executor);
+                const boxWidth = x.bandwidth();
+
+                const color = d.executor === 'jit' ? colors.jit : colors.interpreter;
+
+                // Vertical line (whiskers)
+                svg.append('line')
+                    .attr('x1', xPos + boxWidth/2)
+                    .attr('x2', xPos + boxWidth/2)
+                    .attr('y1', y(d.min))
+                    .attr('y2', y(d.max))
+                    .attr('stroke', color)
+                    .attr('stroke-width', 2);
+
+                // Box
+                svg.append('rect')
+                    .attr('x', xPos)
+                    .attr('y', y(d.q75))
+                    .attr('width', boxWidth)
+                    .attr('height', y(d.q25) - y(d.q75))
+                    .attr('fill', color)
+                    .attr('opacity', 0.6);
+
+                // Median line
+                svg.append('line')
+                    .attr('x1', xPos)
+                    .attr('x2', xPos + boxWidth)
+                    .attr('y1', y(d.median))
+                    .attr('y2', y(d.median))
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 3);
+            });
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x).tickFormat(d => {
+                    const parts = d.split('-');
+                    return parts[0].substring(0, 10);
+                }))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end')
+                .style('font-size', '10px');
+
+            svg.append('g')
+                .call(d3.axisLeft(y));
+
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', 0 - margin.left)
+                .attr('x', 0 - (height / 2))
+                .attr('dy', '1em')
+                .style('text-anchor', 'middle')
+                .text('Latency (µs)');
+        }
+
+        function drawCacheChart() {
+            const container = d3.select('#cache-chart');
+            container.selectAll('*').remove();
+
+            const jitData = filteredData.filter(d => d.jit_statistics);
+
+            if (jitData.length === 0) {
+                container.append('div')
+                    .style('padding', '50px')
+                    .style('text-align', 'center')
+                    .style('color', '#999')
+                    .text('No JIT data available');
+                return;
+            }
+
+            const width = container.node().getBoundingClientRect().width;
+            const height = 400;
+            const radius = Math.min(width, height) / 2 - 40;
+
+            const svg = container.append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                .attr('transform', `translate(${width/2},${height/2})`);
+
+            const avgCacheHitRate = d3.mean(jitData, d => d.jit_statistics.cache_hit_rate);
+            const avgCacheMissRate = 100 - avgCacheHitRate;
+
+            const data = [
+                { label: 'Cache Hits', value: avgCacheHitRate },
+                { label: 'Cache Misses', value: avgCacheMissRate }
+            ];
+
+            const pie = d3.pie().value(d => d.value);
+            const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
+
+            const colors_cache = [colors.jit, colors.cache];
+
+            svg.selectAll('path')
+                .data(pie(data))
+                .enter().append('path')
+                .attr('d', arc)
+                .attr('fill', (d, i) => colors_cache[i])
+                .attr('stroke', 'white')
+                .attr('stroke-width', 2)
+                .on('mouseover', function(event, d) {
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .attr('d', d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 1.1));
+                    showTooltip(event, d.data, 'cache');
+                })
+                .on('mouseout', function() {
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .attr('d', arc);
+                    hideTooltip();
+                });
+
+            // Center text
+            svg.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', '-0.5em')
+                .style('font-size', '2em')
+                .style('font-weight', 'bold')
+                .style('fill', colors.jit)
+                .text(`${avgCacheHitRate.toFixed(1)}%`);
+
+            svg.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', '1.5em')
+                .style('font-size', '1em')
+                .style('fill', '#666')
+                .text('Cache Hit Rate');
+        }
+
+        function drawHeatmap() {
+            const container = d3.select('#heatmap-chart');
+            container.selectAll('*').remove();
+
+            const margin = {top: 30, right: 100, bottom: 100, left: 100};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const metrics = ['min', 'p50', 'p95', 'p99', 'max'];
+            const tests = filteredData.map(d => d.name);
+
+            const x = d3.scaleBand()
+                .domain(metrics)
+                .range([0, width])
+                .padding(0.05);
+
+            const y = d3.scaleBand()
+                .domain(tests)
+                .range([0, height])
+                .padding(0.05);
+
+            // Normalize data for color scale
+            const allValues = filteredData.flatMap(d =>
+                metrics.map(m => d.statistics[m])
+            );
+
+            const colorScale = d3.scaleSequential()
+                .domain([d3.min(allValues), d3.max(allValues)])
+                .interpolator(d3.interpolateViridis);
+
+            // Draw cells
+            filteredData.forEach(test => {
+                metrics.forEach(metric => {
+                    svg.append('rect')
+                        .attr('x', x(metric))
+                        .attr('y', y(test.name))
+                        .attr('width', x.bandwidth())
+                        .attr('height', y.bandwidth())
+                        .attr('fill', colorScale(test.statistics[metric]))
+                        .on('mouseover', function(event) {
+                            showTooltip(event, {
+                                test: test.name,
+                                metric: metric,
+                                value: test.statistics[metric].toFixed(2)
+                            }, 'heatmap');
+                        })
+                        .on('mouseout', hideTooltip);
+
+                    // Add text
+                    svg.append('text')
+                        .attr('x', x(metric) + x.bandwidth() / 2)
+                        .attr('y', y(test.name) + y.bandwidth() / 2)
+                        .attr('text-anchor', 'middle')
+                        .attr('dominant-baseline', 'middle')
+                        .style('fill', test.statistics[metric] < d3.median(allValues) ? 'white' : 'black')
+                        .style('font-size', '10px')
+                        .text(test.statistics[metric].toFixed(1));
+                });
+            });
+
+            // Axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x));
+
+            svg.append('g')
+                .call(d3.axisLeft(y))
+                .selectAll('text')
+                .style('font-size', '10px');
+
+            // Color legend
+            const legendWidth = 20;
+            const legendHeight = height;
+            const legendScale = d3.scaleLinear()
+                .domain([d3.min(allValues), d3.max(allValues)])
+                .range([legendHeight, 0]);
+
+            const legendAxis = d3.axisRight(legendScale).ticks(5);
+
+            const defs = svg.append('defs');
+            const linearGradient = defs.append('linearGradient')
+                .attr('id', 'legend-gradient')
+                .attr('x1', '0%')
+                .attr('x2', '0%')
+                .attr('y1', '100%')
+                .attr('y2', '0%');
+
+            linearGradient.selectAll('stop')
+                .data(d3.range(0, 1.1, 0.1))
+                .enter().append('stop')
+                .attr('offset', d => `${d * 100}%`)
+                .attr('stop-color', d => colorScale(d3.min(allValues) + d * (d3.max(allValues) - d3.min(allValues))));
+
+            svg.append('rect')
+                .attr('x', width + 20)
+                .attr('y', 0)
+                .attr('width', legendWidth)
+                .attr('height', legendHeight)
+                .style('fill', 'url(#legend-gradient)');
+
+            svg.append('g')
+                .attr('transform', `translate(${width + 40}, 0)`)
+                .call(legendAxis);
+        }
+
+        function drawSpeedupChart() {
+            const container = d3.select('#speedup-chart');
+            container.selectAll('*').remove();
+
+            // Calculate speedup for matching workloads
+            const speedupData = [];
+            const workloads = [...new Set(filteredData.map(d => d.workload))];
+
+            workloads.forEach(workload => {
+                const interpreterTest = filteredData.find(d =>
+                    d.workload === workload && d.executor === 'interpreter'
+                );
+                const jitTest = filteredData.find(d =>
+                    d.workload === workload && d.executor === 'jit'
+                );
+
+                if (interpreterTest && jitTest) {
+                    speedupData.push({
+                        workload,
+                        speedup: jitTest.statistics.throughput / interpreterTest.statistics.throughput,
+                        interpreterThroughput: interpreterTest.statistics.throughput,
+                        jitThroughput: jitTest.statistics.throughput
+                    });
+                }
+            });
+
+            if (speedupData.length === 0) {
+                container.append('div')
+                    .style('padding', '50px')
+                    .style('text-align', 'center')
+                    .style('color', '#999')
+                    .text('No comparison data available');
+                return;
+            }
+
+            const margin = {top: 20, right: 30, bottom: 70, left: 60};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(speedupData.map(d => d.workload))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(speedupData, d => d.speedup) * 1.1])
+                .range([height, 0]);
+
+            // Baseline line at 1x
+            svg.append('line')
+                .attr('x1', 0)
+                .attr('x2', width)
+                .attr('y1', y(1))
+                .attr('y2', y(1))
+                .attr('stroke', '#999')
+                .attr('stroke-dasharray', '4')
+                .attr('stroke-width', 2);
+
+            // Bars
+            svg.selectAll('.bar')
+                .data(speedupData)
+                .enter().append('rect')
+                .attr('x', d => x(d.workload))
+                .attr('y', d => y(d.speedup))
+                .attr('width', x.bandwidth())
+                .attr('height', d => Math.max(0, height - y(d.speedup)))
+                .attr('fill', d => d.speedup > 1 ? colors.jit : colors.interpreter)
+                .attr('opacity', 0.8)
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('opacity', 1);
+                    showTooltip(event, d, 'speedup');
+                })
+                .on('mouseout', function() {
+                    d3.select(this).attr('opacity', 0.8);
+                    hideTooltip();
+                });
+
+            // Value labels
+            svg.selectAll('.label')
+                .data(speedupData)
+                .enter().append('text')
+                .attr('x', d => x(d.workload) + x.bandwidth() / 2)
+                .attr('y', d => y(d.speedup) - 5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .style('font-weight', 'bold')
+                .style('fill', colors.jit)
+                .text(d => `${d.speedup.toFixed(2)}x`);
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end')
+                .style('font-size', '11px');
+
+            svg.append('g')
+                .call(d3.axisLeft(y));
+
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', 0 - margin.left)
+                .attr('x', 0 - (height / 2))
+                .attr('dy', '1em')
+                .style('text-anchor', 'middle')
+                .text('Speedup (JIT/Interpreter)');
+        }
+
+        function showTooltip(event, data, type = 'default') {
+            const tooltip = d3.select('#tooltip');
+
+            let content = '';
+            if (type === 'default') {
+                content = `
+                    <strong>${data.name}</strong><br/>
+                    Executor: ${data.executor}<br/>
+                    Workload: ${data.workload}<br/>
+                    Throughput: ${data.statistics.throughput.toFixed(0)} ops/sec<br/>
+                    p50: ${data.statistics.p50.toFixed(2)} µs<br/>
+                    p99: ${data.statistics.p99.toFixed(2)} µs
+                `;
+            } else if (type === 'throughput') {
+                content = `
+                    <strong>${data.name}</strong><br/>
+                    Throughput: ${data.statistics.throughput.toFixed(0)} ops/sec<br/>
+                    Sample Rate: ${data.statistics.sample_rate.toFixed(0)} samples/sec
+                `;
+            } else if (type === 'cache') {
+                content = `
+                    <strong>${data.label}</strong><br/>
+                    ${data.value.toFixed(2)}%
+                `;
+            } else if (type === 'heatmap') {
+                content = `
+                    <strong>${data.test}</strong><br/>
+                    ${data.metric}: ${data.value} µs
+                `;
+            } else if (type === 'speedup') {
+                content = `
+                    <strong>${data.workload}</strong><br/>
+                    Speedup: ${data.speedup.toFixed(2)}x<br/>
+                    Interpreter: ${data.interpreterThroughput.toFixed(0)} ops/sec<br/>
+                    JIT: ${data.jitThroughput.toFixed(0)} ops/sec
+                `;
+            }
+
+            tooltip
+                .style('opacity', 1)
+                .html(content)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        }
+
+        function hideTooltip() {
+            d3.select('#tooltip').style('opacity', 0);
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(perfData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `perftest-export-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

@@ -67,10 +67,17 @@ fn main() {
     });
 
     let json_output = serde_json::to_string_pretty(&report).unwrap();
+
+    // Write to local directory
     fs::write("perftest-results.json", &json_output).expect("Failed to write JSON");
+
+    // Write to docs directory for GitHub Pages (relative to workspace root)
+    let docs_json_path = "../../docs/perftest-results.json";
+    fs::write(docs_json_path, &json_output).expect("Failed to write JSON to docs/");
 
     println!("\n✅ All tests complete!");
     println!("📊 Results saved to: perftest-results.json");
+    println!("📊 Results saved to: docs/perftest-results.json (GitHub Pages)");
     println!("⏱️  Total duration: {:.2}s", duration.as_secs_f64());
 
     // Generate HTML visualization
