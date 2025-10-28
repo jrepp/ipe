@@ -53,7 +53,7 @@ struct BenchmarkExport {
 
 fn get_git_info() -> (Option<String>, Option<String>) {
     let commit = std::process::Command::new("git")
-        .args(&["rev-parse", "--short", "HEAD"])
+        .args(["rev-parse", "--short", "HEAD"])
         .output()
         .ok()
         .and_then(|output| {
@@ -65,7 +65,7 @@ fn get_git_info() -> (Option<String>, Option<String>) {
         });
 
     let branch = std::process::Command::new("git")
-        .args(&["rev-parse", "--abbrev-ref", "HEAD"])
+        .args(["rev-parse", "--abbrev-ref", "HEAD"])
         .output()
         .ok()
         .and_then(|output| {
@@ -121,7 +121,8 @@ fn collect_benchmarks() -> Result<Vec<BenchmarkResult>, Box<dyn std::error::Erro
         let throughput = if benchmark_path.exists() {
             let benchmark_json = fs::read_to_string(&benchmark_path)?;
             let benchmark_data: serde_json::Value = serde_json::from_str(&benchmark_json)?;
-            benchmark_data.get("throughput")
+            benchmark_data
+                .get("throughput")
                 .and_then(|t| t.get("per_iteration"))
                 .and_then(|p| p.as_f64())
         } else {

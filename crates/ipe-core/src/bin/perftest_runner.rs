@@ -15,9 +15,21 @@ fn main() {
 
     // List of all tests to run
     let tests = vec![
-        ("interpreter", "uniform_random_simple", "perftest_interpreter_uniform_random_simple"),
-        ("interpreter", "uniform_random_medium", "perftest_interpreter_uniform_random_medium"),
-        ("interpreter", "uniform_random_complex", "perftest_interpreter_uniform_random_complex"),
+        (
+            "interpreter",
+            "uniform_random_simple",
+            "perftest_interpreter_uniform_random_simple",
+        ),
+        (
+            "interpreter",
+            "uniform_random_medium",
+            "perftest_interpreter_uniform_random_medium",
+        ),
+        (
+            "interpreter",
+            "uniform_random_complex",
+            "perftest_interpreter_uniform_random_complex",
+        ),
         ("interpreter", "cache_heavy", "perftest_interpreter_cache_heavy"),
         ("interpreter", "mixed_workload", "perftest_interpreter_mixed_workload"),
         ("interpreter", "bytecode_stress", "perftest_interpreter_bytecode_stress"),
@@ -84,12 +96,7 @@ fn main() {
     generate_visualization();
 }
 
-fn run_test(
-    executor: &str,
-    workload: &str,
-    test_name: &str,
-    results: &mut Vec<serde_json::Value>,
-) {
+fn run_test(executor: &str, workload: &str, test_name: &str, results: &mut Vec<serde_json::Value>) {
     // Build the cargo test command
     let mut cmd = Command::new("cargo");
     cmd.arg("test")

@@ -50,7 +50,7 @@ struct Statistics {
     total_samples: usize,
     #[serde(serialize_with = "serialize_duration")]
     total_duration: Duration,
-    throughput: f64, // operations per second
+    throughput: f64,  // operations per second
     sample_rate: f64, // samples per second
     outliers: OutlierInfo,
 }
@@ -182,31 +182,34 @@ impl Statistics {
         // Print outlier information
         if self.outliers.total_outliers > 0 {
             println!();
-            println!("Outliers: Found {} outliers among {} measurements ({:.2}%)",
-                self.outliers.total_outliers,
-                self.total_samples,
-                self.outliers.outlier_percentage
+            println!(
+                "Outliers: Found {} outliers among {} measurements ({:.2}%)",
+                self.outliers.total_outliers, self.total_samples, self.outliers.outlier_percentage
             );
             if self.outliers.low_severe > 0 {
-                println!("  {} ({:.2}%) low severe",
+                println!(
+                    "  {} ({:.2}%) low severe",
                     self.outliers.low_severe,
                     (self.outliers.low_severe as f64 / self.total_samples as f64) * 100.0
                 );
             }
             if self.outliers.low_mild > 0 {
-                println!("  {} ({:.2}%) low mild",
+                println!(
+                    "  {} ({:.2}%) low mild",
                     self.outliers.low_mild,
                     (self.outliers.low_mild as f64 / self.total_samples as f64) * 100.0
                 );
             }
             if self.outliers.high_mild > 0 {
-                println!("  {} ({:.2}%) high mild",
+                println!(
+                    "  {} ({:.2}%) high mild",
                     self.outliers.high_mild,
                     (self.outliers.high_mild as f64 / self.total_samples as f64) * 100.0
                 );
             }
             if self.outliers.high_severe > 0 {
-                println!("  {} ({:.2}%) high severe",
+                println!(
+                    "  {} ({:.2}%) high severe",
                     self.outliers.high_severe,
                     (self.outliers.high_severe as f64 / self.total_samples as f64) * 100.0
                 );
@@ -568,7 +571,10 @@ impl PredicateGenerator {
     /// - 2% are very large policies (51-200 comparisons)
     ///
     /// Returns (policies, total_bytes_estimate)
-    fn generate_logarithmic_distribution(&mut self, target_bytes: usize) -> (Vec<CompiledPolicy>, usize) {
+    fn generate_logarithmic_distribution(
+        &mut self,
+        target_bytes: usize,
+    ) -> (Vec<CompiledPolicy>, usize) {
         let mut policies = Vec::new();
         let mut total_bytes = 0;
 
@@ -1009,21 +1015,12 @@ fn perftest_jit_vs_interpreter_comparison() {
     println!("{}", "=".repeat(80));
     println!("Interpreter throughput: {:.0} ops/sec", interp_stats.throughput);
     println!("JIT throughput:         {:.0} ops/sec", jit_stats.throughput);
-    println!(
-        "JIT speedup:            {:.2}x",
-        jit_stats.throughput / interp_stats.throughput
-    );
+    println!("JIT speedup:            {:.2}x", jit_stats.throughput / interp_stats.throughput);
     println!();
-    println!(
-        "Interpreter p50:        {:.3} µs",
-        interp_stats.p50.as_secs_f64() * 1_000_000.0
-    );
+    println!("Interpreter p50:        {:.3} µs", interp_stats.p50.as_secs_f64() * 1_000_000.0);
     println!("JIT p50:                {:.3} µs", jit_stats.p50.as_secs_f64() * 1_000_000.0);
     println!();
-    println!(
-        "Interpreter p99:        {:.3} µs",
-        interp_stats.p99.as_secs_f64() * 1_000_000.0
-    );
+    println!("Interpreter p99:        {:.3} µs", interp_stats.p99.as_secs_f64() * 1_000_000.0);
     println!("JIT p99:                {:.3} µs", jit_stats.p99.as_secs_f64() * 1_000_000.0);
     jit_cache_stats.print();
     println!("{}", "=".repeat(80));
@@ -1060,12 +1057,8 @@ fn perftest_jit_mixed_workload() {
     let policies = gen.generate_mixed_workload(100);
     let contexts = create_test_contexts(100, 54321);
 
-    let (stats, jit_stats) = run_jit_test(
-        "JIT - Mixed Workload",
-        &policies,
-        &contexts,
-        Duration::from_secs(10),
-    );
+    let (stats, jit_stats) =
+        run_jit_test("JIT - Mixed Workload", &policies, &contexts, Duration::from_secs(10));
 
     stats.print("JIT - Mixed Workload (60% simple, 30% medium, 10% complex)");
     jit_stats.print();
@@ -1098,12 +1091,8 @@ fn perftest_jit_bytecode_stress() {
     let policies: Vec<_> = (0..50).map(|_| gen.generate_bytecode_stress()).collect();
     let contexts = create_test_contexts(100, 54321);
 
-    let (stats, jit_stats) = run_jit_test(
-        "JIT - Bytecode Stress",
-        &policies,
-        &contexts,
-        Duration::from_secs(10),
-    );
+    let (stats, jit_stats) =
+        run_jit_test("JIT - Bytecode Stress", &policies, &contexts, Duration::from_secs(10));
 
     stats.print("JIT - Bytecode Stress (deep nesting, many operations)");
     jit_stats.print();
@@ -1136,12 +1125,8 @@ fn perftest_jit_jump_heavy() {
     let policies: Vec<_> = (0..50).map(|_| gen.generate_jump_heavy()).collect();
     let contexts = create_test_contexts(100, 54321);
 
-    let (stats, jit_stats) = run_jit_test(
-        "JIT - Jump Heavy",
-        &policies,
-        &contexts,
-        Duration::from_secs(10),
-    );
+    let (stats, jit_stats) =
+        run_jit_test("JIT - Jump Heavy", &policies, &contexts, Duration::from_secs(10));
 
     stats.print("JIT - Jump Heavy (branch prediction stress)");
     jit_stats.print();
