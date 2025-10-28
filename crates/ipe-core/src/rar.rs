@@ -58,23 +58,12 @@ pub enum Operation {
 }
 
 /// Request metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Request {
     pub principal: Principal,
     pub timestamp: i64,
     pub source_ip: Option<String>,
     pub metadata: HashMap<String, AttributeValue>,
-}
-
-impl Default for Request {
-    fn default() -> Self {
-        Self {
-            principal: Principal::default(),
-            timestamp: 0,
-            source_ip: None,
-            metadata: HashMap::new(),
-        }
-    }
 }
 
 /// Principal (user/service) making the request

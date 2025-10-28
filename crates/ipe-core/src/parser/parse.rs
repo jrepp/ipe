@@ -327,7 +327,7 @@ impl Parser {
             TokenKind::Not => {
                 self.advance();
                 let operand = self.parse_primary()?;
-                Ok(Expression::not(operand))
+                Ok(Expression::logical_not(operand))
             },
 
             _ => Err(ParseError::InvalidExpression(format!("Unexpected token: {}", token_kind))),

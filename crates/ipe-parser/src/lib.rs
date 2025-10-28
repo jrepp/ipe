@@ -6,12 +6,10 @@
 
 //! Policy language parser using nom
 
-/// Parser module (to be implemented)
 pub mod parser {
     //! Policy parser implementation
 }
 
-/// Lexer module (to be implemented)
 pub mod lexer {
     //! Lexical analysis
 }

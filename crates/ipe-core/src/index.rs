@@ -39,10 +39,7 @@ impl PolicyDB {
 
         // Index by each resource type
         for resource_type in &resource_types {
-            self.index_by_resource_type
-                .entry(*resource_type)
-                .or_insert_with(Vec::new)
-                .push(policy_idx);
+            self.index_by_resource_type.entry(*resource_type).or_default().push(policy_idx);
         }
 
         self.policies.push(StoredPolicy { name, policy, field_map, resource_types });
