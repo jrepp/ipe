@@ -55,5 +55,2268 @@
     "export_timestamp": "2025-10-28T10:27:39.635516+00:00",
     "git_branch": "perftest/predicate-execution",
     "git_commit": "795dbd0"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.2,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.785853532258844,
+        "throughput": 70422535.2112676,
+        "timestamp": "2025-10-28T11:59:27.847445+00:00"
+      },
+      {
+        "mean_ns": 13.77,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.62236224311436,
+        "throughput": 72621641.24909224,
+        "timestamp": "2025-10-28T11:59:27.847450+00:00"
+      },
+      {
+        "mean_ns": 14.14,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.70280183121172,
+        "throughput": 70721357.85007071,
+        "timestamp": "2025-10-28T11:59:27.847455+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:27.847459+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 22.08,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.795518748038013,
+        "throughput": 45289855.07246377,
+        "timestamp": "2025-10-28T11:59:28.850883+00:00"
+      },
+      {
+        "mean_ns": 15.85,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.247654185114875,
+        "throughput": 63091482.64984227,
+        "timestamp": "2025-10-28T11:59:28.850889+00:00"
+      },
+      {
+        "mean_ns": 14.59,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.884715235577293,
+        "throughput": 68540095.95613433,
+        "timestamp": "2025-10-28T11:59:28.850894+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:28.850899+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 15.0,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.86528216919196,
+        "throughput": 66666666.666666664,
+        "timestamp": "2025-10-28T11:59:29.855144+00:00"
+      },
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T11:59:29.855150+00:00"
+      },
+      {
+        "mean_ns": 12.9,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.24759725264429,
+        "throughput": 77519379.84496124,
+        "timestamp": "2025-10-28T11:59:29.855154+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:29.855159+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T11:59:30.859109+00:00"
+      },
+      {
+        "mean_ns": 13.32,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.41900100417114,
+        "throughput": 75075075.07507508,
+        "timestamp": "2025-10-28T11:59:30.859114+00:00"
+      },
+      {
+        "mean_ns": 12.91,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.262447923355957,
+        "throughput": 77459333.8497289,
+        "timestamp": "2025-10-28T11:59:30.859119+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:30.859123+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.18,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.7582286655459,
+        "throughput": 70521861.77715091,
+        "timestamp": "2025-10-28T11:59:31.859839+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T11:59:31.859845+00:00"
+      },
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T11:59:31.859850+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:31.859855+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 19.59,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.80533345082459,
+        "throughput": 51046452.27156713,
+        "timestamp": "2025-10-28T11:59:32.864439+00:00"
+      },
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T11:59:32.864445+00:00"
+      },
+      {
+        "mean_ns": 12.93,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.292099419192304,
+        "throughput": 77339520.49497293,
+        "timestamp": "2025-10-28T11:59:32.864450+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:32.864454+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T11:59:33.868216+00:00"
+      },
+      {
+        "mean_ns": 12.51,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.110988985397903,
+        "throughput": 79936051.15907274,
+        "timestamp": "2025-10-28T11:59:33.868223+00:00"
+      },
+      {
+        "mean_ns": 14.54,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.816871599725317,
+        "throughput": 68775790.9215956,
+        "timestamp": "2025-10-28T11:59:33.868228+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:33.868232+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T11:59:34.871750+00:00"
+      },
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T11:59:34.871756+00:00"
+      },
+      {
+        "mean_ns": 13.76,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.608222764952465,
+        "throughput": 72674418.60465117,
+        "timestamp": "2025-10-28T11:59:34.871761+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:34.871765+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 12.5,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.095811058973116,
+        "throughput": 80000000.0,
+        "timestamp": "2025-10-28T11:59:35.876738+00:00"
+      },
+      {
+        "mean_ns": 12.51,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.110988985397903,
+        "throughput": 79936051.15907274,
+        "timestamp": "2025-10-28T11:59:35.876744+00:00"
+      },
+      {
+        "mean_ns": 14.57,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.857620703397487,
+        "throughput": 68634179.82155113,
+        "timestamp": "2025-10-28T11:59:35.876749+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:35.876754+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 42.1,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 4.236744032862972,
+        "throughput": 23752969.12114014,
+        "timestamp": "2025-10-28T11:59:36.881787+00:00"
+      },
+      {
+        "mean_ns": 42.94,
+        "median_ns": 42.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 7.059490066569965,
+        "throughput": 23288309.26874709,
+        "timestamp": "2025-10-28T11:59:36.881803+00:00"
+      },
+      {
+        "mean_ns": 42.54,
+        "median_ns": 42.0,
+        "name": "context_creation",
+        "std_dev_ns": 17.7010847125254,
+        "throughput": 23507287.259050302,
+        "timestamp": "2025-10-28T11:59:36.881816+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:36.881820+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 15.43,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.136163984234923,
+        "throughput": 64808813.99870382,
+        "timestamp": "2025-10-28T11:59:37.885041+00:00"
+      },
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T11:59:37.885047+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T11:59:37.885052+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T11:59:37.885058+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.57,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.857620703397487,
+        "throughput": 68634179.82155113,
+        "timestamp": "2025-10-28T12:05:08.268314+00:00"
+      },
+      {
+        "mean_ns": 12.91,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.262447923355957,
+        "throughput": 77459333.8497289,
+        "timestamp": "2025-10-28T12:05:08.268320+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T12:05:08.268325+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:08.268328+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T12:05:09.268859+00:00"
+      },
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T12:05:09.268879+00:00"
+      },
+      {
+        "mean_ns": 11.66,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 18.69931549549341,
+        "throughput": 85763293.31046312,
+        "timestamp": "2025-10-28T12:05:09.268884+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:09.268890+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T12:05:10.273896+00:00"
+      },
+      {
+        "mean_ns": 15.42,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.123210479443873,
+        "throughput": 64850843.06095979,
+        "timestamp": "2025-10-28T12:05:10.273901+00:00"
+      },
+      {
+        "mean_ns": 14.18,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.7582286655459,
+        "throughput": 70521861.77715091,
+        "timestamp": "2025-10-28T12:05:10.273906+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:10.273911+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.18,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.7582286655459,
+        "throughput": 70521861.77715091,
+        "timestamp": "2025-10-28T12:05:11.276959+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T12:05:11.276965+00:00"
+      },
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T12:05:11.276970+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:11.276975+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:12.279666+00:00"
+      },
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T12:05:12.279671+00:00"
+      },
+      {
+        "mean_ns": 12.92,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.27728196608641,
+        "throughput": 77399380.80495356,
+        "timestamp": "2025-10-28T12:05:12.279676+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:12.279681+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T12:05:13.280316+00:00"
+      },
+      {
+        "mean_ns": 15.43,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.136163984234923,
+        "throughput": 64808813.99870382,
+        "timestamp": "2025-10-28T12:05:13.280322+00:00"
+      },
+      {
+        "mean_ns": 14.18,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.7582286655459,
+        "throughput": 70521861.77715091,
+        "timestamp": "2025-10-28T12:05:13.280327+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:13.280331+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 20.42,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.835152987199308,
+        "throughput": 48971596.47404505,
+        "timestamp": "2025-10-28T12:05:14.282359+00:00"
+      },
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T12:05:14.282365+00:00"
+      },
+      {
+        "mean_ns": 13.35,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.462463872798832,
+        "throughput": 74906367.0411985,
+        "timestamp": "2025-10-28T12:05:14.282370+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:14.282375+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.76,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.608222764952465,
+        "throughput": 72674418.60465117,
+        "timestamp": "2025-10-28T12:05:15.286936+00:00"
+      },
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T12:05:15.286942+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T12:05:15.286947+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:15.286951+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 32.08,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 17.53777636988224,
+        "throughput": 31172069.82543641,
+        "timestamp": "2025-10-28T12:05:16.291951+00:00"
+      },
+      {
+        "mean_ns": 19.59,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.80533345082459,
+        "throughput": 51046452.27156713,
+        "timestamp": "2025-10-28T12:05:16.291957+00:00"
+      },
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T12:05:16.291962+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:16.291966+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.59,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.884715235577293,
+        "throughput": 68540095.95613433,
+        "timestamp": "2025-10-28T12:05:17.296956+00:00"
+      },
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T12:05:17.296961+00:00"
+      },
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T12:05:17.296966+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:17.296970+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 24.59,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.50175358353523,
+        "throughput": 40666937.7795852,
+        "timestamp": "2025-10-28T12:05:18.297972+00:00"
+      },
+      {
+        "mean_ns": 16.67,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.418645890460017,
+        "throughput": 59988002.39952009,
+        "timestamp": "2025-10-28T12:05:18.297980+00:00"
+      },
+      {
+        "mean_ns": 14.15,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.71668075513726,
+        "throughput": 70671378.0918728,
+        "timestamp": "2025-10-28T12:05:18.297985+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:18.297989+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 12.92,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.27728196608641,
+        "throughput": 77399380.80495356,
+        "timestamp": "2025-10-28T12:05:19.301970+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:19.301976+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:19.301980+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:19.301986+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 12.51,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.110988985397903,
+        "throughput": 79936051.15907274,
+        "timestamp": "2025-10-28T12:05:20.306096+00:00"
+      },
+      {
+        "mean_ns": 12.49,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.080615818154303,
+        "throughput": 80064051.2409928,
+        "timestamp": "2025-10-28T12:05:20.306102+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:20.306107+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:20.306112+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T12:05:21.311094+00:00"
+      },
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T12:05:21.311100+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T12:05:21.311105+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:21.311109+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 31.25,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 18.046814123273947,
+        "throughput": 32000000.0,
+        "timestamp": "2025-10-28T12:05:22.316102+00:00"
+      },
+      {
+        "mean_ns": 1.67,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 8.181754090658066,
+        "throughput": 598802395.2095809,
+        "timestamp": "2025-10-28T12:05:22.316109+00:00"
+      },
+      {
+        "mean_ns": 0.42,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 4.1789472358478035,
+        "throughput": 2380952380.952381,
+        "timestamp": "2025-10-28T12:05:22.316114+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:22.316119+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 21.68,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.832129031858457,
+        "throughput": 46125461.25461255,
+        "timestamp": "2025-10-28T12:05:23.318900+00:00"
+      },
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T12:05:23.318906+00:00"
+      },
+      {
+        "mean_ns": 15.0,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.00199990001,
+        "throughput": 66666666.666666664,
+        "timestamp": "2025-10-28T12:05:23.318911+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:23.318916+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:24.321861+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:24.321867+00:00"
+      },
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T12:05:24.321872+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:24.321877+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 15.42,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.123210479443873,
+        "throughput": 64850843.06095979,
+        "timestamp": "2025-10-28T12:05:25.325371+00:00"
+      },
+      {
+        "mean_ns": 13.76,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.608222764952465,
+        "throughput": 72674418.60465117,
+        "timestamp": "2025-10-28T12:05:25.325377+00:00"
+      },
+      {
+        "mean_ns": 14.13,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.688908044886592,
+        "throughput": 70771408.35102618,
+        "timestamp": "2025-10-28T12:05:25.325382+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:25.325386+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.55,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.830468980838553,
+        "throughput": 68728522.33676976,
+        "timestamp": "2025-10-28T12:05:26.326291+00:00"
+      },
+      {
+        "mean_ns": 13.72,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.55151145052474,
+        "throughput": 72886297.3760933,
+        "timestamp": "2025-10-28T12:05:26.326297+00:00"
+      },
+      {
+        "mean_ns": 13.32,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.41900100417114,
+        "throughput": 75075075.07507508,
+        "timestamp": "2025-10-28T12:05:26.326301+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:26.326306+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 17.92,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.634282153736287,
+        "throughput": 55803571.428571425,
+        "timestamp": "2025-10-28T12:05:27.331286+00:00"
+      },
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T12:05:27.331293+00:00"
+      },
+      {
+        "mean_ns": 14.14,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.70280183121172,
+        "throughput": 70721357.85007071,
+        "timestamp": "2025-10-28T12:05:27.331298+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:27.331302+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.74,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.57989785468759,
+        "throughput": 72780203.78457059,
+        "timestamp": "2025-10-28T12:05:28.331385+00:00"
+      },
+      {
+        "mean_ns": 12.92,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.27728196608641,
+        "throughput": 77399380.80495356,
+        "timestamp": "2025-10-28T12:05:28.331391+00:00"
+      },
+      {
+        "mean_ns": 12.91,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.262447923355957,
+        "throughput": 77459333.8497289,
+        "timestamp": "2025-10-28T12:05:28.331396+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:28.331400+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 31.67,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 17.80171620939962,
+        "throughput": 31575623.618566465,
+        "timestamp": "2025-10-28T12:05:29.336045+00:00"
+      },
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T12:05:29.336053+00:00"
+      },
+      {
+        "mean_ns": 46.69,
+        "median_ns": 42.0,
+        "name": "context_creation",
+        "std_dev_ns": 16.930265798267907,
+        "throughput": 21417862.497322768,
+        "timestamp": "2025-10-28T12:05:29.336121+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:29.336128+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 1.67,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 8.181754090658066,
+        "throughput": 598802395.2095809,
+        "timestamp": "2025-10-28T12:05:30.341060+00:00"
+      },
+      {
+        "mean_ns": 14.99,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.988744332748865,
+        "throughput": 66711140.760507,
+        "timestamp": "2025-10-28T12:05:30.341071+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T12:05:30.341075+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:30.341080+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 19.57,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.78425124944364,
+        "throughput": 51098620.337250896,
+        "timestamp": "2025-10-28T12:05:31.342099+00:00"
+      },
+      {
+        "mean_ns": 15.83,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.22229215494625,
+        "throughput": 63171193.93556538,
+        "timestamp": "2025-10-28T12:05:31.342105+00:00"
+      },
+      {
+        "mean_ns": 13.74,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.57989785468759,
+        "throughput": 72780203.78457059,
+        "timestamp": "2025-10-28T12:05:31.342110+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:31.342114+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 15.83,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.22229215494625,
+        "throughput": 63171193.93556538,
+        "timestamp": "2025-10-28T12:05:32.344890+00:00"
+      },
+      {
+        "mean_ns": 12.9,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.24759725264429,
+        "throughput": 77519379.84496124,
+        "timestamp": "2025-10-28T12:05:32.344896+00:00"
+      },
+      {
+        "mean_ns": 15.42,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.123210479443873,
+        "throughput": 64850843.06095979,
+        "timestamp": "2025-10-28T12:05:32.344901+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:32.344905+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 19.17,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.772604555038352,
+        "throughput": 52164840.89723526,
+        "timestamp": "2025-10-28T12:05:33.349893+00:00"
+      },
+      {
+        "mean_ns": 15.42,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.123210479443873,
+        "throughput": 64850843.06095979,
+        "timestamp": "2025-10-28T12:05:33.349900+00:00"
+      },
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T12:05:33.349904+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:33.349909+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T12:05:34.353645+00:00"
+      },
+      {
+        "mean_ns": 14.15,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.71668075513726,
+        "throughput": 70671378.0918728,
+        "timestamp": "2025-10-28T12:05:34.353651+00:00"
+      },
+      {
+        "mean_ns": 12.92,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.27728196608641,
+        "throughput": 77399380.80495356,
+        "timestamp": "2025-10-28T12:05:34.353656+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:34.353660+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 17.09,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.503216820782047,
+        "throughput": 58513750.73142189,
+        "timestamp": "2025-10-28T12:05:35.358478+00:00"
+      },
+      {
+        "mean_ns": 21.67,
+        "median_ns": 41.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 21.6337953212098,
+        "throughput": 46146746.65436086,
+        "timestamp": "2025-10-28T12:05:35.358486+00:00"
+      },
+      {
+        "mean_ns": 14.59,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.884715235577293,
+        "throughput": 68540095.95613433,
+        "timestamp": "2025-10-28T12:05:35.358492+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:35.358497+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.97,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.962191763431196,
+        "throughput": 66800267.2010688,
+        "timestamp": "2025-10-28T12:05:36.359012+00:00"
+      },
+      {
+        "mean_ns": 16.25,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.325046125408917,
+        "throughput": 61538461.538461536,
+        "timestamp": "2025-10-28T12:05:36.359018+00:00"
+      },
+      {
+        "mean_ns": 13.76,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.608222764952465,
+        "throughput": 72674418.60465117,
+        "timestamp": "2025-10-28T12:05:36.359023+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:36.359027+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T12:05:37.364022+00:00"
+      },
+      {
+        "mean_ns": 14.18,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.7582286655459,
+        "throughput": 70521861.77715091,
+        "timestamp": "2025-10-28T12:05:37.364028+00:00"
+      },
+      {
+        "mean_ns": 14.19,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.772048452297508,
+        "throughput": 70472163.49541931,
+        "timestamp": "2025-10-28T12:05:37.364033+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:37.364038+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 39.59,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 9.094058499921804,
+        "throughput": 25258903.76357666,
+        "timestamp": "2025-10-28T12:05:38.365384+00:00"
+      },
+      {
+        "mean_ns": 15.83,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.22229215494625,
+        "throughput": 63171193.93556538,
+        "timestamp": "2025-10-28T12:05:38.365391+00:00"
+      },
+      {
+        "mean_ns": 15.0,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.00199990001,
+        "throughput": 66666666.666666664,
+        "timestamp": "2025-10-28T12:05:38.365397+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T12:05:38.365403+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T15:35:07.285636+00:00"
+      },
+      {
+        "mean_ns": 14.57,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.857620703397487,
+        "throughput": 68634179.82155113,
+        "timestamp": "2025-10-28T15:35:07.285642+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T15:35:07.285647+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:07.285650+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T15:35:08.290656+00:00"
+      },
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T15:35:08.290661+00:00"
+      },
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T15:35:08.290666+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:08.290671+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.76,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.608222764952465,
+        "throughput": 72674418.60465117,
+        "timestamp": "2025-10-28T15:35:09.292545+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T15:35:09.292551+00:00"
+      },
+      {
+        "mean_ns": 13.76,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.608222764952465,
+        "throughput": 72674418.60465117,
+        "timestamp": "2025-10-28T15:35:09.292555+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:09.292559+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 15.03,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.041684060976507,
+        "throughput": 66533599.46773121,
+        "timestamp": "2025-10-28T15:35:10.294898+00:00"
+      },
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T15:35:10.294905+00:00"
+      },
+      {
+        "mean_ns": 14.18,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.7582286655459,
+        "throughput": 70521861.77715091,
+        "timestamp": "2025-10-28T15:35:10.294910+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:10.294914+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 28.35,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.4516708793872,
+        "throughput": 35273368.60670194,
+        "timestamp": "2025-10-28T15:35:11.299911+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T15:35:11.299917+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T15:35:11.299922+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:11.299926+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.74,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.57989785468759,
+        "throughput": 72780203.78457059,
+        "timestamp": "2025-10-28T15:35:12.303683+00:00"
+      },
+      {
+        "mean_ns": 15.0,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.00199990001,
+        "throughput": 66666666.666666664,
+        "timestamp": "2025-10-28T15:35:12.303688+00:00"
+      },
+      {
+        "mean_ns": 14.15,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.71668075513726,
+        "throughput": 70671378.0918728,
+        "timestamp": "2025-10-28T15:35:12.303693+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:12.303698+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 44.62,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 14.727375869448036,
+        "throughput": 22411474.675033618,
+        "timestamp": "2025-10-28T15:35:13.304913+00:00"
+      },
+      {
+        "mean_ns": 12.08,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 18.90326955846528,
+        "throughput": 82781456.95364238,
+        "timestamp": "2025-10-28T15:35:13.304918+00:00"
+      },
+      {
+        "mean_ns": 12.08,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 18.90326955846528,
+        "throughput": 82781456.95364238,
+        "timestamp": "2025-10-28T15:35:13.304922+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:13.304926+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 27.5,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.741580483841712,
+        "throughput": 36363636.36363637,
+        "timestamp": "2025-10-28T15:35:14.305612+00:00"
+      },
+      {
+        "mean_ns": 9.59,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 17.548273419342433,
+        "throughput": 104275286.75703858,
+        "timestamp": "2025-10-28T15:35:14.305619+00:00"
+      },
+      {
+        "mean_ns": 14.14,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.70280183121172,
+        "throughput": 70721357.85007071,
+        "timestamp": "2025-10-28T15:35:14.305624+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:14.305628+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 20.01,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.829543922035363,
+        "throughput": 49975012.49375312,
+        "timestamp": "2025-10-28T15:35:15.310616+00:00"
+      },
+      {
+        "mean_ns": 19.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.7618496285856,
+        "throughput": 52192066.805845514,
+        "timestamp": "2025-10-28T15:35:15.310624+00:00"
+      },
+      {
+        "mean_ns": 15.84,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.23497961451902,
+        "throughput": 63131313.13131313,
+        "timestamp": "2025-10-28T15:35:15.310630+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:15.310635+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T15:35:16.315100+00:00"
+      },
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T15:35:16.315105+00:00"
+      },
+      {
+        "mean_ns": 14.57,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.857620703397487,
+        "throughput": 68634179.82155113,
+        "timestamp": "2025-10-28T15:35:16.315110+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:16.315115+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 17.91,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.622848978741985,
+        "throughput": 55834729.20156337,
+        "timestamp": "2025-10-28T15:35:17.319830+00:00"
+      },
+      {
+        "mean_ns": 15.83,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.22229215494625,
+        "throughput": 63171193.93556538,
+        "timestamp": "2025-10-28T15:35:17.319836+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T15:35:17.319841+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:17.319845+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T15:35:18.321450+00:00"
+      },
+      {
+        "mean_ns": 14.59,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.884715235577293,
+        "throughput": 68540095.95613433,
+        "timestamp": "2025-10-28T15:35:18.321456+00:00"
+      },
+      {
+        "mean_ns": 12.93,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.292099419192304,
+        "throughput": 77339520.49497293,
+        "timestamp": "2025-10-28T15:35:18.321461+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:18.321465+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T15:35:19.326447+00:00"
+      },
+      {
+        "mean_ns": 17.09,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.503216820782047,
+        "throughput": 58513750.73142189,
+        "timestamp": "2025-10-28T15:35:19.326454+00:00"
+      },
+      {
+        "mean_ns": 12.92,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.27728196608641,
+        "throughput": 77399380.80495356,
+        "timestamp": "2025-10-28T15:35:19.326459+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:19.326463+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 27.48,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.727381985453615,
+        "throughput": 36390101.892285295,
+        "timestamp": "2025-10-28T15:35:20.328588+00:00"
+      },
+      {
+        "mean_ns": 26.31,
+        "median_ns": 41.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.165661407452006,
+        "throughput": 38008361.83960471,
+        "timestamp": "2025-10-28T15:35:20.328598+00:00"
+      },
+      {
+        "mean_ns": 25.91,
+        "median_ns": 41.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.286988440870143,
+        "throughput": 38595137.012736395,
+        "timestamp": "2025-10-28T15:35:20.328607+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:20.328612+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 12.09,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 18.918823959221147,
+        "throughput": 82712985.9387924,
+        "timestamp": "2025-10-28T15:35:21.329202+00:00"
+      },
+      {
+        "mean_ns": 29.16,
+        "median_ns": 41.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.09383146463799,
+        "throughput": 34293552.81207133,
+        "timestamp": "2025-10-28T15:35:21.329209+00:00"
+      },
+      {
+        "mean_ns": 0.0,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 0.0,
+        "throughput": null,
+        "timestamp": "2025-10-28T15:35:21.329214+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:21.329219+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T15:35:22.333155+00:00"
+      },
+      {
+        "mean_ns": 13.74,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.57989785468759,
+        "throughput": 72780203.78457059,
+        "timestamp": "2025-10-28T15:35:22.333160+00:00"
+      },
+      {
+        "mean_ns": 12.08,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 18.90326955846528,
+        "throughput": 82781456.95364238,
+        "timestamp": "2025-10-28T15:35:22.333165+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:22.333171+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T15:35:23.334792+00:00"
+      },
+      {
+        "mean_ns": 12.08,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 18.90326955846528,
+        "throughput": 82781456.95364238,
+        "timestamp": "2025-10-28T15:35:23.334796+00:00"
+      },
+      {
+        "mean_ns": 12.52,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.126149638649174,
+        "throughput": 79872204.47284345,
+        "timestamp": "2025-10-28T15:35:23.334800+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:23.334805+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 2.5,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 9.895958771134811,
+        "throughput": 400000000.0,
+        "timestamp": "2025-10-28T15:35:24.339802+00:00"
+      },
+      {
+        "mean_ns": 8.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 16.933903861779775,
+        "throughput": 114547537.2279496,
+        "timestamp": "2025-10-28T15:35:24.339808+00:00"
+      },
+      {
+        "mean_ns": 13.74,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.57989785468759,
+        "throughput": 72780203.78457059,
+        "timestamp": "2025-10-28T15:35:24.339813+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:24.339817+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 17.91,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.622848978741985,
+        "throughput": 55834729.20156337,
+        "timestamp": "2025-10-28T15:35:25.343527+00:00"
+      },
+      {
+        "mean_ns": 19.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 23.134701208357978,
+        "throughput": 52192066.805845514,
+        "timestamp": "2025-10-28T15:35:25.343534+00:00"
+      },
+      {
+        "mean_ns": 21.25,
+        "median_ns": 41.0,
+        "name": "context_creation",
+        "std_dev_ns": 21.64272395055669,
+        "throughput": 47058823.52941176,
+        "timestamp": "2025-10-28T15:35:25.343540+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:25.343544+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 20.81,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 23.162337964894657,
+        "throughput": 48053820.27871216,
+        "timestamp": "2025-10-28T15:35:26.343953+00:00"
+      },
+      {
+        "mean_ns": 21.24,
+        "median_ns": 41.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.82216127110727,
+        "throughput": 47080979.28436912,
+        "timestamp": "2025-10-28T15:35:26.343961+00:00"
+      },
+      {
+        "mean_ns": 0.41,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 4.079448492137142,
+        "throughput": 2439024390.2439027,
+        "timestamp": "2025-10-28T15:35:26.343968+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:26.343972+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T15:35:27.348960+00:00"
+      },
+      {
+        "mean_ns": 13.34,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.447992184284736,
+        "throughput": 74962518.74062969,
+        "timestamp": "2025-10-28T15:35:27.348966+00:00"
+      },
+      {
+        "mean_ns": 12.92,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.27728196608641,
+        "throughput": 77399380.80495356,
+        "timestamp": "2025-10-28T15:35:27.348971+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:27.348976+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T15:35:28.349461+00:00"
+      },
+      {
+        "mean_ns": 14.14,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.70280183121172,
+        "throughput": 70721357.85007071,
+        "timestamp": "2025-10-28T15:35:28.349467+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T15:35:28.349472+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:28.349478+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.58,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.87117510365202,
+        "throughput": 68587105.62414266,
+        "timestamp": "2025-10-28T15:35:29.354474+00:00"
+      },
+      {
+        "mean_ns": 13.73,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.56571235605799,
+        "throughput": 72833211.94464676,
+        "timestamp": "2025-10-28T15:35:29.354479+00:00"
+      },
+      {
+        "mean_ns": 14.99,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.988744332748865,
+        "throughput": 66711140.760507,
+        "timestamp": "2025-10-28T15:35:29.354484+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:29.354488+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 25.4,
+        "median_ns": 41.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 21.16364807872214,
+        "throughput": 39370078.740157485,
+        "timestamp": "2025-10-28T15:35:30.354645+00:00"
+      },
+      {
+        "mean_ns": 19.99,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.80888992714411,
+        "throughput": 50025012.50625313,
+        "timestamp": "2025-10-28T15:35:30.354653+00:00"
+      },
+      {
+        "mean_ns": 24.16,
+        "median_ns": 41.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.562451215747583,
+        "throughput": 41390728.47682119,
+        "timestamp": "2025-10-28T15:35:30.354659+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:30.354663+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 17.92,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.634282153736287,
+        "throughput": 55803571.428571425,
+        "timestamp": "2025-10-28T15:35:31.357012+00:00"
+      },
+      {
+        "mean_ns": 17.91,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.622848978741985,
+        "throughput": 55834729.20156337,
+        "timestamp": "2025-10-28T15:35:31.357019+00:00"
+      },
+      {
+        "mean_ns": 17.5,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.567206908085502,
+        "throughput": 57142857.14285714,
+        "timestamp": "2025-10-28T15:35:31.357025+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:31.357031+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T15:35:32.359797+00:00"
+      },
+      {
+        "mean_ns": 13.75,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.594067979875952,
+        "throughput": 72727272.72727273,
+        "timestamp": "2025-10-28T15:35:32.359803+00:00"
+      },
+      {
+        "mean_ns": 14.17,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.74439414112269,
+        "throughput": 70571630.20465773,
+        "timestamp": "2025-10-28T15:35:32.359808+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:32.359813+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 15.42,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 20.123210479443873,
+        "throughput": 64850843.06095979,
+        "timestamp": "2025-10-28T15:35:33.360529+00:00"
+      },
+      {
+        "mean_ns": 25.0,
+        "median_ns": 41.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 20.415680248279752,
+        "throughput": 40000000.0,
+        "timestamp": "2025-10-28T15:35:33.360536+00:00"
+      },
+      {
+        "mean_ns": 16.25,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 20.325046125408917,
+        "throughput": 61538461.538461536,
+        "timestamp": "2025-10-28T15:35:33.360542+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:33.360550+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 42.08,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 4.139275298889891,
+        "throughput": 23764258.55513308,
+        "timestamp": "2025-10-28T15:35:34.364233+00:00"
+      },
+      {
+        "mean_ns": 42.94,
+        "median_ns": 42.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 7.177492598393955,
+        "throughput": 23288309.26874709,
+        "timestamp": "2025-10-28T15:35:34.364250+00:00"
+      },
+      {
+        "mean_ns": 33.0,
+        "median_ns": 42.0,
+        "name": "context_creation",
+        "std_dev_ns": 23.843238035132728,
+        "throughput": 30303030.303030305,
+        "timestamp": "2025-10-28T15:35:34.364260+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:34.364264+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 13.36,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.476919674322225,
+        "throughput": 74850299.40119761,
+        "timestamp": "2025-10-28T15:35:35.368491+00:00"
+      },
+      {
+        "mean_ns": 14.19,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.772048452297508,
+        "throughput": 70472163.49541931,
+        "timestamp": "2025-10-28T15:35:35.368499+00:00"
+      },
+      {
+        "mean_ns": 14.57,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.857620703397487,
+        "throughput": 68634179.82155113,
+        "timestamp": "2025-10-28T15:35:35.368505+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:35.368509+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 14.16,
+        "median_ns": 0.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 19.730544848026895,
+        "throughput": 70621468.92655367,
+        "timestamp": "2025-10-28T15:35:36.373493+00:00"
+      },
+      {
+        "mean_ns": 13.33,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 19.433504573287852,
+        "throughput": 75018754.68867217,
+        "timestamp": "2025-10-28T15:35:36.373498+00:00"
+      },
+      {
+        "mean_ns": 13.32,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.41900100417114,
+        "throughput": 75075075.07507508,
+        "timestamp": "2025-10-28T15:35:36.373503+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:36.373507+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
+  },
+  {
+    "benchmarks": [
+      {
+        "mean_ns": 36.27,
+        "median_ns": 42.0,
+        "name": "policy_eval_interpreter",
+        "std_dev_ns": 17.346962270092142,
+        "throughput": 27570995.312930793,
+        "timestamp": "2025-10-28T15:35:37.377207+00:00"
+      },
+      {
+        "mean_ns": 3.33,
+        "median_ns": 0.0,
+        "name": "policy_eval_jit",
+        "std_dev_ns": 11.293409582583994,
+        "throughput": 300300300.3003003,
+        "timestamp": "2025-10-28T15:35:37.377214+00:00"
+      },
+      {
+        "mean_ns": 13.35,
+        "median_ns": 0.0,
+        "name": "context_creation",
+        "std_dev_ns": 19.462463872798832,
+        "throughput": 74906367.0411985,
+        "timestamp": "2025-10-28T15:35:37.377219+00:00"
+      }
+    ],
+    "export_timestamp": "2025-10-28T15:35:37.377223+00:00",
+    "git_branch": "perftest/predicate-execution",
+    "git_commit": "5a5985c"
   }
 ]

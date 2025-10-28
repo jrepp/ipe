@@ -136,8 +136,74 @@
         }
 
         .axis-label {
-            font-size: 0.9em;
+            font-size: 1.2em;
             fill: #666;
+            font-weight: 600;
+        }
+
+        /* Make all SVG text larger */
+        svg text {
+            font-size: 13px !important;
+            fill: #444;
+        }
+
+        svg .tick text {
+            font-size: 12px !important;
+        }
+
+        /* Warp-in animation for charts */
+        @keyframes warpIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(30px);
+            }
+            60% {
+                transform: scale(1.02) translateY(-5px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .chart-container {
+            animation: warpIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+        }
+
+        .chart-container svg {
+            animation: fadeInUp 0.5s ease-out 0.3s backwards;
+        }
+
+        .chart-container:nth-child(1) { animation-delay: 0.1s; }
+        .chart-container:nth-child(2) { animation-delay: 0.2s; }
+        .chart-container:nth-child(3) { animation-delay: 0.3s; }
+
+        .stat-card {
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
         .tooltip {
@@ -231,6 +297,218 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
+
+        /* Tablet styles (768px - 1024px) */
+        @media (max-width: 1024px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .dashboard {
+                padding: 20px;
+            }
+        }
+
+        /* Mobile landscape and small tablets (480px - 768px) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                margin: 0;
+                border-radius: 10px;
+            }
+
+            header {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .back-link {
+                padding: 8px 14px;
+                font-size: 0.85em;
+            }
+
+            .dashboard {
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 2em;
+            }
+
+            .stat-label {
+                font-size: 0.8em;
+            }
+
+            .chart-container {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .chart-title {
+                font-size: 1.1em;
+                margin-bottom: 10px;
+            }
+
+            .chart {
+                min-height: 400px;
+            }
+
+            svg text {
+                font-size: 11px !important;
+            }
+
+            .controls {
+                flex-direction: column;
+                padding: 12px 15px;
+                gap: 12px;
+            }
+
+            .control-group {
+                width: 100%;
+            }
+
+            select, button {
+                width: 100%;
+            }
+        }
+
+        /* Mobile portrait (< 480px) */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                border-radius: 8px;
+            }
+
+            header {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 5px;
+            }
+
+            .subtitle {
+                font-size: 0.9em;
+            }
+
+            .back-link {
+                padding: 6px 12px;
+                font-size: 0.8em;
+                margin-top: 10px;
+            }
+
+            .dashboard {
+                padding: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 15px;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-value {
+                font-size: 1.6em;
+            }
+
+            .stat-label {
+                font-size: 0.75em;
+            }
+
+            .chart-container {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .chart-title {
+                font-size: 1em;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+            }
+
+            .chart {
+                min-height: 350px;
+                overflow-x: auto;
+            }
+
+            /* Make charts scrollable on mobile */
+            .chart svg {
+                min-width: 400px;
+            }
+
+            svg text {
+                font-size: 9px !important;
+            }
+
+            svg .tick text {
+                font-size: 8px !important;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+                width: 100%;
+            }
+
+            .controls {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .control-group label {
+                font-size: 0.85em;
+            }
+
+            select {
+                padding: 8px 10px;
+                font-size: 0.85em;
+                width: 100%;
+            }
+
+            .tooltip {
+                max-width: 250px;
+                font-size: 0.8em;
+                padding: 10px 14px;
+            }
+
+            /* Table responsiveness */
+            table {
+                font-size: 0.85em;
+            }
+
+            th, td {
+                padding: 8px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -271,8 +549,7 @@
                             <option value="log">Logarithmic</option>
                         </select>
                     </div>
-                    <button onclick="updateChart()">Update Chart</button>
-                    <button onclick="exportData()">Export Data</button>
+                    <button onclick="exportData()">📥 Export Data</button>
                 </div>
 
                 <!-- Timeline Chart -->
@@ -302,6 +579,11 @@
         // Load data
         async function loadData() {
             try {
+                // Check if we're on file:// protocol
+                if (window.location.protocol === 'file:') {
+                    throw new Error('file:// protocol detected. Please use a local web server to view this page.');
+                }
+
                 // Load history
                 const historyResponse = await fetch('benchmark-history.json');
                 if (historyResponse.ok) {
@@ -325,16 +607,46 @@
 
                 initializeControls();
                 updateSummaryStats();
-                updateChart();
-                displayLatestResults();
 
+                // Show content BEFORE drawing charts so D3.js can measure dimensions
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
+
+                // Draw charts after content is visible
+                setTimeout(() => {
+                    updateChart();
+                    displayLatestResults();
+                }, 100);
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
-                document.getElementById('error').textContent =
-                    `Error loading data: ${error.message}`;
+
+                let errorMsg = `Error loading data: ${error.message}`;
+
+                if (window.location.protocol === 'file:') {
+                    errorMsg = `<div style="text-align: center; padding: 20px;">
+                        <strong>🚫 Direct file access is not supported</strong><br><br>
+                        Due to browser security restrictions, this page cannot load data via file:// protocol.<br><br>
+                        <div style="margin-top: 20px; padding: 20px; background: #fff3cd; border-radius: 8px; text-align: left; max-width: 600px; margin: 20px auto;">
+                            <strong>Please use one of these methods:</strong><br><br>
+                            <strong>Option 1:</strong> Python HTTP Server<br>
+                            <code style="background: #2d2d2d; color: #f8f8f2; padding: 10px; display: block; border-radius: 5px; margin: 10px 0;">
+                            cd docs && python3 -m http.server 8080<br>
+                            # Then open http://localhost:8080/benchmarks.html
+                            </code><br>
+
+                            <strong>Option 2:</strong> Just command<br>
+                            <code style="background: #2d2d2d; color: #f8f8f2; padding: 10px; display: block; border-radius: 5px; margin: 10px 0;">
+                            just test-pages-headed
+                            </code><br>
+
+                            <strong>Option 3:</strong> View on GitHub Pages<br>
+                            Deploy this to GitHub Pages and access via https://
+                        </div>
+                    </div>`;
+                }
+
+                document.getElementById('error').innerHTML = errorMsg;
             }
         }
 
@@ -355,6 +667,11 @@
                 option.textContent = name.replace(/_/g, ' ');
                 select.appendChild(option);
             });
+
+            // Add event listeners to automatically update chart on change
+            document.getElementById('benchmark-select').addEventListener('change', updateChart);
+            document.getElementById('metric-select').addEventListener('change', updateChart);
+            document.getElementById('scale-select').addEventListener('change', updateChart);
         }
 
         function updateSummaryStats() {
@@ -404,16 +721,24 @@
             // Extract data for selected benchmark
             const timelineData = historyData.map(export_data => {
                 const bench = export_data.benchmarks.find(b => b.name === benchmarkName);
-                return bench ? {
+                if (!bench) return null;
+
+                // Calculate confidence intervals if not present
+                const value = bench[metric];
+                const std_dev = bench.std_dev_ns || 0;
+                const lower = bench.mean_lower !== undefined ? bench.mean_lower : Math.max(0, value - std_dev);
+                const upper = bench.mean_upper !== undefined ? bench.mean_upper : value + std_dev;
+
+                return {
                     timestamp: new Date(export_data.export_timestamp),
-                    value: bench[metric],
-                    lower: bench.mean_lower,
-                    upper: bench.mean_upper,
+                    value: value,
+                    lower: lower,
+                    upper: upper,
                     commit: export_data.git_commit,
                     branch: export_data.git_branch,
                     name: bench.name
-                } : null;
-            }).filter(d => d !== null);
+                };
+            }).filter(d => d !== null && d.value !== undefined);
 
             if (timelineData.length === 0) {
                 container.append('div')

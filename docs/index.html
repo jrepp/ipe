@@ -223,6 +223,16 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Navigation hover effects */
+        nav a:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        nav a:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -233,9 +243,22 @@
             <div class="tagline">High-Performance Policy Evaluation with Multi-Tier Execution</div>
         </header>
 
+        <!-- Navigation -->
+        <nav style="position: sticky; top: 0; background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%); backdrop-filter: blur(10px); padding: 12px 40px; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1); z-index: 1000; border-bottom: 2px solid rgba(102, 126, 234, 0.1);">
+            <div style="display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap; font-size: 0.9em;">
+                <a href="#quick-links" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">📚 Quick Links</a>
+                <a href="#features" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">⚡ Features</a>
+                <a href="#architecture" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">🏗️ Architecture</a>
+                <a href="#wasm" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">🌐 WebAssembly</a>
+                <a href="#evaluation" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">🎯 Evaluation</a>
+                <a href="#getting-started" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">🚀 Get Started</a>
+                <a href="#demo" style="color: #667eea; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.3s;">🎮 Live Demo</a>
+            </div>
+        </nav>
+
         <div class="content">
             <!-- Quick Links -->
-            <section class="section">
+            <section id="quick-links" class="section">
                 <h2>Quick Links</h2>
                 <div class="cards">
                     <a href="performance.html" class="card">
@@ -298,7 +321,7 @@
             </section>
 
             <!-- Key Features -->
-            <section class="section">
+            <section id="features" class="section">
                 <h2>Key Features</h2>
                 <div class="features">
                     <div class="feature">
@@ -325,7 +348,7 @@
             </section>
 
             <!-- System Architecture -->
-            <section class="section">
+            <section id="architecture" class="section">
                 <h2>System Architecture</h2>
                 <p>
                     IPE uses a <span class="highlight">subway map architecture</span> with clear separation of concerns
@@ -414,7 +437,7 @@ graph TB
             </section>
 
             <!-- WASM Deployment -->
-            <section class="section">
+            <section id="wasm" class="section">
                 <h2>WebAssembly Deployment</h2>
                 <p>
                     IPE compiles to <span class="highlight">WebAssembly</span> for client-side policy evaluation,
@@ -500,7 +523,7 @@ graph LR
                 </ul>
 
                 <div class="code-block">
-// Example: Feature flag evaluation in browser
+                    <pre style="margin: 0; font-family: 'Courier New', monospace; line-height: 1.5;">// Example: Feature flag evaluation in browser
 import init, { IPEEngine } from './ipe-wasm.js';
 
 await init();
@@ -519,12 +542,12 @@ const context = {
 const showFeature = engine.evaluate('premium-feature', context);
 if (showFeature) {
     // Render premium feature
-}
+}</pre>
                 </div>
             </section>
 
             <!-- Predicate Evaluation -->
-            <section class="section">
+            <section id="evaluation" class="section">
                 <h2>Predicate Evaluation & Context</h2>
                 <p>
                     IPE evaluates policies against a <span class="highlight">RAR (Resource-Action-Request) Context</span>.
@@ -560,7 +583,7 @@ if (showFeature) {
 
                 <h3>Context Structure</h3>
                 <div class="code-block">
-EvaluationContext {
+                    <pre style="margin: 0; font-family: 'Courier New', monospace; line-height: 1.5;">EvaluationContext {
     resource: {
         type_id: ResourceTypeId,
         attributes: HashMap&lt;String, AttributeValue&gt;
@@ -574,7 +597,7 @@ EvaluationContext {
         principal: Option&lt;Principal&gt;,
         extra: HashMap&lt;String, AttributeValue&gt;
     }
-}
+}</pre>
                 </div>
 
                 <h3>Performance Characteristics</h3>
@@ -600,13 +623,13 @@ EvaluationContext {
             </section>
 
             <!-- Getting Started -->
-            <section class="section">
+            <section id="getting-started" class="section">
                 <h2>Getting Started</h2>
                 <p>
                     Run performance tests to see IPE in action:
                 </p>
                 <div class="code-block">
-# Install just (Rust-native task runner)
+                    <pre style="margin: 0; font-family: 'Courier New', monospace; line-height: 1.5;"># Install just (Rust-native task runner)
 cargo install just
 
 # Run all performance tests (~3 minutes)
@@ -616,7 +639,7 @@ just perftest-all
 open docs/performance.html
 
 # Or quick test (~20 seconds)
-just perftest-quick
+just perftest-quick</pre>
                 </div>
 
                 <h3>Performance Tests Include:</h3>
@@ -631,7 +654,7 @@ just perftest-quick
             </section>
 
             <!-- Interactive Demo -->
-            <section class="section">
+            <section id="demo" class="section">
                 <h2>🎮 Live Predicate Evaluation Demo</h2>
                 <p>
                     Move your mouse over the grid to see <span class="highlight">real-time predicate evaluation</span>.

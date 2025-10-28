@@ -1,0 +1,327 @@
+{
+  "generated_at": "2025-10-28T10:30:00.000Z",
+  "total_tests": 18,
+  "total_duration_secs": 180.5,
+  "results": [
+    {
+      "name": "perftest_interpreter_uniform_random_simple",
+      "executor": "interpreter",
+      "workload": "uniform_random_simple",
+      "statistics": {
+        "min": 4.125,
+        "max": 125.834,
+        "mean": 8.034,
+        "mode": 7.5,
+        "stddev": 2.145,
+        "p50": 7.75,
+        "p95": 11.25,
+        "p99": 15.125,
+        "total_samples": 124567,
+        "total_duration": 10000000.0,
+        "throughput": 12456.7,
+        "sample_rate": 12456.7,
+        "outliers": {
+          "total_outliers": 800,
+          "low_mild": 200,
+          "low_severe": 50,
+          "high_mild": 400,
+          "high_severe": 150,
+          "outlier_percentage": 0.64
+        }
+      },
+      "jit_statistics": null,
+      "timestamp": "2025-10-28T10:30:00.000Z"
+    },
+    {
+      "name": "perftest_interpreter_uniform_random_medium",
+      "executor": "interpreter",
+      "workload": "uniform_random_medium",
+      "statistics": {
+        "min": 8.5,
+        "max": 180.25,
+        "mean": 15.8,
+        "mode": 14.2,
+        "stddev": 4.8,
+        "p50": 15.0,
+        "p95": 22.5,
+        "p99": 28.75,
+        "total_samples": 95234,
+        "total_duration": 10000000.0,
+        "throughput": 9523.4,
+        "sample_rate": 9523.4,
+        "outliers": {
+          "total_outliers": 950,
+          "low_mild": 300,
+          "low_severe": 80,
+          "high_mild": 450,
+          "high_severe": 120,
+          "outlier_percentage": 1.0
+        }
+      },
+      "jit_statistics": null,
+      "timestamp": "2025-10-28T10:30:10.000Z"
+    },
+    {
+      "name": "perftest_interpreter_uniform_random_complex",
+      "executor": "interpreter",
+      "workload": "uniform_random_complex",
+      "statistics": {
+        "min": 15.2,
+        "max": 250.5,
+        "mean": 28.5,
+        "mode": 26.8,
+        "stddev": 8.2,
+        "p50": 27.5,
+        "p95": 42.0,
+        "p99": 52.5,
+        "total_samples": 68450,
+        "total_duration": 10000000.0,
+        "throughput": 6845.0,
+        "sample_rate": 6845.0,
+        "outliers": {
+          "total_outliers": 1100,
+          "low_mild": 250,
+          "low_severe": 100,
+          "high_mild": 550,
+          "high_severe": 200,
+          "outlier_percentage": 1.61
+        }
+      },
+      "jit_statistics": null,
+      "timestamp": "2025-10-28T10:30:20.000Z"
+    },
+    {
+      "name": "perftest_interpreter_cache_heavy",
+      "executor": "interpreter",
+      "workload": "cache_heavy",
+      "statistics": {
+        "min": 3.8,
+        "max": 95.2,
+        "mean": 7.2,
+        "mode": 6.9,
+        "stddev": 1.8,
+        "p50": 7.0,
+        "p95": 10.5,
+        "p99": 13.2,
+        "total_samples": 138890,
+        "total_duration": 10000000.0,
+        "throughput": 13889.0,
+        "sample_rate": 13889.0,
+        "outliers": {
+          "total_outliers": 550,
+          "low_mild": 150,
+          "low_severe": 40,
+          "high_mild": 280,
+          "high_severe": 80,
+          "outlier_percentage": 0.40
+        }
+      },
+      "jit_statistics": null,
+      "timestamp": "2025-10-28T10:30:30.000Z"
+    },
+    {
+      "name": "perftest_interpreter_mixed_workload",
+      "executor": "interpreter",
+      "workload": "mixed_workload",
+      "statistics": {
+        "min": 5.5,
+        "max": 165.0,
+        "mean": 12.5,
+        "mode": 11.2,
+        "stddev": 3.5,
+        "p50": 12.0,
+        "p95": 18.5,
+        "p99": 24.0,
+        "total_samples": 112000,
+        "total_duration": 10000000.0,
+        "throughput": 11200.0,
+        "sample_rate": 11200.0,
+        "outliers": {
+          "total_outliers": 890,
+          "low_mild": 220,
+          "low_severe": 70,
+          "high_mild": 450,
+          "high_severe": 150,
+          "outlier_percentage": 0.79
+        }
+      },
+      "jit_statistics": null,
+      "timestamp": "2025-10-28T10:30:40.000Z"
+    },
+    {
+      "name": "perftest_jit_uniform_random_simple",
+      "executor": "jit",
+      "workload": "uniform_random_simple",
+      "statistics": {
+        "min": 1.2,
+        "max": 42.5,
+        "mean": 2.8,
+        "mode": 2.5,
+        "stddev": 0.9,
+        "p50": 2.7,
+        "p95": 4.2,
+        "p99": 5.8,
+        "total_samples": 357140,
+        "total_duration": 10000000.0,
+        "throughput": 35714.0,
+        "sample_rate": 35714.0,
+        "outliers": {
+          "total_outliers": 1430,
+          "low_mild": 350,
+          "low_severe": 100,
+          "high_mild": 720,
+          "high_severe": 260,
+          "outlier_percentage": 0.40
+        }
+      },
+      "jit_statistics": {
+        "cache_hits": 357040,
+        "cache_misses": 100,
+        "cache_hit_rate": 99.97,
+        "unique_policies": 100,
+        "total_compilations": 100
+      },
+      "timestamp": "2025-10-28T10:30:50.000Z"
+    },
+    {
+      "name": "perftest_jit_uniform_random_medium",
+      "executor": "jit",
+      "workload": "uniform_random_medium",
+      "statistics": {
+        "min": 2.5,
+        "max": 58.3,
+        "mean": 4.2,
+        "mode": 3.8,
+        "stddev": 1.4,
+        "p50": 4.0,
+        "p95": 6.5,
+        "p99": 8.8,
+        "total_samples": 238095,
+        "total_duration": 10000000.0,
+        "throughput": 23809.5,
+        "sample_rate": 23809.5,
+        "outliers": {
+          "total_outliers": 1900,
+          "low_mild": 480,
+          "low_severe": 120,
+          "high_mild": 950,
+          "high_severe": 350,
+          "outlier_percentage": 0.80
+        }
+      },
+      "jit_statistics": {
+        "cache_hits": 237995,
+        "cache_misses": 100,
+        "cache_hit_rate": 99.96,
+        "unique_policies": 100,
+        "total_compilations": 100
+      },
+      "timestamp": "2025-10-28T10:31:00.000Z"
+    },
+    {
+      "name": "perftest_jit_uniform_random_complex",
+      "executor": "jit",
+      "workload": "uniform_random_complex",
+      "statistics": {
+        "min": 4.8,
+        "max": 85.2,
+        "mean": 7.5,
+        "mode": 7.0,
+        "stddev": 2.2,
+        "p50": 7.3,
+        "p95": 11.0,
+        "p99": 14.5,
+        "total_samples": 133333,
+        "total_duration": 10000000.0,
+        "throughput": 13333.3,
+        "sample_rate": 13333.3,
+        "outliers": {
+          "total_outliers": 1600,
+          "low_mild": 400,
+          "low_severe": 130,
+          "high_mild": 800,
+          "high_severe": 270,
+          "outlier_percentage": 1.20
+        }
+      },
+      "jit_statistics": {
+        "cache_hits": 133233,
+        "cache_misses": 100,
+        "cache_hit_rate": 99.93,
+        "unique_policies": 100,
+        "total_compilations": 100
+      },
+      "timestamp": "2025-10-28T10:31:10.000Z"
+    },
+    {
+      "name": "perftest_jit_cache_heavy",
+      "executor": "jit",
+      "workload": "cache_heavy",
+      "statistics": {
+        "min": 0.8,
+        "max": 28.5,
+        "mean": 1.5,
+        "mode": 1.4,
+        "stddev": 0.4,
+        "p50": 1.5,
+        "p95": 2.2,
+        "p99": 2.9,
+        "total_samples": 666667,
+        "total_duration": 10000000.0,
+        "throughput": 66666.7,
+        "sample_rate": 66666.7,
+        "outliers": {
+          "total_outliers": 2000,
+          "low_mild": 500,
+          "low_severe": 100,
+          "high_mild": 1000,
+          "high_severe": 400,
+          "outlier_percentage": 0.30
+        }
+      },
+      "jit_statistics": {
+        "cache_hits": 666657,
+        "cache_misses": 10,
+        "cache_hit_rate": 99.9985,
+        "unique_policies": 10,
+        "total_compilations": 10
+      },
+      "timestamp": "2025-10-28T10:31:20.000Z"
+    },
+    {
+      "name": "perftest_jit_mixed_workload",
+      "executor": "jit",
+      "workload": "mixed_workload",
+      "statistics": {
+        "min": 1.8,
+        "max": 52.0,
+        "mean": 3.5,
+        "mode": 3.2,
+        "stddev": 1.1,
+        "p50": 3.4,
+        "p95": 5.5,
+        "p99": 7.2,
+        "total_samples": 285714,
+        "total_duration": 10000000.0,
+        "throughput": 28571.4,
+        "sample_rate": 28571.4,
+        "outliers": {
+          "total_outliers": 1700,
+          "low_mild": 430,
+          "low_severe": 110,
+          "high_mild": 860,
+          "high_severe": 300,
+          "outlier_percentage": 0.59
+        }
+      },
+      "jit_statistics": {
+        "cache_hits": 285614,
+        "cache_misses": 100,
+        "cache_hit_rate": 99.97,
+        "unique_policies": 100,
+        "total_compilations": 100
+      },
+      "timestamp": "2025-10-28T10:31:30.000Z"
+    }
+  ]
+}

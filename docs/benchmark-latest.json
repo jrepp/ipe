@@ -1,57 +1,31 @@
 {
-  "export_timestamp": "2025-10-28T10:27:39.635516+00:00",
-  "git_commit": "795dbd0",
+  "export_timestamp": "2025-10-28T15:35:37.377223+00:00",
+  "git_commit": "5a5985c",
   "git_branch": "perftest/predicate-execution",
   "benchmarks": [
     {
-      "name": "policy_compilation",
-      "timestamp": "2025-10-28T10:27:39.600463+00:00",
-      "mean_ns": 28.680722211131837,
-      "median_ns": 28.59367701927841,
-      "std_dev_ns": 0.6697535789145158,
-      "mean_lower": 28.55186200243149,
-      "mean_upper": 28.81214156381645,
-      "throughput": null
+      "name": "policy_eval_interpreter",
+      "timestamp": "2025-10-28T15:35:37.377207+00:00",
+      "mean_ns": 36.27,
+      "median_ns": 42.0,
+      "std_dev_ns": 17.346962270092142,
+      "throughput": 27570995.312930793
     },
     {
-      "name": "policy_loading",
-      "timestamp": "2025-10-28T10:27:39.600463+00:00",
-      "mean_ns": 29.069029592591622,
-      "median_ns": 29.024933990300894,
-      "std_dev_ns": 0.6384603252554414,
-      "mean_lower": 28.946040015664227,
-      "mean_upper": 29.194646977154623,
-      "throughput": null
+      "name": "policy_eval_jit",
+      "timestamp": "2025-10-28T15:35:37.377214+00:00",
+      "mean_ns": 3.33,
+      "median_ns": 0.0,
+      "std_dev_ns": 11.293409582583994,
+      "throughput": 300300300.3003003
     },
     {
       "name": "context_creation",
-      "timestamp": "2025-10-28T10:27:39.600463+00:00",
-      "mean_ns": 264.8385032637173,
-      "median_ns": 263.11183653768734,
-      "std_dev_ns": 7.693216840718616,
-      "mean_lower": 263.41458172459414,
-      "mean_upper": 266.41271326794805,
-      "throughput": null
-    },
-    {
-      "name": "concurrent_evaluation_8threads",
-      "timestamp": "2025-10-28T10:27:39.600463+00:00",
-      "mean_ns": 85221.66455935799,
-      "median_ns": 82143.01959497645,
-      "std_dev_ns": 10821.565493913326,
-      "mean_lower": 83202.36513540319,
-      "mean_upper": 87402.63090248543,
-      "throughput": null
-    },
-    {
-      "name": "single_policy_interpreter",
-      "timestamp": "2025-10-28T10:27:39.600463+00:00",
-      "mean_ns": 1.484120931038036,
-      "median_ns": 1.4785189255073417,
-      "std_dev_ns": 0.029558071084732872,
-      "mean_lower": 1.4784560279809045,
-      "mean_upper": 1.4899897924294343,
-      "throughput": null
+      "timestamp": "2025-10-28T15:35:37.377219+00:00",
+      "mean_ns": 13.35,
+      "median_ns": 0.0,
+      "std_dev_ns": 19.462463872798832,
+      "throughput": 74906367.0411985
     }
   ]
 }
