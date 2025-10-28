@@ -9,6 +9,13 @@ The filesystem structure directly maps to the policy tree hierarchy:
 ```
 testing/
 └── policies/                          → Root of policy tree
+    ├── _features/                     → _features (internal namespace)
+    │   ├── sync/                      → _features.sync (namespace)
+    │   │   ├── require_validation.ipe → _features.sync.require_validation (policy)
+    │   │   └── allow_partial_sync.ipe → _features.sync.allow_partial_sync (policy)
+    │   └── registry/                  → _features.registry (namespace)
+    │       ├── enable_stats_collection.ipe → _features.registry.enable_stats_collection (policy)
+    │       └── require_heartbeat.ipe  → _features.registry.require_heartbeat (policy)
     ├── prod/                          → prod (namespace)
     │   ├── deployment/                → prod.deployment (namespace)
     │   │   ├── approval.ipe           → prod.deployment.approval (policy)
@@ -26,6 +33,13 @@ The filesystem structure above translates to this policy tree:
 
 ```
 root
+├── _features (directory) [INTERNAL]
+│   ├── sync (directory)
+│   │   ├── require_validation (policy)
+│   │   └── allow_partial_sync (policy)
+│   └── registry (directory)
+│       ├── enable_stats_collection (policy)
+│       └── require_heartbeat (policy)
 ├── prod (directory)
 │   ├── deployment (directory)
 │   │   ├── approval (policy)
@@ -38,6 +52,35 @@ root
 ```
 
 ## Example Policies
+
+### Internal `_features` Policies
+
+The `_features` namespace is **reserved for internal control plane policies**. These policies are loaded into the control plane's embedded IPE engine and control the behavior of the control plane itself.
+
+**Important Notes:**
+- `_features` policies are NOT exposed to data plane instances
+- IPE instances do NOT get feature flags
+- Only the control plane evaluates these policies to make operational decisions
+
+**_features.sync.require_validation**
+- Controls whether sync operations must validate all policies before applying
+- Production: validation always required
+- Staging: can optionally skip for rapid iteration
+
+**_features.sync.allow_partial_sync**
+- Controls whether partial syncs (some policies fail) are allowed
+- Production: all-or-nothing required
+- Dev/staging: can allow partial sync if explicitly requested
+
+**_features.registry.enable_stats_collection**
+- Controls detailed statistics collection from registered instances
+- Production: always enabled for observability
+- Other environments: configurable
+
+**_features.registry.require_heartbeat**
+- Controls heartbeat monitoring requirements
+- Production: strict heartbeat requirements
+- Staging/dev: more lenient
 
 ### Production Environment
 
@@ -70,26 +113,41 @@ git init
 git add policies/
 git commit -m "Initial policy tree"
 
-# Configure IPE sidecar to sync from this repo
+# Get the commit hash for sync
+COMMIT_HASH=$(git rev-parse HEAD)
+
+# Configure IPE control plane to sync from this repo
 # In ipe.toml:
 [control_plane.git_sync]
 repository_url = "file:///path/to/ipe/testing"
 branch = "main"
-policies_directory = "policies"
+policies_root_path = "policies"
+
+# Sync to specific commit (required)
+curl --unix-socket /var/run/ipe/control.sock \
+  -X POST \
+  -d "{
+    \"method\": \"sync\",
+    \"params\": {
+      \"commit\": \"$COMMIT_HASH\"
+    }
+  }"
 ```
 
-### Manual Policy Loading
+### Querying Instance Registry
 
 ```bash
-# Use the control plane API to load policies
+# List all registered IPE instances with stats
+curl --unix-socket /var/run/ipe/control.sock \
+  -X POST \
+  -d '{"method": "list"}'
+
+# Get detailed stats for a specific instance
 curl --unix-socket /var/run/ipe/control.sock \
   -X POST \
   -d '{
-    "method": "sync-from-git",
-    "params": {
-      "repository": "file:///path/to/ipe/testing",
-      "branch": "main"
-    }
+    "method": "stats",
+    "params": {"id": "ipe-abc-123"}
   }'
 ```
 
@@ -152,22 +210,24 @@ policy RequireAuthentication {
 EOF
 ```
 
-## Feature Flags Example
+## Control Plane Feature Flags
 
-Policies can check feature flags advertised by the server:
+The control plane uses its internal `_features` policy tree to control its own behavior. These are NOT feature flags for IPE instances - they are policies that the control plane evaluates internally to make operational decisions.
 
-```ipe
-policy ConditionalFeature {
-    // Check if experimental caching is enabled
-    if feature_flags.experimental_caching {
-        // Use caching-aware logic
-        allow("Using cached evaluation")
-    } else {
-        // Standard evaluation
-        allow("Standard evaluation")
-    }
-}
+The control plane embeds the IPE engine directly (no socket communication needed). Before operations like syncing, the control plane evaluates `_features` policies:
+
 ```
+Example: Before syncing, control plane internally evaluates:
+  Policy: _features.sync.require_validation
+  Context: {
+    operation: "sync",
+    environment: "production",
+    skip_validation: false
+  }
+  Result: allow/deny with reasoning
+```
+
+**Remember**: Data plane instances advertise feature flags in their hello messages (RFC-002), but those are separate from the control plane's `_features` policies.
 
 ## References
 
