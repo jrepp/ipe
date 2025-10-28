@@ -120,3 +120,54 @@ bench-export:
 # Run benchmarks and export results
 bench-all: bench bench-export
     @echo "✅ Benchmarks complete! Results exported to docs/"
+
+# Run continuous benchmarks (1-second intervals) for time-series charts
+bench-continuous DURATION="60":
+    @echo "🚀 Running continuous benchmarks for {{DURATION}} seconds..."
+    cd crates/ipe-core && cargo run --release --bin bench_continuous --features jit {{DURATION}}
+    @echo "✅ Continuous benchmark complete! View at http://localhost:8080/benchmarks.html"
+
+# Start Docker nginx server for docs
+docs-serve:
+    @echo "🐳 Starting nginx server with Docker..."
+    cd docs && docker-compose up -d docs
+    @echo "✅ Server running at http://localhost:8080"
+    @echo "📊 Performance: http://localhost:8080/performance.html"
+    @echo "📈 Benchmarks: http://localhost:8080/benchmarks.html"
+
+# Stop Docker nginx server
+docs-stop:
+    @echo "🛑 Stopping nginx server..."
+    cd docs && docker-compose down
+
+# View Docker logs
+docs-logs:
+    cd docs && docker-compose logs -f docs
+
+# Test GitHub Pages with Playwright (uses Docker nginx)
+test-pages:
+    @echo "🧪 Testing GitHub Pages with Playwright..."
+    cd docs && docker-compose up -d docs
+    @sleep 2
+    cd docs && npx playwright test
+    cd docs && docker-compose down
+
+# Test GitHub Pages with headed browser (uses Docker nginx)
+test-pages-headed:
+    @echo "🧪 Starting Docker nginx server..."
+    cd docs && docker-compose up -d docs
+    @sleep 2
+    @echo "🌐 Opening browser at http://localhost:8080"
+    @open http://localhost:8080
+    @echo "✅ Server running. Press Ctrl+C when done, then run 'just docs-stop'"
+
+# Run quick validation tests
+test-pages-quick:
+    @echo "🧪 Running quick validation tests..."
+    cd docs && node test-pages.js
+
+# Full test with Docker (runs tests in container)
+test-pages-docker:
+    @echo "🐳 Running full test suite with Docker..."
+    cd docs && docker-compose --profile test up --abort-on-container-exit
+    cd docs && docker-compose down
