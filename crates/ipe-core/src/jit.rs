@@ -320,6 +320,7 @@ impl Default for JitCompiler {
 }
 
 #[cfg(test)]
+#[cfg(not(miri))] // Skip JIT tests under Miri due to pointer provenance issues in region crate
 mod tests {
     use super::*;
     use crate::bytecode::{CompiledPolicy, Instruction, PolicyHeader};

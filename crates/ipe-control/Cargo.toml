@@ -9,3 +9,4 @@ license.workspace = true
 tonic = { workspace = true }
 prost = { workspace = true }
 tokio = { workspace = true }
+async-stream = { workspace = true }

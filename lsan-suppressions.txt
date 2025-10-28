@@ -1,0 +1,12 @@
+# LeakSanitizer suppressions file
+# Suppress known false positives or third-party library leaks
+
+# Format:
+# leak:<pattern>
+# Where pattern is a function name or library that contains the leak
+
+# Suppress leaks in cranelift-jit (JIT compilation allocates executable memory)
+leak:cranelift_jit
+
+# Suppress leaks in region crate (memory protection syscalls)
+leak:region

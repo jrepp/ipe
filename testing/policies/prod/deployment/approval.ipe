@@ -1,0 +1,22 @@
+// Production Deployment Approval Policy
+// Path: prod.deployment.approval
+//
+// This policy requires approval from senior engineers before
+// deployments can proceed to production.
+
+policy RequireDeploymentApproval {
+    // Context requirements
+    require resource.type == "Deployment"
+    require resource.environment == "production"
+
+    // Check for required approvals
+    let approvers = context.approvals || []
+    let senior_approvers = approvers.filter(a => a.role == "senior_engineer")
+
+    // Decision logic
+    if senior_approvers.length >= 2 {
+        allow("Sufficient senior engineer approvals")
+    } else {
+        deny("Requires 2 senior engineer approvals, found " + senior_approvers.length)
+    }
+}
