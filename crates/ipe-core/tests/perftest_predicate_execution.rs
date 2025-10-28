@@ -52,6 +52,17 @@ struct Statistics {
     total_duration: Duration,
     throughput: f64, // operations per second
     sample_rate: f64, // samples per second
+    outliers: OutlierInfo,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct OutlierInfo {
+    total_outliers: usize,
+    low_mild: usize,
+    low_severe: usize,
+    high_mild: usize,
+    high_severe: usize,
+    outlier_percentage: f64,
 }
 
 // Serialize Duration as microseconds (f64)
@@ -85,25 +96,6 @@ struct JitStatistics {
     total_compilations: usize,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-struct TestResult {
-    name: String,
-    executor: String, // "interpreter" or "jit"
-    workload: String, // "uniform_random_simple", "cache_heavy", etc.
-    statistics: Statistics,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    jit_statistics: Option<JitStatistics>,
-    timestamp: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-struct PerftestReport {
-    generated_at: String,
-    total_tests: usize,
-    total_duration_secs: f64,
-    results: Vec<TestResult>,
-}
-
 impl Statistics {
     fn from_samples(mut samples: Vec<Duration>, test_duration: Duration) -> Self {
         assert!(!samples.is_empty(), "Cannot compute statistics on empty samples");
@@ -131,12 +123,17 @@ impl Statistics {
         let stddev = Duration::from_nanos(variance.sqrt() as u64);
 
         // Calculate percentiles
+        let p25 = samples[total_samples * 25 / 100];
         let p50 = samples[total_samples * 50 / 100];
+        let p75 = samples[total_samples * 75 / 100];
         let p95 = samples[total_samples * 95 / 100];
         let p99 = samples[total_samples * 99 / 100];
 
         // Calculate mode (most common duration, grouped by microsecond)
         let mode = calculate_mode(&samples);
+
+        // Calculate outliers using IQR (Interquartile Range) method
+        let outliers = detect_outliers(&samples, p25, p75);
 
         // Calculate throughput and sample rate
         let throughput = total_samples as f64 / test_duration.as_secs_f64();
@@ -155,6 +152,7 @@ impl Statistics {
             total_duration: test_duration,
             throughput,
             sample_rate,
+            outliers,
         }
     }
 
@@ -180,6 +178,41 @@ impl Statistics {
         println!("  p50 (median):   {:>10.3} µs", self.p50.as_secs_f64() * 1_000_000.0);
         println!("  p95:            {:>10.3} µs", self.p95.as_secs_f64() * 1_000_000.0);
         println!("  p99:            {:>10.3} µs", self.p99.as_secs_f64() * 1_000_000.0);
+
+        // Print outlier information
+        if self.outliers.total_outliers > 0 {
+            println!();
+            println!("Outliers: Found {} outliers among {} measurements ({:.2}%)",
+                self.outliers.total_outliers,
+                self.total_samples,
+                self.outliers.outlier_percentage
+            );
+            if self.outliers.low_severe > 0 {
+                println!("  {} ({:.2}%) low severe",
+                    self.outliers.low_severe,
+                    (self.outliers.low_severe as f64 / self.total_samples as f64) * 100.0
+                );
+            }
+            if self.outliers.low_mild > 0 {
+                println!("  {} ({:.2}%) low mild",
+                    self.outliers.low_mild,
+                    (self.outliers.low_mild as f64 / self.total_samples as f64) * 100.0
+                );
+            }
+            if self.outliers.high_mild > 0 {
+                println!("  {} ({:.2}%) high mild",
+                    self.outliers.high_mild,
+                    (self.outliers.high_mild as f64 / self.total_samples as f64) * 100.0
+                );
+            }
+            if self.outliers.high_severe > 0 {
+                println!("  {} ({:.2}%) high severe",
+                    self.outliers.high_severe,
+                    (self.outliers.high_severe as f64 / self.total_samples as f64) * 100.0
+                );
+            }
+        }
+
         println!("{}", "=".repeat(80));
     }
 }
@@ -246,6 +279,61 @@ fn calculate_mode(samples: &[Duration]) -> Option<Duration> {
         .map(|(&micros, _)| micros)?;
 
     Some(Duration::from_micros(mode_micros))
+}
+
+/// Detect outliers using IQR (Interquartile Range) method
+///
+/// Outliers are classified as:
+/// - Low severe: value < Q1 - 3*IQR
+/// - Low mild: Q1 - 3*IQR <= value < Q1 - 1.5*IQR
+/// - High mild: Q3 + 1.5*IQR < value <= Q3 + 3*IQR
+/// - High severe: value > Q3 + 3*IQR
+///
+/// This is the same method used by criterion.rs for benchmark outlier detection.
+fn detect_outliers(samples: &[Duration], q1: Duration, q3: Duration) -> OutlierInfo {
+    let iqr_nanos = q3.as_nanos().saturating_sub(q1.as_nanos()) as f64;
+    let q1_nanos = q1.as_nanos() as f64;
+    let q3_nanos = q3.as_nanos() as f64;
+
+    let low_severe_threshold = q1_nanos - 3.0 * iqr_nanos;
+    let low_mild_threshold = q1_nanos - 1.5 * iqr_nanos;
+    let high_mild_threshold = q3_nanos + 1.5 * iqr_nanos;
+    let high_severe_threshold = q3_nanos + 3.0 * iqr_nanos;
+
+    let mut low_severe = 0;
+    let mut low_mild = 0;
+    let mut high_mild = 0;
+    let mut high_severe = 0;
+
+    for &sample in samples {
+        let sample_nanos = sample.as_nanos() as f64;
+
+        if sample_nanos < low_severe_threshold {
+            low_severe += 1;
+        } else if sample_nanos < low_mild_threshold {
+            low_mild += 1;
+        } else if sample_nanos > high_severe_threshold {
+            high_severe += 1;
+        } else if sample_nanos > high_mild_threshold {
+            high_mild += 1;
+        }
+    }
+
+    let total_outliers = low_severe + low_mild + high_mild + high_severe;
+    let outlier_percentage = if samples.is_empty() {
+        0.0
+    } else {
+        (total_outliers as f64 / samples.len() as f64) * 100.0
+    };
+
+    OutlierInfo {
+        total_outliers,
+        low_mild,
+        low_severe,
+        high_mild,
+        high_severe,
+        outlier_percentage,
+    }
 }
 
 // =============================================================================
@@ -466,6 +554,93 @@ impl PredicateGenerator {
         }
 
         // Default deny if no condition matched
+        policy.emit(Instruction::Return { value: false });
+
+        policy
+    }
+
+    /// Generate policies with logarithmic size distribution to reach target total size
+    ///
+    /// Creates a realistic distribution where:
+    /// - 70% are small policies (1-5 comparisons)
+    /// - 20% are medium policies (6-15 comparisons)
+    /// - 8% are large policies (16-50 comparisons)
+    /// - 2% are very large policies (51-200 comparisons)
+    ///
+    /// Returns (policies, total_bytes_estimate)
+    fn generate_logarithmic_distribution(&mut self, target_bytes: usize) -> (Vec<CompiledPolicy>, usize) {
+        let mut policies = Vec::new();
+        let mut total_bytes = 0;
+
+        // Rough estimate: each comparison is about 25 bytes (3-4 instructions + constant)
+        const BYTES_PER_COMPARISON: usize = 25;
+        const POLICY_OVERHEAD: usize = 50; // Base policy overhead
+
+        while total_bytes < target_bytes {
+            // Generate policy size using logarithmic distribution
+            let rand_val = self.rng.gen::<f64>();
+            let num_comparisons = if rand_val < 0.70 {
+                // 70% small: 1-5 comparisons
+                self.rng.gen_range(1..=5)
+            } else if rand_val < 0.90 {
+                // 20% medium: 6-15 comparisons
+                self.rng.gen_range(6..=15)
+            } else if rand_val < 0.98 {
+                // 8% large: 16-50 comparisons
+                self.rng.gen_range(16..=50)
+            } else {
+                // 2% very large: 51-200 comparisons
+                self.rng.gen_range(51..=200)
+            };
+
+            let policy = self.generate_policy_with_comparisons(num_comparisons);
+            let policy_bytes = POLICY_OVERHEAD + (num_comparisons * BYTES_PER_COMPARISON);
+            total_bytes += policy_bytes;
+            policies.push(policy);
+
+            // Progress indicator every 10MB
+            if policies.len() % 10000 == 0 {
+                let mb = total_bytes as f64 / (1024.0 * 1024.0);
+                println!("  Generated {} policies, ~{:.1} MB", policies.len(), mb);
+            }
+        }
+
+        (policies, total_bytes)
+    }
+
+    /// Generate a policy with a specific number of comparisons
+    fn generate_policy_with_comparisons(&mut self, num_comparisons: usize) -> CompiledPolicy {
+        let mut policy = CompiledPolicy::new(self.rng.gen());
+
+        for i in 0..num_comparisons {
+            let field_offset = self.rng.gen_range(0..10);
+            let const_value = self.rng.gen_range(0..100);
+            let const_idx = policy.add_constant(Value::Int(const_value));
+
+            policy.emit(Instruction::LoadField { offset: field_offset });
+            policy.emit(Instruction::LoadConst { idx: const_idx });
+
+            let op = match self.rng.gen_range(0..6) {
+                0 => CompOp::Eq,
+                1 => CompOp::Neq,
+                2 => CompOp::Lt,
+                3 => CompOp::Lte,
+                4 => CompOp::Gt,
+                _ => CompOp::Gte,
+            };
+            policy.emit(Instruction::Compare { op });
+
+            if i > 0 {
+                if self.rng.gen_bool(0.5) {
+                    policy.emit(Instruction::And);
+                } else {
+                    policy.emit(Instruction::Or);
+                }
+            }
+        }
+
+        policy.emit(Instruction::JumpIfFalse { offset: 2 });
+        policy.emit(Instruction::Return { value: true });
         policy.emit(Instruction::Return { value: false });
 
         policy
@@ -1028,4 +1203,66 @@ fn perftest_jit_cache_hit_rate_comparison() {
         jit_stats_100.cache_hit_rate, stats_100.throughput
     );
     println!("{}", "=".repeat(80));
+}
+
+// =============================================================================
+// Logarithmic Distribution Tests - 100MB Policy Set
+// =============================================================================
+
+#[test]
+#[ignore]
+fn perftest_interpreter_logarithmic_100mb() {
+    let mut gen = PredicateGenerator::new(123456789);
+    println!("\nGenerating ~100MB of policies with logarithmic size distribution...");
+
+    let target_bytes = 100 * 1024 * 1024; // 100 MB
+    let (policies, actual_bytes) = gen.generate_logarithmic_distribution(target_bytes);
+
+    println!(
+        "Generated {} policies totaling ~{:.1} MB",
+        policies.len(),
+        actual_bytes as f64 / (1024.0 * 1024.0)
+    );
+
+    let contexts = create_test_contexts(200, 987654321);
+    let field_map = create_field_mapping();
+
+    let stats = run_interpreter_test(
+        "Interpreter - Logarithmic Distribution (100MB)",
+        &policies,
+        &contexts,
+        &field_map,
+        Duration::from_secs(10),
+    );
+
+    stats.print("Interpreter - Logarithmic Distribution (100MB)");
+}
+
+#[test]
+#[ignore]
+#[cfg(all(feature = "jit", not(miri)))]
+fn perftest_jit_logarithmic_100mb() {
+    let mut gen = PredicateGenerator::new(123456789);
+    println!("\nGenerating ~100MB of policies with logarithmic size distribution...");
+
+    let target_bytes = 100 * 1024 * 1024; // 100 MB
+    let (policies, actual_bytes) = gen.generate_logarithmic_distribution(target_bytes);
+
+    println!(
+        "Generated {} policies totaling ~{:.1} MB",
+        policies.len(),
+        actual_bytes as f64 / (1024.0 * 1024.0)
+    );
+
+    let contexts = create_test_contexts(200, 987654321);
+
+    let (stats, jit_stats) = run_jit_test(
+        "JIT - Logarithmic Distribution (100MB)",
+        &policies,
+        &contexts,
+        Duration::from_secs(10),
+    );
+
+    stats.print("JIT - Logarithmic Distribution (100MB)");
+    jit_stats.print();
 }

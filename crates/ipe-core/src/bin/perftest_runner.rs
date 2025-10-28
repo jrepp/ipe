@@ -22,6 +22,8 @@ fn main() {
         ("interpreter", "mixed_workload", "perftest_interpreter_mixed_workload"),
         ("interpreter", "bytecode_stress", "perftest_interpreter_bytecode_stress"),
         ("interpreter", "jump_heavy", "perftest_interpreter_jump_heavy"),
+        // Note: logarithmic_100mb test excluded from default run (too heavy)
+        // ("interpreter", "logarithmic_100mb", "perftest_interpreter_logarithmic_100mb"),
     ];
 
     #[cfg(feature = "jit")]
@@ -35,6 +37,8 @@ fn main() {
         ("jit", "jump_heavy", "perftest_jit_jump_heavy"),
         ("jit", "comparison", "perftest_jit_vs_interpreter_comparison"),
         ("jit", "cache_comparison", "perftest_jit_cache_hit_rate_comparison"),
+        // Note: logarithmic_100mb test excluded from default run (too heavy)
+        // ("jit", "logarithmic_100mb", "perftest_jit_logarithmic_100mb"),
     ];
 
     // Run interpreter tests

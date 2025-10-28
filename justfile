@@ -50,6 +50,21 @@ perftest-quick:
 perftest-compare:
     @just perftest perftest_jit_vs_interpreter_comparison
 
+# Run 100MB logarithmic distribution test (interpreter) - WARNING: Slow!
+perftest-100mb-interpreter:
+    @echo "⚠️  Running 100MB logarithmic distribution test (interpreter)..."
+    @echo "⚠️  This may take several minutes to generate policies and run!"
+    @just perftest perftest_interpreter_logarithmic_100mb
+
+# Run 100MB logarithmic distribution test (JIT) - WARNING: Slow!
+perftest-100mb-jit:
+    @echo "⚠️  Running 100MB logarithmic distribution test (JIT)..."
+    @echo "⚠️  This may take several minutes to generate policies and run!"
+    @just perftest perftest_jit_logarithmic_100mb
+
+# Run both 100MB logarithmic distribution tests
+perftest-100mb: perftest-100mb-interpreter perftest-100mb-jit
+
 # Clean perftest results
 perftest-clean:
     rm -f crates/ipe-core/perftest-results.json
