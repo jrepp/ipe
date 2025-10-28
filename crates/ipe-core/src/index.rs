@@ -81,7 +81,7 @@ impl PolicyDB {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bytecode::{Instruction, Value};
+    use crate::bytecode::Instruction;
 
     #[test]
     fn test_policydb_new() {
