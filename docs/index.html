@@ -621,6 +621,75 @@ just perftest-quick
                     <li><strong>100MB Logarithmic:</strong> Realistic distribution of policy sizes</li>
                 </ul>
             </section>
+
+            <!-- Interactive Demo -->
+            <section class="section">
+                <h2>🎮 Live Predicate Evaluation Demo</h2>
+                <p>
+                    Move your mouse over the grid to see <span class="highlight">real-time predicate evaluation</span>.
+                    Each cell has its own policy that checks mouse position boundaries. Edit the predicates
+                    on the left to experiment with different conditions!
+                </p>
+
+                <div style="display: flex; gap: 30px; margin-top: 30px; flex-wrap: wrap;">
+                    <!-- Predicate Editor Panel -->
+                    <div style="flex: 1; min-width: 350px;">
+                        <h3 style="color: #764ba2; margin-bottom: 15px;">📝 Editable Predicates</h3>
+                        <div id="predicate-editors" style="display: grid; gap: 10px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">📊 Performance Metrics</h4>
+                            <div id="metrics" style="font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.6;">
+                                <div>Mouse Position: <span id="mouse-pos" style="color: #667eea;">-</span></div>
+                                <div>Evaluations/sec: <span id="eval-rate" style="color: #764ba2;">0</span></div>
+                                <div>Last Eval Time: <span id="eval-time" style="color: #667eea;">0µs</span></div>
+                                <div>Active Cells: <span id="active-cells" style="color: #764ba2;">0/9</span></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-size: 0.9em;">
+                            <strong>💡 Tip:</strong> Try expressions like:<br>
+                            <code style="background: white; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-top: 5px;">
+                                mouse.x > 200 && mouse.y < 300
+                            </code>
+                        </div>
+                    </div>
+
+                    <!-- Visualization Panel -->
+                    <div style="flex: 1; min-width: 450px;">
+                        <h3 style="color: #764ba2; margin-bottom: 15px;">🎯 9-Slice Grid Visualization</h3>
+                        <div id="demo-grid" style="
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 2px;
+                            background: #e0e0e0;
+                            border-radius: 10px;
+                            overflow: hidden;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                        ">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <button id="reset-btn" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border: none;
+                                padding: 12px 25px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                font-size: 1em;
+                                transition: all 0.3s;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                🔄 Reset to Defaults
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <footer>
@@ -636,6 +705,202 @@ just perftest-quick
 
     <script>
         mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        // =====================================================================
+        // Interactive Predicate Evaluation Demo
+        // =====================================================================
+
+        // Default predicates for 9-slice grid (3x3)
+        const defaultPredicates = [
+            // Top row
+            'mouse.x < 200 && mouse.y < 200',
+            'mouse.x >= 200 && mouse.x < 400 && mouse.y < 200',
+            'mouse.x >= 400 && mouse.y < 200',
+            // Middle row
+            'mouse.x < 200 && mouse.y >= 200 && mouse.y < 400',
+            'mouse.x >= 200 && mouse.x < 400 && mouse.y >= 200 && mouse.y < 400',
+            'mouse.x >= 400 && mouse.y >= 200 && mouse.y < 400',
+            // Bottom row
+            'mouse.x < 200 && mouse.y >= 400',
+            'mouse.x >= 200 && mouse.x < 400 && mouse.y >= 400',
+            'mouse.x >= 400 && mouse.y >= 400'
+        ];
+
+        let predicates = [...defaultPredicates];
+        let mouseX = 0;
+        let mouseY = 0;
+        let evalCount = 0;
+        let lastEvalTime = 0;
+        let lastSecond = Date.now();
+        let evalPerSecond = 0;
+
+        // Simple expression evaluator for IPE-like predicates
+        function evaluatePredicate(expr, context) {
+            const startTime = performance.now();
+            try {
+                // Replace IPE syntax with JavaScript
+                let jsExpr = expr
+                    .replace(/mouse\.x/g, context.x)
+                    .replace(/mouse\.y/g, context.y)
+                    .replace(/&&/g, '&&')
+                    .replace(/\|\|/g, '||');
+
+                const result = eval(jsExpr);
+                const endTime = performance.now();
+                lastEvalTime = (endTime - startTime) * 1000; // Convert to microseconds
+                return !!result;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Create predicate editors
+        function initializeEditors() {
+            const container = document.getElementById('predicate-editors');
+            container.innerHTML = '';
+
+            predicates.forEach((pred, index) => {
+                const row = Math.floor(index / 3);
+                const col = index % 3;
+                const cellLabel = `Cell [${row},${col}]`;
+
+                const editorDiv = document.createElement('div');
+                editorDiv.style.cssText = 'background: white; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0;';
+
+                const label = document.createElement('div');
+                label.textContent = cellLabel;
+                label.style.cssText = 'font-weight: 600; color: #667eea; margin-bottom: 5px; font-size: 0.9em;';
+
+                const textarea = document.createElement('textarea');
+                textarea.value = pred;
+                textarea.rows = 2;
+                textarea.style.cssText = `
+                    width: 100%;
+                    font-family: 'Courier New', monospace;
+                    font-size: 0.85em;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    resize: vertical;
+                `;
+                textarea.addEventListener('input', (e) => {
+                    predicates[index] = e.target.value;
+                    updateVisualization();
+                });
+
+                editorDiv.appendChild(label);
+                editorDiv.appendChild(textarea);
+                container.appendChild(editorDiv);
+            });
+        }
+
+        // Create grid cells
+        function initializeGrid() {
+            const grid = document.getElementById('demo-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.id = `cell-${i}`;
+                cell.style.cssText = `
+                    aspect-ratio: 1;
+                    background: #f0f0f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 2em;
+                    transition: all 0.15s ease;
+                    cursor: crosshair;
+                    position: relative;
+                `;
+
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                cell.innerHTML = `<span style="opacity: 0.3;">[${row},${col}]</span>`;
+
+                grid.appendChild(cell);
+            }
+        }
+
+        // Update visualization based on current mouse position
+        function updateVisualization() {
+            const context = { x: mouseX, y: mouseY };
+            let activeCount = 0;
+
+            predicates.forEach((pred, index) => {
+                const cell = document.getElementById(`cell-${index}`);
+                if (!cell) return;
+
+                const isActive = evaluatePredicate(pred, context);
+                if (isActive) activeCount++;
+
+                // Update cell styling
+                if (isActive) {
+                    cell.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    cell.style.color = 'white';
+                    cell.style.transform = 'scale(0.95)';
+                    cell.style.boxShadow = 'inset 0 0 20px rgba(0, 0, 0, 0.3)';
+                    cell.querySelector('span').style.opacity = '1';
+                    cell.querySelector('span').style.fontWeight = 'bold';
+                } else {
+                    cell.style.background = '#f0f0f0';
+                    cell.style.color = '#999';
+                    cell.style.transform = 'scale(1)';
+                    cell.style.boxShadow = 'none';
+                    cell.querySelector('span').style.opacity = '0.3';
+                    cell.querySelector('span').style.fontWeight = 'normal';
+                }
+            });
+
+            // Update metrics
+            evalCount++;
+            const now = Date.now();
+            if (now - lastSecond >= 1000) {
+                evalPerSecond = evalCount;
+                evalCount = 0;
+                lastSecond = now;
+            }
+
+            document.getElementById('active-cells').textContent = `${activeCount}/9`;
+            document.getElementById('eval-rate').textContent = evalPerSecond;
+            document.getElementById('eval-time').textContent = `${lastEvalTime.toFixed(2)}µs`;
+        }
+
+        // Track mouse movement over the grid
+        function initializeMouseTracking() {
+            const grid = document.getElementById('demo-grid');
+            const updateMousePos = (e) => {
+                const rect = grid.getBoundingClientRect();
+                mouseX = Math.floor(e.clientX - rect.left);
+                mouseY = Math.floor(e.clientY - rect.top);
+
+                document.getElementById('mouse-pos').textContent = `(${mouseX}, ${mouseY})`;
+                updateVisualization();
+            };
+
+            grid.addEventListener('mousemove', updateMousePos);
+            grid.addEventListener('mouseenter', updateMousePos);
+            grid.addEventListener('mouseleave', () => {
+                mouseX = -1;
+                mouseY = -1;
+                document.getElementById('mouse-pos').textContent = '-';
+                updateVisualization();
+            });
+        }
+
+        // Reset button
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeEditors();
+            initializeGrid();
+            initializeMouseTracking();
+            updateVisualization();
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                predicates = [...defaultPredicates];
+                initializeEditors();
+                updateVisualization();
+            });
+        });
     </script>
 </body>
 </html>
