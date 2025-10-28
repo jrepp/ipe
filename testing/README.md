@@ -229,8 +229,86 @@ Example: Before syncing, control plane internally evaluates:
 
 **Remember**: Data plane instances advertise feature flags in their hello messages (RFC-002), but those are separate from the control plane's `_features` policies.
 
+## Data Plane Usage
+
+The data plane allows services to write dynamic data that predicates evaluate against (see RFC-005).
+
+### Writing Approval Data
+
+```bash
+# Deployment service writes approval data
+curl --unix-socket /var/run/ipe/data.sock \
+  -X POST \
+  -d '{
+    "method": "put",
+    "params": {
+      "key": "approvals.deploy-123",
+      "value": {
+        "deployment_id": "deploy-123",
+        "approvers": [
+          {"user": "alice", "role": "senior_engineer", "timestamp": 1698765000},
+          {"user": "bob", "role": "senior_engineer", "timestamp": 1698765100}
+        ]
+      },
+      "ttl": 3600
+    }
+  }'
+
+# Predicate prod.deployment.approval reads this data during evaluation
+```
+
+### Writing Relationship Data
+
+```bash
+# Identity service writes user relationships
+curl --unix-socket /var/run/ipe/data.sock \
+  -X POST \
+  -d '{
+    "method": "put",
+    "params": {
+      "key": "relationships.user-alice",
+      "value": {
+        "user_id": "alice",
+        "groups": ["engineering", "senior-engineers"],
+        "manager": "charlie",
+        "org_unit": "platform"
+      }
+    }
+  }'
+```
+
+### Reading Data in Predicates
+
+Predicates access data using `data.get()`:
+
+```ipe
+policy RequireDeploymentApproval {
+    // ... context checks ...
+
+    // Fetch approval data
+    let approval_data = data.get("approvals." + context.deployment_id) || {}
+    let approvers = approval_data.approvers || []
+    let senior_approvers = approvers.filter(a => a.role == "senior_engineer")
+
+    if senior_approvers.length >= 2 {
+        allow("Sufficient approvals")
+    } else {
+        deny("Requires 2 senior engineer approvals")
+    }
+}
+```
+
+**Key Points:**
+- Services write data directly to data plane (not control plane)
+- Different authorization model than policies
+- High write throughput with eventual consistency (AP)
+- Predicates read from local cache (fast)
+- Data distributed via message plane (pub/sub or gossip)
+
 ## References
 
-- [RFC-004: Control Plane Architecture](../rfcs/004-control-plane.md)
-- [RFC-003: Policy Tree Storage](../rfcs/003-policy-tree-storage.md)
+- [RFC-001: Predicate Service Architecture](../rfcs/001-predicate-service-architecture.md)
 - [RFC-002: SSE/JSON Protocol](../rfcs/002-sse-json-protocol.md)
+- [RFC-003: Policy Tree Storage](../rfcs/003-policy-tree-storage.md)
+- [RFC-004: Control Plane Architecture](../rfcs/004-control-plane.md)
+- [RFC-005: Data Plane Architecture](../rfcs/005-data-plane.md)
