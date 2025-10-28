@@ -6,7 +6,7 @@
 
 ## Summary
 
-A minimal Rust service (<50MB) that runs as a predicate service, providing sub-millisecond policy evaluation via separate data and control planes. Optimized for local communication and zero-downtime updates.
+A minimal Rust service (<50MB) that runs as a predicate service, providing sub-millisecond policy evaluation via three distinct planes: Control (policy management), Data (privileged data writes), and Evaluation (application queries). Each plane has separate privilege boundaries and authorization models.
 
 ## Motivation
 
@@ -19,51 +19,97 @@ Modern workloads need policy evaluation that is:
 
 ## Architecture
 
-### Service Model
+### Three-Plane Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│      IPE Predicate Service              │
-├─────────────────────────────────────────┤
-│                                         │
-│  ┌─────────────┐    ┌────────────────┐ │
-│  │ Control     │    │  Data Plane    │ │
-│  │ Plane       │    │  (Evaluation)  │ │
-│  │             │    │                │ │
-│  │ - Policy    │───▶│ - Query API    │ │
-│  │   Updates   │    │ - Hot Read     │ │
-│  │ - Data Sync │    │ - Zero-copy    │ │
-│  │ - Metrics   │    │                │ │
-│  └─────────────┘    └────────────────┘ │
-│         │                    ▲          │
-│         │                    │          │
-└─────────┼────────────────────┼──────────┘
-          │                    │
-          │                    │
-   Control Socket         Data Socket(s)
-   (Unix/TCP)            (Unix/TCP/Multi)
-          │                    │
-          ▼                    ▼
-   ┌──────────┐         ┌──────────┐
-   │ Control  │         │ Workload │
-   │ Service  │         │ Services │
-   └──────────┘         └──────────┘
+                    ┌────────────────────────────────────────┐
+                    │     IPE Predicate Service              │
+                    ├────────────────────────────────────────┤
+                    │                                        │
+   CONTROL PLANE    │  ┌──────────────────────────────────┐ │  Privilege: HIGHEST
+   (Admin)          │  │  Control Plane                   │ │  Auth: Admin tokens
+   ─────────────────┼─▶│  - Policy management             │ │  Who: Security admins
+                    │  │  - GitOps sync                   │ │
+                    │  │  - Policy distribution           │ │
+                    │  └──────────────────────────────────┘ │
+                    │                │                       │
+                    │                ▼                       │
+   DATA PLANE       │  ┌──────────────────────────────────┐ │  Privilege: PRIVILEGED
+   (Services)       │  │  Data Plane                      │ │  Auth: Service tokens
+   ─────────────────┼─▶│  - Dynamic data writes           │ │  Who: Services
+                    │  │  - Approvals, relationships      │ │
+                    │  │  - Message plane distribution    │ │
+                    │  └──────────────────────────────────┘ │
+                    │                │                       │
+                    │                ▼                       │
+   EVALUATION PLANE │  ┌──────────────────────────────────┐ │  Privilege: APPLICATION
+   (Applications)   │  │  Evaluation Plane                │ │  Auth: App tokens
+   ◀────────────────┼──│  - Predicate evaluation          │ │  Who: Application code
+                    │  │  - Feature flag queries          │ │
+                    │  │  - Authorization checks          │ │
+                    │  │  - Read-only access              │ │
+                    │  └──────────────────────────────────┘ │
+                    │                                        │
+                    └────────────────────────────────────────┘
+
+     /control.sock            /data.sock              /eval.sock
+          │                       │                       │
+          ▼                       ▼                       ▼
+    ┌──────────┐           ┌──────────┐           ┌──────────┐
+    │  Admin   │           │ Services │           │   Apps   │
+    │  Tools   │           │ (writes) │           │ (queries)│
+    └──────────┘           └──────────┘           └──────────┘
 ```
 
-### Planes
+### Plane Definitions
 
-#### Data Plane (Read-Only, High-Throughput)
-- Lock-free reads via arc-swap
-- Multiple listeners (unix + TCP)
-- Zero coordination between requests
-- Primary: `/var/run/ipe/eval.sock`
+#### 1. Control Plane (HIGHEST Privilege)
+**Purpose:** Policy authoring, management, and distribution
 
-#### Control Plane (Write, Admin)
-- GitOps-based policy synchronization (see RFC-004)
-- Atomic updates with versioning
-- Authentication required
-- Audit logging enabled
-- Primary: `/var/run/ipe/control.sock`
+**Operations:**
+- Sync policies from Git (RFC-004)
+- Update policy trees
+- Manage `_features` policies
+- Registry management (list instances, stats)
+
+**Authorization:**
+- Admin-level credentials (mTLS, admin tokens)
+- Restricted to policy authors and security admins
+- Full audit logging
+
+**Socket:** `/var/run/ipe/control.sock`
+
+#### 2. Data Plane (PRIVILEGED Writes)
+**Purpose:** Dynamic data that policies evaluate against
+
+**Operations:**
+- Write approvals, permissions, relationships
+- Update rate limit counters
+- Manage dynamic policy context data
+- Data replication via message plane
+
+**Authorization:**
+- Service-level tokens
+- Specific services authorized for specific namespaces
+- Write-only (predicates read from local cache)
+
+**Socket:** `/var/run/ipe/data.sock`
+
+#### 3. Evaluation Plane (APPLICATION Level)
+**Purpose:** Application-facing predicate evaluation
+
+**Operations:**
+- Evaluate predicates
+- Query feature flags
+- Authorization checks
+- Read-only policy queries
+
+**Authorization:**
+- Application-level tokens
+- Read-only access
+- Rate limited per client
+
+**Socket:** `/var/run/ipe/eval.sock`
 
 ### Configuration
 
@@ -78,34 +124,57 @@ max_heap_mb = 50
 policy_cache_mb = 10
 data_cache_mb = 5
 
-[data_plane]
-# Listener configurations
-[[data_plane.listeners]]
+[evaluation_plane]
+# Application-facing evaluation requests (LOWEST privilege)
+[[evaluation_plane.listeners]]
 type = "unix"
 path = "/var/run/ipe/eval.sock"
-mode = 0o666
+mode = 0o666  # Readable by applications
 
-[[data_plane.listeners]]
+[[evaluation_plane.listeners]]
 type = "tcp"
 bind = "127.0.0.1:9001"
 max_connections = 1000
 
 # Performance tuning
-worker_threads = 2  # Limit threads for small footprint
+worker_threads = 2
 max_concurrent_evals = 500
 
+# Authorization
+require_auth = true
+auth_type = "app_token"
+
+[data_plane]
+# Service writes of dynamic data (PRIVILEGED)
+type = "unix"
+path = "/var/run/ipe/data.sock"
+mode = 0o660  # Restricted to services
+
+# Authorization
+require_auth = true
+auth_type = "service_token"
+namespace_auth = [
+  {namespace = "approvals.*", services = ["deployment-service"]},
+  {namespace = "relationships.*", services = ["identity-service"]},
+]
+
+# Replication
+message_plane = "pubsub"
+pubsub_url = "nats://localhost:4222"
+
 [control_plane]
-# Control listener
+# Admin policy management (HIGHEST privilege)
 type = "unix"
 path = "/var/run/ipe/control.sock"
-mode = 0o660
+mode = 0o660  # Restricted to admins
 
 # Security
 require_auth = true
+auth_type = "admin_token"
 allowed_clients = ["/usr/local/bin/ipe-ctl"]
 
 # Update coordination
-atomic_swap = true  # Use arc-swap for zero-downtime updates
+atomic_swap = true
 validation_required = true
 
 [storage]

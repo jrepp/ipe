@@ -7,17 +7,24 @@
 
 ## Summary
 
-The data plane provides high-availability, partition-tolerant storage for dynamic data that predicates evaluate against. Unlike policies (managed by control plane), data is written directly by services and optimized for high write throughput with eventual consistency.
+The data plane provides high-availability, partition-tolerant storage for dynamic data that predicates evaluate against. This is the **middle privilege layer** - services write privileged data (approvals, relationships, permissions) that affects predicate execution. Separate from the Control Plane (highest privilege, policy management) and Evaluation Plane (lowest privilege, application queries).
 
 ## Motivation
 
-Requirements:
+The IPE architecture has **three privilege layers**:
+
+1. **Control Plane** (HIGHEST) - Admins manage policies via GitOps
+2. **Data Plane** (PRIVILEGED) - Services write data that policies evaluate
+3. **Evaluation Plane** (APPLICATION) - Apps query predicates for decisions
+
+The Data Plane needs:
 - **High Availability:** Services write data directly, must tolerate failures
 - **Partition Tolerance:** Continue operating during network partitions
 - **High Write Throughput:** Optimized for frequent updates (permissions, relationships)
-- **Low Read Latency:** Predicate evaluations need fast data access
-- **Different Authorization:** Services write data with different auth than policy updates
+- **Low Read Latency:** Predicate evaluations need fast local access
+- **Service-Level Authorization:** Services write privileged data with service tokens
 - **Eventual Consistency:** AP not CP - availability over strong consistency
+- **Logical Separation:** Different from evaluation queries and control operations
 
 ## Key Features
 
@@ -29,18 +36,56 @@ Requirements:
 ✅ Predicate services cache data locally
 ✅ Optimistic locking for conflict resolution
 
+## Three-Plane Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      IPE System                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  CONTROL PLANE (CP - Strong Consistency)          [HIGHEST]    │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │  • Admins write policies via GitOps                       │ │
+│  │  • Strong consistency required                            │ │
+│  │  • Admin tokens (mTLS)                                    │ │
+│  │  • /control.sock                                          │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                          │                                      │
+│                          ▼ (policies)                           │
+│  DATA PLANE (AP - Eventual Consistency)          [PRIVILEGED]  │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │  • Services write approvals, relationships, permissions   │ │
+│  │  • Eventual consistency, high availability                │ │
+│  │  • Service tokens (namespace-scoped)                      │ │
+│  │  • /data.sock (write) → message plane → replicate        │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                          │                                      │
+│                          ▼ (data)                               │
+│  EVALUATION PLANE (Read-Only)                   [APPLICATION]  │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │  • Applications query predicates for decisions            │ │
+│  │  • Reads from local cache (policies + data)              │ │
+│  │  • Application tokens                                     │ │
+│  │  • /eval.sock (read-only)                                │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## CAP Theorem Trade-offs
 
-| Component | CAP | Justification |
-|-----------|-----|---------------|
-| **Control Plane (Policies)** | CP | Strong consistency needed for policy updates |
-| **Data Plane (Dynamic Data)** | AP | Availability and partition tolerance for high write loads |
+| Plane | CAP | Justification |
+|-------|-----|---------------|
+| **Control Plane** | CP | Strong consistency needed for policy updates |
+| **Data Plane** | AP | Availability and partition tolerance for high write loads |
+| **Evaluation Plane** | AP | Read-only from local cache, eventual consistency acceptable |
 
 **Why AP for Data Plane:**
 - Services need to write permissions/relationships even during network issues
 - Predicate evaluations can tolerate slightly stale data
 - High write volume requires eventual consistency
 - Authorization failures are worse than stale data
+- Logical separation from evaluation queries (different sockets, auth)
 
 ## Architecture
 
