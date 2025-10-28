@@ -134,9 +134,7 @@ impl JitCompiler {
 
         // Create JitCode - just a lightweight wrapper around the function pointer
         // IMPORTANT: The JitCompiler must stay alive for as long as this code is used
-        let jit_code = Arc::new(JitCode {
-            ptr: code_ptr as *const u8,
-        });
+        let jit_code = Arc::new(JitCode { ptr: code_ptr as *const u8 });
 
         // Cache result
         self.cache.write().insert(name.to_string(), Arc::clone(&jit_code));
