@@ -29,7 +29,8 @@ export RUSTDOCFLAGS="-Z sanitizer=leak"
 export LSAN_OPTIONS="suppressions=${GITHUB_WORKSPACE:-$(pwd)}/lsan-suppressions.txt"
 
 # Run tests and capture output
-TEST_OUTPUT=$(cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features 2>&1 || true)
+# Skip doctests to avoid ABI mismatch issues (known Rust sanitizer limitation)
+TEST_OUTPUT=$(cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features --lib --bins --tests 2>&1 || true)
 EXIT_CODE=$?
 
 echo "$TEST_OUTPUT"
