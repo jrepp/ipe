@@ -1,0 +1,38 @@
+// Production API Rate Limiting Policy
+// Path: prod.api.rate_limit
+//
+// Enforces rate limits for API requests in production
+
+policy EnforceRateLimit {
+    require resource.type == "APIRequest"
+    require resource.environment == "production"
+
+    // Get request metadata
+    let user_id = request.user_id
+    let api_key = request.api_key
+    let endpoint = resource.endpoint
+
+    // Fetch current rate limit data
+    let rate_data = data.get("rate_limits." + user_id) || {
+        requests_in_window: 0,
+        window_start: 0
+    }
+
+    // Configure limits
+    let max_requests = 1000  // per hour
+    let window_duration = 3600  // 1 hour in seconds
+    let current_time = context.timestamp
+
+    // Check if we're in a new window
+    if current_time - rate_data.window_start > window_duration {
+        // Reset counter for new window
+        allow("Rate limit OK (new window)")
+    }
+
+    // Check if under limit
+    if rate_data.requests_in_window < max_requests {
+        allow("Rate limit OK (" + rate_data.requests_in_window + "/" + max_requests + ")")
+    } else {
+        deny("Rate limit exceeded (" + rate_data.requests_in_window + "/" + max_requests + ")")
+    }
+}
