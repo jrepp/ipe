@@ -2,7 +2,7 @@
 
 # Default target
 help:
-	@echo "Intent Policy Engine - Development Makefile"
+	@echo "Idempotent Predicate Engine - Development Makefile"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  make build          - Build all crates"

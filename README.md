@@ -1,6 +1,6 @@
-# Intent Policy Engine (IPE)
+# Idempotent Predicate Engine (IPE)
 
-**A high-performance, AI-native policy engine built in Rust**
+**A high-performance, AI-native predicate engine built in Rust**
 
 [![Build](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=master)](https://github.com/jrepp/ipe/actions)
 [![Tests](https://img.shields.io/badge/tests-248%20passing-success)](https://github.com/jrepp/ipe)
@@ -11,14 +11,14 @@
 
 ## What is IPE?
 
-IPE (Intent Policy Engine) is a policy evaluation engine that compiles human-readable policy rules into optimized bytecode. Policies define access control, workflow validation, and business logic that changes frequently.
+IPE (Idempotent Predicate Engine) is a predicate evaluation engine that compiles human-readable predicates into optimized bytecode. Predicates define access control, workflow validation, and business logic that changes frequently.
 
 ### Key Capabilities
 
-- **Declarative Policy Language**: Write rules that describe intent, not imperative code
-- **Bytecode Compilation**: Policies compile to a compact bytecode representation
-- **Lock-Free Reads**: Atomic snapshots enable concurrent policy evaluation without blocking
-- **Zero-Downtime Updates**: Swap policy sets atomically while serving requests
+- **Declarative Predicate Language**: Write rules that describe intent, not imperative code
+- **Bytecode Compilation**: Predicates compile to a compact bytecode representation
+- **Lock-Free Reads**: Atomic snapshots enable concurrent predicate evaluation without blocking
+- **Zero-Downtime Updates**: Swap predicate sets atomically while serving requests
 - **Embedded**: Small binary footprint for integration into existing systems
 
 ### Use Cases
@@ -34,8 +34,8 @@ IPE (Intent Policy Engine) is a policy evaluation engine that compiles human-rea
 
 ```mermaid
 graph TB
-    subgraph "Policy Pipeline"
-        Source[Policy Source] --> Parser
+    subgraph "Predicate Pipeline"
+        Source[Predicate Source] --> Parser
         Parser --> AST[Abstract Syntax Tree]
         AST --> Compiler
         Compiler --> Bytecode
@@ -48,12 +48,12 @@ graph TB
     end
 
     subgraph "Data Store"
-        Store[PolicyDataStore<br/>Lock-Free Reads] -.Arc Clone.-> Snapshot[PolicySnapshot<br/>Immutable]
+        Store[PredicateDataStore<br/>Lock-Free Reads] -.Arc Clone.-> Snapshot[PredicateSnapshot<br/>Immutable]
         Snapshot --> Index[Resource Index]
     end
 
     subgraph "Evaluation"
-        Engine[PolicyEngine]
+        Engine[PredicateEngine]
         Context[EvaluationContext<br/>Resource/Action/Request]
         Interpreter --> Engine
         BaselineJIT --> Engine
@@ -71,10 +71,10 @@ graph TB
 
 IPE uses a multi-tier execution model:
 
-1. **Parse**: Policy source → AST
+1. **Parse**: Predicate source → AST
 2. **Compile**: AST → Bytecode
 3. **Interpret**: Bytecode execution (baseline performance)
-4. **JIT** (optional): Hot policies compile to native code
+4. **JIT** (optional): Hot predicates compile to native code
 5. **Store**: Atomic snapshots for lock-free reads
 
 ## Features
@@ -82,9 +82,9 @@ IPE uses a multi-tier execution model:
 ### Performance
 - Bytecode interpretation for fast baseline execution
 - Optional JIT compilation via Cranelift for hot paths
-- Adaptive tiering automatically optimizes frequently-evaluated policies
+- Adaptive tiering automatically optimizes frequently-evaluated predicates
 - Lock-free reads using atomic snapshots
-- Memory-mapped policy storage
+- Memory-mapped predicate storage
 
 ### Developer Experience
 - Natural language intent strings for documentation
@@ -100,17 +100,17 @@ IPE uses a multi-tier execution model:
 
 ## Quick Start
 
-### Example Policy
+### Example Predicate
 
 ```rust
-policy RequireApproval:
+predicate RequireApproval:
   "Production deployments need 2+ approvals from senior engineers"
-  
+
   triggers when
     resource.type == "Deployment"
     and environment in ["production", "staging"]
     and resource.risk_level >= "medium"
-  
+
   requires
     approvals.count >= 2
     where approver.role == "senior-engineer"
@@ -120,10 +120,10 @@ policy RequireApproval:
 ### Rust Usage
 
 ```rust
-use ipe_core::{PolicyEngine, EvaluationContext};
+use ipe_core::{PredicateEngine, EvaluationContext};
 
-// Load compiled policies
-let engine = PolicyEngine::from_file("policies.ipe")?;
+// Load compiled predicates
+let engine = PredicateEngine::from_file("predicates.ipe")?;
 
 // Create evaluation context
 let ctx = EvaluationContext {
@@ -161,21 +161,21 @@ cargo build --release
 └──────┬───────┘
        │ Compile
 ┌──────▼────────┐
-│ Bytecode      │  Compact representation (~200 bytes/policy)
+│ Bytecode      │  Compact representation (~200 bytes/predicate)
 └──────┬────────┘
        │ Evaluate
 ┌──────▼────────┐
-│ Interpreter   │  ~50μs per policy
+│ Interpreter   │  ~50μs per predicate
 └──────┬────────┘
        │ Profile (100+ evals)
 ┌──────▼────────┐
-│ JIT (Cranelift│  ~10μs per policy (5-10x faster)
+│ JIT (Cranelift│  ~10μs per predicate (5-10x faster)
 └───────────────┘
 ```
 
 ### Tiered Execution
 
-IPE uses adaptive tiering to automatically optimize frequently-used policies:
+IPE uses adaptive tiering to automatically optimize frequently-used predicates:
 
 | Tier | Trigger | Compilation | Notes |
 |------|---------|-------------|-------|
@@ -291,7 +291,7 @@ Licensed under the Mozilla Public License Version 2.0 ([LICENSE](LICENSE) or htt
 
 ## Acknowledgments
 
-- Inspired by Cedar, Rego/OPA, and other policy languages
+- Inspired by Cedar, Rego/OPA, and other predicate languages
 - Powered by Cranelift JIT compiler
 - Built with Rust for safety and performance
 
