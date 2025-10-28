@@ -5,18 +5,17 @@ use cranelift::prelude::*;
 use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{Linkage, Module};
 use parking_lot::RwLock;
-use region::{protect, Protection};
 use std::collections::HashMap;
 use std::sync::Arc;
 
 /// JIT-compiled native code for a policy
+///
+/// Note: This struct intentionally does NOT implement Drop. The executable memory
+/// is managed by the JITModule and will be freed when the owning JitCompiler is dropped.
+/// Individual JitCode instances are just lightweight wrappers around function pointers.
 pub struct JitCode {
     /// Function pointer to native code
     ptr: *const u8,
-    /// Size of compiled code
-    size: usize,
-    /// Memory region (for cleanup)
-    region: *mut u8,
 }
 
 unsafe impl Send for JitCode {}
@@ -26,23 +25,20 @@ impl JitCode {
     /// Execute the JIT-compiled policy
     ///
     /// # Safety
-    /// Caller must ensure the context pointer is valid
+    /// Caller must ensure the context pointer is valid and that the JitCompiler
+    /// that created this code is still alive.
     pub unsafe fn execute(&self, ctx: *const EvaluationContext) -> bool {
         let func: extern "C" fn(*const EvaluationContext) -> u8 = std::mem::transmute(self.ptr);
         func(ctx) != 0
     }
 }
 
-impl Drop for JitCode {
-    fn drop(&mut self) {
-        // Note: region-allocated memory is automatically freed when the protection is dropped
-        // The `region` crate doesn't provide an explicit `free` function
-    }
-}
-
 /// JIT compiler for policies
+///
+/// IMPORTANT: This must be kept alive for as long as any JitCode instances
+/// created by it are in use. Dropping this will free all compiled code memory.
 pub struct JitCompiler {
-    /// Cranelift JIT module
+    /// Cranelift JIT module - owns all executable memory
     module: JITModule,
     /// Builder context (reused)
     builder_ctx: FunctionBuilderContext,
@@ -133,20 +129,12 @@ impl JitCompiler {
             .map_err(|e| Error::JitError(format!("Failed to finalize: {}", e)))?;
 
         // Get function pointer
+        // Cranelift manages the executable memory and will free it when this JitCompiler is dropped
         let code_ptr = self.module.get_finalized_function(id);
 
-        // Make memory executable
-        let jit_code = Arc::new(JitCode {
-            ptr: code_ptr,
-            size: 4096, // Page size estimate
-            region: code_ptr as *mut u8,
-        });
-
-        // Protect memory as executable
-        unsafe {
-            protect(jit_code.region, jit_code.size, Protection::READ_EXECUTE)
-                .map_err(|e| Error::JitError(format!("Failed to protect memory: {}", e)))?;
-        }
+        // Create JitCode - just a lightweight wrapper around the function pointer
+        // IMPORTANT: The JitCompiler must stay alive for as long as this code is used
+        let jit_code = Arc::new(JitCode { ptr: code_ptr as *const u8 });
 
         // Cache result
         self.cache.write().insert(name.to_string(), Arc::clone(&jit_code));
@@ -170,7 +158,9 @@ impl JitCompiler {
             match instr {
                 Instruction::Jump { offset } | Instruction::JumpIfFalse { offset } => {
                     let target = (idx as i16 + offset) as usize;
-                    block_map.entry(target).or_insert_with(|| builder.create_block());
+                    if !block_map.contains_key(&target) {
+                        block_map.insert(target, builder.create_block());
+                    }
                 },
                 _ => {},
             }
@@ -320,10 +310,10 @@ impl Default for JitCompiler {
 }
 
 #[cfg(test)]
-#[cfg(not(miri))] // Skip JIT tests under Miri due to pointer provenance issues in region crate
+#[cfg(not(miri))] // Skip JIT tests under Miri (cranelift uses raw pointers)
 mod tests {
     use super::*;
-    use crate::bytecode::{CompiledPolicy, Instruction, PolicyHeader};
+    use crate::bytecode::{CompOp, CompiledPolicy, Instruction, PolicyHeader, Value};
 
     #[test]
     fn test_simple_jit_compilation() {
