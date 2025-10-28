@@ -1,4 +1,4 @@
-# RFC-001: Sidecar Service Architecture
+# RFC-001: Predicate Service Architecture
 
 **Status:** 📝 Draft
 **Created:** 2025-10-27
@@ -6,7 +6,7 @@
 
 ## Summary
 
-A minimal Rust service (<50MB) that runs as a sidecar, providing sub-millisecond policy evaluation via separate data and control planes. Optimized for local communication and zero-downtime updates.
+A minimal Rust service (<50MB) that runs as a predicate service, providing sub-millisecond policy evaluation via separate data and control planes. Optimized for local communication and zero-downtime updates.
 
 ## Motivation
 
@@ -23,7 +23,7 @@ Modern workloads need policy evaluation that is:
 
 ```
 ┌─────────────────────────────────────────┐
-│         IPE Sidecar Service             │
+│      IPE Predicate Service              │
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌─────────────┐    ┌────────────────┐ │
@@ -70,7 +70,7 @@ Modern workloads need policy evaluation that is:
 ```toml
 [service]
 # Service identity
-name = "ipe-sidecar"
+name = "ipe-predicate"
 instance_id = "pod-abc-123"
 
 # Memory constraints
@@ -146,7 +146,7 @@ trace_sampling_rate = 0.01  # 1% of requests
 
 ## Deployment Model
 
-### Sidecar Pattern
+### Co-Location Pattern
 
 ```yaml
 # Kubernetes example
@@ -162,7 +162,7 @@ spec:
     - name: ipe-socket
       mountPath: /var/run/ipe
 
-  - name: ipe-sidecar
+  - name: ipe-predicate
     image: ipe:latest
     resources:
       limits:
@@ -259,3 +259,4 @@ policy_store.swap(path, new_bytecode, new_hash, parent_hash);
 - [RFC-002: SSE/JSON Protocol](002-sse-json-protocol.md)
 - [RFC-003: Policy Tree Storage](003-policy-tree-storage.md)
 - [RFC-004: Control Plane Architecture](004-control-plane.md)
+- [RFC-005: Data Plane Architecture](005-data-plane.md)
