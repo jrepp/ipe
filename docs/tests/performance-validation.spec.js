@@ -48,7 +48,7 @@ test.describe('Performance Dashboard Validation', () => {
     expect(barCount).toBeGreaterThan(0);
 
     // Check for axis labels (should have units)
-    const axisLabel = page.locator('#p50-chart svg text').filter({ hasText: 'µs' });
+    const axisLabel = page.locator('#p50-chart svg text').filter({ hasText: 'µs' }).first();
     await expect(axisLabel).toBeVisible();
   });
 
@@ -60,7 +60,7 @@ test.describe('Performance Dashboard Validation', () => {
     expect(barCount).toBeGreaterThan(0);
 
     // Check for units
-    const axisLabel = page.locator('#p95-chart svg text').filter({ hasText: 'µs' });
+    const axisLabel = page.locator('#p95-chart svg text').filter({ hasText: 'µs' }).first();
     await expect(axisLabel).toBeVisible();
   });
 
@@ -72,7 +72,7 @@ test.describe('Performance Dashboard Validation', () => {
     expect(barCount).toBeGreaterThan(0);
 
     // Check for units
-    const axisLabel = page.locator('#p99-chart svg text').filter({ hasText: 'µs' });
+    const axisLabel = page.locator('#p99-chart svg text').filter({ hasText: 'µs' }).first();
     await expect(axisLabel).toBeVisible();
   });
 
@@ -84,7 +84,7 @@ test.describe('Performance Dashboard Validation', () => {
     expect(barCount).toBeGreaterThan(0);
 
     // Check for units (ops/sec)
-    const axisLabel = page.locator('#throughput-chart svg text').filter({ hasText: 'ops/sec' });
+    const axisLabel = page.locator('#throughput-chart svg text').filter({ hasText: 'ops/sec' }).first();
     await expect(axisLabel).toBeVisible();
   });
 
@@ -97,7 +97,7 @@ test.describe('Performance Dashboard Validation', () => {
     expect(pathCount).toBeGreaterThanOrEqual(2); // Should have at least 2 slices
 
     // Check for center text showing percentage
-    const centerText = page.locator('#cache-chart svg text').filter({ hasText: '%' });
+    const centerText = page.locator('#cache-chart svg text').filter({ hasText: '%' }).first();
     await expect(centerText).toBeVisible();
   });
 
@@ -109,7 +109,7 @@ test.describe('Performance Dashboard Validation', () => {
     expect(barCount).toBeGreaterThan(0);
 
     // Check for speedup label
-    const axisLabel = page.locator('#speedup-chart svg text').filter({ hasText: 'Speedup' });
+    const axisLabel = page.locator('#speedup-chart svg text').filter({ hasText: 'Speedup' }).first();
     await expect(axisLabel).toBeVisible();
 
     // Check for baseline line at 1x (just check it exists, may be outside viewport)

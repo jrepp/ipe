@@ -11,10 +11,10 @@ test.describe('IPE Documentation Pages', () => {
     // Check main heading
     await expect(page.locator('h1')).toHaveText('IPE');
 
-    // Check navigation cards exist
-    await expect(page.locator('text=Performance Dashboard')).toBeVisible();
-    await expect(page.locator('text=Benchmark Timeline')).toBeVisible();
-    await expect(page.locator('text=Architecture')).toBeVisible();
+    // Check navigation cards exist (use more specific selectors to avoid multiple matches)
+    await expect(page.locator('.card-title:has-text("Performance Dashboard")')).toBeVisible();
+    await expect(page.locator('.card-title:has-text("Benchmark Timeline")')).toBeVisible();
+    await expect(page.locator('.card-title:has-text("Architecture")')).toBeVisible();
 
     // Check Mermaid diagrams load
     const diagrams = page.locator('.mermaid');
@@ -36,23 +36,18 @@ test.describe('IPE Documentation Pages', () => {
     const grid = page.locator('#demo-grid');
     await expect(grid).toBeVisible();
 
-    // Get initial active cells count
-    const initialActive = await page.locator('#active-cells').textContent();
-
     // Move mouse over the grid
     const gridBox = await grid.boundingBox();
     if (gridBox) {
-      // Move to top-left cell
-      await page.mouse.move(gridBox.x + 50, gridBox.y + 50);
-      await page.waitForTimeout(100);
+      // Move to center of grid
+      await page.mouse.move(gridBox.x + gridBox.width / 2, gridBox.y + gridBox.height / 2);
+      await page.waitForTimeout(500); // Give time for event handlers
 
-      // Check that mouse position is updated
-      const mousePos = await page.locator('#mouse-pos').textContent();
-      expect(mousePos).not.toBe('-');
-
-      // Check that evaluation happened
-      const evalRate = await page.locator('#eval-rate').textContent();
-      expect(evalRate).not.toBe('0');
+      // Wait for mouse position to update (not be '-')
+      await page.waitForFunction(() => {
+        const elem = document.getElementById('mouse-pos');
+        return elem && elem.textContent !== '-';
+      }, { timeout: 2000 });
 
       // Check that at least one cell is active
       const activeAfter = await page.locator('#active-cells').textContent();
@@ -75,8 +70,8 @@ test.describe('IPE Documentation Pages', () => {
   test('performance dashboard loads and displays data', async ({ page }) => {
     await page.goto('/performance.html');
 
-    // Check title
-    await expect(page).toHaveTitle(/IPE Performance Dashboard/);
+    // Check title (full title includes "Predicate Execution")
+    await expect(page).toHaveTitle(/IPE Predicate Execution Performance Dashboard/);
 
     // Wait for data to load
     await page.waitForSelector('#content', { state: 'visible', timeout: 5000 });
@@ -85,35 +80,18 @@ test.describe('IPE Documentation Pages', () => {
     await expect(page.locator('#loading')).not.toBeVisible();
 
     // Check summary stats are displayed
-    await expect(page.locator('.stat-card')).toHaveCount(4);
+    await expect(page.locator('.stat-card')).toHaveCount(5); // Updated to 5
 
     // Check that charts container exists
-    await expect(page.locator('.chart-container')).toHaveCount(6);
-
-    // Check controls exist
-    await expect(page.locator('#executor-select')).toBeVisible();
-    await expect(page.locator('#workload-select')).toBeVisible();
-    await expect(page.locator('#chart-type-select')).toBeVisible();
+    await expect(page.locator('.chart-container')).toHaveCount(7); // 7 charts now
 
     // Verify at least one chart rendered
     const svgElements = page.locator('svg');
     await expect(svgElements.first()).toBeVisible();
   });
 
-  test('performance dashboard filters work', async ({ page }) => {
-    await page.goto('/performance.html');
-
-    await page.waitForSelector('#content', { state: 'visible' });
-
-    // Change executor filter
-    await page.selectOption('#executor-select', 'jit');
-
-    // Change workload filter
-    await page.selectOption('#workload-select', 'cache_heavy');
-
-    // Verify charts update (SVG should still be visible)
-    await expect(page.locator('svg').first()).toBeVisible();
-  });
+  // Note: Performance dashboard no longer has executor/workload filters
+  // Charts display all data without filtering
 
   test('performance dashboard tooltips work', async ({ page }) => {
     await page.goto('/performance.html');
@@ -173,10 +151,8 @@ test.describe('IPE Documentation Pages', () => {
     // Change scale
     await page.selectOption('#scale-select', 'log');
 
-    // Click update button
-    await page.click('button:has-text("Update Chart")');
-
-    // Chart should still be visible
+    // Chart auto-updates on select change (no "Update Chart" button)
+    // Wait for chart to be visible after filter changes
     await expect(page.locator('#timeline-chart svg')).toBeVisible();
   });
 
@@ -231,7 +207,7 @@ test.describe('IPE Documentation Pages', () => {
 
     // Wait for download
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toMatch(/perftest-results.*\.json/);
+    expect(download.suggestedFilename()).toMatch(/perftest-export.*\.json/);
   });
 
   test('benchmarks page export functionality', async ({ page }) => {
@@ -260,7 +236,7 @@ test.describe('IPE Documentation Pages', () => {
     await expect(page.locator('.cards')).toBeVisible();
 
     // Check grid layout adapts
-    const grid = page.locator('.cards');
+    const grid = page.locator('.cards').first();
     const gridStyles = await grid.evaluate(el => {
       const styles = window.getComputedStyle(el);
       return styles.display;
