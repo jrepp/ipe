@@ -2,18 +2,18 @@
 // Path: _features.registry.enable_stats_collection
 //
 // Controls whether the control plane collects detailed statistics
-// from registered sidecars.
+// from registered instances.
 
 policy EnableStatsCollection {
     require context.operation == "registry"
 
     // Check if stats collection is requested
     let collect_stats = context.collect_detailed_stats || false
-    let sidecar_environment = context.sidecar.environment || "unknown"
+    let instance_environment = context.instance.environment || "unknown"
 
     // Always collect stats in production for observability
-    if sidecar_environment == "production" {
-        allow("Stats collection enabled for production sidecars")
+    if instance_environment == "production" {
+        allow("Stats collection enabled for production instances")
     }
 
     // In dev/staging, respect the collection flag

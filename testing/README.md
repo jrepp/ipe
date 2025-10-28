@@ -73,7 +73,7 @@ The `_features` namespace is **reserved for internal control plane policies**. T
 - Dev/staging: can allow partial sync if explicitly requested
 
 **_features.registry.enable_stats_collection**
-- Controls detailed statistics collection from registered sidecars
+- Controls detailed statistics collection from registered instances
 - Production: always enabled for observability
 - Other environments: configurable
 
@@ -147,7 +147,7 @@ curl --unix-socket /var/run/ipe/control.sock \
   -X POST \
   -d '{
     "method": "stats",
-    "params": {"id": "sidecar-abc-123"}
+    "params": {"id": "ipe-abc-123"}
   }'
 ```
 

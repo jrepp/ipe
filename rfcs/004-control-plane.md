@@ -12,7 +12,7 @@ The control plane manages policy synchronization, updates, and metadata tracking
 ## Motivation
 
 Requirements:
-- **GitOps Native:** Policies versioned in Git, synchronized to sidecars
+- **GitOps Native:** Policies versioned in Git, synchronized to instances
 - **Filesystem Mapping:** Directory structure → Policy tree structure
 - **Metadata Rich:** Git commit info, author, timestamp embedded in policies
 - **Secure:** Authenticated access, audit logging
@@ -131,7 +131,7 @@ struct PolicyMetadata {
 
     // Sync tracking
     sync_id: String,             // Unique sync operation ID
-    synced_at: u64,              // When loaded into sidecar
+    synced_at: u64,              // When loaded into instance
 }
 ```
 
@@ -305,7 +305,7 @@ data: {
   "result": {
     "instances": [
       {
-        "id": "sidecar-abc-123",
+        "id": "ipe-abc-123",
         "node_name": "k8s-node-1",
         "hostname": "pod-web-app-xyz",
         "socket_path": "/var/run/ipe/eval.sock",
@@ -326,7 +326,7 @@ data: {
         "last_heartbeat": 1698765430
       },
       {
-        "id": "sidecar-def-456",
+        "id": "ipe-def-456",
         "node_name": "k8s-node-2",
         "hostname": "pod-api-gateway-123",
         "socket_path": "/var/run/ipe/eval.sock",
@@ -356,13 +356,13 @@ data: {
 event: stats
 data: {
   "method": "stats",
-  "params": {"id": "sidecar-abc-123"}
+  "params": {"id": "ipe-abc-123"}
 }
 
 // Response includes detailed stats and recent evaluations
 data: {
   "result": {
-    "id": "sidecar-abc-123",
+    "id": "ipe-abc-123",
     "node_name": "k8s-node-1",
     "stats": {
       "total_evaluations": 150234,
