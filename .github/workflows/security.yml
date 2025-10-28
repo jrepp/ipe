@@ -25,18 +25,15 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit
 
-      - name: Run cargo audit
-        run: cargo audit
-
-      - name: Run cargo audit (JSON output)
-        run: cargo audit --json > audit-report.json
-        continue-on-error: true
+      - name: Run cargo audit with intelligent validation
+        run: .github/scripts/check-cargo-audit.sh
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4
         with:
           name: audit-report
           path: audit-report.json
+        if: always()  # Upload report even if check failed
 
   cargo-deny:
     name: Cargo Deny
@@ -139,20 +136,5 @@ jobs:
       - name: Install cargo-geiger
         run: cargo install cargo-geiger
 
-      - name: Run cargo-geiger (unsafe code detection)
-        run: |
-          # Run on each workspace member since geiger doesn't support virtual manifests
-          for crate in crates/*/; do
-            echo "Checking $crate"
-            cargo geiger --manifest-path="${crate}Cargo.toml" --all-features || true
-          done
-
-      - name: Verify no unsafe code in core
-        run: |
-          # Ensure core crates have zero unsafe blocks
-          output=$(cargo geiger --manifest-path=crates/ipe-core/Cargo.toml --all-features 2>&1 || echo "")
-          if echo "$output" | grep -q "Metric output format: x/y"; then
-            echo "✅ cargo-geiger completed for ipe-core"
-          else
-            echo "⚠️  cargo-geiger check completed with warnings"
-          fi
+      - name: Run cargo-geiger with intelligent validation
+        run: .github/scripts/check-cargo-geiger.sh
