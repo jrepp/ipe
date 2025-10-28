@@ -1,0 +1,26 @@
+// Control Plane Feature: Require Validation
+// Path: _features.sync.require_validation
+//
+// This policy controls whether the control plane MUST validate
+// all policies before applying a sync operation.
+//
+// Note: This policy is evaluated by the control plane's internal
+// IPE sidecar and controls the control plane's behavior, NOT the
+// behavior of data plane sidecars.
+
+policy RequireValidation {
+    require context.operation == "sync"
+
+    // In production environments, validation cannot be skipped
+    if context.environment == "production" && context.skip_validation == true {
+        deny("Validation cannot be skipped in production environment")
+    }
+
+    // In staging, validation can be optionally skipped for rapid iteration
+    if context.environment == "staging" && context.skip_validation == true {
+        allow("Validation skipped in staging (use with caution)")
+    }
+
+    // Default: require validation
+    allow("Validation required for sync operation")
+}

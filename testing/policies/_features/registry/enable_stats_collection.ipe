@@ -1,0 +1,25 @@
+// Control Plane Feature: Enable Stats Collection
+// Path: _features.registry.enable_stats_collection
+//
+// Controls whether the control plane collects detailed statistics
+// from registered sidecars.
+
+policy EnableStatsCollection {
+    require context.operation == "registry"
+
+    // Check if stats collection is requested
+    let collect_stats = context.collect_detailed_stats || false
+    let sidecar_environment = context.sidecar.environment || "unknown"
+
+    // Always collect stats in production for observability
+    if sidecar_environment == "production" {
+        allow("Stats collection enabled for production sidecars")
+    }
+
+    // In dev/staging, respect the collection flag
+    if collect_stats == true {
+        allow("Stats collection enabled")
+    } else {
+        deny("Stats collection disabled for this sidecar")
+    }
+}

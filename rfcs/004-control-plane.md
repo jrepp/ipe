@@ -12,20 +12,25 @@ The control plane manages policy synchronization, updates, and metadata tracking
 ## Motivation
 
 Requirements:
-- **GitOps Native:** Policies versioned in Git, synchronized to sidecar
+- **GitOps Native:** Policies versioned in Git, synchronized to sidecars
 - **Filesystem Mapping:** Directory structure → Policy tree structure
 - **Metadata Rich:** Git commit info, author, timestamp embedded in policies
 - **Secure:** Authenticated access, audit logging
 - **Atomic:** All-or-nothing policy updates
-- **Observable:** Track sync status, drift detection
+- **Observable:** Sidecar registry with stats and uptime
+- **Roll Forward Only:** No rollback, only forward to specific commits
+- **Self-Hosting:** Control plane uses its own IPE sidecar for decisions
 
 ## Key Features
 
 ✅ GitOps-based policy synchronization
-✅ Filesystem tree → Policy tree mapping
+✅ Filesystem tree → Policy tree mapping with configurable root path
 ✅ Git metadata embedded in policy objects
-✅ Atomic policy updates with rollback
-✅ Feature flags configuration
+✅ Commit-hash based sync (idempotent, no status tracking)
+✅ Roll forward only (sync to any commit)
+✅ Control plane has own IPE sidecar for internal policies
+✅ `_features` internal policy tree for control plane feature flags
+✅ Sidecar registry with node info, uptime, and execution stats
 ✅ Audit logging for all operations
 
 ## Architecture
@@ -33,31 +38,43 @@ Requirements:
 ### Control Plane Components
 
 ```
-┌─────────────────────────────────────────────┐
-│            Control Plane                     │
-├─────────────────────────────────────────────┤
-│                                             │
-│  ┌──────────────┐      ┌─────────────────┐ │
-│  │ Git Sync     │      │  Policy Store   │ │
-│  │ Manager      │─────▶│  Manager        │ │
-│  │              │      │                 │ │
-│  │ - Clone      │      │ - Validate      │ │
-│  │ - Pull       │      │ - Compile       │ │
-│  │ - Watch      │      │ - Store         │ │
-│  └──────────────┘      └─────────────────┘ │
-│         │                       │           │
-│         │                       │           │
-│  ┌──────▼───────────────────────▼────────┐  │
-│  │    Control API (RFC-002)              │  │
-│  │                                        │  │
-│  │  - update-policy                      │  │
-│  │  - sync-from-git                      │  │
-│  │  - list-policies                      │  │
-│  │  - get-metadata                       │  │
-│  │  - set-feature-flags                  │  │
-│  └────────────────────────────────────────┘  │
-│                    │                         │
-└────────────────────┼─────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   Control Plane                          │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────┐      ┌─────────────────┐             │
+│  │ Git Sync     │      │  Policy Store   │             │
+│  │ Manager      │─────▶│  Manager        │             │
+│  │              │      │                 │             │
+│  │ - Clone      │      │ - Validate      │             │
+│  │ - Pull       │      │ - Compile       │             │
+│  │ - Checkout   │      │ - Store         │             │
+│  └──────────────┘      └─────────────────┘             │
+│         │                       │                       │
+│         │                       │                       │
+│  ┌──────▼───────────────────────▼────────────────────┐  │
+│  │         Control API (RFC-002)                     │  │
+│  │                                                    │  │
+│  │  - sync-from-git (commit-hash based)              │  │
+│  │  - list-sidecars (registry with stats)            │  │
+│  │  - get-sidecar-stats                              │  │
+│  │  - list-policies                                  │  │
+│  │  - get-metadata                                   │  │
+│  └────────────────────────────────────────────────────┘  │
+│         │                       ▲                        │
+│         │    ┌──────────────────┘                        │
+│         │    │                                           │
+│  ┌──────▼────▼───────────────┐    ┌──────────────────┐  │
+│  │  Internal IPE Sidecar     │    │ Sidecar Registry │  │
+│  │                           │    │                  │  │
+│  │  Policy Tree:             │    │ - Node info      │  │
+│  │  - _features (internal)   │    │ - Uptime         │  │
+│  │                           │    │ - Exec stats     │  │
+│  │  Feature flags for        │    │ - Health         │  │
+│  │  control plane itself     │    │                  │  │
+│  └───────────────────────────┘    └──────────────────┘  │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
                      │
                      ▼
             Control Socket
@@ -151,73 +168,97 @@ struct PolicyMetadata {
 # Repository configuration
 repository_url = "https://github.com/example/policies.git"
 branch = "main"
+policies_root_path = "policies"  # Path in repo to policy tree root (default: "")
 auth_method = "ssh_key"  # or "token", "none"
 ssh_key_path = "/var/lib/ipe/ssh/id_rsa"
 
 # Sync behavior
-sync_interval = 60  # seconds (0 = manual only)
-auto_sync_on_start = true
-policies_directory = "policies"  # Subdirectory in repo
+# Note: No auto-sync or intervals - sync is explicitly called with commit hash
+# This makes sync idempotent and allows roll forward to any commit
 
 # Git settings
-shallow_clone = true  # --depth=1 for faster clones
+shallow_clone = false  # Need full history to checkout specific commits
 fetch_tags = false
 
 # Validation
 require_all_valid = true  # Reject sync if any policy fails compilation
-dry_run_before_apply = true
+
+[control_plane.internal_sidecar]
+# Control plane's own IPE sidecar for internal policies
+socket_path = "/var/run/ipe/internal.sock"
+policy_tree = "_features"  # Internal policy tree for control plane feature flags
 ```
 
 ## Control Plane API
 
 ### Sync Operations
 
+Sync operations are **commit-hash based** and **idempotent**. The control plane compiles all source policies to bytecode before applying. If any policy fails compilation, the entire sync is rejected.
+
 ```json
-// Manual sync from Git
+// Sync to specific commit (required)
 event: sync-from-git
 data: {
   "method": "sync-from-git",
   "params": {
-    "repository": "https://github.com/example/policies.git",
-    "branch": "main",
-    "force": false  // Skip validation checks
+    "commit": "abc123def456",  // REQUIRED: specific commit hash
+    "repository_url": "https://github.com/example/policies.git",  // Optional: override config
+    "policies_root_path": "policies"  // Optional: override config
   }
 }
 
-// Response
+// Response: up-to-date (already at this commit)
 data: {
   "result": {
-    "sync_id": "sync-abc123",
-    "status": "success",
+    "status": "up-to-date",
+    "commit": "abc123def456",
+    "commit_message": "Add new deployment policies",
+    "commit_time": 1698765400,
+    "current_commit": "abc123def456",
+    "policies_count": 8
+  }
+}
+
+// Response: superseded (updated to new commit)
+data: {
+  "result": {
+    "status": "superseded",
+    "previous_commit": "xyz789old",
+    "new_commit": "abc123def456",
+    "commit_message": "Add new deployment policies",
+    "commit_time": 1698765400,
     "policies_updated": 5,
     "policies_added": 2,
     "policies_removed": 1,
-    "commit": "abc123def456",
-    "commit_message": "Add new deployment policies",
+    "policies_compiled": 8,
     "synced_at": 1698765432
   }
 }
 
-// Get sync status
-event: get-sync-status
-data: {"method": "get-sync-status"}
-
-// Response
+// Response: compilation failure (sync rejected)
 data: {
-  "result": {
-    "last_sync": {
-      "sync_id": "sync-abc123",
-      "commit": "abc123",
-      "synced_at": 1698765432,
-      "status": "success"
-    },
-    "repository": "https://github.com/example/policies.git",
-    "branch": "main",
-    "auto_sync_enabled": true,
-    "next_sync_in": 45  // seconds
+  "error": {
+    "code": -32001,
+    "message": "Policy compilation failed",
+    "data": {
+      "commit": "abc123def456",
+      "failed_policies": [
+        {
+          "path": "prod.deployment.approval",
+          "file": "policies/prod/deployment/approval.ipe",
+          "error": "Syntax error at line 15: expected '}'"
+        }
+      ]
+    }
   }
 }
 ```
+
+**Key Properties:**
+- Sync is idempotent: calling with same commit hash multiple times is safe
+- No sync status tracking: response tells you if up-to-date or superseded
+- Roll forward only: sync to any commit (newer or older)
+- All policies compiled before applying: atomic all-or-nothing update
 
 ### Policy Metadata Queries
 
@@ -249,30 +290,97 @@ data: {
 }
 ```
 
-### Feature Flags Management
+### Sidecar Registry
+
+The control plane maintains a registry of all IPE sidecars with their status and statistics.
 
 ```json
-// Set feature flags
-event: set-feature-flags
-data: {
-  "method": "set-feature-flags",
-  "params": {
-    "flags": {
-      "streaming_enabled": true,
-      "experimental_caching": true
-    }
-  }
-}
+// List all registered sidecars
+event: list-sidecars
+data: {"method": "list-sidecars"}
 
 // Response
 data: {
   "result": {
-    "updated_flags": ["streaming_enabled", "experimental_caching"],
-    "current_flags": {
-      "streaming_enabled": true,
-      "policy_versioning": true,
-      "tree_enumeration": true,
-      "experimental_caching": true
+    "sidecars": [
+      {
+        "id": "sidecar-abc-123",
+        "node_name": "k8s-node-1",
+        "hostname": "pod-web-app-xyz",
+        "socket_path": "/var/run/ipe/eval.sock",
+        "uptime_seconds": 86400,
+        "started_at": 1698679032,
+        "current_commit": "abc123def456",
+        "policies_loaded": 8,
+        "stats": {
+          "total_evaluations": 150234,
+          "evaluations_per_second": 42.3,
+          "avg_eval_time_us": 234,
+          "p50_eval_time_us": 180,
+          "p99_eval_time_us": 890,
+          "error_count": 12,
+          "error_rate": 0.00008
+        },
+        "health": "healthy",
+        "last_heartbeat": 1698765430
+      },
+      {
+        "id": "sidecar-def-456",
+        "node_name": "k8s-node-2",
+        "hostname": "pod-api-gateway-123",
+        "socket_path": "/var/run/ipe/eval.sock",
+        "uptime_seconds": 43200,
+        "started_at": 1698722232,
+        "current_commit": "abc123def456",
+        "policies_loaded": 8,
+        "stats": {
+          "total_evaluations": 89234,
+          "evaluations_per_second": 28.7,
+          "avg_eval_time_us": 198,
+          "p50_eval_time_us": 165,
+          "p99_eval_time_us": 745,
+          "error_count": 5,
+          "error_rate": 0.00006
+        },
+        "health": "healthy",
+        "last_heartbeat": 1698765429
+      }
+    ],
+    "total_sidecars": 2,
+    "healthy_sidecars": 2
+  }
+}
+
+// Get stats for specific sidecar
+event: get-sidecar-stats
+data: {
+  "method": "get-sidecar-stats",
+  "params": {"sidecar_id": "sidecar-abc-123"}
+}
+
+// Response includes detailed stats and recent evaluations
+data: {
+  "result": {
+    "sidecar_id": "sidecar-abc-123",
+    "node_name": "k8s-node-1",
+    "stats": {
+      "total_evaluations": 150234,
+      "evaluations_by_policy": {
+        "prod.deployment.approval": 45234,
+        "prod.deployment.validation": 38923,
+        "prod.api.rate_limit": 66077
+      },
+      "decision_breakdown": {
+        "allow": 142345,
+        "deny": 7889
+      },
+      "performance": {
+        "avg_eval_time_us": 234,
+        "p50_eval_time_us": 180,
+        "p95_eval_time_us": 567,
+        "p99_eval_time_us": 890,
+        "max_eval_time_us": 2340
+      }
     }
   }
 }
@@ -356,46 +464,93 @@ All control plane operations are logged:
 }
 ```
 
-## Rollback and Recovery
+## Internal Policy Tree: `_features`
 
-### Rollback to Previous Commit
+The control plane runs its own IPE sidecar with an internal policy tree called `_features`. This tree is used exclusively by the control plane to make decisions about control plane operations.
+
+**Key Characteristics:**
+- **Internal only**: Not exposed to data plane sidecars
+- **Control plane feature flags**: Policies control control plane behavior
+- **Self-hosting**: Control plane uses IPE to evaluate its own operational decisions
+- **Reserved namespace**: `_features` is a reserved prefix
+
+**Important**: IPE sidecar processes themselves do NOT get feature flags. Feature flags in `_features` control only the control plane's behavior.
+
+### Example `_features` Policies
+
+```
+_features/
+├── sync/
+│   ├── allow_auto_compile.ipe      → _features.sync.allow_auto_compile
+│   └── require_validation.ipe      → _features.sync.require_validation
+└── registry/
+    └── enable_stats_collection.ipe → _features.registry.enable_stats_collection
+```
+
+Example policy:
+```ipe
+// _features.sync.require_validation
+policy RequireValidation {
+    // Always require validation before applying policies
+    require context.operation == "sync"
+
+    if context.skip_validation == true {
+        deny("Validation cannot be skipped in production")
+    }
+
+    allow("Validation required")
+}
+```
+
+The control plane evaluates these policies before performing operations, allowing runtime configuration of control plane behavior.
+
+## Roll Forward Semantics
+
+There is **no rollback** - only **roll forward**. To revert to a previous state:
+
+1. Identify the desired commit hash
+2. Call `sync-from-git` with that commit hash
+3. Control plane will checkout that commit and apply it
+
+This is still "rolling forward" to a specific commit, even if it's older than the current one.
 
 ```json
-// Rollback to specific Git commit
-event: rollback-to-commit
+// Roll forward to previous commit (not a rollback)
+event: sync-from-git
 data: {
-  "method": "rollback-to-commit",
+  "method": "sync-from-git",
   "params": {
-    "commit": "abc123def456",
-    "reason": "Broken policy in latest commit"
+    "commit": "xyz789old"  // Older commit - still a forward operation
   }
 }
 ```
 
-### Policy Version History
-
-Leverages RFC-003's version history to track policy changes:
-- Each sync creates new policy versions
-- Git commits linked to policy hashes
-- Can restore to any previous version
+**Benefits:**
+- All changes are explicit operations
+- Full audit trail (every sync is logged)
+- No special rollback machinery
+- Git history is the source of truth
 
 ## Implementation Phases
 
 | Week | Deliverables |
 |------|--------------|
-| 1 | Filesystem scanning, path mapping, metadata extraction |
-| 2 | Git clone/pull, commit metadata embedding |
-| 3 | Sync API, atomic updates, notification |
-| 4 | Feature flags API, audit logging, rollback |
-| 5 | Auto-sync daemon, drift detection, reconciliation |
+| 1 | Filesystem scanning, path mapping, metadata extraction, compilation |
+| 2 | Git operations: clone/pull/checkout, commit-hash based sync |
+| 3 | Sync API (commit-based), atomic updates, sidecar notification |
+| 4 | Internal IPE sidecar, `_features` policy tree |
+| 5 | Sidecar registry, stats collection, heartbeat monitoring |
+| 6 | Audit logging, comprehensive error handling |
 
 ## Success Metrics
 
-- <5s sync time for 100 policies
+- <5s sync time for 100 policies (including compilation)
 - <10ms metadata queries
+- <100ms sidecar registry queries
 - 100% audit coverage for control operations
 - Zero policy loss during sync failures
-- <1min to rollback to previous version
+- Idempotent sync: same commit hash always produces same result
+- <30s heartbeat interval for sidecar health monitoring
 
 ## Alternatives Considered
 
@@ -403,7 +558,9 @@ Leverages RFC-003's version history to track policy changes:
 |----------|------------------|
 | Manual file upload | No version history, error-prone |
 | Database-backed | Loses Git integration benefits |
-| Polling Git API | Less efficient than git pull |
+| Auto-sync with polling | Less explicit, harder to reason about state |
+| Sync status tracking | Adds complexity, commit hash is sufficient |
+| Rollback operations | Roll forward is simpler and more auditable |
 | Custom VCS | Reinventing the wheel, Git is proven |
 
 ## Future Enhancements
