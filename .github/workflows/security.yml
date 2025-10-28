@@ -25,18 +25,15 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit
 
-      - name: Run cargo audit
-        run: cargo audit
-
-      - name: Run cargo audit (JSON output)
-        run: cargo audit --json > audit-report.json
-        continue-on-error: true
+      - name: Run cargo audit with intelligent validation
+        run: .github/scripts/check-cargo-audit.sh
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4
         with:
           name: audit-report
           path: audit-report.json
+        if: always()  # Upload report even if check failed
 
   cargo-deny:
     name: Cargo Deny
@@ -81,10 +78,9 @@ jobs:
   sanitizers:
     name: Sanitizers
     runs-on: ubuntu-latest
-    continue-on-error: true  # ABI mismatch with backtrace dependencies - known Rust limitation
     strategy:
       matrix:
-        sanitizer: [address, leak, thread]
+        sanitizer: [address, thread]
     steps:
       - uses: actions/checkout@v4
 
@@ -103,10 +99,30 @@ jobs:
         run: |
           export RUSTFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
           export RUSTDOCFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
-          cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features
+          # Skip doctests to avoid ABI mismatch issues (known Rust limitation with sanitizers)
+          cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features --lib --bins --tests
         env:
           ASAN_OPTIONS: detect_leaks=1
-          LSAN_OPTIONS: suppressions=${{ github.workspace }}/lsan-suppressions.txt
+
+  leak-sanitizer:
+    name: Leak Sanitizer (with allowlist validation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run leak sanitizer with intelligent validation
+        run: .github/scripts/check-leak-sanitizer.sh
 
   supply-chain:
     name: Supply Chain Security
@@ -120,20 +136,5 @@ jobs:
       - name: Install cargo-geiger
         run: cargo install cargo-geiger
 
-      - name: Run cargo-geiger (unsafe code detection)
-        run: |
-          # Run on each workspace member since geiger doesn't support virtual manifests
-          for crate in crates/*/; do
-            echo "Checking $crate"
-            cargo geiger --manifest-path="${crate}Cargo.toml" --all-features || true
-          done
-
-      - name: Verify no unsafe code in core
-        run: |
-          # Ensure core crates have zero unsafe blocks
-          output=$(cargo geiger --manifest-path=crates/ipe-core/Cargo.toml --all-features 2>&1 || echo "")
-          if echo "$output" | grep -q "Metric output format: x/y"; then
-            echo "✅ cargo-geiger completed for ipe-core"
-          else
-            echo "⚠️  cargo-geiger check completed with warnings"
-          fi
+      - name: Run cargo-geiger with intelligent validation
+        run: .github/scripts/check-cargo-geiger.sh

@@ -30,7 +30,6 @@ cranelift-module = { workspace = true, optional = true }
 cranelift-native = { workspace = true, optional = true }
 cranelift-codegen = { workspace = true, optional = true }
 target-lexicon = { workspace = true, optional = true }
-region = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -41,8 +40,7 @@ jit = [
     "cranelift-module",
     "cranelift-native",
     "cranelift-codegen",
-    "target-lexicon",
-    "region"
+    "target-lexicon"
 ]
 
 [dev-dependencies]

@@ -197,9 +197,8 @@ jobs:
         run: cargo doc --all-features --no-deps --document-private-items
 
   minimal-versions:
-    name: Minimal Versions Check
+    name: Minimal Versions Check (with allowlist validation)
     runs-on: ubuntu-latest
-    continue-on-error: true  # tonic 0.14 requires http 1.2+ (transitive dependency issue)
     steps:
       - uses: actions/checkout@v4
 
@@ -217,5 +216,5 @@ jobs:
           cargo install cargo-hack
           cargo install cargo-minimal-versions
 
-      - name: Check minimal versions
-        run: cargo minimal-versions check --all-features
+      - name: Check minimal versions with intelligent validation
+        run: .github/scripts/check-minimal-versions.sh
