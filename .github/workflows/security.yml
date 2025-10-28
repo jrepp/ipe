@@ -81,10 +81,9 @@ jobs:
   sanitizers:
     name: Sanitizers
     runs-on: ubuntu-latest
-    continue-on-error: true  # ABI mismatch with backtrace dependencies - known Rust limitation
     strategy:
       matrix:
-        sanitizer: [address, leak, thread]
+        sanitizer: [address, thread]
     steps:
       - uses: actions/checkout@v4
 
@@ -106,7 +105,26 @@ jobs:
           cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features
         env:
           ASAN_OPTIONS: detect_leaks=1
-          LSAN_OPTIONS: suppressions=${{ github.workspace }}/lsan-suppressions.txt
+
+  leak-sanitizer:
+    name: Leak Sanitizer (with allowlist validation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run leak sanitizer with intelligent validation
+        run: .github/scripts/check-leak-sanitizer.sh
 
   supply-chain:
     name: Supply Chain Security

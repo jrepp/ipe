@@ -111,6 +111,10 @@ pub struct TieredPolicy {
     #[cfg(feature = "jit")]
     pub jit_code: RwLock<Option<Arc<JitCode>>>,
 
+    /// JIT compiler (owns executable memory, must live as long as compiled code)
+    #[cfg(feature = "jit")]
+    compiler: RwLock<Option<JitCompiler>>,
+
     /// Profiling statistics
     pub stats: Arc<ProfileStats>,
 
@@ -124,6 +128,8 @@ impl TieredPolicy {
             bytecode: Arc::new(bytecode),
             #[cfg(feature = "jit")]
             jit_code: RwLock::new(None),
+            #[cfg(feature = "jit")]
+            compiler: RwLock::new(None),
             stats: Arc::new(ProfileStats::new()),
             name,
         }
@@ -172,36 +178,36 @@ impl TieredPolicy {
         })
     }
 
-    /// Trigger JIT compilation in background
+    /// Trigger JIT compilation (synchronous to avoid threading issues with JITModule)
     #[cfg(feature = "jit")]
     fn trigger_jit_compilation(&self) {
-        use std::thread;
-
-        let bytecode = Arc::clone(&self.bytecode);
-        let jit_code = Arc::new(RwLock::new(self.jit_code.read().clone()));
-        let name = self.name.clone();
-        let stats = Arc::clone(&self.stats);
-
-        thread::spawn(move || {
-            let mut compiler = match JitCompiler::new() {
-                Ok(c) => c,
+        // Create compiler if it doesn't exist
+        if self.compiler.read().is_none() {
+            match JitCompiler::new() {
+                Ok(c) => {
+                    *self.compiler.write() = Some(c);
+                },
                 Err(e) => {
                     tracing::error!("Failed to create JIT compiler: {}", e);
                     return;
                 },
-            };
+            }
+        }
 
-            match compiler.compile(&bytecode, &name) {
+        // Compile the policy
+        let mut compiler_guard = self.compiler.write();
+        if let Some(ref mut compiler) = *compiler_guard {
+            match compiler.compile(&self.bytecode, &self.name) {
                 Ok(compiled) => {
-                    *jit_code.write() = Some(compiled);
-                    stats.promote();
-                    tracing::info!("JIT compiled policy: {}", name);
+                    *self.jit_code.write() = Some(compiled);
+                    self.stats.promote();
+                    tracing::info!("JIT compiled policy: {}", self.name);
                 },
                 Err(e) => {
-                    tracing::error!("JIT compilation failed for {}: {}", name, e);
+                    tracing::error!("JIT compilation failed for {}: {}", self.name, e);
                 },
             }
-        });
+        }
     }
 }
 
@@ -227,9 +233,18 @@ impl TieredPolicyManager {
     /// Synchronously compile a policy to JIT (for critical policies)
     #[cfg(feature = "jit")]
     pub fn compile_sync(&self, policy: &TieredPolicy) -> Result<()> {
-        let compiled = self.compiler.write().compile(&policy.bytecode, &policy.name)?;
-        *policy.jit_code.write() = Some(compiled);
-        *policy.stats.current_tier.write() = ExecutionTier::BaselineJIT;
+        // Create compiler for the policy if it doesn't have one
+        if policy.compiler.read().is_none() {
+            *policy.compiler.write() = Some(JitCompiler::new()?);
+        }
+
+        // Compile using the policy's own compiler
+        let mut compiler_guard = policy.compiler.write();
+        if let Some(ref mut compiler) = *compiler_guard {
+            let compiled = compiler.compile(&policy.bytecode, &policy.name)?;
+            *policy.jit_code.write() = Some(compiled);
+            *policy.stats.current_tier.write() = ExecutionTier::BaselineJIT;
+        }
         Ok(())
     }
 
