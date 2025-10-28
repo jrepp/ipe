@@ -55,11 +55,11 @@ root
 
 ### Internal `_features` Policies
 
-The `_features` namespace is **reserved for internal control plane policies**. These policies are loaded into the control plane's own IPE sidecar and control the behavior of the control plane itself.
+The `_features` namespace is **reserved for internal control plane policies**. These policies are loaded into the control plane's embedded IPE engine and control the behavior of the control plane itself.
 
 **Important Notes:**
-- `_features` policies are NOT exposed to data plane sidecars
-- IPE sidecar processes do NOT get feature flags
+- `_features` policies are NOT exposed to data plane instances
+- IPE instances do NOT get feature flags
 - Only the control plane evaluates these policies to make operational decisions
 
 **_features.sync.require_validation**
@@ -127,27 +127,27 @@ policies_root_path = "policies"
 curl --unix-socket /var/run/ipe/control.sock \
   -X POST \
   -d "{
-    \"method\": \"sync-from-git\",
+    \"method\": \"sync\",
     \"params\": {
       \"commit\": \"$COMMIT_HASH\"
     }
   }"
 ```
 
-### Querying Sidecar Registry
+### Querying Instance Registry
 
 ```bash
-# List all registered sidecars with stats
+# List all registered IPE instances with stats
 curl --unix-socket /var/run/ipe/control.sock \
   -X POST \
-  -d '{"method": "list-sidecars"}'
+  -d '{"method": "list"}'
 
-# Get detailed stats for a specific sidecar
+# Get detailed stats for a specific instance
 curl --unix-socket /var/run/ipe/control.sock \
   -X POST \
   -d '{
-    "method": "get-sidecar-stats",
-    "params": {"sidecar_id": "sidecar-abc-123"}
+    "method": "stats",
+    "params": {"id": "sidecar-abc-123"}
   }'
 ```
 
@@ -212,28 +212,22 @@ EOF
 
 ## Control Plane Feature Flags
 
-The control plane uses its internal `_features` policy tree to control its own behavior. These are NOT feature flags for sidecars - they are policies that the control plane evaluates to make operational decisions.
+The control plane uses its internal `_features` policy tree to control its own behavior. These are NOT feature flags for IPE instances - they are policies that the control plane evaluates internally to make operational decisions.
 
-Example: Before syncing, the control plane might evaluate:
-```bash
-# Control plane evaluates _features.sync.require_validation
-# to decide if validation can be skipped
-curl --unix-socket /var/run/ipe/internal.sock \
-  -X POST \
-  -d '{
-    "method": "evaluate",
-    "params": {
-      "policies": ["_features.sync.require_validation"],
-      "context": {
-        "operation": "sync",
-        "environment": "production",
-        "skip_validation": false
-      }
-    }
-  }'
+The control plane embeds the IPE engine directly (no socket communication needed). Before operations like syncing, the control plane evaluates `_features` policies:
+
+```
+Example: Before syncing, control plane internally evaluates:
+  Policy: _features.sync.require_validation
+  Context: {
+    operation: "sync",
+    environment: "production",
+    skip_validation: false
+  }
+  Result: allow/deny with reasoning
 ```
 
-**Remember**: Data plane sidecars advertise feature flags in their hello messages (RFC-002), but those are separate from the control plane's `_features` policies.
+**Remember**: Data plane instances advertise feature flags in their hello messages (RFC-002), but those are separate from the control plane's `_features` policies.
 
 ## References
 
