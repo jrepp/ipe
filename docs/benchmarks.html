@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPE Benchmark Timeline</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            padding: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        select, button {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select {
+            background: white;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .chart {
+            width: 100%;
+            min-height: 500px;
+        }
+
+        .line {
+            fill: none;
+            stroke-width: 3;
+        }
+
+        .dot {
+            stroke: white;
+            stroke-width: 2;
+        }
+
+        .confidence-band {
+            opacity: 0.2;
+        }
+
+        .axis-label {
+            font-size: 0.9em;
+            fill: #666;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9em;
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px;
+            font-size: 1.5em;
+            color: #667eea;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #dc3545;
+            font-size: 1.2em;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 IPE Benchmark Timeline</h1>
+            <div class="subtitle">Historical Performance Tracking</div>
+            <a href="index.html" class="back-link">← Back to Home</a>
+        </header>
+
+        <div class="dashboard">
+            <div id="loading" class="loading">Loading benchmark history...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="content" style="display: none;">
+                <!-- Summary Stats -->
+                <div class="stats-grid" id="stats-grid"></div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="benchmark-select">Benchmark</label>
+                        <select id="benchmark-select">
+                            <!-- Will be populated -->
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="metric-select">Metric</label>
+                        <select id="metric-select">
+                            <option value="mean_ns">Mean (ns)</option>
+                            <option value="median_ns">Median (ns)</option>
+                            <option value="std_dev_ns">Std Dev (ns)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="scale-select">Scale</label>
+                        <select id="scale-select">
+                            <option value="linear">Linear</option>
+                            <option value="log">Logarithmic</option>
+                        </select>
+                    </div>
+                    <button onclick="updateChart()">Update Chart</button>
+                    <button onclick="exportData()">Export Data</button>
+                </div>
+
+                <!-- Timeline Chart -->
+                <div class="chart-container">
+                    <div class="chart-title">⏱️ Performance Timeline</div>
+                    <div id="timeline-chart" class="chart"></div>
+                    <div class="legend" id="legend"></div>
+                </div>
+
+                <!-- Latest Results -->
+                <div class="chart-container">
+                    <div class="chart-title">📊 Latest Benchmark Results</div>
+                    <div id="latest-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Global data storage
+        let historyData = [];
+        let latestData = null;
+        const colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // Load data
+        async function loadData() {
+            try {
+                // Load history
+                const historyResponse = await fetch('benchmark-history.json');
+                if (historyResponse.ok) {
+                    historyData = await historyResponse.json();
+                }
+
+                // Load latest
+                const latestResponse = await fetch('benchmark-latest.json');
+                if (latestResponse.ok) {
+                    latestData = await latestResponse.json();
+                }
+
+                if (historyData.length === 0 && !latestData) {
+                    throw new Error('No benchmark data available. Run benchmarks first.');
+                }
+
+                // If no history but have latest, use latest as history
+                if (historyData.length === 0 && latestData) {
+                    historyData = [latestData];
+                }
+
+                initializeControls();
+                updateSummaryStats();
+                updateChart();
+                displayLatestResults();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent =
+                    `Error loading data: ${error.message}`;
+            }
+        }
+
+        function initializeControls() {
+            // Get all unique benchmark names
+            const benchmarkNames = new Set();
+            historyData.forEach(export_data => {
+                export_data.benchmarks.forEach(bench => {
+                    benchmarkNames.add(bench.name);
+                });
+            });
+
+            const select = document.getElementById('benchmark-select');
+            select.innerHTML = '';
+            benchmarkNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name.replace(/_/g, ' ');
+                select.appendChild(option);
+            });
+        }
+
+        function updateSummaryStats() {
+            if (!latestData) return;
+
+            const statsGrid = document.getElementById('stats-grid');
+            const totalBenchmarks = latestData.benchmarks.length;
+            const avgMean = d3.mean(latestData.benchmarks, d => d.mean_ns);
+            const fastestBench = latestData.benchmarks.reduce((a, b) =>
+                a.mean_ns < b.mean_ns ? a : b
+            );
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Benchmarks</div>
+                    <div class="stat-value">${totalBenchmarks}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Mean</div>
+                    <div class="stat-value">${formatNs(avgMean)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Fastest</div>
+                    <div class="stat-value">${formatNs(fastestBench.mean_ns)}</div>
+                    <div class="stat-label">${fastestBench.name}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">History Runs</div>
+                    <div class="stat-value">${historyData.length}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Latest Commit</div>
+                    <div class="stat-value">${latestData.git_commit || 'N/A'}</div>
+                    <div class="stat-label">${latestData.git_branch || ''}</div>
+                </div>
+            `;
+        }
+
+        function updateChart() {
+            const benchmarkName = document.getElementById('benchmark-select').value;
+            const metric = document.getElementById('metric-select').value;
+            const scale = document.getElementById('scale-select').value;
+
+            const container = d3.select('#timeline-chart');
+            container.selectAll('*').remove();
+
+            // Extract data for selected benchmark
+            const timelineData = historyData.map(export_data => {
+                const bench = export_data.benchmarks.find(b => b.name === benchmarkName);
+                return bench ? {
+                    timestamp: new Date(export_data.export_timestamp),
+                    value: bench[metric],
+                    lower: bench.mean_lower,
+                    upper: bench.mean_upper,
+                    commit: export_data.git_commit,
+                    branch: export_data.git_branch,
+                    name: bench.name
+                } : null;
+            }).filter(d => d !== null);
+
+            if (timelineData.length === 0) {
+                container.append('div')
+                    .style('padding', '50px')
+                    .style('text-align', 'center')
+                    .style('color', '#999')
+                    .text('No data available for this benchmark');
+                return;
+            }
+
+            const margin = {top: 20, right: 30, bottom: 70, left: 80};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            const x = d3.scaleTime()
+                .domain(d3.extent(timelineData, d => d.timestamp))
+                .range([0, width]);
+
+            const yScale = scale === 'log' ? d3.scaleLog() : d3.scaleLinear();
+            const y = yScale
+                .domain([
+                    d3.min(timelineData, d => Math.min(d.lower, d.value)),
+                    d3.max(timelineData, d => Math.max(d.upper, d.value))
+                ])
+                .nice()
+                .range([height, 0]);
+
+            // Confidence band
+            const area = d3.area()
+                .x(d => x(d.timestamp))
+                .y0(d => y(d.lower))
+                .y1(d => y(d.upper))
+                .curve(d3.curveMonotoneX);
+
+            svg.append('path')
+                .datum(timelineData)
+                .attr('class', 'confidence-band')
+                .attr('d', area)
+                .attr('fill', '#667eea');
+
+            // Line
+            const line = d3.line()
+                .x(d => x(d.timestamp))
+                .y(d => y(d.value))
+                .curve(d3.curveMonotoneX);
+
+            svg.append('path')
+                .datum(timelineData)
+                .attr('class', 'line')
+                .attr('d', line)
+                .attr('stroke', '#764ba2');
+
+            // Dots
+            svg.selectAll('.dot')
+                .data(timelineData)
+                .enter().append('circle')
+                .attr('class', 'dot')
+                .attr('cx', d => x(d.timestamp))
+                .attr('cy', d => y(d.value))
+                .attr('r', 5)
+                .attr('fill', '#667eea')
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('r', 8);
+                    showTooltip(event, d, metric);
+                })
+                .on('mouseout', function() {
+                    d3.select(this).attr('r', 5);
+                    hideTooltip();
+                });
+
+            // Axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(Math.min(timelineData.length, 10)))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end');
+
+            svg.append('g')
+                .call(d3.axisLeft(y).tickFormat(d => formatNs(d)));
+
+            // Labels
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', 0 - margin.left)
+                .attr('x', 0 - (height / 2))
+                .attr('dy', '1em')
+                .style('text-anchor', 'middle')
+                .text(metric.replace(/_/g, ' ').toUpperCase());
+
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom - 10)
+                .style('text-anchor', 'middle')
+                .text('Time');
+        }
+
+        function displayLatestResults() {
+            if (!latestData) return;
+
+            const container = document.getElementById('latest-results');
+            const sorted = [...latestData.benchmarks].sort((a, b) => a.mean_ns - b.mean_ns);
+
+            let html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead style="background: #f8f9fa;"><tr>';
+            html += '<th style="padding: 12px; text-align: left;">Benchmark</th>';
+            html += '<th style="padding: 12px; text-align: right;">Mean</th>';
+            html += '<th style="padding: 12px; text-align: right;">Median</th>';
+            html += '<th style="padding: 12px; text-align: right;">Std Dev</th>';
+            html += '</tr></thead><tbody>';
+
+            sorted.forEach((bench, idx) => {
+                const bg = idx % 2 === 0 ? 'white' : '#f8f9fa';
+                html += `<tr style="background: ${bg};">`;
+                html += `<td style="padding: 12px; font-weight: 600;">${bench.name.replace(/_/g, ' ')}</td>`;
+                html += `<td style="padding: 12px; text-align: right; font-family: monospace;">${formatNs(bench.mean_ns)}</td>`;
+                html += `<td style="padding: 12px; text-align: right; font-family: monospace;">${formatNs(bench.median_ns)}</td>`;
+                html += `<td style="padding: 12px; text-align: right; font-family: monospace;">${formatNs(bench.std_dev_ns)}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function formatNs(ns) {
+            if (ns < 1000) return `${ns.toFixed(2)} ns`;
+            if (ns < 1000000) return `${(ns / 1000).toFixed(2)} µs`;
+            if (ns < 1000000000) return `${(ns / 1000000).toFixed(2)} ms`;
+            return `${(ns / 1000000000).toFixed(2)} s`;
+        }
+
+        function showTooltip(event, d, metric) {
+            const tooltip = d3.select('#tooltip');
+            tooltip
+                .style('opacity', 1)
+                .html(`
+                    <strong>${d.name}</strong><br>
+                    Commit: ${d.commit || 'N/A'}<br>
+                    Branch: ${d.branch || 'N/A'}<br>
+                    Time: ${d.timestamp.toLocaleString()}<br>
+                    <br>
+                    Value: ${formatNs(d.value)}<br>
+                    CI: [${formatNs(d.lower)}, ${formatNs(d.upper)}]
+                `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        }
+
+        function hideTooltip() {
+            d3.select('#tooltip').style('opacity', 0);
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(historyData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `benchmark-history-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

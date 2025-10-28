@@ -108,3 +108,15 @@ docs:
 # Clean build artifacts
 clean:
     cargo clean
+
+# Run Criterion benchmarks
+bench:
+    cargo bench
+
+# Export benchmark results to GitHub Pages
+bench-export:
+    cd crates/ipe-core && cargo run --release --bin bench_export
+
+# Run benchmarks and export results
+bench-all: bench bench-export
+    @echo "✅ Benchmarks complete! Results exported to docs/"
