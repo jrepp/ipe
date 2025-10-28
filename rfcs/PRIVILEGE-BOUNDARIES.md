@@ -6,36 +6,35 @@
 
 IPE separates concerns into three planes, each with different privilege levels, authorization models, and operational semantics:
 
-```
-        ┌─────────────────────────────────────────────┐
-        │         IPE Three-Plane Architecture        │
-        ├─────────────────────────────────────────────┤
-        │                                             │
-        │  1. CONTROL PLANE         [HIGHEST]         │
-        │     • Policy Management                     │
-        │     • Admin-only access                     │
-        │     • CP (Strong Consistency)               │
-        │     • Socket: /control.sock                 │
-        │     • Auth: Admin tokens (mTLS)             │
-        │     • Who: Security admins, policy authors  │
-        │                                             │
-        │  2. DATA PLANE           [PRIVILEGED]       │
-        │     • Dynamic Data Writes                   │
-        │     • Service-level access                  │
-        │     • AP (Eventual Consistency)             │
-        │     • Socket: /data.sock                    │
-        │     • Auth: Service tokens (namespaced)     │
-        │     • Who: Services (deployment, identity)  │
-        │                                             │
-        │  3. EVALUATION PLANE     [APPLICATION]      │
-        │     • Predicate Evaluation                  │
-        │     • Application-level access              │
-        │     • Read-only from cache                  │
-        │     • Socket: /eval.sock                    │
-        │     • Auth: Application tokens              │
-        │     • Who: Application code, end-users      │
-        │                                             │
-        └─────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph "IPE Three-Plane Architecture"
+        subgraph CP["CONTROL PLANE<br/>[HIGHEST PRIVILEGE]"]
+            CP1["Policy Management<br/>• Admin-only access<br/>• CP - Strong Consistency<br/>• /control.sock<br/>• Admin tokens + mTLS"]
+            CP2["Who: Security admins,<br/>policy authors"]
+        end
+
+        subgraph DP["DATA PLANE<br/>[PRIVILEGED ACCESS]"]
+            DP1["Dynamic Data Writes<br/>• Service-level access<br/>• AP - Eventual Consistency<br/>• /data.sock<br/>• Service tokens"]
+            DP2["Who: Deployment service,<br/>Identity service"]
+        end
+
+        subgraph EP["EVALUATION PLANE<br/>[APPLICATION LEVEL]"]
+            EP1["Predicate Evaluation<br/>• Application-level access<br/>• Read-only from cache<br/>• /eval.sock<br/>• App tokens"]
+            EP2["Who: Application code,<br/>end-users"]
+        end
+
+        CP -->|policies| DP
+        DP -->|data| EP
+    end
+
+    Admin["Admin Tools<br/>(GitOps)"] -->|Admin Token| CP
+    Services["Services<br/>(Writes)"] -->|Service Token| DP
+    Apps["Applications<br/>(Queries)"] -->|App Token| EP
+
+    style CP fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    style DP fill:#ffa94d,stroke:#e67700,color:#fff
+    style EP fill:#51cf66,stroke:#2f9e44,color:#fff
 ```
 
 ## Plane Details
@@ -138,14 +137,20 @@ IPE separates concerns into three planes, each with different privilege levels, 
 
 ## Privilege Escalation Prevention
 
-```
-Evaluation Plane ──X──> Cannot write data
-                   ↑
-                   |
-Data Plane ────────X──> Cannot write policies
-                   ↑
-                   |
-Control Plane ─────────> Can manage everything
+```mermaid
+flowchart LR
+    EP["Evaluation Plane<br/>(APPLICATION)"]
+    DP["Data Plane<br/>(PRIVILEGED)"]
+    CP["Control Plane<br/>(HIGHEST)"]
+
+    EP -.->|"❌ Cannot<br/>write data"| DP
+    EP -.->|"❌ Cannot<br/>write policies"| CP
+    DP -.->|"❌ Cannot<br/>write policies"| CP
+    CP -->|"✓ Can manage<br/>everything"| CP
+
+    style EP fill:#51cf66,stroke:#2f9e44,color:#fff
+    style DP fill:#ffa94d,stroke:#e67700,color:#fff
+    style CP fill:#ff6b6b,stroke:#c92a2a,color:#fff
 ```
 
 **Enforcement:**
@@ -159,33 +164,61 @@ Control Plane ─────────> Can manage everything
 
 ### Policy Distribution (Control Plane → Predicate Services)
 
-```
-1. Admin commits policy to Git
-2. Control plane syncs via /control.sock
-3. Control plane compiles and distributes policies
-4. Predicate services update local policy cache
-5. Evaluation plane reads from updated cache
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant Git
+    participant Control as Control Plane<br/>/control.sock
+    participant Cache as Predicate Service<br/>Policy Cache
+    participant Eval as Evaluation Plane<br/>/eval.sock
+
+    Admin->>Git: 1. Commit policy
+    Admin->>Control: 2. Sync (commit hash)
+    Control->>Git: 3. Fetch policies
+    Control->>Control: 4. Compile to bytecode
+    Control->>Cache: 5. Distribute policies
+    Note over Cache: Policies updated
+    Eval->>Cache: 6. Read policies (later)
 ```
 
 ### Dynamic Data Flow (Services → Data Plane → Predicates)
 
-```
-1. Service writes approval via /data.sock (Data Plane)
-2. Data plane stores locally (RocksDB)
-3. Message plane publishes to all predicate services
-4. Predicate services update local data cache
-5. Application evaluates via /eval.sock (Evaluation Plane)
-6. Evaluation reads policies + data from local cache
+```mermaid
+sequenceDiagram
+    participant Service as Service<br/>(Deployment)
+    participant Data as Data Plane<br/>/data.sock
+    participant Msg as Message Plane<br/>(NATS/Gossip)
+    participant Cache as Predicate Service<br/>Data Cache
+    participant App
+    participant Eval as Evaluation Plane<br/>/eval.sock
+
+    Service->>Data: 1. PUT approval data
+    Data->>Data: 2. Store (RocksDB)
+    Data->>Msg: 3. Publish change
+    Msg->>Cache: 4. Replicate to instances
+    Note over Cache: Data updated
+    App->>Eval: 5. Evaluate predicate
+    Eval->>Cache: 6. Read data + policies
+    Eval->>App: 7. Return decision
 ```
 
 ### Evaluation Flow (Applications → Evaluation Plane)
 
-```
-1. Application sends evaluation request via /eval.sock
-2. Predicate service reads policies from cache
-3. Predicate service reads data from cache
-4. Evaluation runs (sub-millisecond)
-5. Decision returned to application
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant Eval as Evaluation Plane<br/>/eval.sock
+    participant PCache as Policy Cache
+    participant DCache as Data Cache
+    participant Engine as IPE Engine
+
+    App->>Eval: 1. Evaluate request
+    Eval->>PCache: 2. Read policies
+    Eval->>DCache: 3. Read data
+    Eval->>Engine: 4. Execute evaluation
+    Note over Engine: <1ms latency
+    Engine->>Eval: 5. Decision
+    Eval->>App: 6. Return result
 ```
 
 ## Token Types
