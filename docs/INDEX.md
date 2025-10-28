@@ -1,6 +1,6 @@
 # IPE Documentation Index
 
-**Welcome to the Intent Policy Engine documentation!**
+**Welcome to the Idempotent Predicate Engine documentation!**
 
 This index provides a guided path through IPE's documentation based on your needs.
 
@@ -10,7 +10,7 @@ This index provides a guided path through IPE's documentation based on your need
 
 1. **[README](../README.md)** - Project overview, badges, and quick links
 2. **[QUICKSTART](../QUICKSTART.md)** - Get IPE running in 5 minutes
-3. **[END_TO_END_EXAMPLE](../END_TO_END_EXAMPLE.md)** - Complete walkthrough of policy lifecycle
+3. **[END_TO_END_EXAMPLE](../END_TO_END_EXAMPLE.md)** - Complete walkthrough of predicate lifecycle
 
 ## Understanding IPE
 
@@ -36,14 +36,14 @@ See **[rfcs/INDEX.md](../rfcs/INDEX.md)** for the complete RFC collection, inclu
 
 - **RFC-001:** Sidecar service architecture
 - **RFC-002:** SSE/JSON protocol specification
-- **RFC-003:** Policy tree storage system
+- **RFC-003:** Predicate tree storage system
 
 ## Crate Documentation
 
 **Per-crate technical docs:**
 
 - **[ipe-core](../crates/ipe-core/)** - Core engine and interpreter
-- **[ipe-parser](../crates/ipe-parser/README.md)** - Policy language parser
+- **[ipe-parser](../crates/ipe-parser/README.md)** - Predicate language parser
 - **[ipe-control](../crates/ipe-control/)** - Control plane (gRPC)
 - **[ipe-web](../crates/ipe-web/)** - Web application
 - **[ipe-wasm](../crates/ipe-wasm/)** - WebAssembly bindings
