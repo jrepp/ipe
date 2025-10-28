@@ -30,16 +30,17 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 |-----|-------|--------|---------|
 | [001](001-sidecar-service-architecture.md) | Sidecar Service Architecture | Draft | Minimal Rust service with data/control plane separation, <50MB footprint |
 | [002](002-sse-json-protocol.md) | SSE/JSON Protocol | Draft | MCP-inspired protocol using Server-Sent Events and JSON-RPC |
-| [003](003-policy-tree-storage.md) | Policy Tree Storage | Draft | Content-addressable tree structure with cryptographic hashing |
+| [003](003-policy-tree-storage.md) | Policy Tree Storage | Draft | Content-addressable tree structure with cryptographic hashing, RocksDB backend |
+| [004](004-control-plane.md) | Control Plane Architecture | Draft | GitOps-based policy synchronization with filesystem-to-tree mapping |
 
 ## Planned RFCs
 
 | Number | Title | Target | Description |
 |--------|-------|--------|-------------|
-| 004 | Data Storage | TBD | Dynamic data store for approvals and external signals |
 | 005 | Client Libraries | TBD | Official clients for Rust, Python, Node.js, Go |
 | 006 | Observability | TBD | Metrics, tracing, and monitoring specification |
 | 007 | Security Model | TBD | Authentication, authorization, and audit logging |
+| 008 | Dynamic Data Store | TBD | External signals and runtime data (approvals, etc.) |
 
 ## RFC Guidelines
 

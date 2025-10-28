@@ -1,0 +1,19 @@
+// Staging Deployment Approval Policy
+// Path: staging.deployment.approval
+//
+// More relaxed approval requirements for staging deployments
+
+policy RequireStagingApproval {
+    require resource.type == "Deployment"
+    require resource.environment == "staging"
+
+    // Check for approvals
+    let approvers = context.approvals || []
+
+    // Staging requires at least 1 approval from any engineer
+    if approvers.length >= 1 {
+        allow("Sufficient approvals for staging deployment")
+    } else {
+        deny("Requires at least 1 engineer approval")
+    }
+}

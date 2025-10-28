@@ -1,0 +1,38 @@
+// Production Deployment Validation Policy
+// Path: prod.deployment.validation
+//
+// Validates that deployments meet production requirements
+// including tests, security scans, and documentation.
+
+policy ValidateDeployment {
+    require resource.type == "Deployment"
+    require resource.environment == "production"
+
+    // Check deployment metadata
+    let metadata = resource.metadata || {}
+
+    // Required checks
+    let tests_passed = metadata.tests_passed == true
+    let security_scan_passed = metadata.security_scan_passed == true
+    let has_documentation = metadata.documentation_url != null
+    let has_rollback_plan = metadata.rollback_plan != null
+
+    // Validation logic
+    if !tests_passed {
+        deny("All tests must pass before production deployment")
+    }
+
+    if !security_scan_passed {
+        deny("Security scan must pass before production deployment")
+    }
+
+    if !has_documentation {
+        deny("Deployment documentation required")
+    }
+
+    if !has_rollback_plan {
+        deny("Rollback plan required")
+    }
+
+    allow("Deployment meets all production requirements")
+}

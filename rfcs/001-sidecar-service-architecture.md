@@ -59,6 +59,7 @@ Modern workloads need policy evaluation that is:
 - Primary: `/var/run/ipe/eval.sock`
 
 #### Control Plane (Write, Admin)
+- GitOps-based policy synchronization (see RFC-004)
 - Atomic updates with versioning
 - Authentication required
 - Audit logging enabled
@@ -108,12 +109,12 @@ atomic_swap = true  # Use arc-swap for zero-downtime updates
 validation_required = true
 
 [storage]
-# Policy store backend
-policy_backend = "memory"  # or "rocksdb", "sqlite"
+# Policy store backend (memory for dev, rocksdb for prod)
+policy_backend = "memory"  # or "rocksdb"
 policy_path = "/var/lib/ipe/policies"
 
-# Data store backend
-data_backend = "memory"  # or "rocksdb", "sqlite"
+# Data store backend (memory for dev, rocksdb for prod)
+data_backend = "memory"  # or "rocksdb"
 data_path = "/var/lib/ipe/data"
 
 # Persistence
@@ -255,3 +256,6 @@ policy_store.swap(path, new_bytecode, new_hash, parent_hash);
 - [SSE Specification](https://html.spec.whatwg.org/multipage/server-sent-events.html)
 - [arc-swap](https://docs.rs/arc-swap/) for lock-free reads
 - [tokio](https://tokio.rs/) for async runtime
+- [RFC-002: SSE/JSON Protocol](002-sse-json-protocol.md)
+- [RFC-003: Policy Tree Storage](003-policy-tree-storage.md)
+- [RFC-004: Control Plane Architecture](004-control-plane.md)
