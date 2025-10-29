@@ -14,10 +14,10 @@ db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
 # Vulnerability level to deny
 vulnerability = "deny"
-# Unmaintained crates
-unmaintained = "warn"
+# Unmaintained crates (cargo-deny v2 syntax)
+unmaintained = "all"
 # Crates with security notices
-notice = "warn"
+notice = "all"
 # Yanked crates
 yanked = "deny"
 # Ignore specific advisories (use only when necessary)
