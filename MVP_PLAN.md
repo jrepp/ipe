@@ -1,8 +1,8 @@
-# Intent Policy Engine: MVP Implementation Plan
+# Idempotent Predicate Engine: MVP Implementation Plan
 
 ## Executive Summary
 
-This document outlines the **Minimum Viable Product (MVP)** plan for the Intent Policy Engine, a security-critical policy evaluation engine built in Rust. Our approach prioritizes:
+This document outlines the **Minimum Viable Product (MVP)** plan for the Idempotent Predicate Engine, a security-critical predicate evaluation engine built in Rust. Our approach prioritizes:
 
 1. **Security First**: Comprehensive testing, fuzzing, and code coverage
 2. **Performance Validation**: Early benchmarking to validate <50μs targets
@@ -14,11 +14,11 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 ### What's IN the MVP
 
 **Core Functionality:**
-- ✅ Full policy parsing (nom-based parser)
+- ✅ Full predicate parsing (nom-based parser)
 - ✅ Type-checked AST with semantic validation
 - ✅ Bytecode compiler with optimizations
 - ✅ Bytecode interpreter (50μs target)
-- ✅ Basic policy indexing (resource type)
+- ✅ Basic predicate indexing (resource type)
 - ✅ RAR (Resource-Action-Request) evaluation model
 - ✅ Comprehensive error handling
 
@@ -36,8 +36,8 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 - ✅ Automated security audits
 - ✅ Documentation (rustdoc)
 
-**Example Policies:**
-- ✅ 20+ real-world policy examples
+**Example Predicates:**
+- ✅ 20+ real-world predicate examples
 - ✅ Test corpus for validation
 
 ### What's OUT of MVP (Post-MVP Phases)
@@ -51,11 +51,11 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 ## MVP Timeline: 8-10 Weeks
 
 ### Week 1-2: Foundation & Parser
-**Goal:** Parse policy source into typed AST
+**Goal:** Parse predicate source into typed AST
 
 **Deliverables:**
 - [ ] Lexer with full token support
-- [ ] nom-based parser for policy syntax
+- [ ] nom-based parser for predicate syntax
 - [ ] AST node definitions
 - [ ] Type system implementation
 - [ ] Parser tests (100+ cases)
@@ -64,7 +64,7 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 **Success Criteria:**
 - Parse all RFC examples correctly
 - Helpful error messages with line/column info
-- <10ms parsing for 1000-line policy file
+- <10ms parsing for 1000-line predicate file
 
 ### Week 3-4: Bytecode Compiler
 **Goal:** Compile AST to optimized bytecode
@@ -78,8 +78,8 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 - [ ] Compiler tests (>85% coverage)
 
 **Success Criteria:**
-- Compile 1000 policies in <5 seconds
-- Bytecode size ~200 bytes per policy
+- Compile 1000 predicates in <5 seconds
+- Bytecode size ~200 bytes per predicate
 - Deterministic compilation (same input = same output)
 
 ### Week 5-6: Interpreter & Engine
@@ -88,14 +88,14 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 **Deliverables:**
 - [ ] Stack-based bytecode interpreter
 - [ ] RAR context evaluation
-- [ ] Policy indexing by resource type
+- [ ] Predicate indexing by resource type
 - [ ] Decision resolution (allow/deny)
 - [ ] Memory arena for zero-copy evaluation
 - [ ] Engine tests (>90% coverage)
 
 **Success Criteria:**
-- Single policy evaluation: <50μs p99
-- 1000 policies with indexing: <500μs p99
+- Single predicate evaluation: <50μs p99
+- 1000 predicates with indexing: <500μs p99
 - Zero heap allocations during evaluation
 - Thread-safe, concurrent evaluation
 
@@ -107,7 +107,7 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 - [ ] Property-based tests (proptest)
 - [ ] Criterion benchmarks
 - [ ] Load test framework
-- [ ] Stress tests (1M+ policies)
+- [ ] Stress tests (1M+ predicates)
 - [ ] Memory leak detection (valgrind)
 
 **Success Criteria:**
@@ -138,10 +138,10 @@ This document outlines the **Minimum Viable Product (MVP)** plan for the Intent 
 ### Performance (Must-Have)
 | Metric | Target | Test Method |
 |--------|--------|-------------|
-| Single policy eval (cold) | <50μs p99 | Criterion bench |
-| 1000 policies (indexed) | <500μs p99 | Custom load test |
-| Policy compilation | <10ms per policy | Criterion bench |
-| Memory per policy | <300 bytes | Memory profiler |
+| Single predicate eval (cold) | <50μs p99 | Criterion bench |
+| 1000 predicates (indexed) | <500μs p99 | Custom load test |
+| Predicate compilation | <10ms per predicate | Criterion bench |
+| Memory per predicate | <300 bytes | Memory profiler |
 | Throughput (single-thread) | >20k ops/sec | Load test |
 
 ### Quality (Must-Have)
@@ -193,9 +193,9 @@ ipe/
 │   │   │   │   ├── mod.rs
 │   │   │   │   ├── vm.rs
 │   │   │   │   └── stack.rs
-│   │   │   ├── engine/     # Policy Engine
+│   │   │   ├── engine/     # Predicate Engine
 │   │   │   │   ├── mod.rs
-│   │   │   │   ├── policy_db.rs
+│   │   │   │   ├── predicate_db.rs
 │   │   │   │   ├── index.rs
 │   │   │   │   └── decision.rs
 │   │   │   ├── rar/        # RAR Model
@@ -214,15 +214,15 @@ ipe/
 │   │   │   └── evaluation.rs
 │   │   └── fuzz/           # Fuzz Targets
 │   │       └── fuzz_targets/
-│   │           ├── parse_policy.rs
-│   │           └── evaluate_policy.rs
+│   │           ├── parse_predicate.rs
+│   │           └── evaluate_predicate.rs
 │   │
 │   └── ipe-cli/            # CLI Tool (for testing)
 │       ├── src/
 │       │   └── main.rs
 │       └── Cargo.toml
 │
-├── examples/               # Example Policies
+├── examples/               # Example Predicates
 │   ├── deployment.ipe
 │   ├── security.ipe
 │   └── compliance.ipe
@@ -245,7 +245,7 @@ ipe/
 
 ```
 ┌──────────────┐
-│ Policy Source│  (.ipe files)
+│ Predicate Source│  (.ipe files)
 └──────┬───────┘
        │ parse
        ▼
@@ -255,12 +255,12 @@ ipe/
        │ compile
        ▼
 ┌──────────────┐
-│ Bytecode     │  (serializable, ~200 bytes/policy)
+│ Bytecode     │  (serializable, ~200 bytes/predicate)
 └──────┬───────┘
        │ load into engine
        ▼
 ┌──────────────┐
-│ PolicyDB     │  (indexed by resource type)
+│ PredicateDB  │  (indexed by resource type)
 └──────┬───────┘
        │ evaluate (with RAR context)
        ▼
@@ -277,19 +277,19 @@ ipe/
 - **Parser:** Token stream validation, syntax error recovery
 - **Compiler:** Bytecode correctness, optimization verification
 - **Interpreter:** Instruction execution, stack operations
-- **Engine:** Policy matching, decision resolution
+- **Engine:** Predicate matching, decision resolution
 
 **Critical path testing (100% coverage):**
-- Policy evaluation core loop
+- Predicate evaluation core loop
 - Memory management (arena allocation)
 - Error handling paths
 
 ### 2. Integration Tests
 
 **End-to-end scenarios:**
-- Parse → Compile → Evaluate full policies
-- Multiple policies with conflicts
-- Edge cases (empty policies, large policies)
+- Parse → Compile → Evaluate full predicates
+- Multiple predicates with conflicts
+- Edge cases (empty predicates, large predicates)
 - Concurrent evaluation
 
 ### 3. Property-Based Tests (proptest)
@@ -322,7 +322,7 @@ ipe/
 **Scenarios:**
 - **Throughput test:** 1M evaluations, measure ops/sec
 - **Latency test:** P50/P99/P99.9 latencies under load
-- **Stress test:** 100k policies loaded, evaluate randomly
+- **Stress test:** 100k predicates loaded, evaluate randomly
 - **Concurrent test:** 8 threads evaluating simultaneously
 
 **Tools:**
@@ -364,7 +364,7 @@ cargo llvm-cov --all-features --html
 cargo bench
 
 # Fuzz (10 minutes)
-cargo +nightly fuzz run parse_policy -- -max_total_time=600
+cargo +nightly fuzz run parse_predicate -- -max_total_time=600
 ```
 
 ### Pre-Commit Checks
@@ -477,7 +477,7 @@ The MVP is complete when:
 
 ✅ **Functional:**
 - [ ] All RFC examples parse, compile, and evaluate correctly
-- [ ] Performance targets met (< 50μs single policy eval)
+- [ ] Performance targets met (< 50μs single predicate eval)
 - [ ] All planned tests passing
 
 ✅ **Quality:**
@@ -492,7 +492,7 @@ The MVP is complete when:
 - [ ] Release process tested
 
 ✅ **Validated:**
-- [ ] 20+ real-world policies tested
+- [ ] 20+ real-world predicates tested
 - [ ] Performance benchmarks published
 - [ ] Load tests demonstrate 20k+ ops/sec
 

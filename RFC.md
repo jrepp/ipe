@@ -1,19 +1,19 @@
-# RFC: Intent Policy Engine (IPE)
+# RFC: Idempotent Predicate Engine (IPE)
 
-**Status:** Draft  
-**Author:** Policy Engine Working Group  
-**Created:** 2025-10-26  
+**Status:** Draft
+**Author:** Predicate Engine Working Group
+**Created:** 2025-10-26
 **Version:** 0.1.0
 
 ## Abstract
 
-Intent Policy Engine (IPE) is a declarative policy language and high-performance evaluation engine for DevOps/SecOps workflows. Built in Rust with native and WebAssembly compilation targets, IPE achieves <50μs p99 latency for policy evaluation across 10k+ policies while maintaining human readability and AI-native semantics.
+Idempotent Predicate Engine (IPE) is a declarative predicate language and high-performance evaluation engine for DevOps/SecOps workflows. Built in Rust with native and WebAssembly compilation targets, IPE achieves <50μs p99 latency for predicate evaluation across 10k+ predicates while maintaining human readability and AI-native semantics.
 
 **Key Properties:**
 - Natural language intent + structured logic
 - Deterministic evaluation with predictable performance
 - Zero-copy evaluation via arena allocation
-- Atomic policy updates via gRPC control plane
+- Atomic predicate updates via gRPC control plane
 - Visual editing and testing web interface
 - FFI bindings for C, Python, Node.js, Go
 
@@ -39,9 +39,9 @@ Intent Policy Engine (IPE) is a declarative policy language and high-performance
 
 ### Problems with Current Policy Systems
 
-**Rego (OPA):** Complex syntax, steep learning curve, unpredictable performance on large policy sets  
-**Cedar:** AWS-specific, limited composability, verbose policy definitions  
-**YAML-based (K8s policies):** Indentation hell, poor diff visibility, no semantic layer  
+**Rego (OPA):** Complex syntax, steep learning curve, unpredictable performance on large policy sets
+**Cedar:** AWS-specific, limited composability, verbose policy definitions
+**YAML-based (K8s policies):** Indentation hell, poor diff visibility, no semantic layer
 **Custom DSLs:** Fragmentation, poor tooling, AI integration as afterthought
 
 ### Requirements
@@ -49,7 +49,7 @@ Intent Policy Engine (IPE) is a declarative policy language and high-performance
 1. **Human-Friendly:** Read like documentation, diff well in Git, visual by default
 2. **AI-Native:** Natural language intent, semantic queries, bidirectional translation
 3. **Performance:** <100μs evaluation, predictable latency, minimal memory footprint
-4. **Scale:** 100k+ policies, concurrent evaluation, hot-reload without downtime
+4. **Scale:** 100k+ predicates, concurrent evaluation, hot-reload without downtime
 5. **Embeddable:** Native libs, WASM, minimal dependencies, <5MB binary
 6. **Observable:** Explain decisions, trace evaluation, audit trails
 
@@ -78,17 +78,17 @@ Intent Policy Engine (IPE) is a declarative policy language and high-performance
 
 ### Core Principles
 
-**Principle 1: Intent is Documentation**  
-The natural language string is not a comment—it's the policy's specification. Code validates intent.
+**Principle 1: Intent is Documentation**
+The natural language string is not a comment—it's the predicate's specification. Code validates intent.
 
-**Principle 2: Compile Everything**  
+**Principle 2: Compile Everything**
 Runtime does zero parsing. All decisions made at compile time.
 
-**Principle 3: Fail Fast, Fail Clearly**  
-Invalid policies caught at compile time. Runtime failures include full context.
+**Principle 3: Fail Fast, Fail Clearly**
+Invalid predicates caught at compile time. Runtime failures include full context.
 
-**Principle 4: Optimize for Reading**  
-Policies are read 1000x more than written. Reviews should be effortless.
+**Principle 4: Optimize for Reading**
+Predicates are read 1000x more than written. Reviews should be effortless.
 
 ---
 
@@ -97,19 +97,19 @@ Policies are read 1000x more than written. Reviews should be effortless.
 ### Syntax Overview
 
 ```rust
-policy RequireApproval:
+predicate RequireApproval:
   "Production deployments need 2+ approvals from senior engineers"
-  
+
   triggers when
     resource.type == "Deployment"
     and environment in ["production", "staging"]
     and resource.risk_level >= "medium"
-  
+
   requires
     approvals.count >= 2
     where approver.role == "senior-engineer"
     and approver.department != requester.department
-  
+
   metadata
     severity: critical
     owner: security-team
@@ -119,7 +119,7 @@ policy RequireApproval:
 ### Grammar (EBNF)
 
 ```ebnf
-Policy       ::= "policy" Identifier ":" Description Triggers Requires Metadata?
+Predicate    ::= "predicate" Identifier ":" Description Triggers Requires Metadata?
 Description  ::= StringLiteral
 Triggers     ::= "triggers when" Expression+
 Requires     ::= "requires" Expression+ ("where" Expression+)?
@@ -201,7 +201,7 @@ all([T], Predicate) -> bool
 
 ### Resource-Action-Request Context
 
-Every policy evaluation receives a **RAR** (Resource-Action-Request) context:
+Every predicate evaluation receives a **RAR** (Resource-Action-Request) context:
 
 ```rust
 struct EvaluationContext {
@@ -245,7 +245,7 @@ struct Principal {
 ### Evaluation Flow
 
 ```
-Request arrives → Build RAR context → Load policies → Evaluate
+Request arrives → Build RAR context → Load predicates → Evaluate
                                                          ↓
                                           ┌──────────────┴──────────────┐
                                           │                             │
@@ -313,7 +313,7 @@ Request arrives → Build RAR context → Load policies → Evaluate
 
 ```rust
 // nom-based parser produces typed AST
-pub struct PolicyAst {
+pub struct PredicateAst {
     pub name: String,
     pub intent: String,
     pub triggers: Vec<Condition>,
@@ -372,8 +372,8 @@ pub enum Instruction {
 
 // Bytecode layout (memory-mapped)
 #[repr(C)]
-pub struct CompiledPolicy {
-    header: PolicyHeader,
+pub struct CompiledPredicate {
+    header: PredicateHeader,
     code: [Instruction],
     constants: [Value],
 }
@@ -381,7 +381,7 @@ pub struct CompiledPolicy {
 
 ### Stage 4: JIT Compilation (Runtime)
 
-For hot policies (frequently evaluated), IPE includes a **JIT compiler** that translates bytecode to native machine code at runtime using Cranelift.
+For hot predicates (frequently evaluated), IPE includes a **JIT compiler** that translates bytecode to native machine code at runtime using Cranelift.
 
 ```
 Bytecode → JIT Compiler (Cranelift) → Native Code → Cache
@@ -391,7 +391,7 @@ Interpreter (cold path)              Native execution (hot path)
 ```
 
 **Why Cranelift:**
-- Fast compilation (<1ms for typical policies)
+- Fast compilation (<1ms for typical predicates)
 - No LLVM dependency (lightweight)
 - Safe code generation
 - WASM-ready (also used in wasmtime)
@@ -400,17 +400,17 @@ Interpreter (cold path)              Native execution (hot path)
 
 ```rust
 pub enum ExecutionTier {
-    Interpreter,          // Initial: All policies
+    Interpreter,          // Initial: All predicates
     BaselineJIT,          // After 100 evals: Simple JIT, fast compile
     OptimizedJIT,         // After 10k evals: Full optimizations
-    NativeAOT,            // Pre-compiled: Critical policies
+    NativeAOT,            // Pre-compiled: Critical predicates
 }
 
-pub struct TieredPolicy {
-    bytecode: CompiledPolicy,
+pub struct TieredPredicate {
+    bytecode: CompiledPredicate,
     jit_code: Option<JitCode>,
     tier: ExecutionTier,
-    
+
     // Profiling data
     eval_count: AtomicU64,
     avg_latency: AtomicU64,
@@ -430,19 +430,19 @@ pub struct JitCompiler {
 }
 
 impl JitCompiler {
-    pub fn compile(&mut self, policy: &CompiledPolicy) -> Result<JitCode> {
+    pub fn compile(&mut self, predicate: &CompiledPredicate) -> Result<JitCode> {
         // Create Cranelift function
         let mut func = Function::new();
         let mut builder_ctx = FunctionBuilderContext::new();
         let mut builder = FunctionBuilder::new(&mut func, &mut builder_ctx);
-        
+
         // Entry block
         let entry_block = builder.create_block();
         builder.append_block_params_for_function_params(entry_block);
         builder.switch_to_block(entry_block);
-        
+
         // Translate bytecode to IR
-        for instr in &policy.code {
+        for instr in &predicate.code {
             self.translate_instruction(&mut builder, instr)?;
         }
         
@@ -518,7 +518,7 @@ impl JitCode {
 **Adaptive JIT Policy:**
 
 ```rust
-impl TieredPolicy {
+impl TieredPredicate {
     pub fn evaluate(&self, ctx: &EvaluationContext) -> Result<Decision> {
         // Check if JIT code available
         if let Some(jit) = &self.jit_code {
@@ -527,15 +527,15 @@ impl TieredPolicy {
             self.record_eval();
             return Ok(Decision::from_bool(result));
         }
-        
+
         // Slow path: interpreter
         let result = self.interpret(ctx)?;
-        
+
         // Check if should JIT compile
         if self.should_promote() {
             self.trigger_jit_compilation();
         }
-        
+
         Ok(result)
     }
     
@@ -556,9 +556,9 @@ impl TieredPolicy {
 
 | Tier | Compile Time | Eval Latency | Memory Overhead | When to Use |
 |------|--------------|--------------|-----------------|-------------|
-| Interpreter | 0 (pre-compiled) | ~50μs | 200 bytes/policy | Cold policies |
-| Baseline JIT | ~500μs | ~10μs | +2KB/policy | >100 evals |
-| Optimized JIT | ~5ms | ~5μs | +4KB/policy | >10k evals |
+| Interpreter | 0 (pre-compiled) | ~50μs | 200 bytes/predicate | Cold predicates |
+| Baseline JIT | ~500μs | ~10μs | +2KB/predicate | >100 evals |
+| Optimized JIT | ~5ms | ~5μs | +4KB/predicate | >10k evals |
 | Native AOT | Build-time | ~2μs | 0 (embedded) | Critical paths |
 
 **JIT Safety:**
@@ -599,26 +599,26 @@ impl JitMemory {
 ### Core Engine
 
 ```rust
-pub struct PolicyEngine {
-    // Immutable policy database (Arc for cheap clone)
-    policies: Arc<PolicyDb>,
-    
+pub struct PredicateEngine {
+    // Immutable predicate database (Arc for cheap clone)
+    predicates: Arc<PredicateDB>,
+
     // Evaluation arena (per-thread)
     arena: ThreadLocal<RefCell<Arena>>,
-    
+
     // Metrics
     metrics: Arc<Metrics>,
 }
 
-impl PolicyEngine {
+impl PredicateEngine {
     pub fn evaluate(&self, ctx: &EvaluationContext) -> Result<Decision, Error> {
         // 1. Fast path: indexed lookup
-        let candidates = self.policies.lookup(ctx.resource.type_id)?;
-        
-        // 2. Evaluate in parallel (if >10 policies)
+        let candidates = self.predicates.lookup(ctx.resource.type_id)?;
+
+        // 2. Evaluate in parallel (if >10 predicates)
         let results = self.evaluate_candidates(candidates, ctx)?;
-        
-        // 3. Combine results (policy resolution)
+
+        // 3. Combine results (predicate resolution)
         Ok(self.resolve(results))
     }
 }
@@ -628,22 +628,22 @@ impl PolicyEngine {
 
 ```rust
 // Multi-level index for fast candidate selection
-pub struct PolicyDb {
-    // Level 1: Resource type -> policies
-    by_resource: HashMap<ResourceTypeId, Vec<PolicyId>>,
-    
-    // Level 2: Common fields -> policies
-    by_field: HashMap<FieldId, BTreeMap<Value, Vec<PolicyId>>>,
-    
-    // Level 3: All policies (for brute force fallback)
-    all_policies: Vec<CompiledPolicy>,
-    
+pub struct PredicateDB {
+    // Level 1: Resource type -> predicates
+    by_resource: HashMap<ResourceTypeId, Vec<PredicateId>>,
+
+    // Level 2: Common fields -> predicates
+    by_field: HashMap<FieldId, BTreeMap<Value, Vec<PredicateId>>>,
+
+    // Level 3: All predicates (for brute force fallback)
+    all_predicates: Vec<CompiledPredicate>,
+
     // Metadata for queries
-    metadata: HashMap<PolicyId, Metadata>,
+    metadata: HashMap<PredicateId, Metadata>,
 }
 
-impl PolicyDb {
-    pub fn lookup(&self, resource_type: ResourceTypeId) -> &[PolicyId] {
+impl PredicateDB {
+    pub fn lookup(&self, resource_type: ResourceTypeId) -> &[PredicateId] {
         self.by_resource.get(&resource_type).map(|v| v.as_slice()).unwrap_or(&[])
     }
 }
@@ -694,41 +694,41 @@ impl<'arena> Evaluator<'arena> {
 
 ## 7. Memory Model
 
-### Policy Storage
+### Predicate Storage
 
 ```rust
-// Memory-mapped policy database
-pub struct MmapPolicyDb {
+// Memory-mapped predicate database
+pub struct MmapPredicateDB {
     mmap: Mmap,
     header: &'static DbHeader,
-    policies: &'static [CompiledPolicy],
+    predicates: &'static [CompiledPredicate],
 }
 
 #[repr(C)]
 struct DbHeader {
     magic: [u8; 4],      // "IPE\0"
     version: u32,
-    policy_count: u32,
+    predicate_count: u32,
     index_offset: u64,
-    policy_offset: u64,
+    predicate_offset: u64,
 }
 ```
 
 ### Hot/Cold Tiering
 
 ```rust
-pub struct TieredPolicyDb {
-    // Hot: L1 cache-sized policies (frequently evaluated)
-    hot: Vec<CompiledPolicy>,  // ~64KB
-    
-    // Warm: Recent policies (in memory)
-    warm: LruCache<PolicyId, CompiledPolicy>,  // ~1MB
-    
-    // Cold: All policies (memory-mapped)
-    cold: MmapPolicyDb,  // Unlimited
-    
+pub struct TieredPredicateDB {
+    // Hot: L1 cache-sized predicates (frequently evaluated)
+    hot: Vec<CompiledPredicate>,  // ~64KB
+
+    // Warm: Recent predicates (in memory)
+    warm: LruCache<PredicateId, CompiledPredicate>,  // ~1MB
+
+    // Cold: All predicates (memory-mapped)
+    cold: MmapPredicateDB,  // Unlimited
+
     // Stats for promotion/demotion
-    access_stats: HashMap<PolicyId, AccessStats>,
+    access_stats: HashMap<PredicateId, AccessStats>,
 }
 ```
 
@@ -764,27 +764,27 @@ syntax = "proto3";
 
 package ipe.control;
 
-service PolicyControl {
-  // Upload new policy set (atomic swap)
-  rpc UpdatePolicies(UpdateRequest) returns (UpdateResponse);
-  
-  // Query policy status
-  rpc GetPolicyStatus(StatusRequest) returns (StatusResponse);
-  
-  // Test policies against sample data
-  rpc TestPolicies(TestRequest) returns (TestResponse);
-  
-  // Stream policy evaluations (observability)
+service PredicateControl {
+  // Upload new predicate set (atomic swap)
+  rpc UpdatePredicates(UpdateRequest) returns (UpdateResponse);
+
+  // Query predicate status
+  rpc GetPredicateStatus(StatusRequest) returns (StatusResponse);
+
+  // Test predicates against sample data
+  rpc TestPredicates(TestRequest) returns (TestResponse);
+
+  // Stream predicate evaluations (observability)
   rpc StreamEvaluations(StreamRequest) returns (stream Evaluation);
 }
 
 message UpdateRequest {
-  // New policy source files
-  repeated PolicyFile policies = 1;
-  
+  // New predicate source files
+  repeated PredicateFile predicates = 1;
+
   // Compilation options
   CompileOptions options = 2;
-  
+
   // Rollback on validation failure
   bool atomic = 3;
 }
@@ -795,15 +795,15 @@ message UpdateResponse {
     Success success = 1;
     CompileError error = 2;
   }
-  
+
   // New version ID
   string version_id = 3;
-  
+
   // Compilation metrics
   CompileMetrics metrics = 4;
 }
 
-message PolicyFile {
+message PredicateFile {
   string path = 1;
   string content = 2;
 }
@@ -812,44 +812,44 @@ message PolicyFile {
 ### Atomic Swap Implementation
 
 ```rust
-pub struct PolicyManager {
-    // Current active policy set (Arc for atomic swap)
-    current: Arc<ArcSwap<PolicyDb>>,
-    
-    // Policy versions (for rollback)
-    versions: Mutex<BTreeMap<String, Arc<PolicyDb>>>,
-    
+pub struct PredicateDataStore {
+    // Current active predicate set (Arc for atomic swap)
+    current: Arc<ArcSwap<PredicateDB>>,
+
+    // Predicate versions (for rollback)
+    versions: Mutex<BTreeMap<String, Arc<PredicateDB>>>,
+
     // Compilation pipeline
-    compiler: PolicyCompiler,
+    compiler: PredicateCompiler,
 }
 
-impl PolicyManager {
-    pub async fn update_policies(&self, req: UpdateRequest) -> Result<UpdateResponse> {
-        // 1. Compile new policy set
-        let new_db = self.compiler.compile(&req.policies).await?;
-        
+impl PredicateDataStore {
+    pub async fn update_predicates(&self, req: UpdateRequest) -> Result<UpdateResponse> {
+        // 1. Compile new predicate set
+        let new_db = self.compiler.compile(&req.predicates).await?;
+
         // 2. Validate (run test suite)
         self.validate(&new_db, &req.test_cases).await?;
-        
+
         // 3. Atomic swap (lock-free)
         let version_id = self.generate_version_id();
         let new_db = Arc::new(new_db);
-        
+
         self.current.swap(Arc::clone(&new_db));
-        
+
         // 4. Store version (for rollback)
         self.versions.lock().unwrap().insert(version_id.clone(), new_db);
-        
+
         Ok(UpdateResponse {
             version_id,
-            result: Success { policies_loaded: req.policies.len() },
+            result: Success { predicates_loaded: req.predicates.len() },
         })
     }
-    
+
     pub fn rollback(&self, version_id: &str) -> Result<()> {
         let versions = self.versions.lock().unwrap();
         let old_db = versions.get(version_id).ok_or(Error::VersionNotFound)?;
-        
+
         self.current.swap(Arc::clone(old_db));
         Ok(())
     }
@@ -859,12 +859,12 @@ impl PolicyManager {
 ### Zero-Downtime Updates
 
 ```rust
-// Policy engine uses Arc<ArcSwap<>> for lock-free reads during updates
-impl PolicyEngine {
+// Predicate engine uses Arc<ArcSwap<>> for lock-free reads during updates
+impl PredicateEngine {
     pub fn evaluate(&self, ctx: &EvaluationContext) -> Result<Decision> {
-        // Load current policy DB (atomic read)
-        let db = self.policies.load();
-        
+        // Load current predicate DB (atomic read)
+        let db = self.predicates.load();
+
         // Evaluation never blocked by updates
         self.eval_with_db(&db, ctx)
     }
@@ -880,16 +880,16 @@ impl PolicyEngine {
 ```
 Frontend: SvelteKit + TailwindCSS + Monaco Editor
 Backend: Axum (Rust) + gRPC-Web
-Policy Engine: WASM-compiled IPE core
-Storage: PostgreSQL (policies) + Redis (cache)
+Predicate Engine: WASM-compiled IPE core
+Storage: PostgreSQL (predicates) + Redis (cache)
 ```
 
 ### Core Features
 
-**1. Visual Policy Editor**
+**1. Visual Predicate Editor**
 ```
 ┌─────────────────────────────────────────────────┐
-│ Policy: RequireApproval            [Save] [Test]│
+│ Predicate: RequireApproval         [Save] [Test]│
 ├─────────────────────────────────────────────────┤
 │ ┌─ Intent ──────────────────────────────────┐   │
 │ │ "Production deployments need..."         │   │
@@ -923,7 +923,7 @@ Storage: PostgreSQL (policies) + Redis (cache)
 ├─────────────────────────────────────────────────┤
 │ Result: ✅ ALLOWED                               │
 │                                                 │
-│ Matched Policies (2):                           │
+│ Matched Predicates (2):                         │
 │ • RequireApproval ✓                             │
 │ • AuditHighRisk ✓                               │
 │                                                 │
@@ -931,17 +931,17 @@ Storage: PostgreSQL (policies) + Redis (cache)
 └─────────────────────────────────────────────────┘
 ```
 
-**3. Policy Conflict Detection**
+**3. Predicate Conflict Detection**
 ```
-⚠️  Warning: Policy conflicts detected
+⚠️  Warning: Predicate conflicts detected
 
-Policy A (RequireApproval):
+Predicate A (RequireApproval):
   requires approvals >= 2
 
-Policy B (FastTrackHotfix):
+Predicate B (FastTrackHotfix):
   allows if resource.tags contains "hotfix"
 
-These policies may conflict when:
+These predicates may conflict when:
   - Resource is Deployment
   - Environment is production
   - Tags include "hotfix"
@@ -952,32 +952,32 @@ Suggestion: Add explicit priority or conditions
 ### WASM Integration
 
 ```rust
-// Compile policy engine to WASM
+// Compile predicate engine to WASM
 #[wasm_bindgen]
-pub struct WasmPolicyEngine {
-    engine: PolicyEngine,
+pub struct WasmPredicateEngine {
+    engine: PredicateEngine,
 }
 
 #[wasm_bindgen]
-impl WasmPolicyEngine {
+impl WasmPredicateEngine {
     #[wasm_bindgen(constructor)]
-    pub fn new(policies_bytes: &[u8]) -> Result<WasmPolicyEngine, JsValue> {
-        let db = PolicyDb::from_bytes(policies_bytes)
+    pub fn new(predicates_bytes: &[u8]) -> Result<WasmPredicateEngine, JsValue> {
+        let db = PredicateDB::from_bytes(predicates_bytes)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        
-        Ok(WasmPolicyEngine {
-            engine: PolicyEngine::new(Arc::new(db)),
+
+        Ok(WasmPredicateEngine {
+            engine: PredicateEngine::new(Arc::new(db)),
         })
     }
-    
+
     #[wasm_bindgen]
     pub fn evaluate(&self, context_json: &str) -> Result<JsValue, JsValue> {
         let ctx: EvaluationContext = serde_json::from_str(context_json)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        
+
         let decision = self.engine.evaluate(&ctx)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        
+
         Ok(serde_wasm_bindgen::to_value(&decision)?)
     }
 }
@@ -986,31 +986,31 @@ impl WasmPolicyEngine {
 ### Real-Time Collaboration
 
 ```rust
-// WebSocket-based policy editing
+// WebSocket-based predicate editing
 use axum::extract::ws::{WebSocket, Message};
 
-async fn policy_editor_ws(
+async fn predicate_editor_ws(
     ws: WebSocket,
     session: EditorSession,
 ) {
     let (tx, mut rx) = ws.split();
-    
+
     while let Some(msg) = rx.next().await {
         match msg {
             Message::Text(text) => {
-                // Parse policy update
-                let update: PolicyUpdate = serde_json::from_str(&text)?;
-                
+                // Parse predicate update
+                let update: PredicateUpdate = serde_json::from_str(&text)?;
+
                 // Validate syntax in real-time
-                let result = validate_policy(&update.content);
-                
+                let result = validate_predicate(&update.content);
+
                 // Broadcast to other editors (CRDT)
-                session.broadcast(PolicyChange {
+                session.broadcast(PredicateChange {
                     author: session.user_id,
                     change: update,
                     timestamp: Utc::now(),
                 }).await?;
-                
+
                 // Send validation result
                 tx.send(Message::Text(serde_json::to_string(&result)?)).await?;
             }
@@ -1081,7 +1081,7 @@ ipe/
 ├── examples/
 │   ├── embedded.rs        # Embedded usage
 │   ├── grpc_client.rs     # Control plane client
-│   └── policies/          # Example policies
+│   └── predicates/        # Example predicates
 │
 └── benches/
     └── evaluation.rs      # Performance benchmarks
@@ -1142,22 +1142,22 @@ prometheus = "0.13"
 // ipe-ffi/src/lib.rs
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use ipe_core::{PolicyEngine, EvaluationContext};
+use ipe_core::{PredicateEngine, EvaluationContext};
 
 #[repr(C)]
 pub struct IpeEngine {
-    inner: Box<PolicyEngine>,
+    inner: Box<PredicateEngine>,
 }
 
 #[no_mangle]
-pub extern "C" fn ipe_engine_new(policies_path: *const c_char) -> *mut IpeEngine {
-    let path = unsafe { CStr::from_ptr(policies_path).to_str().unwrap() };
-    
-    let engine = match PolicyEngine::from_file(path) {
+pub extern "C" fn ipe_engine_new(predicates_path: *const c_char) -> *mut IpeEngine {
+    let path = unsafe { CStr::from_ptr(predicates_path).to_str().unwrap() };
+
+    let engine = match PredicateEngine::from_file(path) {
         Ok(e) => e,
         Err(_) => return std::ptr::null_mut(),
     };
-    
+
     Box::into_raw(Box::new(IpeEngine {
         inner: Box::new(engine),
     }))
@@ -1191,30 +1191,30 @@ pub extern "C" fn ipe_engine_free(engine: *mut IpeEngine) {
 ```rust
 // ipe-python/src/lib.rs
 use pyo3::prelude::*;
-use ipe_core::{PolicyEngine, EvaluationContext};
+use ipe_core::{PredicateEngine, EvaluationContext};
 
 #[pyclass]
-struct PyPolicyEngine {
-    engine: PolicyEngine,
+struct PyPredicateEngine {
+    engine: PredicateEngine,
 }
 
 #[pymethods]
-impl PyPolicyEngine {
+impl PyPredicateEngine {
     #[new]
-    fn new(policies_path: &str) -> PyResult<Self> {
-        let engine = PolicyEngine::from_file(policies_path)
+    fn new(predicates_path: &str) -> PyResult<Self> {
+        let engine = PredicateEngine::from_file(predicates_path)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-        
-        Ok(PyPolicyEngine { engine })
+
+        Ok(PyPredicateEngine { engine })
     }
-    
+
     fn evaluate(&self, context: &str) -> PyResult<String> {
         let ctx: EvaluationContext = serde_json::from_str(context)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
-        
+
         let decision = self.engine.evaluate(&ctx)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-        
+
         serde_json::to_string(&decision)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))
     }
@@ -1222,7 +1222,7 @@ impl PyPolicyEngine {
 
 #[pymodule]
 fn ipe_engine(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<PyPolicyEngine>()?;
+    m.add_class::<PyPredicateEngine>()?;
     Ok(())
 }
 ```
@@ -1232,31 +1232,31 @@ fn ipe_engine(_py: Python, m: &PyModule) -> PyResult<()> {
 ```rust
 // ipe-node/src/lib.rs
 use napi::bindgen_prelude::*;
-use ipe_core::{PolicyEngine, EvaluationContext};
+use ipe_core::{PredicateEngine, EvaluationContext};
 
 #[napi]
-pub struct NodePolicyEngine {
-    engine: PolicyEngine,
+pub struct NodePredicateEngine {
+    engine: PredicateEngine,
 }
 
 #[napi]
-impl NodePolicyEngine {
+impl NodePredicateEngine {
     #[napi(constructor)]
-    pub fn new(policies_path: String) -> Result<Self> {
-        let engine = PolicyEngine::from_file(&policies_path)
+    pub fn new(predicates_path: String) -> Result<Self> {
+        let engine = PredicateEngine::from_file(&predicates_path)
             .map_err(|e| Error::from_reason(e.to_string()))?;
-        
-        Ok(NodePolicyEngine { engine })
+
+        Ok(NodePredicateEngine { engine })
     }
-    
+
     #[napi]
     pub fn evaluate(&self, context_json: String) -> Result<String> {
         let ctx: EvaluationContext = serde_json::from_str(&context_json)
             .map_err(|e| Error::from_reason(e.to_string()))?;
-        
+
         let decision = self.engine.evaluate(&ctx)
             .map_err(|e| Error::from_reason(e.to_string()))?;
-        
+
         serde_json::to_string(&decision)
             .map_err(|e| Error::from_reason(e.to_string()))
     }
@@ -1271,12 +1271,12 @@ impl NodePolicyEngine {
 
 | Operation | p50 | p99 | p99.9 | Max |
 |-----------|-----|-----|-------|-----|
-| Single policy eval | <10μs | <20μs | <50μs | <100μs |
-| 100 policies | <50μs | <100μs | <200μs | <500μs |
-| 10k policies (indexed) | <100μs | <200μs | <500μs | <1ms |
-| 100k policies (indexed) | <500μs | <1ms | <2ms | <5ms |
-| Policy compilation | <10ms | <50ms | <100ms | <500ms |
-| Atomic policy swap | <1μs | <5μs | <10μs | <50μs |
+| Single predicate eval | <10μs | <20μs | <50μs | <100μs |
+| 100 predicates | <50μs | <100μs | <200μs | <500μs |
+| 10k predicates (indexed) | <100μs | <200μs | <500μs | <1ms |
+| 100k predicates (indexed) | <500μs | <1ms | <2ms | <5ms |
+| Predicate compilation | <10ms | <50ms | <100ms | <500ms |
+| Atomic predicate swap | <1μs | <5μs | <10μs | <50μs |
 
 ### Memory Targets
 
@@ -1284,17 +1284,17 @@ impl NodePolicyEngine {
 |-----------|------|-------|
 | Core engine binary | <2MB | Stripped release build |
 | WASM module | <500KB | With wasm-opt |
-| Per-policy overhead | <200 bytes | Compiled bytecode |
+| Per-predicate overhead | <200 bytes | Compiled bytecode |
 | Evaluation arena | 4KB | Thread-local, reused |
-| Hot policy cache | 64KB | L1 cache-friendly |
-| Index overhead | 10-20% | Of total policy size |
+| Hot predicate cache | 64KB | L1 cache-friendly |
+| Index overhead | 10-20% | Of total predicate size |
 
 ### Throughput Targets
 
 - **Single-threaded:** 100k evaluations/sec
 - **Multi-threaded (8 cores):** 500k+ evaluations/sec
 - **Concurrent updates:** No impact on read path
-- **Policy updates:** <50ms end-to-end (parse + compile + swap)
+- **Predicate updates:** <50ms end-to-end (parse + compile + swap)
 
 ---
 
@@ -1305,10 +1305,10 @@ impl NodePolicyEngine {
 - [ ] Language parser (nom-based)
 - [ ] AST and type system
 - [ ] Basic evaluation engine
-- [ ] Memory-mapped policy storage
+- [ ] Memory-mapped predicate storage
 - [ ] Benchmark suite
 
-**Deliverable:** Working engine with <100μs evaluation for 1k policies
+**Deliverable:** Working engine with <100μs evaluation for 1k predicates
 
 ### Phase 2: Compilation Pipeline (Months 3-4)
 
@@ -1319,7 +1319,7 @@ impl NodePolicyEngine {
 - [ ] **Bytecode interpreter**
 - [ ] Performance tuning
 
-**Deliverable:** <50μs evaluation for 10k policies with indexing
+**Deliverable:** <50μs evaluation for 10k predicates with indexing
 
 ### Phase 3: JIT Compilation (Months 5-6)
 
@@ -1331,12 +1331,12 @@ impl NodePolicyEngine {
 - [ ] Memory protection for executable pages
 - [ ] Benchmarking JIT vs interpreter
 
-**Deliverable:** <10μs evaluation for hot policies with JIT
+**Deliverable:** <10μs evaluation for hot predicates with JIT
 
 ### Phase 4: Control Plane (Months 7-8)
 
 - [ ] gRPC service implementation
-- [ ] Atomic policy updates
+- [ ] Atomic predicate updates
 - [ ] Version management
 - [ ] Observability (metrics, tracing)
 - [ ] Testing framework
@@ -1355,23 +1355,23 @@ impl NodePolicyEngine {
 
 ### Phase 6: Web Application (Months 11-12)
 
-- [ ] Visual policy editor
+- [ ] Visual predicate editor
 - [ ] Live testing interface
 - [ ] Conflict detection
 - [ ] Diff visualization
 - [ ] Real-time collaboration
 
-**Deliverable:** Production-ready web UI for policy management
+**Deliverable:** Production-ready web UI for predicate management
 
 ### Phase 7: AI Integration (Months 13-14)
 
 - [ ] Semantic query API
-- [ ] Natural language policy generation
+- [ ] Natural language predicate generation
 - [ ] Explanation engine
 - [ ] Conflict resolution suggestions
-- [ ] Policy effectiveness analytics
+- [ ] Predicate effectiveness analytics
 
-**Deliverable:** AI-native policy management experience
+**Deliverable:** AI-native predicate management experience
 
 ### Phase 8: Production Hardening (Ongoing)
 
@@ -1388,22 +1388,22 @@ impl NodePolicyEngine {
 ### Compilation Safety
 
 - Parser rejects unbounded recursion
-- Maximum policy complexity limits (AST depth, condition count)
+- Maximum predicate complexity limits (AST depth, condition count)
 - Resource limits during compilation (time, memory)
-- Sandboxed compilation for untrusted policies
+- Sandboxed compilation for untrusted predicates
 
 ### Runtime Safety
 
 - All array accesses bounds-checked
-- No unsafe code in hot path (evaluated policies)
+- No unsafe code in hot path (evaluated predicates)
 - Arena allocation prevents use-after-free
 - Atomic updates prevent torn reads
 
 ### Control Plane Security
 
 - mTLS for gRPC connections
-- Policy update authentication and authorization
-- Audit log for all policy changes
+- Predicate update authentication and authorization
+- Audit log for all predicate changes
 - Rate limiting on update endpoint
 
 ---
@@ -1412,30 +1412,30 @@ impl NodePolicyEngine {
 
 ### Advanced Features
 
-- **Policy versioning:** A/B testing policies with traffic splitting
-- **Conditional compilation:** Feature flags in policies
-- **Policy marketplace:** Shareable policy templates
+- **Predicate versioning:** A/B testing predicates with traffic splitting
+- **Conditional compilation:** Feature flags in predicates
+- **Predicate marketplace:** Shareable predicate templates
 - **ML-based optimization:** Learn optimal index strategies from traffic
 
 ### Integration
 
 - **Service mesh:** Envoy/Istio authorization filter
 - **API gateways:** Kong/Traefik plugins
-- **CI/CD:** GitHub Actions for policy validation
-- **Infrastructure:** Terraform/Pulumi policy checks
+- **CI/CD:** GitHub Actions for predicate validation
+- **Infrastructure:** Terraform/Pulumi predicate checks
 
 ### Research Areas
 
-- **Formal verification:** Prove policy properties (e.g., no conflicts)
-- **Distributed evaluation:** Policy evaluation across multiple nodes
-- **Incremental compilation:** Fast recompilation on policy edits
-- **Probabilistic policies:** Policies with confidence scores
+- **Formal verification:** Prove predicate properties (e.g., no conflicts)
+- **Distributed evaluation:** Predicate evaluation across multiple nodes
+- **Incremental compilation:** Fast recompilation on predicate edits
+- **Probabilistic predicates:** Predicates with confidence scores
 
 ---
 
 ## Conclusion
 
-Intent Policy Engine combines human readability, AI integration, and extreme performance in a Rust-native implementation. The three-layer architecture (source → AST → bytecode) enables both ease of use and optimization, while the gRPC control plane provides operational excellence.
+Idempotent Predicate Engine combines human readability, AI integration, and extreme performance in a Rust-native implementation. The three-layer architecture (source → AST → bytecode) enables both ease of use and optimization, while the gRPC control plane provides operational excellence.
 
 **Next Steps:**
 1. Review and approve RFC
@@ -1444,7 +1444,7 @@ Intent Policy Engine combines human readability, AI integration, and extreme per
 4. Set up CI/CD and benchmarking infrastructure
 
 **Questions for Review:**
-- Should we support policy inheritance/composition in v1?
+- Should we support predicate inheritance/composition in v1?
 - What's the priority order for language bindings?
 - Should WASM target be browser-only or include server runtimes (wasmtime)?
-- Do we need distributed consensus for policy updates (Raft/etcd)?
+- Do we need distributed consensus for predicate updates (Raft/etcd)?

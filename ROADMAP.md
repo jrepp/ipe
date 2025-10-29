@@ -1,8 +1,8 @@
-# Intent Policy Engine: Production Roadmap
+# Idempotent Predicate Engine: Production Roadmap
 
 ## Vision
 
-Transform IPE from prototype to a **production-grade, embeddable policy engine** suitable for security-critical applications with:
+Transform IPE from prototype to a **production-grade, embeddable predicate engine** suitable for security-critical applications with:
 - 100% code coverage of critical paths
 - <50μs p99 latency validated under load
 - Zero CVEs in first year
@@ -34,7 +34,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 **Status:** 🚧 In Progress
 **Duration:** 2 weeks
 **Team:** 2 engineers
-**Goal:** Parse policy source into type-checked AST
+**Goal:** Parse predicate source into type-checked AST
 
 ### Week 1: Lexer & Basic Parser
 **Deliverables:**
@@ -43,7 +43,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
   - String escaping and unicode support
   - Position tracking for error messages
 - [ ] Basic parser using `nom`
-  - Policy structure (name, intent, triggers, requires)
+  - Predicate structure (name, intent, triggers, requires)
   - Expression parsing (comparison, logical, membership)
   - Error recovery
 - [ ] Unit tests (>90% coverage)
@@ -99,7 +99,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 
 **Success Criteria:**
 - Compile all RFC examples
-- <10ms compilation per policy
+- <10ms compilation per predicate
 - Deterministic output
 
 ### Week 4: Optimization Pass
@@ -112,7 +112,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 - [ ] Comprehensive test suite
 
 **Success Criteria:**
-- Bytecode size ~200 bytes per policy
+- Bytecode size ~200 bytes per predicate
 - Optimizations measurable (10-30% reduction)
 - No correctness regressions
 
@@ -143,22 +143,22 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 - [ ] Unit tests (100% coverage - critical path)
 
 **Success Criteria:**
-- Single policy eval: <50μs p99
+- Single predicate eval: <50μs p99
 - Zero heap allocations during eval
 - Thread-safe
 
-### Week 6: Policy Engine & Indexing
+### Week 6: Predicate Engine & Indexing
 **Deliverables:**
-- [ ] PolicyDB implementation
+- [ ] PredicateDB implementation
   - Memory-mapped storage
   - Index by resource type
   - Fast lookup structures
 - [ ] Decision resolution
-- [ ] Parallel evaluation (>10 policies)
+- [ ] Parallel evaluation (>10 predicates)
 - [ ] Comprehensive test suite
 
 **Success Criteria:**
-- 1000 policies with indexing: <500μs p99
+- 1000 predicates with indexing: <500μs p99
 - Concurrent evaluation works
 - Zero data races (TSAN validation)
 
@@ -181,7 +181,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 ### Week 7: Comprehensive Testing
 **Deliverables:**
 - [ ] Integration tests
-  - End-to-end policy evaluation
+  - End-to-end predicate evaluation
   - Error handling paths
   - Edge cases
 - [ ] Property-based tests (proptest)
@@ -192,7 +192,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
   - Parse fuzzing
   - Compile fuzzing
   - Evaluation fuzzing
-- [ ] Stress tests (100k+ policies)
+- [ ] Stress tests (100k+ predicates)
 
 **Success Criteria:**
 - Code coverage >90% overall
@@ -241,7 +241,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
   - Getting started
   - Language reference
   - Best practices
-- [ ] Example policies (20+)
+- [ ] Example predicates (20+)
   - DevOps scenarios
   - SecOps scenarios
   - Compliance scenarios
@@ -333,7 +333,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 - [ ] Performance dashboard
 
 **Success Criteria:**
-- <10μs p99 for hot policies
+- <10μs p99 for hot predicates
 - Zero correctness regressions
 - Fuzzing stable
 
@@ -344,13 +344,13 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 **Status:** ⏳ Planned
 **Duration:** 6 weeks
 **Team:** 2 engineers
-**Goal:** Production-ready policy management
+**Goal:** Production-ready predicate management
 
 ### Weeks 17-18: gRPC Service
 **Deliverables:**
 - [ ] gRPC service definition
-- [ ] Policy update API
-- [ ] Policy query API
+- [ ] Predicate update API
+- [ ] Predicate query API
 - [ ] Testing API
 - [ ] Client library
 
@@ -440,12 +440,12 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 **Status:** ⏳ Planned
 **Duration:** 6 weeks
 **Team:** 2 engineers (1 frontend, 1 backend)
-**Goal:** Visual policy management
+**Goal:** Visual predicate management
 
 ### Weeks 29-30: Backend API
 **Deliverables:**
 - [ ] Axum REST API
-- [ ] Policy CRUD operations
+- [ ] Predicate CRUD operations
 - [ ] Test execution API
 - [ ] WebSocket for live updates
 - [ ] Authentication
@@ -455,7 +455,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 - WebSocket works
 - Auth integrated
 
-### Weeks 31-32: Frontend (Policy Editor)
+### Weeks 31-32: Frontend (Predicate Editor)
 **Deliverables:**
 - [ ] SvelteKit application
 - [ ] Monaco editor integration
@@ -472,7 +472,7 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 **Deliverables:**
 - [ ] Conflict detection UI
 - [ ] Diff visualization
-- [ ] Policy analytics
+- [ ] Predicate analytics
 - [ ] Deployment
 - [ ] Documentation
 
@@ -507,13 +507,13 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 **Deliverables:**
 - [ ] Performance profiling
 - [ ] Optimization sprint
-- [ ] Large-scale testing (1M+ policies)
+- [ ] Large-scale testing (1M+ predicates)
 - [ ] Memory optimization
 - [ ] Benchmark suite expansion
 
 **Success Criteria:**
 - All performance targets exceeded
-- 1M+ policies supported
+- 1M+ predicates supported
 - Memory footprint optimized
 
 ### Weeks 39-40: Production Deployments
@@ -547,15 +547,15 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 ## Long-Term: Continuous Improvement (Months 11+)
 
 ### AI Integration (Months 11-12)
-- [ ] Natural language → Policy generation
+- [ ] Natural language → Predicate generation
 - [ ] Semantic query API
 - [ ] Conflict detection AI
-- [ ] Policy effectiveness analytics
+- [ ] Predicate effectiveness analytics
 - [ ] Explanation engine
 
 ### Advanced Features (Months 13+)
-- [ ] Policy marketplace
-- [ ] A/B testing policies
+- [ ] Predicate marketplace
+- [ ] A/B testing predicates
 - [ ] ML-based optimization
 - [ ] Formal verification
 - [ ] Distributed evaluation
@@ -573,13 +573,13 @@ Transform IPE from prototype to a **production-grade, embeddable policy engine**
 ### Technical Excellence
 | Metric | Target | Timeline |
 |--------|--------|----------|
-| Single policy latency (interpreter) | <50μs p99 | Week 6 |
-| Single policy latency (JIT) | <10μs p99 | Week 16 |
+| Single predicate latency (interpreter) | <50μs p99 | Week 6 |
+| Single predicate latency (JIT) | <10μs p99 | Week 16 |
 | Code coverage | >90% overall, 100% critical | Week 8 |
 | Fuzzing stability | 100M+ iterations | Week 8 |
 | Security vulnerabilities | 0 high/critical | Week 36 |
 | Binary size | <2MB | Week 10 |
-| Memory per policy | <300 bytes | Week 6 |
+| Memory per predicate | <300 bytes | Week 6 |
 
 ### Adoption & Community
 | Metric | Target | Timeline |

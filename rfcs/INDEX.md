@@ -4,7 +4,7 @@
 
 ## What are RFCs?
 
-RFCs (Request for Comments) are design documents that describe major features, architectural decisions, and technical specifications for the Intent Policy Engine. Each RFC goes through a review process before implementation.
+RFCs (Request for Comments) are design documents that describe major features, architectural decisions, and technical specifications for the Idempotent Predicate Engine. Each RFC goes through a review process before implementation.
 
 ## RFC Process
 
