@@ -2,10 +2,10 @@
 
 **A high-performance, AI-native predicate engine built in Rust**
 
-[![Build](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=master)](https://github.com/jrepp/ipe/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=main)](https://github.com/jrepp/ipe/actions)
 [![Tests](https://img.shields.io/badge/tests-248%20passing-success)](https://github.com/jrepp/ipe)
-[![Clippy](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=master&label=clippy)](https://github.com/jrepp/ipe/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/jrepp/ipe/branch/master/graph/badge.svg)](https://codecov.io/gh/jrepp/ipe)
+[![Clippy](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=main&label=clippy)](https://github.com/jrepp/ipe/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jrepp/ipe/branch/main/graph/badge.svg)](https://codecov.io/gh/jrepp/ipe)
 [![dependency status](https://deps.rs/repo/github/jrepp/ipe/status.svg)](https://deps.rs/repo/github/jrepp/ipe)
 [![License](https://img.shields.io/badge/license-MPLv2-blue.svg)](LICENSE)
 
