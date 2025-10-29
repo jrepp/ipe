@@ -1,6 +1,6 @@
-//! Policy language parser
+//! Predicate language parser
 //!
-//! This module implements parsing for the Intent Policy Engine language.
+//! This module implements parsing for the Idempotent Predicate Engine language.
 
 pub mod lexer;
 pub mod parse;

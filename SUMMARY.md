@@ -1,12 +1,12 @@
-# Intent Policy Engine: Executive Summary
+# Idempotent Predicate Engine: Executive Summary
 
 ## Vision
 
-A next-generation policy engine that combines human readability, AI integration, and extreme performance through runtime bytecode-to-native compilation.
+A next-generation predicate engine that combines human readability, AI integration, and extreme performance through runtime bytecode-to-native compilation.
 
 ## Problem Statement
 
-Current policy systems force a choice between:
+Current predicate systems force a choice between:
 - **Readable** (YAML, natural language) → Slow, unpredictable
 - **Fast** (compiled, optimized) → Complex, developer-hostile
 
@@ -35,11 +35,11 @@ IPE eliminates this trade-off.
 
 ### Key Innovation: Adaptive JIT Compilation
 
-Unlike traditional interpreters, IPE uses **runtime profiling** to automatically optimize hot policies:
+Unlike traditional interpreters, IPE uses **runtime profiling** to automatically optimize hot predicates:
 
-1. **Cold policies** (rarely evaluated): Interpreted at ~50μs
-2. **Warm policies** (>100 evals): Baseline JIT at ~10μs (5x faster)
-3. **Hot policies** (>10k evals): Optimized JIT at ~5μs (10x faster)
+1. **Cold predicates** (rarely evaluated): Interpreted at ~50μs
+2. **Warm predicates** (>100 evals): Baseline JIT at ~10μs (5x faster)
+3. **Hot predicates** (>10k evals): Optimized JIT at ~5μs (10x faster)
 
 This happens **transparently** with zero configuration.
 
@@ -49,8 +49,8 @@ This happens **transparently** with zero configuration.
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| Policy evaluation (JIT) | <10μs | 10x faster than OPA |
-| Memory per policy | 200 bytes | 50x smaller than Rego |
+| Predicate evaluation (JIT) | <10μs | 10x faster than OPA |
+| Memory per predicate | 200 bytes | 50x smaller than Rego |
 | Binary size | <2MB | Embedded-friendly |
 | JIT compilation | <1ms | Faster than V8's TurboFan |
 | Throughput | 100k ops/sec | Single-threaded |
@@ -72,10 +72,10 @@ Rust Core (ipe-core)
 
 ### Operational Excellence
 
-- **Atomic updates:** Zero-downtime policy reloads via Arc-swap
+- **Atomic updates:** Zero-downtime predicate reloads via Arc-swap
 - **gRPC control plane:** Versioned deployments, rollbacks
 - **Observability:** Metrics, traces, explain mode
-- **Testing:** Inline policy tests, sample data validation
+- **Testing:** Inline predicate tests, sample data validation
 
 ## Differentiators
 
@@ -86,7 +86,7 @@ Rust Core (ipe-core)
 | Language | Datalog-like | SQL/Go-like |
 | Eval mode | Interpreter | Interpreter + JIT |
 | Latency | ~500μs | <10μs (JIT) |
-| Memory | ~10KB/policy | 200 bytes/policy |
+| Memory | ~10KB/predicate | 200 bytes/predicate |
 | AI integration | Afterthought | Native |
 
 ### vs. Cedar
@@ -112,40 +112,40 @@ Rust Core (ipe-core)
 ### DevOps
 
 ```rust
-policy DeploymentFreeze:
+predicate DeploymentFreeze:
   "Block production deployments during code freeze"
-  
+
   triggers when
     resource.type == "Deployment"
     and environment == "production"
     and current_time in freeze_windows
-  
+
   denies with reason "Code freeze in effect"
 ```
 
 ### SecOps
 
 ```rust
-policy RequireMFA:
+predicate RequireMFA:
   "High-privilege actions need MFA verification"
-  
+
   triggers when
     action.privilege_level >= "admin"
     and not request.mfa_verified
-  
+
   denies with reason "MFA required for admin actions"
 ```
 
 ### Compliance
 
 ```rust
-policy AuditHighRisk:
+predicate AuditHighRisk:
   "Log all high-risk resource modifications"
-  
+
   triggers when
     action.operation in ["Update", "Delete"]
     and resource.risk_level == "high"
-  
+
   requires
     audit_log.enabled
     and notification.sent_to("security-team")
@@ -153,19 +153,19 @@ policy AuditHighRisk:
 
 ## AI Integration
 
-### Natural Language → Policy
+### Natural Language → Predicate
 
 ```
 User: "We need to require two approvals for production deployments"
 
 AI generates:
-policy ProductionApprovals:
+predicate ProductionApprovals:
   "Production deployments require two approvals"
-  
+
   triggers when
     resource.type == "Deployment"
     and environment == "production"
-  
+
   requires
     approvals.count >= 2
 ```
@@ -173,16 +173,16 @@ policy ProductionApprovals:
 ### Semantic Queries
 
 ```sql
--- Find all policies affecting deployments
-search policies where affects resource:Deployment
+-- Find all predicates affecting deployments
+search predicates where affects resource:Deployment
 
 -- Explain why a request was denied
 explain decision for deployment:api-v2
   with context { environment: "prod" }
 
 -- Detect conflicts
-find conflicts between policy:RequireApproval
-  and policy:FastTrackHotfix
+find conflicts between predicate:RequireApproval
+  and predicate:FastTrackHotfix
 ```
 
 ### Explainability
@@ -215,7 +215,7 @@ Action required:
 ### In Progress (Phase 1-2)
 - 🚧 Language parser (nom)
 - 🚧 Bytecode compiler
-- 🚧 Policy indexing
+- 🚧 Predicate indexing
 - 🚧 Basic interpreter
 
 ### Planned (Phases 3-8)
@@ -235,7 +235,7 @@ Action required:
 ## Success Metrics
 
 ### Technical
-- <10μs p99 latency for policy evaluation
+- <10μs p99 latency for predicate evaluation
 - <2MB binary size
 - 100k ops/sec throughput
 - Zero CVEs in first year
@@ -273,14 +273,14 @@ Action required:
 
 ## Conclusion
 
-Intent Policy Engine represents a paradigm shift in policy management:
+Idempotent Predicate Engine represents a paradigm shift in predicate management:
 
 - **Human-friendly** syntax with natural language intent
 - **AI-native** architecture for generation and queries
 - **Extreme performance** via adaptive JIT compilation
 - **Production-ready** operational features
 
-This isn't just another policy engine—it's the foundation for the next generation of security and compliance automation.
+This isn't just another predicate engine—it's the foundation for the next generation of security and compliance automation.
 
 ---
 
