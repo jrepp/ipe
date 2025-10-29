@@ -1,6 +1,6 @@
 # ipe-parser
 
-Policy language parser for the Intent Policy Engine.
+Predicate language parser for the Idempotent Predicate Engine.
 
 **Status:** Stub - To be implemented in Phase 1 (Weeks 1-2)
 
