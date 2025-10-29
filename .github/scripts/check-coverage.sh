@@ -29,8 +29,8 @@ echo "🔍 Validating based on test results..."
 
 # Run tests and count results
 test_output=$(cargo test --all-features --workspace --no-fail-fast 2>&1)
-passed=$(echo "$test_output" | grep -oP '\d+ passed' | grep -oP '\d+' || echo "0")
-failed=$(echo "$test_output" | grep -oP '\d+ failed' | grep -oP '\d+' || echo "0")
+passed=$(echo "$test_output" | grep -oP '\d+ passed' | grep -oP '\d+' | awk '{sum+=$1} END {print sum+0}')
+failed=$(echo "$test_output" | grep -oP '\d+ failed' | grep -oP '\d+' | awk '{sum+=$1} END {print sum+0}')
 
 echo "✅ Tests passed: $passed"
 echo "❌ Tests failed: $failed"
