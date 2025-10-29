@@ -41,7 +41,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run benchmarks
-        run: cargo bench --all-features -- --output-format bencher | tee benchmark-results.txt
+        run: cargo bench --all-features 2>&1 | tee benchmark-results.txt
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
@@ -93,7 +93,7 @@ jobs:
           # Target: Throughput > 20k ops/sec
 
           # Run benchmarks and extract results
-          cargo bench --bench evaluation -- --output-format bencher > bench_out.txt 2>&1
+          cargo bench --bench evaluation 2>&1 > bench_out.txt
 
           # Parse results (this is a placeholder - actual implementation needed)
           echo "✅ Performance targets validated"

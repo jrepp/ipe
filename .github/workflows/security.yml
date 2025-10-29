@@ -81,6 +81,7 @@ jobs:
   sanitizers:
     name: Sanitizers
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         sanitizer: [address, leak, thread]
@@ -114,12 +115,13 @@ jobs:
         run: cargo install cargo-geiger
 
       - name: Run cargo-geiger (unsafe code detection)
-        run: cargo geiger --all-features
+        run: cargo geiger --all-features --all-targets
 
       - name: Verify no unsafe code in core
         run: |
           # Ensure core crates have zero unsafe blocks
-          if cargo geiger --all-features | grep -A 5 "ipe-core" | grep -q "🔒"; then
+          cd crates/ipe-core
+          if cargo geiger --all-features | grep -q "🔒"; then
             echo "✅ No unsafe code in ipe-core"
           else
             echo "❌ Unsafe code detected in ipe-core"
