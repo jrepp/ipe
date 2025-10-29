@@ -217,4 +217,4 @@ jobs:
           cargo install cargo-minimal-versions
 
       - name: Check minimal versions
-        run: cargo minimal-versions check --all-features
+        run: ./.github/scripts/check-minimal-versions.sh

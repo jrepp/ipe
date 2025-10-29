@@ -99,13 +99,7 @@ jobs:
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests with ${{ matrix.sanitizer }} sanitizer
-        run: |
-          export RUSTFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
-          export RUSTDOCFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
-          cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features
-        env:
-          ASAN_OPTIONS: detect_leaks=1
-          LSAN_OPTIONS: suppressions=lsan-suppressions.txt
+        run: ./.github/scripts/check-sanitizer.sh ${{ matrix.sanitizer }}
 
   supply-chain:
     name: Supply Chain Security
