@@ -117,13 +117,5 @@ jobs:
       - name: Run cargo-geiger (unsafe code detection)
         run: ./.github/scripts/check-supply-chain.sh
 
-      - name: Verify no unsafe code in core
-        run: |
-          # Ensure core crates have zero unsafe blocks
-          cd crates/ipe-core
-          if cargo geiger --all-features | grep -q "🔒"; then
-            echo "✅ No unsafe code in ipe-core"
-          else
-            echo "❌ Unsafe code detected in ipe-core"
-            exit 1
-          fi
+      # Note: Removed redundant ipe-core check - the wrapper script above
+      # already validates all workspace crates including ipe-core
