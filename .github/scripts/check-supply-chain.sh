@@ -7,46 +7,51 @@ set -euo pipefail
 echo "🔍 Running supply chain security checks..."
 echo ""
 
-# Get list of workspace members
+# Get list of workspace package names (packages with no source = workspace members)
 echo "📦 Discovering workspace members..."
-members=$(cargo metadata --format-version 1 --no-deps | jq -r '.workspace_members[]' | cut -d' ' -f1)
+packages=$(cargo metadata --format-version 1 --no-deps | \
+           jq -r '.packages[] | select(.source == null) | .name')
 
-if [ -z "$members" ]; then
-    echo "❌ No workspace members found"
+if [ -z "$packages" ]; then
+    echo "❌ No workspace packages found"
     exit 1
 fi
 
-echo "Found workspace members:"
-echo "$members" | sed 's/^/  - /'
+echo "Found workspace packages:"
+echo "$packages" | sed 's/^/  - /'
 echo ""
 
 # Track if any checks fail
 all_passed=true
 failed_crates=""
 
-# Run cargo-geiger on each member
-for member in $members; do
-    # Extract crate name (format is "name version (path)")
-    crate_name=$(echo "$member" | cut -d' ' -f1)
-    echo "🔎 Checking $crate_name..."
-    
-    # Find the crate's directory
-    crate_dir=$(cargo metadata --format-version 1 --no-deps | \
-                jq -r ".packages[] | select(.name == \"$crate_name\") | .manifest_path" | \
-                xargs dirname)
-    
-    if [ -z "$crate_dir" ]; then
-        echo "  ⚠️  Could not find directory for $crate_name, skipping"
+# Run cargo-geiger on each package
+for pkg_name in $packages; do
+    echo "🔎 Checking $pkg_name..."
+
+    # Find the package's directory
+    manifest_path=$(cargo metadata --format-version 1 --no-deps | \
+                    jq -r ".packages[] | select(.name == \"$pkg_name\") | .manifest_path")
+
+    if [ -z "$manifest_path" ]; then
+        echo "  ⚠️  Could not find manifest for $pkg_name, skipping"
         continue
     fi
-    
-    # Run cargo-geiger in the crate's directory
-    if (cd "$crate_dir" && cargo geiger --all-features --all-targets 2>&1); then
-        echo "  ✅ $crate_name passed"
+
+    pkg_dir=$(dirname "$manifest_path")
+
+    if [ ! -d "$pkg_dir" ]; then
+        echo "  ⚠️  Directory does not exist for $pkg_name, skipping"
+        continue
+    fi
+
+    # Run cargo-geiger in the package's directory (suppress output on success)
+    if (cd "$pkg_dir" && cargo geiger --all-features --all-targets > /dev/null 2>&1); then
+        echo "  ✅ $pkg_name passed"
     else
-        echo "  ❌ $crate_name failed"
+        echo "  ❌ $pkg_name failed"
         all_passed=false
-        failed_crates="$failed_crates\n  - $crate_name"
+        failed_crates="$failed_crates\n  - $pkg_name"
     fi
     echo ""
 done
