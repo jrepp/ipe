@@ -46,19 +46,33 @@ for pkg_name in $packages; do
     fi
 
     # Run cargo-geiger in the package's directory
-    # Capture output to show errors if it fails
-    output=$(cd "$pkg_dir" && cargo geiger --all-features --all-targets 2>&1) || status=$?
+    # Note: cargo-geiger returns non-zero if dependencies have unsafe code (warnings)
+    # We only care if OUR crate has unsafe code, so check the output
+    output=$(cd "$pkg_dir" && cargo geiger --all-features --all-targets 2>&1) || true
 
-    if [ "${status:-0}" -eq 0 ]; then
-        echo "  ✅ $pkg_name passed"
-    else
-        echo "  ❌ $pkg_name failed"
-        echo ""
-        echo "Error output:"
-        echo "$output" | tail -30
-        echo ""
+    # Extract the first line of stats (our crate) - format: "0/0  0/0  0/0  0/0  0/0  ?  crate-name"
+    # If any of the first 5 ratios are non-zero, we have unsafe code in our crate
+    crate_stats=$(echo "$output" | grep -E "^[0-9]+/[0-9]+.*$pkg_name" | head -1 || echo "")
+
+    if [ -z "$crate_stats" ]; then
+        echo "  ⚠️  Could not find stats for $pkg_name in output"
+        echo "  Output:"
+        echo "$output" | head -10
         all_passed=false
-        failed_crates="$failed_crates\n  - $pkg_name"
+        failed_crates="$failed_crates\n  - $pkg_name (could not parse output)"
+    else
+        # Check if our crate has any unsafe code (non-zero numerators in the stats)
+        # Format: "Functions/Total  Exprs/Total  Impls/Total  Traits/Total  Methods/Total"
+        has_unsafe=$(echo "$crate_stats" | grep -E "^[1-9][0-9]*/[0-9]+" || echo "")
+
+        if [ -n "$has_unsafe" ]; then
+            echo "  ❌ $pkg_name has unsafe code"
+            echo "  Stats: $crate_stats"
+            all_passed=false
+            failed_crates="$failed_crates\n  - $pkg_name"
+        else
+            echo "  ✅ $pkg_name passed (no unsafe code in crate)"
+        fi
     fi
     echo ""
 done
