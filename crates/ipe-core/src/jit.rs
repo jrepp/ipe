@@ -327,6 +327,7 @@ mod tests {
     use crate::bytecode::{CompOp, CompiledPolicy, Instruction, PolicyHeader, Value};
 
     #[test]
+    #[cfg_attr(miri, ignore = "JIT compilation requires pointer operations not supported by Miri")]
     fn test_simple_jit_compilation() {
         let mut compiler = JitCompiler::new().unwrap();
 

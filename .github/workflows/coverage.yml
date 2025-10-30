@@ -62,19 +62,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Check coverage threshold
-        run: |
-          # Extract overall coverage percentage
-          coverage=$(cargo llvm-cov --all-features --workspace --summary-only | grep -oP 'TOTAL.*\K\d+\.\d+' | head -1)
-          echo "Overall coverage: $coverage%"
-
-          # Require >90% coverage
-          threshold=90.0
-          if (( $(echo "$coverage < $threshold" | bc -l) )); then
-            echo "❌ Coverage $coverage% is below threshold $threshold%"
-            exit 1
-          else
-            echo "✅ Coverage $coverage% meets threshold $threshold%"
-          fi
+        run: ./.github/scripts/check-coverage.sh
 
   coverage-per-crate:
     name: Per-Crate Coverage

@@ -441,12 +441,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "TieredPolicyManager creates JIT compiler not supported by Miri")]
     fn test_tiered_policy_manager_creation() {
         let manager = TieredPolicyManager::new();
         assert!(manager.is_ok());
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "TieredPolicyManager creates JIT compiler not supported by Miri")]
     fn test_tiered_policy_manager_default() {
         let manager = TieredPolicyManager::default();
         // Should not panic, just verify it was created
@@ -454,6 +456,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "TieredPolicyManager creates JIT compiler not supported by Miri")]
     fn test_tiered_policy_manager_create_policy() {
         use crate::testing::simple_policy;
 

@@ -81,6 +81,7 @@ jobs:
   sanitizers:
     name: Sanitizers
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         sanitizer: [address, leak, thread]
@@ -99,13 +100,7 @@ jobs:
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests with ${{ matrix.sanitizer }} sanitizer
-        run: |
-          export RUSTFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
-          export RUSTDOCFLAGS="-Z sanitizer=${{ matrix.sanitizer }}"
-          cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features
-        env:
-          ASAN_OPTIONS: detect_leaks=1
-          LSAN_OPTIONS: suppressions=lsan-suppressions.txt
+        run: ./.github/scripts/check-sanitizer.sh ${{ matrix.sanitizer }}
 
   supply-chain:
     name: Supply Chain Security
@@ -120,14 +115,7 @@ jobs:
         run: cargo install cargo-geiger
 
       - name: Run cargo-geiger (unsafe code detection)
-        run: cargo geiger --all-features
+        run: ./.github/scripts/check-supply-chain.sh
 
-      - name: Verify no unsafe code in core
-        run: |
-          # Ensure core crates have zero unsafe blocks
-          if cargo geiger --all-features | grep -A 5 "ipe-core" | grep -q "🔒"; then
-            echo "✅ No unsafe code in ipe-core"
-          else
-            echo "❌ Unsafe code detected in ipe-core"
-            exit 1
-          fi
+      # Note: Removed redundant ipe-core check - the wrapper script above
+      # already validates all workspace crates including ipe-core
