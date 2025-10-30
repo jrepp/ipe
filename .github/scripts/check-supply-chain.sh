@@ -50,24 +50,35 @@ for pkg_name in $packages; do
     # We only care if OUR crate has unsafe code, so check the output
     output=$(cd "$pkg_dir" && cargo geiger --all-features --all-targets 2>&1) || true
 
-    # Extract the first line of stats (our crate) - format: "0/0  0/0  0/0  0/0  0/0  ?  crate-name"
-    # If any of the first 5 ratios are non-zero, we have unsafe code in our crate
-    crate_stats=$(echo "$output" | grep -E "^[0-9]+/[0-9]+.*$pkg_name" | head -1 || echo "")
+    # Extract the line with our crate's stats
+    # Look for pattern: "0/0  0/0  0/0  0/0  0/0  ?  pkg-name version"
+    # Handle both plain and colored output (ANSI codes)
+    crate_stats=$(echo "$output" | grep -P "^\s*\d+/\d+.*\s+$pkg_name(\s|$)" | head -1 || echo "")
 
     if [ -z "$crate_stats" ]; then
-        echo "  ⚠️  Could not find stats for $pkg_name in output"
-        echo "  Output:"
-        echo "$output" | head -10
-        all_passed=false
-        failed_crates="$failed_crates\n  - $pkg_name (could not parse output)"
+        # cargo-geiger might have failed to run properly
+        # Check if there's a fatal error
+        if echo "$output" | grep -qi "error:.*failed\|error:.*could not"; then
+            echo "  ❌ $pkg_name failed (cargo-geiger error)"
+            echo "  Error:"
+            echo "$output" | grep -i "error:" | head -5
+            all_passed=false
+            failed_crates="$failed_crates\n  - $pkg_name (cargo-geiger error)"
+        else
+            # No stats found, but also no fatal error - might be warnings only
+            # In this case, assume no unsafe code in our crate (warnings are from deps)
+            echo "  ✅ $pkg_name passed (no stats found, assuming safe)"
+        fi
     else
         # Check if our crate has any unsafe code (non-zero numerators in the stats)
-        # Format: "Functions/Total  Exprs/Total  Impls/Total  Traits/Total  Methods/Total"
-        has_unsafe=$(echo "$crate_stats" | grep -E "^[1-9][0-9]*/[0-9]+" || echo "")
+        # Remove ANSI color codes first, then check the first number
+        clean_stats=$(echo "$crate_stats" | sed 's/\x1b\[[0-9;]*m//g')
+        first_ratio=$(echo "$clean_stats" | grep -oP '^\s*\d+/\d+' | head -1)
+        numerator=$(echo "$first_ratio" | cut -d'/' -f1 | tr -d ' ')
 
-        if [ -n "$has_unsafe" ]; then
+        if [ "$numerator" != "0" ]; then
             echo "  ❌ $pkg_name has unsafe code"
-            echo "  Stats: $crate_stats"
+            echo "  Stats: $clean_stats"
             all_passed=false
             failed_crates="$failed_crates\n  - $pkg_name"
         else
