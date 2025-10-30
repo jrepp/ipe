@@ -45,11 +45,18 @@ for pkg_name in $packages; do
         continue
     fi
 
-    # Run cargo-geiger in the package's directory (suppress output on success)
-    if (cd "$pkg_dir" && cargo geiger --all-features --all-targets > /dev/null 2>&1); then
+    # Run cargo-geiger in the package's directory
+    # Capture output to show errors if it fails
+    output=$(cd "$pkg_dir" && cargo geiger --all-features --all-targets 2>&1) || status=$?
+
+    if [ "${status:-0}" -eq 0 ]; then
         echo "  ✅ $pkg_name passed"
     else
         echo "  ❌ $pkg_name failed"
+        echo ""
+        echo "Error output:"
+        echo "$output" | tail -30
+        echo ""
         all_passed=false
         failed_crates="$failed_crates\n  - $pkg_name"
     fi
