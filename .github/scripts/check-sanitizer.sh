@@ -31,8 +31,8 @@ if echo "$output" | grep -q "failed to read suppressions file"; then
 
     # Check if tests actually passed
     if echo "$output" | grep -q "test result: ok\."; then
-        passed=$(echo "$output" | grep -oP '\d+ passed' | grep -oP '\d+' || echo "0")
-        failed=$(echo "$output" | grep -oP '\d+ failed' | grep -oP '\d+' || echo "0")
+        passed=$(echo "$output" | grep -oP '\d+ passed' | grep -oP '\d+' | tail -1 || echo "0")
+        failed=$(echo "$output" | grep -oP '\d+ failed' | grep -oP '\d+' | tail -1 || echo "0")
 
         echo ""
         echo "Test Results:"
@@ -72,8 +72,8 @@ fi
 
 # Check if tests actually passed despite exit code
 if echo "$output" | grep -q "test result: ok\."; then
-    passed=$(echo "$output" | grep -oP '\d+ passed' | grep -oP '\d+' || echo "0")
-    failed=$(echo "$output" | grep -oP '\d+ failed' | grep -oP '\d+' || echo "0")
+    passed=$(echo "$output" | grep -oP '\d+ passed' | grep -oP '\d+' | tail -1 || echo "0")
+    failed=$(echo "$output" | grep -oP '\d+ failed' | grep -oP '\d+' | tail -1 || echo "0")
 
     if [ "$failed" -eq 0 ] && [ "$passed" -gt 200 ]; then
         echo "✅ PASS: All tests passed ($passed passed, $failed failed)"
