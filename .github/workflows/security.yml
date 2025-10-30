@@ -115,7 +115,7 @@ jobs:
         run: cargo install cargo-geiger
 
       - name: Run cargo-geiger (unsafe code detection)
-        run: cargo geiger --workspace --all-features --all-targets
+        run: ./.github/scripts/check-supply-chain.sh
 
       - name: Verify no unsafe code in core
         run: |
