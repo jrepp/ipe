@@ -3,7 +3,7 @@
 #![cfg(feature = "approvals")]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ipe_core::relationship::{RelationType, Relationship, RelationshipQuery, RelationshipStore};
+use ipe_core::relationship::{Relationship, RelationshipQuery, RelationshipStore};
 
 fn bench_relationship_add(c: &mut Criterion) {
     let mut group = c.benchmark_group("relationship_add");

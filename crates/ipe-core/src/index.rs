@@ -41,7 +41,7 @@ impl PolicyDB {
         for resource_type in &resource_types {
             self.index_by_resource_type
                 .entry(*resource_type)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(policy_idx);
         }
 
@@ -81,7 +81,7 @@ impl PolicyDB {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bytecode::{Instruction, Value};
+    use crate::bytecode::Instruction;
 
     #[test]
     fn test_policydb_new() {

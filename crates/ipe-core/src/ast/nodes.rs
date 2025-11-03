@@ -160,7 +160,7 @@ impl Expression {
     }
 
     /// Create a NOT expression
-    pub fn not(operand: Expression) -> Self {
+    pub fn logical_not(operand: Expression) -> Self {
         Self::Logical {
             op: LogicalOp::Not,
             operands: vec![operand],
@@ -345,17 +345,11 @@ impl Default for Metadata {
 }
 
 /// Source location for error reporting
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SourceLocation {
     pub line: usize,
     pub column: usize,
     pub length: usize,
-}
-
-impl Default for SourceLocation {
-    fn default() -> Self {
-        Self { line: 0, column: 0, length: 0 }
-    }
 }
 
 impl SourceLocation {
@@ -487,7 +481,7 @@ mod tests {
     #[test]
     fn test_expression_logical_not() {
         let expr = Expression::literal(Value::Bool(true));
-        let not_expr = Expression::not(expr);
+        let not_expr = Expression::logical_not(expr);
 
         match not_expr {
             Expression::Logical { op, operands } => {

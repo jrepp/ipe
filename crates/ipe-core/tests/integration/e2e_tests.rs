@@ -302,7 +302,7 @@ fn test_e2e_approval_with_metadata_audit_trail() {
             .with_metadata("ticket", "INCIDENT-2024-001")
             .with_metadata("justification", "Emergency cleanup after data corruption")
             .with_metadata("approved_by_email", "admin@example.com")
-            .with_metadata("approval_timestamp", &chrono::Utc::now().to_rfc3339())
+            .with_metadata("approval_timestamp", chrono::Utc::now().to_rfc3339())
             .with_expiration(3600), // 1 hour emergency access
         )
         .unwrap();

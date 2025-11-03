@@ -327,7 +327,7 @@ impl Parser {
             TokenKind::Not => {
                 self.advance();
                 let operand = self.parse_primary()?;
-                Ok(Expression::not(operand))
+                Ok(Expression::logical_not(operand))
             },
 
             _ => Err(ParseError::InvalidExpression(format!("Unexpected token: {}", token_kind))),
@@ -998,11 +998,8 @@ user.is_superuser == true"#;
         let expr = parser.parse_expression().unwrap();
 
         // Should parse as a logical expression
-        match expr {
-            Expression::Logical { op: LogicalOp::Or, operands } => {
-                assert_eq!(operands.len(), 2);
-            },
-            _ => {},
+        if let Expression::Logical { op: LogicalOp::Or, operands } = expr {
+            assert_eq!(operands.len(), 2);
         }
     }
 

@@ -293,7 +293,7 @@ fn test_concurrent_grant_same_approval() {
                         "bot-123",
                         "resource",
                         "GET",
-                        &format!("admin-{}", i),
+                        format!("admin-{}", i),
                     ))
                     .unwrap();
             })

@@ -1,7 +1,7 @@
 //! Integration tests for scope and TTL features
 
 use ipe_core::approval::{Approval, ApprovalStore, Scope, TTLConfig};
-use ipe_core::relationship::{RelationType, Relationship, RelationshipStore};
+use ipe_core::relationship::{Relationship, RelationshipStore};
 use std::sync::Arc;
 
 // ============================================================================
