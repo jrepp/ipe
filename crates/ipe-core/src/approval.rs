@@ -11,9 +11,10 @@ use std::sync::Arc;
 use thiserror::Error;
 
 /// Scope defines the isolation boundary for data
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum Scope {
     /// Global scope - accessible across all tenants (use sparingly)
+    #[default]
     Global,
     /// Tenant-specific scope
     Tenant(String),
@@ -49,15 +50,9 @@ impl Scope {
             Scope::Environment(e) => format!("env:{}", e),
             Scope::TenantEnvironment { tenant, environment } => {
                 format!("tenant:{}:env:{}", tenant, environment)
-            }
+            },
             Scope::Custom(parts) => format!("custom:{}", parts.join(":")),
         }
-    }
-}
-
-impl Default for Scope {
-    fn default() -> Self {
-        Scope::Global
     }
 }
 
@@ -119,11 +114,7 @@ pub enum ApprovalError {
     SerializationError(#[from] serde_json::Error),
 
     #[error("Approval not found: {identity}:{resource}:{action}")]
-    NotFound {
-        identity: String,
-        resource: String,
-        action: String,
-    },
+    NotFound { identity: String, resource: String, action: String },
 
     #[error("Approval expired at {expired_at}")]
     Expired { expired_at: DateTime<Utc> },
@@ -261,7 +252,7 @@ impl ApprovalCheck {
 #[cfg(feature = "approvals")]
 mod rocksdb_impl {
     use super::*;
-    use rocksdb::{DB, Options, ColumnFamilyDescriptor};
+    use rocksdb::{ColumnFamilyDescriptor, Options, DB};
 
     /// Database context for approval storage and retrieval
     #[derive(Debug)]
@@ -282,10 +273,7 @@ mod rocksdb_impl {
             let path = path.as_ref();
             let db = Self::open_db(path)?;
 
-            Ok(Self {
-                db: Arc::new(db),
-                temp_dir: None,
-            })
+            Ok(Self { db: Arc::new(db), temp_dir: None })
         }
 
         /// Create temporary store for testing
@@ -306,9 +294,7 @@ mod rocksdb_impl {
             opts.create_missing_column_families(true);
 
             // Optimizations
-            opts.set_prefix_extractor(
-                rocksdb::SliceTransform::create_fixed_prefix(20)
-            );
+            opts.set_prefix_extractor(rocksdb::SliceTransform::create_fixed_prefix(20));
 
             // Column family for approvals
             let mut approval_opts = Options::default();
@@ -355,12 +341,7 @@ mod rocksdb_impl {
 
         /// Check if approval exists and is valid (not expired)
         /// Defaults to Global scope for backward compatibility
-        pub fn has_approval(
-            &self,
-            identity: &str,
-            resource: &str,
-            action: &str,
-        ) -> Result<bool> {
+        pub fn has_approval(&self, identity: &str, resource: &str, action: &str) -> Result<bool> {
             self.has_approval_in_scope(identity, resource, action, &Scope::Global)
         }
 
@@ -406,7 +387,7 @@ mod rocksdb_impl {
                 Ok(Some(value)) => {
                     let approval: Approval = serde_json::from_slice(&value)?;
                     Ok(Some(approval))
-                }
+                },
                 Ok(None) => Ok(None),
                 Err(e) => Err(ApprovalError::DatabaseError(e.to_string())),
             }
@@ -414,12 +395,7 @@ mod rocksdb_impl {
 
         /// Revoke approval (delete from database)
         /// Defaults to Global scope for backward compatibility
-        pub fn revoke_approval(
-            &self,
-            identity: &str,
-            resource: &str,
-            action: &str,
-        ) -> Result<()> {
+        pub fn revoke_approval(&self, identity: &str, resource: &str, action: &str) -> Result<()> {
             self.revoke_approval_in_scope(identity, resource, action, &Scope::Global)
         }
 
@@ -442,11 +418,7 @@ mod rocksdb_impl {
         /// Check set membership: is identity in approved set for resource?
         /// Uses prefix scanning for efficient lookup
         /// Defaults to Global scope for backward compatibility
-        pub fn is_in_approved_set(
-            &self,
-            identity: &str,
-            resource_pattern: &str,
-        ) -> Result<bool> {
+        pub fn is_in_approved_set(&self, identity: &str, resource_pattern: &str) -> Result<bool> {
             self.is_in_approved_set_in_scope(identity, resource_pattern, &Scope::Global)
         }
 
@@ -497,7 +469,11 @@ mod rocksdb_impl {
         }
 
         /// List all approvals for a given identity in specific scope
-        pub fn list_approvals_in_scope(&self, identity: &str, scope: &Scope) -> Result<Vec<Approval>> {
+        pub fn list_approvals_in_scope(
+            &self,
+            identity: &str,
+            scope: &Scope,
+        ) -> Result<Vec<Approval>> {
             let prefix = format!("approvals:{}:{}:", scope.encode(), identity);
             let cf = self.cf_approvals()?;
 
@@ -564,8 +540,8 @@ mod tests {
 
     #[test]
     fn test_approval_with_expiration() {
-        let approval = Approval::new("bot-123", "resource", "action", "admin")
-            .with_expiration(3600);
+        let approval =
+            Approval::new("bot-123", "resource", "action", "admin").with_expiration(3600);
 
         assert!(approval.expires_at.is_some());
         assert!(!approval.is_expired());
@@ -605,7 +581,8 @@ mod tests {
 
         store.grant_approval(approval.clone()).unwrap();
 
-        let retrieved = store.get_approval("bot-123", "https://api.example.com/data", "GET")
+        let retrieved = store
+            .get_approval("bot-123", "https://api.example.com/data", "GET")
             .unwrap()
             .expect("Approval should exist");
 
@@ -667,8 +644,12 @@ mod tests {
     fn test_batch_approval_checks() {
         let store = ApprovalStore::new_temp().unwrap();
 
-        store.grant_approval(Approval::new("bot-1", "resource-A", "GET", "admin")).unwrap();
-        store.grant_approval(Approval::new("bot-2", "resource-B", "POST", "admin")).unwrap();
+        store
+            .grant_approval(Approval::new("bot-1", "resource-A", "GET", "admin"))
+            .unwrap();
+        store
+            .grant_approval(Approval::new("bot-2", "resource-B", "POST", "admin"))
+            .unwrap();
 
         let checks = vec![
             ApprovalCheck::new("bot-1", "resource-A", "GET"),
@@ -684,9 +665,15 @@ mod tests {
     fn test_list_approvals() {
         let store = ApprovalStore::new_temp().unwrap();
 
-        store.grant_approval(Approval::new("bot-123", "resource-A", "GET", "admin")).unwrap();
-        store.grant_approval(Approval::new("bot-123", "resource-B", "POST", "admin")).unwrap();
-        store.grant_approval(Approval::new("bot-456", "resource-C", "DELETE", "admin")).unwrap();
+        store
+            .grant_approval(Approval::new("bot-123", "resource-A", "GET", "admin"))
+            .unwrap();
+        store
+            .grant_approval(Approval::new("bot-123", "resource-B", "POST", "admin"))
+            .unwrap();
+        store
+            .grant_approval(Approval::new("bot-456", "resource-C", "DELETE", "admin"))
+            .unwrap();
 
         let approvals = store.list_approvals("bot-123").unwrap();
         assert_eq!(approvals.len(), 2);
@@ -713,12 +700,14 @@ mod tests {
         let store = ApprovalStore::new_temp().unwrap();
 
         for i in 1..=100 {
-            store.grant_approval(Approval::new(
-                format!("bot-{}", i),
-                "https://api.example.com/data",
-                "GET",
-                "admin"
-            )).unwrap();
+            store
+                .grant_approval(Approval::new(
+                    format!("bot-{}", i),
+                    "https://api.example.com/data",
+                    "GET",
+                    "admin",
+                ))
+                .unwrap();
         }
 
         assert!(store.is_in_approved_set("bot-50", "https://api.example.com/data").unwrap());

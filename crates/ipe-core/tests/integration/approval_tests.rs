@@ -1,7 +1,9 @@
 //! Integration tests for approval-based authorization
 
 use ipe_core::approval::{Approval, ApprovalCheck, ApprovalStore};
-use ipe_core::rar::{Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource};
+use ipe_core::rar::{
+    Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource,
+};
 use std::sync::Arc;
 
 #[test]
@@ -147,12 +149,8 @@ fn test_expired_approval_denied() {
     let store = ApprovalStore::new_temp().unwrap();
 
     // Grant approval that expires immediately
-    let mut approval = Approval::new(
-        "bot-123",
-        "https://api.example.com/data",
-        "GET",
-        "admin-user",
-    );
+    let mut approval =
+        Approval::new("bot-123", "https://api.example.com/data", "GET", "admin-user");
     approval.expires_at = Some(chrono::Utc::now().timestamp() - 100); // Expired 100s ago
 
     store.grant_approval(approval).unwrap();
@@ -213,9 +211,7 @@ fn test_revoked_approval_denied() {
         ))
         .unwrap();
 
-    store
-        .revoke_approval("bot-123", "https://api.example.com/data", "GET")
-        .unwrap();
+    store.revoke_approval("bot-123", "https://api.example.com/data", "GET").unwrap();
 
     let ctx = EvaluationContext::new(
         Resource::url("https://api.example.com/data"),
@@ -328,10 +324,7 @@ fn test_approval_metadata() {
         .expect("Approval should exist");
 
     assert_eq!(approval.metadata.get("ticket").unwrap(), "JIRA-123");
-    assert_eq!(
-        approval.metadata.get("justification").unwrap(),
-        "automated testing"
-    );
+    assert_eq!(approval.metadata.get("justification").unwrap(), "automated testing");
 }
 
 #[test]
@@ -351,19 +344,13 @@ fn test_set_membership_with_many_approvals() {
     }
 
     // Test membership for bot in the middle
-    assert!(store
-        .is_in_approved_set("bot-500", "https://api.example.com/data")
-        .unwrap());
+    assert!(store.is_in_approved_set("bot-500", "https://api.example.com/data").unwrap());
 
     // Test membership for bot at the end
-    assert!(store
-        .is_in_approved_set("bot-1000", "https://api.example.com/data")
-        .unwrap());
+    assert!(store.is_in_approved_set("bot-1000", "https://api.example.com/data").unwrap());
 
     // Test non-member
-    assert!(!store
-        .is_in_approved_set("bot-9999", "https://api.example.com/data")
-        .unwrap());
+    assert!(!store.is_in_approved_set("bot-9999", "https://api.example.com/data").unwrap());
 }
 
 #[test]

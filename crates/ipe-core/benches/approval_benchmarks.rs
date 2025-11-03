@@ -52,9 +52,7 @@ fn bench_approval_lookup(c: &mut Criterion) {
             b.iter(|| {
                 let bot_id = format!("bot-{}", size / 2); // Middle element
                 black_box(
-                    store
-                        .has_approval(&bot_id, "https://api.example.com/data", "GET")
-                        .unwrap(),
+                    store.has_approval(&bot_id, "https://api.example.com/data", "GET").unwrap(),
                 )
             });
         });
@@ -86,9 +84,7 @@ fn bench_approval_lookup_negative(c: &mut Criterion) {
             b.iter(|| {
                 // Lookup non-existent approval (tests bloom filter)
                 black_box(
-                    store
-                        .has_approval("bot-99999", "https://api.example.com/data", "GET")
-                        .unwrap(),
+                    store.has_approval("bot-99999", "https://api.example.com/data", "GET").unwrap(),
                 )
             });
         });
@@ -120,9 +116,7 @@ fn bench_set_membership(c: &mut Criterion) {
             b.iter(|| {
                 let bot_id = format!("bot-{}", size / 2);
                 black_box(
-                    store
-                        .is_in_approved_set(&bot_id, "https://api.example.com/data")
-                        .unwrap(),
+                    store.is_in_approved_set(&bot_id, "https://api.example.com/data").unwrap(),
                 )
             });
         });
@@ -160,13 +154,9 @@ fn bench_batch_checks(c: &mut Criterion) {
             .collect();
 
         group.throughput(Throughput::Elements(*batch_size as u64));
-        group.bench_with_input(
-            BenchmarkId::from_parameter(batch_size),
-            &checks,
-            |b, checks| {
-                b.iter(|| black_box(store.check_approvals(checks.clone()).unwrap()));
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(batch_size), &checks, |b, checks| {
+            b.iter(|| black_box(store.check_approvals(checks.clone()).unwrap()));
+        });
     }
 
     group.finish();
@@ -221,12 +211,8 @@ fn bench_approval_with_expiration(c: &mut Criterion) {
 
     // Mix of expired and valid approvals
     for i in 0..5000 {
-        let mut approval = Approval::new(
-            format!("bot-{}", i),
-            "https://api.example.com/data",
-            "GET",
-            "admin",
-        );
+        let mut approval =
+            Approval::new(format!("bot-{}", i), "https://api.example.com/data", "GET", "admin");
 
         if i % 2 == 0 {
             // Half expired
@@ -242,22 +228,14 @@ fn bench_approval_with_expiration(c: &mut Criterion) {
     group.bench_function("check_with_expiration", |b| {
         b.iter(|| {
             // Check valid approval
-            black_box(
-                store
-                    .has_approval("bot-1", "https://api.example.com/data", "GET")
-                    .unwrap(),
-            )
+            black_box(store.has_approval("bot-1", "https://api.example.com/data", "GET").unwrap())
         });
     });
 
     group.bench_function("check_expired", |b| {
         b.iter(|| {
             // Check expired approval
-            black_box(
-                store
-                    .has_approval("bot-0", "https://api.example.com/data", "GET")
-                    .unwrap(),
-            )
+            black_box(store.has_approval("bot-0", "https://api.example.com/data", "GET").unwrap())
         });
     });
 

@@ -41,7 +41,10 @@ impl EvaluationContext {
 
     #[cfg(feature = "approvals")]
     /// Add relationship store to evaluation context
-    pub fn with_relationship_store(mut self, store: Arc<crate::relationship::RelationshipStore>) -> Self {
+    pub fn with_relationship_store(
+        mut self,
+        store: Arc<crate::relationship::RelationshipStore>,
+    ) -> Self {
         self.relationship_store = Some(store);
         self
     }
@@ -49,12 +52,12 @@ impl EvaluationContext {
     #[cfg(feature = "approvals")]
     /// Check if current request has approval
     pub fn has_approval(&self) -> crate::Result<bool> {
-        let store = self.approval_store
-            .as_ref()
-            .ok_or(crate::Error::NoApprovalStore)?;
+        let store = self.approval_store.as_ref().ok_or(crate::Error::NoApprovalStore)?;
 
         // Extract URL from resource attributes or use a default
-        let resource_url = self.resource.attributes
+        let resource_url = self
+            .resource
+            .attributes
             .get("url")
             .and_then(|v| match v {
                 AttributeValue::String(s) => Some(s.clone()),
@@ -63,7 +66,9 @@ impl EvaluationContext {
             .unwrap_or_else(|| self.action.target.clone());
 
         // Extract HTTP method from action or use operation as string
-        let action_method = self.action.attributes
+        let action_method = self
+            .action
+            .attributes
             .get("method")
             .and_then(|v| match v {
                 AttributeValue::String(s) => Some(s.clone()),
@@ -71,7 +76,8 @@ impl EvaluationContext {
             })
             .unwrap_or_else(|| format!("{:?}", self.action.operation));
 
-        store.has_approval(&self.request.principal.id, &resource_url, &action_method)
+        store
+            .has_approval(&self.request.principal.id, &resource_url, &action_method)
             .map_err(|e| e.into())
     }
 
@@ -82,11 +88,10 @@ impl EvaluationContext {
     /// - ctx.has_relationship("editor", "document-123") - is the principal an editor of the document?
     /// - ctx.has_relationship("member_of", "admin-group") - is the principal a member of the group?
     pub fn has_relationship(&self, relation: &str, object: &str) -> crate::Result<bool> {
-        let store = self.relationship_store
-            .as_ref()
-            .ok_or(crate::Error::NoRelationshipStore)?;
+        let store = self.relationship_store.as_ref().ok_or(crate::Error::NoRelationshipStore)?;
 
-        store.has_relationship(&self.request.principal.id, relation, object)
+        store
+            .has_relationship(&self.request.principal.id, relation, object)
             .map_err(|e| e.into())
     }
 
@@ -98,22 +103,24 @@ impl EvaluationContext {
     /// - "intermediate-ca" is trusted_by "root-ca"
     /// - Then has_transitive_relationship("trusted_by", "root-ca") returns true
     pub fn has_transitive_relationship(&self, relation: &str, object: &str) -> crate::Result<bool> {
-        let store = self.relationship_store
-            .as_ref()
-            .ok_or(crate::Error::NoRelationshipStore)?;
+        let store = self.relationship_store.as_ref().ok_or(crate::Error::NoRelationshipStore)?;
 
-        store.has_transitive_relationship(&self.request.principal.id, relation, object)
+        store
+            .has_transitive_relationship(&self.request.principal.id, relation, object)
             .map_err(|e| e.into())
     }
 
     #[cfg(feature = "approvals")]
     /// Find the relationship path from principal to object
-    pub fn find_relationship_path(&self, relation: &str, object: &str) -> crate::Result<Option<crate::relationship::RelationshipPath>> {
-        let store = self.relationship_store
-            .as_ref()
-            .ok_or(crate::Error::NoRelationshipStore)?;
+    pub fn find_relationship_path(
+        &self,
+        relation: &str,
+        object: &str,
+    ) -> crate::Result<Option<crate::relationship::RelationshipPath>> {
+        let store = self.relationship_store.as_ref().ok_or(crate::Error::NoRelationshipStore)?;
 
-        store.find_relationship_path(&self.request.principal.id, relation, object)
+        store
+            .find_relationship_path(&self.request.principal.id, relation, object)
             .map_err(|e| e.into())
     }
 }
@@ -127,10 +134,7 @@ pub struct Resource {
 
 impl Resource {
     pub fn new(type_id: ResourceTypeId) -> Self {
-        Self {
-            type_id,
-            attributes: HashMap::new(),
-        }
+        Self { type_id, attributes: HashMap::new() }
     }
 
     pub fn with_attribute(mut self, key: impl Into<String>, value: AttributeValue) -> Self {
@@ -139,8 +143,7 @@ impl Resource {
     }
 
     pub fn url(url: impl Into<String>) -> Self {
-        Self::new(ResourceTypeId(0))
-            .with_attribute("url", AttributeValue::String(url.into()))
+        Self::new(ResourceTypeId(0)).with_attribute("url", AttributeValue::String(url.into()))
     }
 }
 
@@ -250,13 +253,11 @@ impl Principal {
     }
 
     pub fn bot(id: impl Into<String>) -> Self {
-        Self::new(id)
-            .with_attribute("type", AttributeValue::String("bot".into()))
+        Self::new(id).with_attribute("type", AttributeValue::String("bot".into()))
     }
 
     pub fn user(id: impl Into<String>) -> Self {
-        Self::new(id)
-            .with_attribute("type", AttributeValue::String("user".into()))
+        Self::new(id).with_attribute("type", AttributeValue::String("user".into()))
     }
 }
 

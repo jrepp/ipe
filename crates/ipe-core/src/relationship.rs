@@ -4,7 +4,7 @@
 //! enabling efficient validation of direct relationships (e.g., "is editor")
 //! and transitive trust chains (e.g., "is trusted through root CA").
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::Path;
@@ -23,11 +23,7 @@ pub enum RelationshipError {
     SerializationError(#[from] serde_json::Error),
 
     #[error("Relationship not found: {subject}:{relation}:{object}")]
-    NotFound {
-        subject: String,
-        relation: String,
-        object: String,
-    },
+    NotFound { subject: String, relation: String, object: String },
 
     #[error("Invalid relationship: {0}")]
     InvalidRelationship(String),
@@ -225,11 +221,13 @@ impl Relationship {
     }
 
     /// Generate forward index key (subject -> relations)
+    #[allow(dead_code)]
     fn forward_index_key(&self) -> String {
         format!("rel_fwd:{}:{}:{}", self.scope.encode(), self.subject, self.relation)
     }
 
     /// Generate reverse index key (object <- relations)
+    #[allow(dead_code)]
     fn reverse_index_key(&self) -> String {
         format!("rel_rev:{}:{}:{}", self.scope.encode(), self.object, self.relation)
     }
@@ -270,7 +268,7 @@ pub struct RelationshipPath {
 #[cfg(feature = "approvals")]
 mod rocksdb_impl {
     use super::*;
-    use rocksdb::{DB, Options, ColumnFamilyDescriptor};
+    use rocksdb::{ColumnFamilyDescriptor, Options, DB};
 
     /// Database context for relationship storage and retrieval
     #[derive(Debug)]
@@ -324,17 +322,13 @@ mod rocksdb_impl {
             let mut opts = Options::default();
             opts.create_if_missing(true);
             opts.create_missing_column_families(true);
-            opts.set_prefix_extractor(
-                rocksdb::SliceTransform::create_fixed_prefix(20)
-            );
+            opts.set_prefix_extractor(rocksdb::SliceTransform::create_fixed_prefix(20));
 
             // Column family for relationships
             let mut rel_opts = Options::default();
             rel_opts.optimize_for_point_lookup(64);
 
-            let cfs = vec![
-                ColumnFamilyDescriptor::new(Self::CF_RELATIONSHIPS, rel_opts),
-            ];
+            let cfs = vec![ColumnFamilyDescriptor::new(Self::CF_RELATIONSHIPS, rel_opts)];
 
             DB::open_cf_descriptors(&opts, path, cfs)
                 .map_err(|e| RelationshipError::DatabaseError(e.to_string()))
@@ -342,21 +336,27 @@ mod rocksdb_impl {
 
         /// Get column family handle
         fn cf_relationships(&self) -> Result<&rocksdb::ColumnFamily> {
-            self.db
-                .cf_handle(Self::CF_RELATIONSHIPS)
-                .ok_or_else(|| RelationshipError::DatabaseError("Relationships CF not found".into()))
+            self.db.cf_handle(Self::CF_RELATIONSHIPS).ok_or_else(|| {
+                RelationshipError::DatabaseError("Relationships CF not found".into())
+            })
         }
 
         /// Add a relationship (privileged operation)
         pub fn add_relationship(&self, relationship: Relationship) -> Result<()> {
             if relationship.subject.is_empty() {
-                return Err(RelationshipError::InvalidRelationship("subject cannot be empty".into()));
+                return Err(RelationshipError::InvalidRelationship(
+                    "subject cannot be empty".into(),
+                ));
             }
             if relationship.relation.is_empty() {
-                return Err(RelationshipError::InvalidRelationship("relation cannot be empty".into()));
+                return Err(RelationshipError::InvalidRelationship(
+                    "relation cannot be empty".into(),
+                ));
             }
             if relationship.object.is_empty() {
-                return Err(RelationshipError::InvalidRelationship("object cannot be empty".into()));
+                return Err(RelationshipError::InvalidRelationship(
+                    "object cannot be empty".into(),
+                ));
             }
 
             let key = relationship.key();
@@ -414,14 +414,15 @@ mod rocksdb_impl {
             object: &str,
             scope: &Scope,
         ) -> Result<Option<Relationship>> {
-            let key = format!("relationships:{}:{}:{}:{}", scope.encode(), subject, relation, object);
+            let key =
+                format!("relationships:{}:{}:{}:{}", scope.encode(), subject, relation, object);
             let cf = self.cf_relationships()?;
 
             match self.db.get_cf(cf, key.as_bytes()) {
                 Ok(Some(value)) => {
                     let relationship: Relationship = serde_json::from_slice(&value)?;
                     Ok(Some(relationship))
-                }
+                },
                 Ok(None) => Ok(None),
                 Err(e) => Err(RelationshipError::DatabaseError(e.to_string())),
             }
@@ -446,7 +447,8 @@ mod rocksdb_impl {
             object: &str,
             scope: &Scope,
         ) -> Result<()> {
-            let key = format!("relationships:{}:{}:{}:{}", scope.encode(), subject, relation, object);
+            let key =
+                format!("relationships:{}:{}:{}:{}", scope.encode(), subject, relation, object);
             let cf = self.cf_relationships()?;
 
             self.db
@@ -529,10 +531,14 @@ mod rocksdb_impl {
         }
 
         /// Get all outgoing relationships from a subject with a specific relation
-        fn get_outgoing_relationships(&self, subject: &str, relation: &str) -> Result<Vec<Relationship>> {
+        fn get_outgoing_relationships(
+            &self,
+            subject: &str,
+            relation: &str,
+        ) -> Result<Vec<Relationship>> {
             // NOTE: This searches across ALL scopes for transitive traversal
             // For a more restricted version, use get_outgoing_relationships_in_scope
-            let prefix = format!("relationships:");
+            let prefix = "relationships:".to_string();
             let cf = self.cf_relationships()?;
 
             let mut relationships = Vec::new();
@@ -547,9 +553,12 @@ mod rocksdb_impl {
                         }
 
                         if let Some(value) = iter.value() {
-                            if let Ok(relationship) = serde_json::from_slice::<Relationship>(value) {
+                            if let Ok(relationship) = serde_json::from_slice::<Relationship>(value)
+                            {
                                 // Filter by subject and relation
-                                if relationship.subject == subject && relationship.relation == relation {
+                                if relationship.subject == subject
+                                    && relationship.relation == relation
+                                {
                                     relationships.push(relationship);
                                 }
                             }
@@ -569,7 +578,11 @@ mod rocksdb_impl {
         }
 
         /// List all relationships for a subject in specific scope
-        pub fn list_subject_relationships_in_scope(&self, subject: &str, scope: &Scope) -> Result<Vec<Relationship>> {
+        pub fn list_subject_relationships_in_scope(
+            &self,
+            subject: &str,
+            scope: &Scope,
+        ) -> Result<Vec<Relationship>> {
             let prefix = format!("relationships:{}:{}:", scope.encode(), subject);
             let cf = self.cf_relationships()?;
 
@@ -585,7 +598,8 @@ mod rocksdb_impl {
                         }
 
                         if let Some(value) = iter.value() {
-                            if let Ok(relationship) = serde_json::from_slice::<Relationship>(value) {
+                            if let Ok(relationship) = serde_json::from_slice::<Relationship>(value)
+                            {
                                 relationships.push(relationship);
                             }
                         }
@@ -654,8 +668,7 @@ mod tests {
 
     #[test]
     fn test_relationship_with_expiration() {
-        let rel = Relationship::role("alice", "editor", "document", "admin")
-            .with_expiration(3600);
+        let rel = Relationship::role("alice", "editor", "document", "admin").with_expiration(3600);
 
         assert!(rel.expires_at.is_some());
         assert!(!rel.is_expired());
@@ -668,7 +681,8 @@ mod tests {
 
         store.add_relationship(rel.clone()).unwrap();
 
-        let retrieved = store.get_relationship("alice", "editor", "document-123")
+        let retrieved = store
+            .get_relationship("alice", "editor", "document-123")
             .unwrap()
             .expect("Relationship should exist");
 
@@ -705,13 +719,13 @@ mod tests {
         let store = RelationshipStore::new_temp().unwrap();
 
         // Build trust chain: cert-1 -> intermediate-ca -> root-ca
-        store.add_relationship(
-            Relationship::trust("cert-1", "intermediate-ca", "pki")
-        ).unwrap();
+        store
+            .add_relationship(Relationship::trust("cert-1", "intermediate-ca", "pki"))
+            .unwrap();
 
-        store.add_relationship(
-            Relationship::trust("intermediate-ca", "root-ca", "pki")
-        ).unwrap();
+        store
+            .add_relationship(Relationship::trust("intermediate-ca", "root-ca", "pki"))
+            .unwrap();
 
         // Direct relationship exists
         assert!(store.has_relationship("cert-1", "trusted_by", "intermediate-ca").unwrap());
@@ -728,13 +742,13 @@ mod tests {
         let store = RelationshipStore::new_temp().unwrap();
 
         // alice -> engineers -> employees
-        store.add_relationship(
-            Relationship::membership("alice", "engineers", "system")
-        ).unwrap();
+        store
+            .add_relationship(Relationship::membership("alice", "engineers", "system"))
+            .unwrap();
 
-        store.add_relationship(
-            Relationship::membership("engineers", "employees", "system")
-        ).unwrap();
+        store
+            .add_relationship(Relationship::membership("engineers", "employees", "system"))
+            .unwrap();
 
         assert!(store.has_transitive_relationship("alice", "member_of", "employees").unwrap());
     }
@@ -744,10 +758,15 @@ mod tests {
         let store = RelationshipStore::new_temp().unwrap();
 
         // Build chain
-        store.add_relationship(Relationship::trust("cert-1", "intermediate", "pki")).unwrap();
-        store.add_relationship(Relationship::trust("intermediate", "root", "pki")).unwrap();
+        store
+            .add_relationship(Relationship::trust("cert-1", "intermediate", "pki"))
+            .unwrap();
+        store
+            .add_relationship(Relationship::trust("intermediate", "root", "pki"))
+            .unwrap();
 
-        let path = store.find_relationship_path("cert-1", "trusted_by", "root")
+        let path = store
+            .find_relationship_path("cert-1", "trusted_by", "root")
             .unwrap()
             .expect("Path should exist");
 
@@ -765,9 +784,13 @@ mod tests {
 
         // Build long chain
         for i in 0..10 {
-            store.add_relationship(
-                Relationship::trust(format!("node-{}", i), format!("node-{}", i + 1), "system")
-            ).unwrap();
+            store
+                .add_relationship(Relationship::trust(
+                    format!("node-{}", i),
+                    format!("node-{}", i + 1),
+                    "system",
+                ))
+                .unwrap();
         }
 
         // Should fail due to max depth

@@ -3,7 +3,7 @@
 #![cfg(feature = "approvals")]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ipe_core::relationship::{Relationship, RelationshipQuery, RelationshipStore, RelationType};
+use ipe_core::relationship::{RelationType, Relationship, RelationshipQuery, RelationshipStore};
 
 fn bench_relationship_add(c: &mut Criterion) {
     let mut group = c.benchmark_group("relationship_add");
@@ -50,11 +50,7 @@ fn bench_relationship_lookup(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
                 let user_id = format!("user-{}", size / 2);
-                black_box(
-                    store
-                        .has_relationship(&user_id, "editor", "document-123")
-                        .unwrap(),
-                )
+                black_box(store.has_relationship(&user_id, "editor", "document-123").unwrap())
             });
         });
     }
@@ -84,7 +80,11 @@ fn bench_transitive_relationship(c: &mut Criterion) {
             b.iter(|| {
                 black_box(
                     store
-                        .has_transitive_relationship("node-0", "trusted_by", &format!("node-{}", depth))
+                        .has_transitive_relationship(
+                            "node-0",
+                            "trusted_by",
+                            &format!("node-{}", depth),
+                        )
                         .unwrap(),
                 )
             });
@@ -121,19 +121,19 @@ fn bench_trust_chain_traversal(c: &mut Criterion) {
             }
         }
 
-        group.bench_with_input(
-            BenchmarkId::from_parameter(chain_length),
-            chain_length,
-            |b, _| {
-                b.iter(|| {
-                    black_box(
-                        store
-                            .find_relationship_path("cert-0", "trusted_by", &format!("ca-{}", chain_length - 1))
-                            .unwrap(),
-                    )
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(chain_length), chain_length, |b, _| {
+            b.iter(|| {
+                black_box(
+                    store
+                        .find_relationship_path(
+                            "cert-0",
+                            "trusted_by",
+                            &format!("ca-{}", chain_length - 1),
+                        )
+                        .unwrap(),
+                )
+            });
+        });
     }
 
     group.finish();
@@ -164,11 +164,15 @@ fn bench_membership_hierarchy(c: &mut Criterion) {
     });
 
     group.bench_function("transitive_2_hops", |b| {
-        b.iter(|| black_box(store.has_transitive_relationship("alice", "member_of", "tech").unwrap()))
+        b.iter(|| {
+            black_box(store.has_transitive_relationship("alice", "member_of", "tech").unwrap())
+        })
     });
 
     group.bench_function("transitive_4_hops", |b| {
-        b.iter(|| black_box(store.has_transitive_relationship("alice", "member_of", "everyone").unwrap()))
+        b.iter(|| {
+            black_box(store.has_transitive_relationship("alice", "member_of", "everyone").unwrap())
+        })
     });
 
     group.finish();
@@ -203,13 +207,9 @@ fn bench_batch_relationship_checks(c: &mut Criterion) {
             .collect();
 
         group.throughput(Throughput::Elements(*batch_size as u64));
-        group.bench_with_input(
-            BenchmarkId::from_parameter(batch_size),
-            &queries,
-            |b, queries| {
-                b.iter(|| black_box(store.check_relationships(queries.clone()).unwrap()));
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(batch_size), &queries, |b, queries| {
+            b.iter(|| black_box(store.check_relationships(queries.clone()).unwrap()));
+        });
     }
 
     group.finish();
@@ -319,7 +319,9 @@ fn bench_role_lookups_vs_trust_chains(c: &mut Criterion) {
     });
 
     group.bench_function("trust_chain_5_hops", |b| {
-        b.iter(|| black_box(store.has_transitive_relationship("cert-0", "trusted_by", "ca-4").unwrap()))
+        b.iter(|| {
+            black_box(store.has_transitive_relationship("cert-0", "trusted_by", "ca-4").unwrap())
+        })
     });
 
     group.finish();
@@ -332,12 +334,7 @@ fn bench_with_expiration(c: &mut Criterion) {
 
     // Mix of expired and valid relationships
     for i in 0..5000 {
-        let mut rel = Relationship::role(
-            format!("user-{}", i),
-            "editor",
-            "document-123",
-            "admin",
-        );
+        let mut rel = Relationship::role(format!("user-{}", i), "editor", "document-123", "admin");
 
         if i % 2 == 0 {
             // Half expired

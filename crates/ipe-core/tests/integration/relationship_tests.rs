@@ -1,7 +1,7 @@
 //! Integration tests for relationship-based authorization
 
-use ipe_core::relationship::{Relationship, RelationshipQuery, RelationshipStore, RelationType};
 use ipe_core::rar::{Action, EvaluationContext, Operation, Principal, Request, Resource};
+use ipe_core::relationship::{RelationType, Relationship, RelationshipQuery, RelationshipStore};
 use std::sync::Arc;
 
 #[test]
@@ -71,9 +71,15 @@ fn test_trust_chain_three_levels() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Build longer trust chain: leaf -> intermediate-1 -> intermediate-2 -> root
-    store.add_relationship(Relationship::trust("leaf-cert", "intermediate-1", "pki")).unwrap();
-    store.add_relationship(Relationship::trust("intermediate-1", "intermediate-2", "pki")).unwrap();
-    store.add_relationship(Relationship::trust("intermediate-2", "root-ca", "pki")).unwrap();
+    store
+        .add_relationship(Relationship::trust("leaf-cert", "intermediate-1", "pki"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::trust("intermediate-1", "intermediate-2", "pki"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::trust("intermediate-2", "root-ca", "pki"))
+        .unwrap();
 
     // Should find path through chain
     assert!(store.has_transitive_relationship("leaf-cert", "trusted_by", "root-ca").unwrap());
@@ -98,8 +104,12 @@ fn test_context_transitive_trust() {
     let store = Arc::new(RelationshipStore::new_temp().unwrap());
 
     // Build trust chain
-    store.add_relationship(Relationship::trust("cert-123", "intermediate-ca", "pki")).unwrap();
-    store.add_relationship(Relationship::trust("intermediate-ca", "root-ca", "pki")).unwrap();
+    store
+        .add_relationship(Relationship::trust("cert-123", "intermediate-ca", "pki"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::trust("intermediate-ca", "root-ca", "pki"))
+        .unwrap();
 
     let ctx = EvaluationContext::new(
         Resource::url("api.example.com"),
@@ -120,9 +130,15 @@ fn test_membership_hierarchy() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Build org hierarchy: alice -> engineers -> employees -> everyone
-    store.add_relationship(Relationship::membership("alice", "engineers", "hr")).unwrap();
-    store.add_relationship(Relationship::membership("engineers", "employees", "hr")).unwrap();
-    store.add_relationship(Relationship::membership("employees", "everyone", "hr")).unwrap();
+    store
+        .add_relationship(Relationship::membership("alice", "engineers", "hr"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::membership("engineers", "employees", "hr"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::membership("employees", "everyone", "hr"))
+        .unwrap();
 
     // Direct membership
     assert!(store.has_relationship("alice", "member_of", "engineers").unwrap());
@@ -140,8 +156,12 @@ fn test_non_transitive_role() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Roles are NOT transitive
-    store.add_relationship(Relationship::role("alice", "editor", "document-1", "admin")).unwrap();
-    store.add_relationship(Relationship::role("document-1", "contains", "section-1", "system")).unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "editor", "document-1", "admin"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::role("document-1", "contains", "section-1", "system"))
+        .unwrap();
 
     // Alice is editor of document-1
     assert!(store.has_relationship("alice", "editor", "document-1").unwrap());
@@ -191,9 +211,15 @@ fn test_multiple_roles_same_subject() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Alice has multiple roles on different documents
-    store.add_relationship(Relationship::role("alice", "editor", "doc-1", "admin")).unwrap();
-    store.add_relationship(Relationship::role("alice", "viewer", "doc-2", "admin")).unwrap();
-    store.add_relationship(Relationship::role("alice", "owner", "doc-3", "admin")).unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "editor", "doc-1", "admin"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "viewer", "doc-2", "admin"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "owner", "doc-3", "admin"))
+        .unwrap();
 
     assert!(store.has_relationship("alice", "editor", "doc-1").unwrap());
     assert!(store.has_relationship("alice", "viewer", "doc-2").unwrap());
@@ -208,7 +234,9 @@ fn test_multiple_roles_same_subject() {
 fn test_remove_relationship() {
     let store = RelationshipStore::new_temp().unwrap();
 
-    store.add_relationship(Relationship::role("alice", "editor", "document-123", "admin")).unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "editor", "document-123", "admin"))
+        .unwrap();
     assert!(store.has_relationship("alice", "editor", "document-123").unwrap());
 
     store.remove_relationship("alice", "editor", "document-123").unwrap();
@@ -220,8 +248,12 @@ fn test_batch_relationship_checks() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Setup some relationships
-    store.add_relationship(Relationship::role("alice", "editor", "doc-1", "admin")).unwrap();
-    store.add_relationship(Relationship::role("bob", "viewer", "doc-2", "admin")).unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "editor", "doc-1", "admin"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::role("bob", "viewer", "doc-2", "admin"))
+        .unwrap();
 
     let queries = vec![
         RelationshipQuery::new("alice", "editor", "doc-1"),
@@ -244,10 +276,18 @@ fn test_complex_trust_graph() {
     //      |               |
     //   cert-1          cert-2
 
-    store.add_relationship(Relationship::trust("intermediate-1", "root-ca", "pki")).unwrap();
-    store.add_relationship(Relationship::trust("intermediate-2", "root-ca", "pki")).unwrap();
-    store.add_relationship(Relationship::trust("cert-1", "intermediate-1", "pki")).unwrap();
-    store.add_relationship(Relationship::trust("cert-2", "intermediate-2", "pki")).unwrap();
+    store
+        .add_relationship(Relationship::trust("intermediate-1", "root-ca", "pki"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::trust("intermediate-2", "root-ca", "pki"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::trust("cert-1", "intermediate-1", "pki"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::trust("cert-2", "intermediate-2", "pki"))
+        .unwrap();
 
     // Both certs should trust root-ca through different paths
     assert!(store.has_transitive_relationship("cert-1", "trusted_by", "root-ca").unwrap());
@@ -326,7 +366,9 @@ fn test_delegation_chain() {
 
     // Delegation is not transitive by default
     assert!(store.has_relationship("alice", "can_delegate_from", "manager").unwrap());
-    assert!(!store.has_transitive_relationship("alice", "can_delegate_from", "admin").unwrap());
+    assert!(!store
+        .has_transitive_relationship("alice", "can_delegate_from", "admin")
+        .unwrap());
 }
 
 #[test]
@@ -434,12 +476,20 @@ fn test_list_subject_relationships() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Alice has multiple relationships
-    store.add_relationship(Relationship::role("alice", "editor", "doc-1", "admin")).unwrap();
-    store.add_relationship(Relationship::role("alice", "viewer", "doc-2", "admin")).unwrap();
-    store.add_relationship(Relationship::membership("alice", "engineers", "hr")).unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "editor", "doc-1", "admin"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "viewer", "doc-2", "admin"))
+        .unwrap();
+    store
+        .add_relationship(Relationship::membership("alice", "engineers", "hr"))
+        .unwrap();
 
     // Bob has one relationship
-    store.add_relationship(Relationship::role("bob", "viewer", "doc-3", "admin")).unwrap();
+    store
+        .add_relationship(Relationship::role("bob", "viewer", "doc-3", "admin"))
+        .unwrap();
 
     let alice_rels = store.list_subject_relationships("alice").unwrap();
     assert_eq!(alice_rels.len(), 3);
@@ -454,10 +504,14 @@ fn test_count_relationships() {
 
     assert_eq!(store.count_relationships().unwrap(), 0);
 
-    store.add_relationship(Relationship::role("alice", "editor", "doc-1", "admin")).unwrap();
+    store
+        .add_relationship(Relationship::role("alice", "editor", "doc-1", "admin"))
+        .unwrap();
     assert_eq!(store.count_relationships().unwrap(), 1);
 
-    store.add_relationship(Relationship::role("bob", "viewer", "doc-2", "admin")).unwrap();
+    store
+        .add_relationship(Relationship::role("bob", "viewer", "doc-2", "admin"))
+        .unwrap();
     assert_eq!(store.count_relationships().unwrap(), 2);
 }
 

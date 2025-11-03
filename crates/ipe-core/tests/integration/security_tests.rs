@@ -1,7 +1,9 @@
 //! Security and validation tests for approval system
 
 use ipe_core::approval::{Approval, ApprovalStore};
-use ipe_core::rar::{Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource};
+use ipe_core::rar::{
+    Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource,
+};
 use std::sync::Arc;
 
 #[test]
@@ -216,10 +218,9 @@ fn test_missing_resource_url_attribute() {
 
     // Create resource WITHOUT "url" attribute
     let mut resource = Resource::new(ipe_core::rar::ResourceTypeId(0));
-    resource.attributes.insert(
-        "name".into(),
-        AttributeValue::String("some-resource".into()),
-    );
+    resource
+        .attributes
+        .insert("name".into(), AttributeValue::String("some-resource".into()));
 
     let ctx = EvaluationContext::new(
         resource,

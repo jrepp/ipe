@@ -1,7 +1,7 @@
 //! Integration tests for scope and TTL features
 
 use ipe_core::approval::{Approval, ApprovalStore, Scope, TTLConfig};
-use ipe_core::relationship::{Relationship, RelationshipStore, RelationType};
+use ipe_core::relationship::{RelationType, Relationship, RelationshipStore};
 use std::sync::Arc;
 
 // ============================================================================
@@ -17,23 +17,19 @@ fn test_approval_tenant_scope() {
     // Grant approval in Acme Corp tenant
     store
         .grant_approval(
-            Approval::new("alice", "document-1", "GET", "admin")
-                .with_scope(acme_scope.clone()),
+            Approval::new("alice", "document-1", "GET", "admin").with_scope(acme_scope.clone()),
         )
         .unwrap();
 
     // Grant approval in Widgets Inc tenant (different alice)
     store
         .grant_approval(
-            Approval::new("alice", "document-1", "GET", "admin")
-                .with_scope(widgets_scope.clone()),
+            Approval::new("alice", "document-1", "GET", "admin").with_scope(widgets_scope.clone()),
         )
         .unwrap();
 
     // Each scope sees only their own approvals
-    assert!(store
-        .has_approval_in_scope("alice", "document-1", "GET", &acme_scope)
-        .unwrap());
+    assert!(store.has_approval_in_scope("alice", "document-1", "GET", &acme_scope).unwrap());
     assert!(store
         .has_approval_in_scope("alice", "document-1", "GET", &widgets_scope)
         .unwrap());
@@ -116,27 +112,20 @@ fn test_approval_tenant_environment_scope() {
         .unwrap();
 
     // Each tenant+environment combination is isolated
-    assert!(store
-        .has_approval_in_scope("alice", "resource", "GET", &acme_dev)
-        .unwrap());
-    assert!(store
-        .has_approval_in_scope("alice", "resource", "GET", &acme_prod)
-        .unwrap());
-    assert!(store
-        .has_approval_in_scope("bob", "resource", "GET", &widgets_dev)
-        .unwrap());
+    assert!(store.has_approval_in_scope("alice", "resource", "GET", &acme_dev).unwrap());
+    assert!(store.has_approval_in_scope("alice", "resource", "GET", &acme_prod).unwrap());
+    assert!(store.has_approval_in_scope("bob", "resource", "GET", &widgets_dev).unwrap());
 
     // Cross-tenant access fails
-    assert!(!store
-        .has_approval_in_scope("alice", "resource", "GET", &widgets_dev)
-        .unwrap());
+    assert!(!store.has_approval_in_scope("alice", "resource", "GET", &widgets_dev).unwrap());
 }
 
 #[test]
 fn test_approval_custom_scope() {
     let store = ApprovalStore::new_temp().unwrap();
 
-    let custom_scope = Scope::Custom(vec!["region".to_string(), "us-west".to_string(), "zone-a".to_string()]);
+    let custom_scope =
+        Scope::Custom(vec!["region".to_string(), "us-west".to_string(), "zone-a".to_string()]);
 
     store
         .grant_approval(
@@ -161,18 +150,12 @@ fn test_approval_scope_revocation() {
         )
         .unwrap();
 
-    assert!(store
-        .has_approval_in_scope("alice", "document", "GET", &acme_scope)
-        .unwrap());
+    assert!(store.has_approval_in_scope("alice", "document", "GET", &acme_scope).unwrap());
 
     // Revoke in correct scope
-    store
-        .revoke_approval_in_scope("alice", "document", "GET", &acme_scope)
-        .unwrap();
+    store.revoke_approval_in_scope("alice", "document", "GET", &acme_scope).unwrap();
 
-    assert!(!store
-        .has_approval_in_scope("alice", "document", "GET", &acme_scope)
-        .unwrap());
+    assert!(!store.has_approval_in_scope("alice", "document", "GET", &acme_scope).unwrap());
 }
 
 #[test]
@@ -188,9 +171,7 @@ fn test_approval_global_scope_backward_compatibility() {
     assert!(store.has_approval("alice", "resource", "GET").unwrap());
 
     // Can also explicitly query Global scope
-    assert!(store
-        .has_approval_in_scope("alice", "resource", "GET", &Scope::Global)
-        .unwrap());
+    assert!(store.has_approval_in_scope("alice", "resource", "GET", &Scope::Global).unwrap());
 }
 
 // ============================================================================
@@ -201,8 +182,7 @@ fn test_approval_global_scope_backward_compatibility() {
 fn test_approval_with_ttl() {
     let store = ApprovalStore::new_temp().unwrap();
 
-    let approval = Approval::new("user", "resource", "GET", "admin")
-        .with_ttl(3600); // 1 hour
+    let approval = Approval::new("user", "resource", "GET", "admin").with_ttl(3600); // 1 hour
 
     assert_eq!(approval.ttl_seconds, Some(3600));
     assert!(approval.expires_at.is_some());
@@ -296,8 +276,8 @@ fn test_relationship_tenant_scope() {
 fn test_relationship_with_ttl() {
     let store = RelationshipStore::new_temp().unwrap();
 
-    let relationship = Relationship::role("alice", "temp-editor", "document", "admin")
-        .with_ttl(3600);
+    let relationship =
+        Relationship::role("alice", "temp-editor", "document", "admin").with_ttl(3600);
 
     assert_eq!(relationship.ttl_seconds, Some(3600));
     assert!(relationship.expires_at.is_some());
@@ -337,24 +317,20 @@ fn test_relationship_trust_chain_with_scope() {
     // Build trust chain in PKI scope
     store
         .add_relationship(
-            Relationship::trust("cert-1", "intermediate-ca", "pki")
-                .with_scope(pki_scope.clone()),
+            Relationship::trust("cert-1", "intermediate-ca", "pki").with_scope(pki_scope.clone()),
         )
         .unwrap();
 
     store
         .add_relationship(
-            Relationship::trust("intermediate-ca", "root-ca", "pki")
-                .with_scope(pki_scope.clone()),
+            Relationship::trust("intermediate-ca", "root-ca", "pki").with_scope(pki_scope.clone()),
         )
         .unwrap();
 
     // Transitive trust should work within scope
     // Note: Current implementation searches across scopes,
     // but the relationships are stored with scope
-    let path = store
-        .find_relationship_path("cert-1", "trusted_by", "root-ca")
-        .unwrap();
+    let path = store.find_relationship_path("cert-1", "trusted_by", "root-ca").unwrap();
 
     assert!(path.is_some());
     let path = path.unwrap();
@@ -446,21 +422,30 @@ fn test_environment_promotion_workflow() {
     // Grant permanent access in prod after approval
     store
         .grant_approval(
-            Approval::new("release-manager", "feature-x", "DEPLOY", "vp-eng")
-                .with_scope(prod),
+            Approval::new("release-manager", "feature-x", "DEPLOY", "vp-eng").with_scope(prod),
             // No TTL - permanent
         )
         .unwrap();
 
     // Verify different TTLs per environment
     let dev_approval = store
-        .get_approval_in_scope("developer", "feature-x", "DEPLOY", &Scope::tenant_env("acme", "dev"))
+        .get_approval_in_scope(
+            "developer",
+            "feature-x",
+            "DEPLOY",
+            &Scope::tenant_env("acme", "dev"),
+        )
         .unwrap()
         .unwrap();
     assert_eq!(dev_approval.ttl_seconds, Some(3600));
 
     let prod_approval = store
-        .get_approval_in_scope("release-manager", "feature-x", "DEPLOY", &Scope::tenant_env("acme", "prod"))
+        .get_approval_in_scope(
+            "release-manager",
+            "feature-x",
+            "DEPLOY",
+            &Scope::tenant_env("acme", "prod"),
+        )
         .unwrap()
         .unwrap();
     assert_eq!(prod_approval.ttl_seconds, None);
@@ -471,10 +456,7 @@ fn test_scope_encoding() {
     assert_eq!(Scope::Global.encode(), "global");
     assert_eq!(Scope::tenant("acme").encode(), "tenant:acme");
     assert_eq!(Scope::env("prod").encode(), "env:prod");
-    assert_eq!(
-        Scope::tenant_env("acme", "prod").encode(),
-        "tenant:acme:env:prod"
-    );
+    assert_eq!(Scope::tenant_env("acme", "prod").encode(), "tenant:acme:env:prod");
     assert_eq!(
         Scope::Custom(vec!["region".into(), "us-west".into()]).encode(),
         "custom:region:us-west"

@@ -1,7 +1,9 @@
 //! End-to-end integration tests combining policy evaluation with approval checks
 
 use ipe_core::approval::{Approval, ApprovalStore};
-use ipe_core::rar::{Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource};
+use ipe_core::rar::{
+    Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource,
+};
 use std::sync::Arc;
 
 /// Simulates a privileged data plane that writes approvals
@@ -24,12 +26,8 @@ impl PrivilegedDataPlane {
         resource: &str,
         action: &str,
     ) -> Result<(), ipe_core::approval::ApprovalError> {
-        self.store.grant_approval(Approval::new(
-            identity,
-            resource,
-            action,
-            &self.admin_id,
-        ))
+        self.store
+            .grant_approval(Approval::new(identity, resource, action, &self.admin_id))
     }
 
     fn grant_access_with_expiration(
@@ -87,11 +85,7 @@ fn test_e2e_bot_workflow_with_approval() {
 
     // Step 1: Privileged admin grants approval to bot
     data_plane
-        .grant_access(
-            "service-bot-alpha",
-            "https://api.example.com/sensitive-data",
-            "GET",
-        )
+        .grant_access("service-bot-alpha", "https://api.example.com/sensitive-data", "GET")
         .unwrap();
 
     // Step 2: Bot makes request with approval
@@ -156,9 +150,7 @@ fn test_e2e_approval_lifecycle() {
     assert!(!ctx3.has_approval().unwrap());
 
     // 6. Grant temporary approval (expires in 2 seconds)
-    data_plane
-        .grant_access_with_expiration(identity, resource, action, 2)
-        .unwrap();
+    data_plane.grant_access_with_expiration(identity, resource, action, 2).unwrap();
 
     // 7. Immediately allowed
     let ctx4 = make_context(store.clone());
