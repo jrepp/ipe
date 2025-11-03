@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPE - Intent Policy Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            opacity: 0.85;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #e0e0e0;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .feature {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .feature-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .feature-description {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .cta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .highlight {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 3px solid #667eea;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>IPE</h1>
+            <div class="subtitle">Intent Policy Engine</div>
+            <div class="tagline">High-Performance Policy Evaluation with Multi-Tier Execution</div>
+        </header>
+
+        <div class="content">
+            <!-- Quick Links -->
+            <section class="section">
+                <h2>Quick Links</h2>
+                <div class="cards">
+                    <a href="performance.html" class="card">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Performance Dashboard</div>
+                        <div class="card-description">
+                            Interactive D3.js visualization of predicate execution performance.
+                            View latency, throughput, JIT speedup, and outlier analysis.
+                        </div>
+                    </a>
+                    <a href="ARCHITECTURE.md" class="card">
+                        <div class="card-icon">🏗️</div>
+                        <div class="card-title">Architecture</div>
+                        <div class="card-description">
+                            Detailed system architecture including parsing, compilation, storage,
+                            and multi-tier execution layers.
+                        </div>
+                    </a>
+                    <a href="BYTECODE.md" class="card">
+                        <div class="card-icon">⚙️</div>
+                        <div class="card-title">Bytecode</div>
+                        <div class="card-description">
+                            Stack-based bytecode instruction set, interpreter design,
+                            and JIT compilation strategy.
+                        </div>
+                    </a>
+                    <a href="AST.md" class="card">
+                        <div class="card-icon">🌳</div>
+                        <div class="card-title">AST</div>
+                        <div class="card-description">
+                            Abstract Syntax Tree structure, type system,
+                            and compilation to bytecode.
+                        </div>
+                    </a>
+                    <a href="INDEX.md" class="card">
+                        <div class="card-icon">🔍</div>
+                        <div class="card-title">Policy Index</div>
+                        <div class="card-description">
+                            Fast policy lookup and indexing by resource type
+                            for efficient evaluation.
+                        </div>
+                    </a>
+                    <a href="../README.md" class="card">
+                        <div class="card-icon">📖</div>
+                        <div class="card-title">Main README</div>
+                        <div class="card-description">
+                            Project overview, getting started guide,
+                            and development workflow.
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Key Features -->
+            <section class="section">
+                <h2>Key Features</h2>
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-title">Performance</div>
+                        <div class="feature-value">&lt;10µs</div>
+                        <div class="feature-description">p99 latency with JIT</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-title">Speedup</div>
+                        <div class="feature-value">3-10x</div>
+                        <div class="feature-description">JIT over interpreter</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-title">Cache Hit Rate</div>
+                        <div class="feature-value">&gt;99%</div>
+                        <div class="feature-description">for cache-heavy workloads</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-title">Concurrency</div>
+                        <div class="feature-value">Lock-Free</div>
+                        <div class="feature-description">Arc-based snapshots</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Architecture -->
+            <section class="section">
+                <h2>System Architecture</h2>
+                <p>
+                    IPE uses a <span class="highlight">subway map architecture</span> with clear separation of concerns
+                    across parsing, compilation, storage, and execution layers. The system employs
+                    <span class="highlight">three-plane architecture</span> with privilege boundaries between
+                    control, data, and management planes.
+                </p>
+
+                <div class="architecture-diagram">
+                    <div class="mermaid">
+graph TB
+    subgraph "Input Layer"
+        PS[Policy Source<br/>.ipe files]
+    end
+
+    subgraph "Parsing Layer"
+        L[Lexer]
+        P[Parser]
+        PS --> L
+        L --> P
+    end
+
+    subgraph "AST Layer"
+        AST[Abstract Syntax Tree]
+        TC[Type Checker]
+        P --> AST
+        AST --> TC
+    end
+
+    subgraph "Compilation Layer"
+        C[Compiler]
+        BC[Bytecode]
+        FM[Field Mapping]
+        TC --> C
+        C --> BC
+        C --> FM
+    end
+
+    subgraph "Storage Layer"
+        DS[PolicyDataStore<br/>Lock-Free]
+        SS[PolicySnapshot<br/>Immutable]
+        DS -.Arc Clone.-> SS
+        BC --> DS
+        FM --> DS
+    end
+
+    subgraph "Execution Layer"
+        I[Interpreter<br/>Baseline]
+        BJ[Baseline JIT<br/>100+ evals]
+        OJ[Optimized JIT<br/>10k+ evals]
+
+        SS --> I
+        SS --> BJ
+        SS --> OJ
+    end
+
+    subgraph "Evaluation Layer"
+        E[PolicyEngine]
+        R[RAR Context<br/>Resource/Action/Request]
+
+        I --> E
+        BJ --> E
+        OJ --> E
+        R --> E
+    end
+
+    subgraph "Output Layer"
+        D[Decision<br/>Allow/Deny]
+        E --> D
+    end
+
+    style PS fill:#e1f5ff
+    style BC fill:#fff4e1
+    style DS fill:#f0f0f0
+    style D fill:#e8f5e9
+                    </div>
+                </div>
+
+                <h3>Architecture Highlights</h3>
+                <ul style="line-height: 1.8; margin-left: 40px; font-size: 1.05em;">
+                    <li><strong>Lock-Free Storage:</strong> Uses Arc-based immutable snapshots for concurrent access</li>
+                    <li><strong>Multi-Tier Execution:</strong> Interpreter → Baseline JIT → Optimized JIT based on policy heat</li>
+                    <li><strong>Zero-Copy Evaluation:</strong> Direct bytecode execution without intermediate allocations</li>
+                    <li><strong>Intelligent Caching:</strong> JIT compiled code reused across evaluations with >99% hit rates</li>
+                </ul>
+            </section>
+
+            <!-- WASM Deployment -->
+            <section class="section">
+                <h2>WebAssembly Deployment</h2>
+                <p>
+                    IPE compiles to <span class="highlight">WebAssembly</span> for client-side policy evaluation,
+                    enabling <span class="highlight">feature flags, A/B testing, and access control</span> directly
+                    in web applications with zero latency.
+                </p>
+
+                <div class="architecture-diagram">
+                    <div class="mermaid">
+graph LR
+    subgraph "Server"
+        API[REST API]
+        PolicyDB[(Policy Store)]
+        API --> PolicyDB
+    end
+
+    subgraph "CDN / Static Hosting"
+        Bundle[ipe-wasm.js<br/>+ policies.json]
+    end
+
+    subgraph "Web Application"
+        App[React/Vue/Angular]
+        WASM[IPE WASM Engine]
+        Cache[Policy Cache]
+
+        App --> WASM
+        WASM --> Cache
+    end
+
+    subgraph "Evaluation"
+        Context[User Context<br/>device/location/tier]
+        Decision{Feature Flag<br/>A/B Test<br/>Access Check}
+
+        Context --> Decision
+        WASM --> Decision
+    end
+
+    PolicyDB -.initial load.-> Bundle
+    Bundle --> Cache
+    Decision --> App
+
+    style WASM fill:#667eea,color:#fff
+    style Decision fill:#e8f5e9
+    style Bundle fill:#fff4e1
+                    </div>
+                </div>
+
+                <h3>Use Cases</h3>
+                <div class="cards">
+                    <div class="card" style="cursor: default;">
+                        <div class="card-icon">🚩</div>
+                        <div class="card-title">Feature Flags</div>
+                        <div class="card-description">
+                            Enable/disable features based on user attributes, device type,
+                            location, or tier without server round-trips.
+                        </div>
+                    </div>
+                    <div class="card" style="cursor: default;">
+                        <div class="card-icon">🧪</div>
+                        <div class="card-title">A/B Testing</div>
+                        <div class="card-description">
+                            Assign users to experiment cohorts based on complex targeting rules
+                            evaluated entirely client-side.
+                        </div>
+                    </div>
+                    <div class="card" style="cursor: default;">
+                        <div class="card-icon">🔐</div>
+                        <div class="card-title">Access Control</div>
+                        <div class="card-description">
+                            Evaluate access policies in the browser for UI hiding/showing
+                            with server-side enforcement as fallback.
+                        </div>
+                    </div>
+                </div>
+
+                <h3>WASM Benefits</h3>
+                <ul style="line-height: 1.8; margin-left: 40px; font-size: 1.05em;">
+                    <li><strong>Zero Latency:</strong> No network round-trip for policy evaluation</li>
+                    <li><strong>Offline Capable:</strong> Policies work without server connectivity</li>
+                    <li><strong>Reduced Load:</strong> Offload evaluation from servers to clients</li>
+                    <li><strong>Near-Native Performance:</strong> WebAssembly execution speed</li>
+                    <li><strong>Small Bundle:</strong> Optimized WASM binary (~50-100KB)</li>
+                </ul>
+
+                <div class="code-block">
+// Example: Feature flag evaluation in browser
+import init, { IPEEngine } from './ipe-wasm.js';
+
+await init();
+const engine = new IPEEngine();
+
+// Load policies
+await engine.load_policies(policiesJson);
+
+// Evaluate feature flag
+const context = {
+    user: { tier: 'premium', location: 'US' },
+    device: { type: 'mobile' },
+    timestamp: Date.now()
+};
+
+const showFeature = engine.evaluate('premium-feature', context);
+if (showFeature) {
+    // Render premium feature
+}
+                </div>
+            </section>
+
+            <!-- Predicate Evaluation -->
+            <section class="section">
+                <h2>Predicate Evaluation & Context</h2>
+                <p>
+                    IPE evaluates policies against a <span class="highlight">RAR (Resource-Action-Request) Context</span>.
+                    The evaluation process flows through multiple stages with intelligent optimization:
+                </p>
+
+                <h3>Evaluation Flow</h3>
+                <ol style="line-height: 2; margin-left: 40px; font-size: 1.05em;">
+                    <li>
+                        <strong>Context Preparation:</strong> Gather resource attributes, action metadata, and request information
+                    </li>
+                    <li>
+                        <strong>Policy Selection:</strong> Use index to find relevant policies for the resource type
+                    </li>
+                    <li>
+                        <strong>Field Mapping:</strong> Map context attributes to bytecode field offsets
+                    </li>
+                    <li>
+                        <strong>Execution Path Selection:</strong>
+                        <ul style="margin-left: 20px; margin-top: 8px;">
+                            <li>First evaluation: <em>Interpreter</em></li>
+                            <li>After 100 evaluations: <em>Baseline JIT</em></li>
+                            <li>After 10,000 evaluations: <em>Optimized JIT</em></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Stack-Based Execution:</strong> Bytecode interpreter or JIT-compiled native code
+                    </li>
+                    <li>
+                        <strong>Decision Output:</strong> Allow or Deny based on policy result
+                    </li>
+                </ol>
+
+                <h3>Context Structure</h3>
+                <div class="code-block">
+EvaluationContext {
+    resource: {
+        type_id: ResourceTypeId,
+        attributes: HashMap&lt;String, AttributeValue&gt;
+    },
+    action: {
+        name: String,
+        metadata: HashMap&lt;String, AttributeValue&gt;
+    },
+    request: {
+        timestamp: DateTime,
+        principal: Option&lt;Principal&gt;,
+        extra: HashMap&lt;String, AttributeValue&gt;
+    }
+}
+                </div>
+
+                <h3>Performance Characteristics</h3>
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-title">Interpreter</div>
+                        <div class="feature-value">&lt;50µs</div>
+                        <div class="feature-description">p99 latency baseline</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-title">Baseline JIT</div>
+                        <div class="feature-value">&lt;20µs</div>
+                        <div class="feature-description">p99 with basic optimization</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-title">Optimized JIT</div>
+                        <div class="feature-value">&lt;10µs</div>
+                        <div class="feature-description">p99 with full optimization</div>
+                    </div>
+                </div>
+
+                <a href="performance.html" class="cta">View Performance Dashboard →</a>
+            </section>
+
+            <!-- Getting Started -->
+            <section class="section">
+                <h2>Getting Started</h2>
+                <p>
+                    Run performance tests to see IPE in action:
+                </p>
+                <div class="code-block">
+# Install just (Rust-native task runner)
+cargo install just
+
+# Run all performance tests (~3 minutes)
+just perftest-all
+
+# View interactive dashboard
+open docs/performance.html
+
+# Or quick test (~20 seconds)
+just perftest-quick
+                </div>
+
+                <h3>Performance Tests Include:</h3>
+                <ul style="line-height: 1.8; margin-left: 40px; font-size: 1.05em;">
+                    <li><strong>Uniform Random:</strong> 100 diverse predicates (worst-case JIT)</li>
+                    <li><strong>Cache Heavy:</strong> 10 repeated predicates (best-case JIT)</li>
+                    <li><strong>Mixed Workload:</strong> 60% simple, 30% medium, 10% complex (realistic)</li>
+                    <li><strong>Bytecode Stress:</strong> Deep nesting and many operations</li>
+                    <li><strong>Jump Heavy:</strong> Branch prediction stress testing</li>
+                    <li><strong>100MB Logarithmic:</strong> Realistic distribution of policy sizes</li>
+                </ul>
+            </section>
+
+            <!-- Interactive Demo -->
+            <section class="section">
+                <h2>🎮 Live Predicate Evaluation Demo</h2>
+                <p>
+                    Move your mouse over the grid to see <span class="highlight">real-time predicate evaluation</span>.
+                    Each cell has its own policy that checks mouse position boundaries. Edit the predicates
+                    on the left to experiment with different conditions!
+                </p>
+
+                <!-- Bytecode Stats Info Card -->
+                <div style="
+                    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                    border: 2px solid #667eea;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 25px 0;
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+                ">
+                    <h3 style="color: #667eea; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        ⚙️ Compiled Bytecode Statistics
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <!-- Total Bytecode Size -->
+                        <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">Total Bytecode Size</div>
+                            <div style="font-size: 1.8em; font-weight: 700; color: #667eea;" id="bytecode-size">0 bytes</div>
+                        </div>
+
+                        <!-- Instruction Count -->
+                        <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">Total Instructions</div>
+                            <div style="font-size: 1.8em; font-weight: 700; color: #764ba2;" id="instruction-count">0</div>
+                        </div>
+
+                        <!-- Stack Depth -->
+                        <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">Max Stack Depth</div>
+                            <div style="font-size: 1.8em; font-weight: 700; color: #667eea;" id="stack-depth">0</div>
+                        </div>
+
+                        <!-- Complexity -->
+                        <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">Avg Complexity</div>
+                            <div style="font-size: 1.8em; font-weight: 700; color: #764ba2;" id="complexity">Simple</div>
+                        </div>
+                    </div>
+
+                    <!-- Instruction Breakdown -->
+                    <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="font-size: 0.9em; font-weight: 600; color: #666; margin-bottom: 10px;">Instruction Type Breakdown:</div>
+                        <div id="instruction-breakdown" style="font-family: 'Courier New', monospace; font-size: 0.85em; color: #333; line-height: 1.6;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 30px; margin-top: 30px; flex-wrap: wrap;">
+                    <!-- Predicate Editor Panel -->
+                    <div style="flex: 1; min-width: 350px;">
+                        <h3 style="color: #764ba2; margin-bottom: 15px;">📝 Editable Predicates</h3>
+                        <div id="predicate-editors" style="display: grid; gap: 10px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">📊 Performance Metrics</h4>
+                            <div id="metrics" style="font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.6;">
+                                <div>Mouse Position: <span id="mouse-pos" style="color: #667eea;">-</span></div>
+                                <div>Evaluations/sec: <span id="eval-rate" style="color: #764ba2;">0</span></div>
+                                <div>Last Eval Time: <span id="eval-time" style="color: #667eea;">0µs</span></div>
+                                <div>Active Cells: <span id="active-cells" style="color: #764ba2;">0/9</span></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-size: 0.9em;">
+                            <strong>💡 Tip:</strong> Try expressions like:<br>
+                            <code style="background: white; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-top: 5px;">
+                                mouse.x > 200 && mouse.y < 300
+                            </code>
+                        </div>
+                    </div>
+
+                    <!-- Visualization Panel -->
+                    <div style="flex: 1; min-width: 450px;">
+                        <h3 style="color: #764ba2; margin-bottom: 15px;">🎯 9-Slice Grid Visualization</h3>
+                        <div id="demo-grid" style="
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 2px;
+                            background: #e0e0e0;
+                            border-radius: 10px;
+                            overflow: hidden;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                        ">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                            <button id="reset-btn" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border: none;
+                                padding: 12px 25px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                font-size: 1em;
+                                transition: all 0.3s;
+                            " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                🔄 Reset to Defaults
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p style="font-size: 1.1em; color: #666;">
+                <strong>IPE</strong> - Intent Policy Engine<br>
+                High-Performance Policy Evaluation with Multi-Tier Execution<br>
+                <a href="https://github.com/yourusername/ipe" style="color: #667eea; text-decoration: none;">
+                    View on GitHub →
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        // =====================================================================
+        // Interactive Predicate Evaluation Demo
+        // =====================================================================
+
+        // =====================================================================
+        // Bytecode Compiler Simulator
+        // =====================================================================
+
+        // IPE Bytecode instruction types and their sizes
+        const BytecodeInstructions = {
+            LoadField: 3,      // opcode + field_id
+            LoadConst: 5,      // opcode + const_value (4 bytes)
+            Compare: 2,        // opcode + comparison_type
+            LogicalAnd: 1,     // opcode only
+            LogicalOr: 1,      // opcode only
+            LogicalNot: 1,     // opcode only
+            Jump: 3,           // opcode + offset
+            JumpIfFalse: 3,    // opcode + offset
+            Return: 1          // opcode only
+        };
+
+        // Simple bytecode compiler for IPE predicates
+        function compileToBytecode(predicate) {
+            const instructions = [];
+            let maxStackDepth = 0;
+            let currentStackDepth = 0;
+
+            try {
+                // Tokenize the predicate
+                const tokens = predicate
+                    .replace(/&&/g, ' && ')
+                    .replace(/\|\|/g, ' || ')
+                    .replace(/</g, ' < ')
+                    .replace(/>/g, ' > ')
+                    .replace(/==/g, ' == ')
+                    .replace(/!=/g, ' != ')
+                    .replace(/\(/g, ' ( ')
+                    .replace(/\)/g, ' ) ')
+                    .split(/\s+/)
+                    .filter(t => t.length > 0);
+
+                let i = 0;
+                while (i < tokens.length) {
+                    const token = tokens[i];
+
+                    // Field access (e.g., mouse.x, mouse.y)
+                    if (token.includes('.')) {
+                        instructions.push({ type: 'LoadField', field: token });
+                        currentStackDepth++;
+                        maxStackDepth = Math.max(maxStackDepth, currentStackDepth);
+                        i++;
+                    }
+                    // Numeric constant
+                    else if (!isNaN(parseFloat(token))) {
+                        instructions.push({ type: 'LoadConst', value: parseFloat(token) });
+                        currentStackDepth++;
+                        maxStackDepth = Math.max(maxStackDepth, currentStackDepth);
+                        i++;
+                    }
+                    // Comparison operators
+                    else if (['<', '>', '<=', '>=', '==', '!='].includes(token)) {
+                        instructions.push({ type: 'Compare', op: token });
+                        currentStackDepth--; // Pop two operands, push one result
+                        i++;
+                    }
+                    // Logical operators
+                    else if (token === '&&') {
+                        instructions.push({ type: 'LogicalAnd' });
+                        currentStackDepth--; // Pop two, push one
+                        i++;
+                    }
+                    else if (token === '||') {
+                        instructions.push({ type: 'LogicalOr' });
+                        currentStackDepth--; // Pop two, push one
+                        i++;
+                    }
+                    else if (token === '!') {
+                        instructions.push({ type: 'LogicalNot' });
+                        // Stack depth unchanged (pop one, push one)
+                        i++;
+                    }
+                    // Parentheses (affect parsing but not bytecode in this simple model)
+                    else if (token === '(' || token === ')') {
+                        i++;
+                    }
+                    else {
+                        i++;
+                    }
+                }
+
+                // Add Return instruction
+                instructions.push({ type: 'Return' });
+
+                return {
+                    instructions,
+                    maxStackDepth,
+                    size: instructions.reduce((sum, inst) => sum + (BytecodeInstructions[inst.type] || 1), 0)
+                };
+            } catch (e) {
+                return {
+                    instructions: [],
+                    maxStackDepth: 0,
+                    size: 0
+                };
+            }
+        }
+
+        // Compute aggregate bytecode statistics for all predicates
+        function computeBytecodeStats(predicates) {
+            const compiledPredicates = predicates.map(p => compileToBytecode(p));
+
+            // Total size
+            const totalSize = compiledPredicates.reduce((sum, bc) => sum + bc.size, 0);
+
+            // Total instructions
+            const totalInstructions = compiledPredicates.reduce((sum, bc) => sum + bc.instructions.length, 0);
+
+            // Max stack depth
+            const maxStackDepth = Math.max(...compiledPredicates.map(bc => bc.maxStackDepth));
+
+            // Instruction type breakdown
+            const instructionCounts = {};
+            compiledPredicates.forEach(bc => {
+                bc.instructions.forEach(inst => {
+                    instructionCounts[inst.type] = (instructionCounts[inst.type] || 0) + 1;
+                });
+            });
+
+            // Complexity assessment
+            const avgInstructionsPerPredicate = totalInstructions / predicates.length;
+            let complexity = 'Simple';
+            if (avgInstructionsPerPredicate > 15) complexity = 'Complex';
+            else if (avgInstructionsPerPredicate > 8) complexity = 'Medium';
+
+            return {
+                totalSize,
+                totalInstructions,
+                maxStackDepth,
+                instructionCounts,
+                complexity
+            };
+        }
+
+        // Update bytecode stats display
+        function updateBytecodeStats() {
+            const stats = computeBytecodeStats(predicates);
+
+            document.getElementById('bytecode-size').textContent = `${stats.totalSize} bytes`;
+            document.getElementById('instruction-count').textContent = stats.totalInstructions;
+            document.getElementById('stack-depth').textContent = stats.maxStackDepth;
+            document.getElementById('complexity').textContent = stats.complexity;
+
+            // Update instruction breakdown
+            const breakdown = Object.entries(stats.instructionCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([type, count]) => {
+                    const percentage = ((count / stats.totalInstructions) * 100).toFixed(1);
+                    const bar = '█'.repeat(Math.ceil(count / 2));
+                    return `${type.padEnd(15)} ${bar} ${count} (${percentage}%)`;
+                })
+                .join('\n');
+
+            document.getElementById('instruction-breakdown').textContent = breakdown || 'No instructions';
+        }
+
+        // =====================================================================
+
+        // Default predicates for 9-slice grid (3x3)
+        const defaultPredicates = [
+            // Top row
+            'mouse.x < 200 && mouse.y < 200',
+            'mouse.x >= 200 && mouse.x < 400 && mouse.y < 200',
+            'mouse.x >= 400 && mouse.y < 200',
+            // Middle row
+            'mouse.x < 200 && mouse.y >= 200 && mouse.y < 400',
+            'mouse.x >= 200 && mouse.x < 400 && mouse.y >= 200 && mouse.y < 400',
+            'mouse.x >= 400 && mouse.y >= 200 && mouse.y < 400',
+            // Bottom row
+            'mouse.x < 200 && mouse.y >= 400',
+            'mouse.x >= 200 && mouse.x < 400 && mouse.y >= 400',
+            'mouse.x >= 400 && mouse.y >= 400'
+        ];
+
+        let predicates = [...defaultPredicates];
+        let mouseX = 0;
+        let mouseY = 0;
+        let evalCount = 0;
+        let lastEvalTime = 0;
+        let lastSecond = Date.now();
+        let evalPerSecond = 0;
+
+        // Simple expression evaluator for IPE-like predicates
+        function evaluatePredicate(expr, context) {
+            const startTime = performance.now();
+            try {
+                // Replace IPE syntax with JavaScript
+                let jsExpr = expr
+                    .replace(/mouse\.x/g, context.x)
+                    .replace(/mouse\.y/g, context.y)
+                    .replace(/&&/g, '&&')
+                    .replace(/\|\|/g, '||');
+
+                const result = eval(jsExpr);
+                const endTime = performance.now();
+                lastEvalTime = (endTime - startTime) * 1000; // Convert to microseconds
+                return !!result;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Create predicate editors
+        function initializeEditors() {
+            const container = document.getElementById('predicate-editors');
+            container.innerHTML = '';
+
+            predicates.forEach((pred, index) => {
+                const row = Math.floor(index / 3);
+                const col = index % 3;
+                const cellLabel = `Cell [${row},${col}]`;
+
+                const editorDiv = document.createElement('div');
+                editorDiv.style.cssText = 'background: white; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0;';
+
+                const label = document.createElement('div');
+                label.textContent = cellLabel;
+                label.style.cssText = 'font-weight: 600; color: #667eea; margin-bottom: 5px; font-size: 0.9em;';
+
+                const textarea = document.createElement('textarea');
+                textarea.value = pred;
+                textarea.rows = 2;
+                textarea.style.cssText = `
+                    width: 100%;
+                    font-family: 'Courier New', monospace;
+                    font-size: 0.85em;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    resize: vertical;
+                `;
+                textarea.addEventListener('input', (e) => {
+                    predicates[index] = e.target.value;
+                    updateVisualization();
+                    updateBytecodeStats();
+                });
+
+                editorDiv.appendChild(label);
+                editorDiv.appendChild(textarea);
+                container.appendChild(editorDiv);
+            });
+        }
+
+        // Create grid cells
+        function initializeGrid() {
+            const grid = document.getElementById('demo-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.id = `cell-${i}`;
+                cell.style.cssText = `
+                    aspect-ratio: 1;
+                    background: #f0f0f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 2em;
+                    transition: all 0.15s ease;
+                    cursor: crosshair;
+                    position: relative;
+                `;
+
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                cell.innerHTML = `<span style="opacity: 0.3;">[${row},${col}]</span>`;
+
+                grid.appendChild(cell);
+            }
+        }
+
+        // Update visualization based on current mouse position
+        function updateVisualization() {
+            const context = { x: mouseX, y: mouseY };
+            let activeCount = 0;
+
+            predicates.forEach((pred, index) => {
+                const cell = document.getElementById(`cell-${index}`);
+                if (!cell) return;
+
+                const isActive = evaluatePredicate(pred, context);
+                if (isActive) activeCount++;
+
+                // Update cell styling
+                if (isActive) {
+                    cell.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    cell.style.color = 'white';
+                    cell.style.transform = 'scale(0.95)';
+                    cell.style.boxShadow = 'inset 0 0 20px rgba(0, 0, 0, 0.3)';
+                    cell.querySelector('span').style.opacity = '1';
+                    cell.querySelector('span').style.fontWeight = 'bold';
+                } else {
+                    cell.style.background = '#f0f0f0';
+                    cell.style.color = '#999';
+                    cell.style.transform = 'scale(1)';
+                    cell.style.boxShadow = 'none';
+                    cell.querySelector('span').style.opacity = '0.3';
+                    cell.querySelector('span').style.fontWeight = 'normal';
+                }
+            });
+
+            // Update metrics
+            evalCount++;
+            const now = Date.now();
+            if (now - lastSecond >= 1000) {
+                evalPerSecond = evalCount;
+                evalCount = 0;
+                lastSecond = now;
+            }
+
+            document.getElementById('active-cells').textContent = `${activeCount}/9`;
+            document.getElementById('eval-rate').textContent = evalPerSecond;
+            document.getElementById('eval-time').textContent = `${lastEvalTime.toFixed(2)}µs`;
+        }
+
+        // Track mouse movement over the grid
+        function initializeMouseTracking() {
+            const grid = document.getElementById('demo-grid');
+            const updateMousePos = (e) => {
+                const rect = grid.getBoundingClientRect();
+                mouseX = Math.floor(e.clientX - rect.left);
+                mouseY = Math.floor(e.clientY - rect.top);
+
+                document.getElementById('mouse-pos').textContent = `(${mouseX}, ${mouseY})`;
+                updateVisualization();
+            };
+
+            grid.addEventListener('mousemove', updateMousePos);
+            grid.addEventListener('mouseenter', updateMousePos);
+            grid.addEventListener('mouseleave', () => {
+                mouseX = -1;
+                mouseY = -1;
+                document.getElementById('mouse-pos').textContent = '-';
+                updateVisualization();
+            });
+        }
+
+        // Reset button
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeEditors();
+            initializeGrid();
+            initializeMouseTracking();
+            updateVisualization();
+            updateBytecodeStats();
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                predicates = [...defaultPredicates];
+                initializeEditors();
+                updateVisualization();
+                updateBytecodeStats();
+            });
+        });
+    </script>
+</body>
+</html>
