@@ -17,6 +17,25 @@ IPE compiles human-readable predicates into optimized bytecode with multi-tier e
 
 ## Core Principles
 
+### 0. Professional Communication Standards
+
+**CRITICAL**: All commits, PRs, and documentation must be professional and tool-agnostic.
+
+**Absolutely Prohibited**:
+- ❌ Agent/tool branding (e.g., "Generated with Claude Code", "Co-Authored-By: Claude")
+- ❌ Marketing links or promotional content
+- ❌ AI assistant attribution or references
+- ❌ Emoji (except in commit footer if explicitly requested by user)
+- ❌ Fluff or marketing language
+
+**Required**:
+- ✅ Clear, technical, professional language
+- ✅ Focus on what changed and why
+- ✅ Tool-agnostic documentation
+- ✅ Human-centric communication
+
+This is a professional open-source project. All contributions should read as if written by a human developer focused on technical substance, not tools used to create them.
+
 ### 1. Rust Best Practices
 
 Follow Rust idioms and best practices:
@@ -557,16 +576,18 @@ make fuzz                                            # Run fuzzing
 
 ## Critical Rules
 
-1. **NO UNSAFE CODE** without explicit justification and safety comments
-2. **ALL TESTS MUST PASS** before committing
-3. **NO CLIPPY WARNINGS** - Fix or suppress with `#[allow]` and comment
-4. **FORMAT BEFORE COMMIT** - Run `cargo fmt --all`
-5. **CONVENTIONAL COMMITS** - Follow format strictly
-6. **NO BRANDING** - Clean, professional commit messages
-7. **BENCHMARK PERFORMANCE-CRITICAL CODE** - Verify no regressions
-8. **DOCUMENT PUBLIC API** - All public items need doc comments
-9. **UPDATE REQUIREMENTS.MD** - Keep requirements in sync
-10. **SECURITY AUDITS** - Run supply chain checks regularly
+1. **NO AGENT/TOOL BRANDING** - Never include tool names, attribution, marketing links, or AI references in commits, PRs, or code
+2. **NO UNSAFE CODE** - Without explicit justification and safety comments
+3. **ALL TESTS MUST PASS** - Before committing
+4. **NO CLIPPY WARNINGS** - Fix or suppress with `#[allow]` and comment
+5. **FORMAT BEFORE COMMIT** - Run `cargo fmt --all`
+6. **CONVENTIONAL COMMITS** - Follow format strictly, no fluff
+7. **PROFESSIONAL TONE** - Technical, concise, tool-agnostic communication
+8. **BENCHMARK PERFORMANCE-CRITICAL CODE** - Verify no regressions
+9. **DOCUMENT PUBLIC API** - All public items need doc comments
+10. **UPDATE REQUIREMENTS.MD** - Keep requirements in sync
+11. **SECURITY AUDITS** - Run supply chain checks regularly
+12. **HUMAN-CENTRIC** - All contributions should read as if written by a human developer
 
 ## Success Criteria
 
