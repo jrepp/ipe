@@ -4,17 +4,11 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-//! Predicate language parser using nom
+/// Parser module for predicate parser implementation (to be implemented)
+pub mod parser {}
 
-/// Parser module (to be implemented)
-pub mod parser {
-    //! Predicate parser implementation
-}
-
-/// Lexer module (to be implemented)
-pub mod lexer {
-    //! Lexical analysis
-}
+/// Lexer module for lexical analysis (to be implemented)
+pub mod lexer {}
 
 #[cfg(test)]
 mod tests {
