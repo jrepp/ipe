@@ -25,14 +25,8 @@ fn test_resource_with_attributes() {
         resource.attributes.get("name"),
         Some(&AttributeValue::String("test-resource".into()))
     );
-    assert_eq!(
-        resource.attributes.get("size"),
-        Some(&AttributeValue::Int(1024))
-    );
-    assert_eq!(
-        resource.attributes.get("public"),
-        Some(&AttributeValue::Bool(true))
-    );
+    assert_eq!(resource.attributes.get("size"), Some(&AttributeValue::Int(1024)));
+    assert_eq!(resource.attributes.get("public"), Some(&AttributeValue::Bool(true)));
 }
 
 #[test]
@@ -67,10 +61,7 @@ fn test_action_with_attributes() {
         .with_attribute("bulk", AttributeValue::Bool(false));
 
     assert_eq!(action.attributes.len(), 2);
-    assert_eq!(
-        action.attributes.get("method"),
-        Some(&AttributeValue::String("PUT".into()))
-    );
+    assert_eq!(action.attributes.get("method"), Some(&AttributeValue::String("PUT".into())));
 }
 
 #[test]
@@ -103,9 +94,7 @@ fn test_principal_creation() {
 
 #[test]
 fn test_principal_with_roles() {
-    let principal = Principal::new("alice")
-        .with_role("admin")
-        .with_role("editor");
+    let principal = Principal::new("alice").with_role("admin").with_role("editor");
 
     assert_eq!(principal.roles.len(), 2);
     assert!(principal.roles.contains(&"admin".to_string()));
@@ -129,20 +118,14 @@ fn test_principal_with_attributes() {
 fn test_principal_bot_helper() {
     let principal = Principal::bot("bot-123");
     assert_eq!(principal.id, "bot-123");
-    assert_eq!(
-        principal.attributes.get("type"),
-        Some(&AttributeValue::String("bot".into()))
-    );
+    assert_eq!(principal.attributes.get("type"), Some(&AttributeValue::String("bot".into())));
 }
 
 #[test]
 fn test_principal_user_helper() {
     let principal = Principal::user("alice");
     assert_eq!(principal.id, "alice");
-    assert_eq!(
-        principal.attributes.get("type"),
-        Some(&AttributeValue::String("user".into()))
-    );
+    assert_eq!(principal.attributes.get("type"), Some(&AttributeValue::String("user".into())));
 }
 
 #[test]
@@ -185,10 +168,8 @@ fn test_attribute_value_variants() {
     let str_val = AttributeValue::String("test".into());
     let int_val = AttributeValue::Int(42);
     let bool_val = AttributeValue::Bool(true);
-    let array_val = AttributeValue::Array(vec![
-        AttributeValue::String("a".into()),
-        AttributeValue::Int(1),
-    ]);
+    let array_val =
+        AttributeValue::Array(vec![AttributeValue::String("a".into()), AttributeValue::Int(1)]);
 
     assert_eq!(str_val, AttributeValue::String("test".into()));
     assert_eq!(int_val, AttributeValue::Int(42));
@@ -320,12 +301,7 @@ fn test_context_has_approval_extracts_url_from_resource() {
 
     // Grant approval for URL
     store
-        .grant_approval(Approval::new(
-            "alice",
-            "https://api.example.com/data",
-            "GET",
-            "admin",
-        ))
+        .grant_approval(Approval::new("alice", "https://api.example.com/data", "GET", "admin"))
         .unwrap();
 
     let ctx = EvaluationContext::new(
@@ -378,9 +354,7 @@ fn test_context_has_approval_falls_back_to_operation() {
     let store = Arc::new(ApprovalStore::new_temp().unwrap());
 
     // Grant approval using operation name as string
-    store
-        .grant_approval(Approval::new("alice", "data", "Update", "admin"))
-        .unwrap();
+    store.grant_approval(Approval::new("alice", "data", "Update", "admin")).unwrap();
 
     let ctx = EvaluationContext::new(
         Resource::url("data"),
@@ -475,7 +449,7 @@ fn test_attribute_value_array() {
     match tags {
         AttributeValue::Array(ref items) => {
             assert_eq!(items.len(), 3);
-        }
+        },
         _ => panic!("Expected array"),
     }
 }
@@ -501,14 +475,8 @@ fn test_complex_evaluation_context() {
             source_ip: Some("10.0.1.100".to_string()),
             metadata: {
                 let mut m = HashMap::new();
-                m.insert(
-                    "commit_sha".to_string(),
-                    AttributeValue::String("abc123def456".into()),
-                );
-                m.insert(
-                    "branch".to_string(),
-                    AttributeValue::String("main".into()),
-                );
+                m.insert("commit_sha".to_string(), AttributeValue::String("abc123def456".into()));
+                m.insert("branch".to_string(), AttributeValue::String("main".into()));
                 m
             },
         },

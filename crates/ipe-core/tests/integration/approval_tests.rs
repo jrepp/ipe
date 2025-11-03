@@ -434,7 +434,7 @@ fn test_scope_tenant_isolation() {
     store
         .grant_approval(
             Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
@@ -442,21 +442,29 @@ fn test_scope_tenant_isolation() {
     store
         .grant_approval(
             Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::tenant("tenant-B"))
+                .with_scope(Scope::tenant("tenant-B")),
         )
         .unwrap();
 
     // Check tenant-A scope
-    assert!(store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-A")).unwrap());
+    assert!(store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-A"))
+        .unwrap());
 
     // Check tenant-B scope
-    assert!(store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-B")).unwrap());
+    assert!(store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-B"))
+        .unwrap());
 
     // Global scope should not have access
-    assert!(!store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::Global).unwrap());
+    assert!(!store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::Global)
+        .unwrap());
 
     // Different tenant should not have access
-    assert!(!store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-C")).unwrap());
+    assert!(!store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-C"))
+        .unwrap());
 }
 
 #[test]
@@ -468,27 +476,31 @@ fn test_scope_environment_isolation() {
     // Grant approval in dev environment
     store
         .grant_approval(
-            Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::env("dev"))
+            Approval::new("bot-123", "resource-1", "GET", "admin").with_scope(Scope::env("dev")),
         )
         .unwrap();
 
     // Grant approval in prod environment
     store
         .grant_approval(
-            Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::env("prod"))
+            Approval::new("bot-123", "resource-1", "GET", "admin").with_scope(Scope::env("prod")),
         )
         .unwrap();
 
     // Check dev environment
-    assert!(store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::env("dev")).unwrap());
+    assert!(store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::env("dev"))
+        .unwrap());
 
     // Check prod environment
-    assert!(store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::env("prod")).unwrap());
+    assert!(store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::env("prod"))
+        .unwrap());
 
     // Staging should not have access
-    assert!(!store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::env("staging")).unwrap());
+    assert!(!store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::env("staging"))
+        .unwrap());
 }
 
 #[test]
@@ -501,33 +513,39 @@ fn test_scope_tenant_environment_combination() {
     store
         .grant_approval(
             Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::tenant_env("tenant-A", "dev"))
+                .with_scope(Scope::tenant_env("tenant-A", "dev")),
         )
         .unwrap();
 
     // Check correct tenant and environment
-    assert!(store.has_approval_in_scope(
-        "bot-123",
-        "resource-1",
-        "GET",
-        &Scope::tenant_env("tenant-A", "dev")
-    ).unwrap());
+    assert!(store
+        .has_approval_in_scope(
+            "bot-123",
+            "resource-1",
+            "GET",
+            &Scope::tenant_env("tenant-A", "dev")
+        )
+        .unwrap());
 
     // Wrong tenant, correct environment
-    assert!(!store.has_approval_in_scope(
-        "bot-123",
-        "resource-1",
-        "GET",
-        &Scope::tenant_env("tenant-B", "dev")
-    ).unwrap());
+    assert!(!store
+        .has_approval_in_scope(
+            "bot-123",
+            "resource-1",
+            "GET",
+            &Scope::tenant_env("tenant-B", "dev")
+        )
+        .unwrap());
 
     // Correct tenant, wrong environment
-    assert!(!store.has_approval_in_scope(
-        "bot-123",
-        "resource-1",
-        "GET",
-        &Scope::tenant_env("tenant-A", "prod")
-    ).unwrap());
+    assert!(!store
+        .has_approval_in_scope(
+            "bot-123",
+            "resource-1",
+            "GET",
+            &Scope::tenant_env("tenant-A", "prod")
+        )
+        .unwrap());
 }
 
 #[test]
@@ -539,26 +557,33 @@ fn test_scope_custom_hierarchy() {
     // Grant approval in custom scope
     store
         .grant_approval(
-            Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()]))
+            Approval::new("bot-123", "resource-1", "GET", "admin").with_scope(Scope::Custom(vec![
+                "region".into(),
+                "us-west".into(),
+                "az-1".into(),
+            ])),
         )
         .unwrap();
 
     // Check correct custom scope
-    assert!(store.has_approval_in_scope(
-        "bot-123",
-        "resource-1",
-        "GET",
-        &Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()])
-    ).unwrap());
+    assert!(store
+        .has_approval_in_scope(
+            "bot-123",
+            "resource-1",
+            "GET",
+            &Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()])
+        )
+        .unwrap());
 
     // Different custom scope
-    assert!(!store.has_approval_in_scope(
-        "bot-123",
-        "resource-1",
-        "GET",
-        &Scope::Custom(vec!["region".into(), "eu-west".into(), "az-1".into()])
-    ).unwrap());
+    assert!(!store
+        .has_approval_in_scope(
+            "bot-123",
+            "resource-1",
+            "GET",
+            &Scope::Custom(vec!["region".into(), "eu-west".into(), "az-1".into()])
+        )
+        .unwrap());
 }
 
 #[test]
@@ -582,21 +607,21 @@ fn test_list_approvals_in_scope() {
     store
         .grant_approval(
             Approval::new("bot-123", "resource-A", "GET", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .grant_approval(
             Approval::new("bot-123", "resource-B", "POST", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .grant_approval(
             Approval::new("bot-123", "resource-C", "DELETE", "admin")
-                .with_scope(Scope::tenant("tenant-B"))
+                .with_scope(Scope::tenant("tenant-B")),
         )
         .unwrap();
 
@@ -623,25 +648,31 @@ fn test_revoke_approval_in_scope() {
     store
         .grant_approval(
             Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .grant_approval(
             Approval::new("bot-123", "resource-1", "GET", "admin")
-                .with_scope(Scope::tenant("tenant-B"))
+                .with_scope(Scope::tenant("tenant-B")),
         )
         .unwrap();
 
     // Revoke from tenant-A only
-    store.revoke_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-A")).unwrap();
+    store
+        .revoke_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-A"))
+        .unwrap();
 
     // tenant-A should not have approval
-    assert!(!store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-A")).unwrap());
+    assert!(!store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-A"))
+        .unwrap());
 
     // tenant-B should still have approval
-    assert!(store.has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-B")).unwrap());
+    assert!(store
+        .has_approval_in_scope("bot-123", "resource-1", "GET", &Scope::tenant("tenant-B"))
+        .unwrap());
 }
 
 #[test]
@@ -649,8 +680,7 @@ fn test_approval_with_ttl() {
     let store = ApprovalStore::new_temp().unwrap();
 
     // Create approval with TTL
-    let approval = Approval::new("bot-123", "resource-1", "GET", "admin")
-        .with_ttl(3600);
+    let approval = Approval::new("bot-123", "resource-1", "GET", "admin").with_ttl(3600);
 
     assert_eq!(approval.ttl_seconds, Some(3600));
     assert!(approval.expires_at.is_some());
@@ -715,30 +745,29 @@ fn test_is_in_approved_set_in_scope() {
     for i in 1..=10 {
         store
             .grant_approval(
-                Approval::new(
-                    format!("bot-{}", i),
-                    "https://api.example.com/data",
-                    "GET",
-                    "admin",
-                )
-                .with_scope(Scope::tenant("tenant-A"))
+                Approval::new(format!("bot-{}", i), "https://api.example.com/data", "GET", "admin")
+                    .with_scope(Scope::tenant("tenant-A")),
             )
             .unwrap();
     }
 
     // Check set membership in correct scope
-    assert!(store.is_in_approved_set_in_scope(
-        "bot-5",
-        "https://api.example.com/data",
-        &Scope::tenant("tenant-A")
-    ).unwrap());
+    assert!(store
+        .is_in_approved_set_in_scope(
+            "bot-5",
+            "https://api.example.com/data",
+            &Scope::tenant("tenant-A")
+        )
+        .unwrap());
 
     // Check set membership in wrong scope
-    assert!(!store.is_in_approved_set_in_scope(
-        "bot-5",
-        "https://api.example.com/data",
-        &Scope::tenant("tenant-B")
-    ).unwrap());
+    assert!(!store
+        .is_in_approved_set_in_scope(
+            "bot-5",
+            "https://api.example.com/data",
+            &Scope::tenant("tenant-B")
+        )
+        .unwrap());
 }
 
 #[test]

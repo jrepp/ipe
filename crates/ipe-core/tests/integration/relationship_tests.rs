@@ -584,7 +584,7 @@ fn test_scope_tenant_isolation() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
@@ -592,21 +592,29 @@ fn test_scope_tenant_isolation() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant("tenant-B"))
+                .with_scope(Scope::tenant("tenant-B")),
         )
         .unwrap();
 
     // Check tenant-A scope
-    assert!(store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A")).unwrap());
+    assert!(store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A"))
+        .unwrap());
 
     // Check tenant-B scope
-    assert!(store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-B")).unwrap());
+    assert!(store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-B"))
+        .unwrap());
 
     // Global scope should not have access
-    assert!(!store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::Global).unwrap());
+    assert!(!store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::Global)
+        .unwrap());
 
     // Different tenant should not have access
-    assert!(!store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-C")).unwrap());
+    assert!(!store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-C"))
+        .unwrap());
 }
 
 #[test]
@@ -618,27 +626,31 @@ fn test_scope_environment_isolation() {
     // Add relationship in dev environment
     store
         .add_relationship(
-            Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::env("dev"))
+            Relationship::role("alice", "editor", "doc-1", "admin").with_scope(Scope::env("dev")),
         )
         .unwrap();
 
     // Add relationship in prod environment
     store
         .add_relationship(
-            Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::env("prod"))
+            Relationship::role("alice", "editor", "doc-1", "admin").with_scope(Scope::env("prod")),
         )
         .unwrap();
 
     // Check dev environment
-    assert!(store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::env("dev")).unwrap());
+    assert!(store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::env("dev"))
+        .unwrap());
 
     // Check prod environment
-    assert!(store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::env("prod")).unwrap());
+    assert!(store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::env("prod"))
+        .unwrap());
 
     // Staging should not have access
-    assert!(!store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::env("staging")).unwrap());
+    assert!(!store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::env("staging"))
+        .unwrap());
 }
 
 #[test]
@@ -651,33 +663,39 @@ fn test_scope_tenant_environment_combination() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant_env("tenant-A", "dev"))
+                .with_scope(Scope::tenant_env("tenant-A", "dev")),
         )
         .unwrap();
 
     // Check correct tenant and environment
-    assert!(store.has_relationship_in_scope(
-        "alice",
-        "editor",
-        "doc-1",
-        &Scope::tenant_env("tenant-A", "dev")
-    ).unwrap());
+    assert!(store
+        .has_relationship_in_scope(
+            "alice",
+            "editor",
+            "doc-1",
+            &Scope::tenant_env("tenant-A", "dev")
+        )
+        .unwrap());
 
     // Wrong tenant, correct environment
-    assert!(!store.has_relationship_in_scope(
-        "alice",
-        "editor",
-        "doc-1",
-        &Scope::tenant_env("tenant-B", "dev")
-    ).unwrap());
+    assert!(!store
+        .has_relationship_in_scope(
+            "alice",
+            "editor",
+            "doc-1",
+            &Scope::tenant_env("tenant-B", "dev")
+        )
+        .unwrap());
 
     // Correct tenant, wrong environment
-    assert!(!store.has_relationship_in_scope(
-        "alice",
-        "editor",
-        "doc-1",
-        &Scope::tenant_env("tenant-A", "prod")
-    ).unwrap());
+    assert!(!store
+        .has_relationship_in_scope(
+            "alice",
+            "editor",
+            "doc-1",
+            &Scope::tenant_env("tenant-A", "prod")
+        )
+        .unwrap());
 }
 
 #[test]
@@ -690,25 +708,29 @@ fn test_scope_custom_hierarchy() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()]))
+                .with_scope(Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()])),
         )
         .unwrap();
 
     // Check correct custom scope
-    assert!(store.has_relationship_in_scope(
-        "alice",
-        "editor",
-        "doc-1",
-        &Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()])
-    ).unwrap());
+    assert!(store
+        .has_relationship_in_scope(
+            "alice",
+            "editor",
+            "doc-1",
+            &Scope::Custom(vec!["region".into(), "us-west".into(), "az-1".into()])
+        )
+        .unwrap());
 
     // Different custom scope
-    assert!(!store.has_relationship_in_scope(
-        "alice",
-        "editor",
-        "doc-1",
-        &Scope::Custom(vec!["region".into(), "eu-west".into(), "az-1".into()])
-    ).unwrap());
+    assert!(!store
+        .has_relationship_in_scope(
+            "alice",
+            "editor",
+            "doc-1",
+            &Scope::Custom(vec!["region".into(), "eu-west".into(), "az-1".into()])
+        )
+        .unwrap());
 }
 
 #[test]
@@ -721,30 +743,34 @@ fn test_list_subject_relationships_in_scope() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .add_relationship(
             Relationship::role("alice", "viewer", "doc-2", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .add_relationship(
             Relationship::role("alice", "owner", "doc-3", "admin")
-                .with_scope(Scope::tenant("tenant-B"))
+                .with_scope(Scope::tenant("tenant-B")),
         )
         .unwrap();
 
     // List relationships in tenant-A
-    let rels = store.list_subject_relationships_in_scope("alice", &Scope::tenant("tenant-A")).unwrap();
+    let rels = store
+        .list_subject_relationships_in_scope("alice", &Scope::tenant("tenant-A"))
+        .unwrap();
     assert_eq!(rels.len(), 2);
 
     // List relationships in tenant-B
-    let rels = store.list_subject_relationships_in_scope("alice", &Scope::tenant("tenant-B")).unwrap();
+    let rels = store
+        .list_subject_relationships_in_scope("alice", &Scope::tenant("tenant-B"))
+        .unwrap();
     assert_eq!(rels.len(), 1);
 
     // List relationships in global scope (none)
@@ -762,25 +788,31 @@ fn test_remove_relationship_in_scope() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant("tenant-B"))
+                .with_scope(Scope::tenant("tenant-B")),
         )
         .unwrap();
 
     // Remove from tenant-A only
-    store.remove_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A")).unwrap();
+    store
+        .remove_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A"))
+        .unwrap();
 
     // tenant-A should not have relationship
-    assert!(!store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A")).unwrap());
+    assert!(!store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A"))
+        .unwrap());
 
     // tenant-B should still have relationship
-    assert!(store.has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-B")).unwrap());
+    assert!(store
+        .has_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-B"))
+        .unwrap());
 }
 
 #[test]
@@ -788,8 +820,7 @@ fn test_relationship_with_ttl() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Create relationship with TTL
-    let rel = Relationship::role("alice", "editor", "doc-1", "admin")
-        .with_ttl(3600);
+    let rel = Relationship::role("alice", "editor", "doc-1", "admin").with_ttl(3600);
 
     assert_eq!(rel.ttl_seconds, Some(3600));
     assert!(rel.expires_at.is_some());
@@ -802,8 +833,7 @@ fn test_relationship_with_ttl() {
 
 #[test]
 fn test_relationship_ttl_sets_expiration() {
-    let rel = Relationship::role("alice", "editor", "doc-1", "admin")
-        .with_ttl(7200);
+    let rel = Relationship::role("alice", "editor", "doc-1", "admin").with_ttl(7200);
 
     assert_eq!(rel.ttl_seconds, Some(7200));
     assert!(rel.expires_at.is_some());
@@ -831,16 +861,20 @@ fn test_get_relationship_in_scope() {
     store
         .add_relationship(
             Relationship::role("alice", "editor", "doc-1", "admin")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     // Get from correct scope
-    let rel = store.get_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A")).unwrap();
+    let rel = store
+        .get_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-A"))
+        .unwrap();
     assert!(rel.is_some());
 
     // Get from wrong scope
-    let rel = store.get_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-B")).unwrap();
+    let rel = store
+        .get_relationship_in_scope("alice", "editor", "doc-1", &Scope::tenant("tenant-B"))
+        .unwrap();
     assert!(rel.is_none());
 }
 
@@ -854,14 +888,14 @@ fn test_transitive_relationship_across_scopes() {
     store
         .add_relationship(
             Relationship::trust("cert-1", "intermediate-ca", "pki")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
     store
         .add_relationship(
             Relationship::trust("intermediate-ca", "root-ca", "pki")
-                .with_scope(Scope::tenant("tenant-A"))
+                .with_scope(Scope::tenant("tenant-A")),
         )
         .unwrap();
 
@@ -899,15 +933,9 @@ fn test_relationship_path_details() {
     let store = RelationshipStore::new_temp().unwrap();
 
     // Build chain
-    store
-        .add_relationship(Relationship::trust("A", "B", "system"))
-        .unwrap();
-    store
-        .add_relationship(Relationship::trust("B", "C", "system"))
-        .unwrap();
-    store
-        .add_relationship(Relationship::trust("C", "D", "system"))
-        .unwrap();
+    store.add_relationship(Relationship::trust("A", "B", "system")).unwrap();
+    store.add_relationship(Relationship::trust("B", "C", "system")).unwrap();
+    store.add_relationship(Relationship::trust("C", "D", "system")).unwrap();
 
     let path = store
         .find_relationship_path("A", "trusted_by", "D")
@@ -945,7 +973,7 @@ fn test_relationship_with_multiple_metadata() {
                 .with_metadata("grant_date", "2024-01-15")
                 .with_metadata("department", "engineering")
                 .with_metadata("ticket", "JIRA-789")
-                .with_metadata("expires", "2025-01-15")
+                .with_metadata("expires", "2025-01-15"),
         )
         .unwrap();
 
