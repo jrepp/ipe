@@ -19,22 +19,27 @@ IPE compiles human-readable predicates into optimized bytecode with multi-tier e
 
 ### 0. Professional Communication Standards
 
-**CRITICAL**: All commits, PRs, and documentation must be professional and tool-agnostic.
+**CRITICAL**: All commits, PRs, and documentation must be professional, concise, and tool-agnostic.
 
 **Absolutely Prohibited**:
 - ❌ Agent/tool branding (e.g., "Generated with Claude Code", "Co-Authored-By: Claude")
 - ❌ Marketing links or promotional content
 - ❌ AI assistant attribution or references
-- ❌ Emoji (except in commit footer if explicitly requested by user)
-- ❌ Fluff or marketing language
+- ❌ Emoji in PRs, commits, or code
+- ❌ Verbose explanations or marketing language
+- ❌ Long-winded PR descriptions (target: <20 lines)
 
 **Required**:
-- ✅ Clear, technical, professional language
-- ✅ Focus on what changed and why
+- ✅ Concise, technical, verification-focused PRs
+- ✅ Actual test results and numbers (not descriptions of benefits)
+- ✅ Clear problem/solution/verification structure
+- ✅ Focus on what was tested and verified
 - ✅ Tool-agnostic documentation
 - ✅ Human-centric communication
 
-This is a professional open-source project. All contributions should read as if written by a human developer focused on technical substance, not tools used to create them.
+**PR Length Guideline**: Most PRs should be <20 lines. Include problem statement, solution approach, and concrete verification data (test counts, benchmark results, coverage percentages). Skip verbose explanations, benefits sections, and decorative formatting.
+
+This is a professional open-source project. All contributions should read as if written by a human developer focused on technical substance and verification, not marketing or explanation.
 
 ### 1. Rust Best Practices
 
@@ -495,25 +500,42 @@ ci/<change-description>    # CI/CD changes
 
 ### Pull Request Standards
 
-**Title**: Clear, concise, follows conventional commit format
+**CRITICAL**: PRs must be concise, technical, and verification-focused.
 
-**Body must include**:
+**Title**: Clear, follows conventional commit format (e.g., "fix(parser): resolve nested expression bug")
 
-1. **Why**: User intent and motivation
-2. **What**: What changed (facts, not opinions)
-3. **How**: Implementation approach and key decisions
-4. **Testing**: How changes were verified
-5. **Performance**: Impact on metrics (if applicable)
-6. **Breaking Changes**: Migration guide if breaking
+**Body format** (concise, no emoji, no verbose explanations):
 
-**Quality checklist**:
-- [ ] All tests pass
-- [ ] No clippy warnings
-- [ ] Code formatted
-- [ ] Documentation updated
-- [ ] Benchmarks run (if performance-related)
-- [ ] No unsafe code added (or justified)
-- [ ] REQUIREMENTS.md updated (if needed)
+```markdown
+## Problem
+[1-2 sentences: what bug/requirement/issue this addresses]
+
+## Solution
+[2-3 sentences: technical approach taken]
+
+## Verification
+- Tests: [test command output or "all 248 tests pass"]
+- Benchmarks: [criterion results if applicable, or "no regression"]
+- Clippy: [clean or "0 warnings"]
+- Coverage: [percentage, e.g., "93.7% maintained"]
+- Manual: [specific manual test if needed]
+
+## Breaking Changes
+[Only if applicable, 1-2 sentences on migration]
+```
+
+**What NOT to include**:
+- ❌ Emoji or decorative elements
+- ❌ Verbose explanations or marketing language
+- ❌ Repetitive "benefits" or "features" sections
+- ❌ Long file-by-file change descriptions
+- ❌ Excessive formatting (tables, diagrams unless essential)
+
+**Focus on**:
+- ✅ Test results and verification data
+- ✅ Actual command output (test count, benchmark numbers)
+- ✅ Technical facts (what changed, what was verified)
+- ✅ Brevity (target: <20 lines for most PRs)
 
 ### Small, Focused PRs
 
@@ -614,18 +636,19 @@ make fuzz                                            # Run fuzzing
 ## Critical Rules
 
 1. **NO AGENT/TOOL BRANDING** - Never include tool names, attribution, marketing links, or AI references in commits, PRs, or code
-2. **NO UNSAFE CODE** - Without explicit justification and safety comments
-3. **ALL TESTS MUST PASS** - Before committing
-4. **NO CLIPPY WARNINGS** - Fix or suppress with `#[allow]` and comment
-5. **FORMAT BEFORE COMMIT** - Run `cargo fmt --all`
-6. **CONVENTIONAL COMMITS** - Follow format strictly, no fluff
-7. **PROFESSIONAL TONE** - Technical, concise, tool-agnostic communication
-8. **BENCHMARK PERFORMANCE-CRITICAL CODE** - Verify no regressions
-9. **DOCUMENT PUBLIC API** - All public items need doc comments
-10. **UPDATE REQUIREMENTS.MD** - Keep requirements in sync
-11. **UPDATE CHANGELOG.MD** - Add entries to Unreleased section for all user-facing changes
-12. **SECURITY AUDITS** - Run supply chain checks regularly
-13. **HUMAN-CENTRIC** - All contributions should read as if written by a human developer
+2. **CONCISE PRS** - PRs must be brief (<20 lines), verification-focused, no emoji, no verbose explanations
+3. **NO UNSAFE CODE** - Without explicit justification and safety comments
+4. **ALL TESTS MUST PASS** - Before committing
+5. **NO CLIPPY WARNINGS** - Fix or suppress with `#[allow]` and comment
+6. **FORMAT BEFORE COMMIT** - Run `cargo fmt --all`
+7. **CONVENTIONAL COMMITS** - Follow format strictly, no fluff
+8. **VERIFICATION DATA** - PRs must include actual test results, benchmark numbers, coverage percentages
+9. **BENCHMARK PERFORMANCE-CRITICAL CODE** - Verify no regressions
+10. **DOCUMENT PUBLIC API** - All public items need doc comments
+11. **UPDATE REQUIREMENTS.MD** - Keep requirements in sync
+12. **UPDATE CHANGELOG.MD** - Add entries to Unreleased section for all user-facing changes
+13. **SECURITY AUDITS** - Run supply chain checks regularly
+14. **HUMAN-CENTRIC** - All contributions should read as if written by a human developer
 
 ## Success Criteria
 
