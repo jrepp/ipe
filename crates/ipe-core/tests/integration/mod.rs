@@ -14,3 +14,5 @@ mod relationship_tests;
 
 #[cfg(feature = "approvals")]
 mod scope_ttl_tests;
+
+mod rar_tests;
