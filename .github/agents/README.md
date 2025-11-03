@@ -44,11 +44,16 @@ Implement features using strict TDD methodology.
 
 ## How to Use
 
-### In AI Assistant Context
+### With Development Tools
 
-Reference an agent in your prompt:
+Reference an agent workflow when working on tasks:
 ```
-@workspace Follow the fix-bug workflow to resolve the stack overflow in nested expressions
+Follow the fix-bug workflow to resolve the stack overflow in nested expressions
+```
+
+Or reference the specific file:
+```
+See .github/agents/fix-bug.md for the bug fix workflow
 ```
 
 ### General Workflow
