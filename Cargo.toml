@@ -69,6 +69,7 @@ hyper = "1.0"
 # Storage
 memmap2 = "0.9"
 bincode = "1.3"
+rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 # Metrics
 prometheus = "0.13"

@@ -23,6 +23,10 @@ crossbeam-channel = { workspace = true }
 # Fix minimal versions check - ahash <0.8.8 has a bug with stdsimd feature
 ahash = ">=0.8.8"
 
+# Approval storage (optional feature)
+rocksdb = { workspace = true, optional = true }
+tempfile = { version = "3.8", optional = true }
+
 # JIT compilation (optional feature)
 cranelift = { workspace = true, optional = true }
 cranelift-jit = { workspace = true, optional = true }
@@ -35,6 +39,7 @@ region = { workspace = true, optional = true }
 [features]
 default = []
 testing = []
+approvals = ["rocksdb", "tempfile"]
 jit = [
     "cranelift",
     "cranelift-jit",
@@ -47,7 +52,23 @@ jit = [
 
 [dev-dependencies]
 criterion = "0.5"
+tempfile = "3.8"
 
 [[bench]]
 name = "evaluation"
 harness = false
+
+[[bench]]
+name = "approval_benchmarks"
+harness = false
+required-features = ["approvals"]
+
+[[bench]]
+name = "relationship_benchmarks"
+harness = false
+required-features = ["approvals"]
+
+[[test]]
+name = "integration"
+path = "tests/integration/mod.rs"
+required-features = ["approvals"]

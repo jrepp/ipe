@@ -12,6 +12,12 @@ pub mod tiering;
 #[cfg(feature = "jit")]
 pub mod jit;
 
+#[cfg(feature = "approvals")]
+pub mod approval;
+
+#[cfg(feature = "approvals")]
+pub mod relationship;
+
 // Test utilities (available in tests and when used as a dependency with dev profile)
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
@@ -46,6 +52,20 @@ pub enum Error {
 
     #[error("Serialization error: {0}")]
     SerializationError(#[from] bincode::Error),
+
+    #[cfg(feature = "approvals")]
+    #[error("Approval error: {0}")]
+    ApprovalError(#[from] crate::approval::ApprovalError),
+
+    #[cfg(feature = "approvals")]
+    #[error("Relationship error: {0}")]
+    RelationshipError(#[from] crate::relationship::RelationshipError),
+
+    #[error("No approval store configured")]
+    NoApprovalStore,
+
+    #[error("No relationship store configured")]
+    NoRelationshipStore,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
