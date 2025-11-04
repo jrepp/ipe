@@ -53,6 +53,8 @@ jit = [
 [dev-dependencies]
 criterion = "0.5"
 tempfile = "3.8"
+# Fix minimal versions - criterion depends on regex, ensure we use >= 1.5.5 to avoid syntax module issues
+regex = ">=1.5.5"
 
 [[bench]]
 name = "evaluation"
