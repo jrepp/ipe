@@ -11,6 +11,7 @@ declare -a ALLOWED_FAILURES=(
     "tonic"           # tonic 1.0.23 has issues, needs 1.35+
     "tokio"           # tokio minimal version issues
     "thiserror"       # thiserror 1.0.23 compatibility
+    "regex"           # regex <1.5.5 has unresolved syntax module issues
 )
 
 # Run the check and capture output
