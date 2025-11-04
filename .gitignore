@@ -15,6 +15,10 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
+# Node
+node_modules/
+package-lock.json
+
 # Temporary development files
 COPY_COMMANDS.txt
 EXTRACT_FILES.sh
