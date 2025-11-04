@@ -426,7 +426,8 @@ mod tests {
     #[test]
     fn test_compile_logical_not() {
         // NOT true
-        let condition = Condition::new(Expression::logical_not(Expression::literal(Value::Bool(true))));
+        let condition =
+            Condition::new(Expression::logical_not(Expression::literal(Value::Bool(true))));
         let policy = create_simple_policy(Requirements::requires(vec![condition]));
 
         let compiler = PolicyCompiler::new(1);
