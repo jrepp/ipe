@@ -81,6 +81,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Time
 chrono = { version = "0.4", features = ["serde"] }
 
+# Regex (fix minimal versions - old regex versions have syntax module issues)
+regex = "1.5.5"
+
 # FFI
 libc = "0.2"
 

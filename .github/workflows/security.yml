@@ -74,9 +74,10 @@ jobs:
         run: cargo miri setup
 
       - name: Run miri tests
-        run: cargo miri test --all-features
+        run: cargo miri test --features jit,testing
         env:
           MIRIFLAGS: "-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check"
+        # Note: Excluding 'approvals' feature because RocksDB uses FFI which Miri cannot test
 
   sanitizers:
     name: Sanitizers
