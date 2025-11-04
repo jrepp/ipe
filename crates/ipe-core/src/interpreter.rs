@@ -430,7 +430,7 @@ mod tests {
     }
 
     // Interpreter tests
-    use crate::rar::{AttributeValue, EvaluationContext, ResourceTypeId};
+    use crate::rar::{AttributeValue, EvaluationContext};
 
     #[test]
     fn test_interpreter_load_const() {

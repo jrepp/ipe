@@ -137,7 +137,7 @@ impl JitCompiler {
 
         // Make memory executable
         let jit_code = Arc::new(JitCode {
-            ptr: code_ptr as *const u8,
+            ptr: code_ptr,
             size: 4096, // Page size estimate
             region: code_ptr as *mut u8,
         });
@@ -170,9 +170,7 @@ impl JitCompiler {
             match instr {
                 Instruction::Jump { offset } | Instruction::JumpIfFalse { offset } => {
                     let target = (idx as i16 + offset) as usize;
-                    if !block_map.contains_key(&target) {
-                        block_map.insert(target, builder.create_block());
-                    }
+                    block_map.entry(target).or_insert_with(|| builder.create_block());
                 },
                 _ => {},
             }
@@ -324,7 +322,7 @@ impl Default for JitCompiler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bytecode::{CompOp, CompiledPolicy, Instruction, PolicyHeader, Value};
+    use crate::bytecode::{CompiledPolicy, Instruction, PolicyHeader};
 
     #[test]
     #[cfg_attr(miri, ignore = "JIT compilation requires pointer operations not supported by Miri")]

@@ -239,8 +239,8 @@ mod tests {
         let b = Value::Int(42);
         let c = Value::Int(10);
 
-        assert_eq!(a.compare(&b, CompOp::Eq).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Eq).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Eq).unwrap());
+        assert!(!a.compare(&c, CompOp::Eq).unwrap());
     }
 
     #[test]
@@ -249,8 +249,8 @@ mod tests {
         let b = Value::Int(10);
         let c = Value::Int(42);
 
-        assert_eq!(a.compare(&b, CompOp::Neq).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Neq).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Neq).unwrap());
+        assert!(!a.compare(&c, CompOp::Neq).unwrap());
     }
 
     #[test]
@@ -259,9 +259,9 @@ mod tests {
         let b = Value::Int(42);
         let c = Value::Int(5);
 
-        assert_eq!(a.compare(&b, CompOp::Lt).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Lt).unwrap(), false);
-        assert_eq!(a.compare(&a, CompOp::Lt).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Lt).unwrap());
+        assert!(!a.compare(&c, CompOp::Lt).unwrap());
+        assert!(!c.compare(&c, CompOp::Lt).unwrap());
     }
 
     #[test]
@@ -270,9 +270,9 @@ mod tests {
         let b = Value::Int(42);
         let c = Value::Int(10);
 
-        assert_eq!(a.compare(&b, CompOp::Lte).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Lte).unwrap(), true);
-        assert_eq!(b.compare(&a, CompOp::Lte).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Lte).unwrap());
+        assert!(a.compare(&c, CompOp::Lte).unwrap());
+        assert!(!b.compare(&a, CompOp::Lte).unwrap());
     }
 
     #[test]
@@ -281,9 +281,9 @@ mod tests {
         let b = Value::Int(10);
         let c = Value::Int(100);
 
-        assert_eq!(a.compare(&b, CompOp::Gt).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Gt).unwrap(), false);
-        assert_eq!(a.compare(&a, CompOp::Gt).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Gt).unwrap());
+        assert!(!a.compare(&c, CompOp::Gt).unwrap());
+        assert!(!a.compare(&b.clone(), CompOp::Lt).unwrap());
     }
 
     #[test]
@@ -292,9 +292,9 @@ mod tests {
         let b = Value::Int(10);
         let c = Value::Int(42);
 
-        assert_eq!(a.compare(&b, CompOp::Gte).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Gte).unwrap(), true);
-        assert_eq!(b.compare(&a, CompOp::Gte).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Gte).unwrap());
+        assert!(a.compare(&c, CompOp::Gte).unwrap());
+        assert!(!b.compare(&a, CompOp::Gte).unwrap());
     }
 
     #[test]
@@ -303,8 +303,8 @@ mod tests {
         let b = Value::String("hello".to_string());
         let c = Value::String("world".to_string());
 
-        assert_eq!(a.compare(&b, CompOp::Eq).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Eq).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Eq).unwrap());
+        assert!(!a.compare(&c, CompOp::Eq).unwrap());
     }
 
     #[test]
@@ -312,8 +312,8 @@ mod tests {
         let a = Value::String("apple".to_string());
         let b = Value::String("banana".to_string());
 
-        assert_eq!(a.compare(&b, CompOp::Lt).unwrap(), true);
-        assert_eq!(b.compare(&a, CompOp::Lt).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Lt).unwrap());
+        assert!(!b.compare(&a, CompOp::Lt).unwrap());
     }
 
     #[test]
@@ -322,8 +322,8 @@ mod tests {
         let b = Value::Bool(true);
         let c = Value::Bool(false);
 
-        assert_eq!(a.compare(&b, CompOp::Eq).unwrap(), true);
-        assert_eq!(a.compare(&c, CompOp::Eq).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Eq).unwrap());
+        assert!(!a.compare(&c, CompOp::Eq).unwrap());
     }
 
     #[test]
@@ -331,8 +331,8 @@ mod tests {
         let a = Value::Bool(true);
         let b = Value::Bool(false);
 
-        assert_eq!(a.compare(&b, CompOp::Neq).unwrap(), true);
-        assert_eq!(a.compare(&a, CompOp::Neq).unwrap(), false);
+        assert!(a.compare(&b, CompOp::Neq).unwrap());
+        assert!(!b.compare(&b, CompOp::Neq).unwrap());
     }
 
     #[test]
@@ -341,10 +341,10 @@ mod tests {
         let b = Value::Bool(false);
 
         // Boolean ordering operations should return false
-        assert_eq!(a.compare(&b, CompOp::Lt).unwrap(), false);
-        assert_eq!(a.compare(&b, CompOp::Lte).unwrap(), false);
-        assert_eq!(a.compare(&b, CompOp::Gt).unwrap(), false);
-        assert_eq!(a.compare(&b, CompOp::Gte).unwrap(), false);
+        assert!(!a.compare(&b, CompOp::Lt).unwrap());
+        assert!(!a.compare(&b, CompOp::Lte).unwrap());
+        assert!(!a.compare(&b, CompOp::Gt).unwrap());
+        assert!(!a.compare(&b, CompOp::Gte).unwrap());
     }
 
     #[test]

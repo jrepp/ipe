@@ -69,6 +69,7 @@ hyper = "1.0"
 # Storage
 memmap2 = "0.9"
 bincode = "1.3"
+rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 # Metrics
 prometheus = "0.13"
@@ -79,6 +80,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
+
+# Regex (fix minimal versions - old regex versions have syntax module issues)
+regex = "1.5.5"
 
 # FFI
 libc = "0.2"

@@ -180,7 +180,7 @@ impl PolicyBuilder {
     }
 
     /// Add a NOT instruction
-    pub fn not(mut self) -> Self {
+    pub fn logical_not(mut self) -> Self {
         self.policy.emit(Instruction::Not);
         self
     }

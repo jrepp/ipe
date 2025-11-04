@@ -34,6 +34,7 @@ fn create_sample_context() -> EvaluationContext {
         action: Action {
             operation: Operation::Deploy,
             target: "production/us-east-1".to_string(),
+            attributes: HashMap::new(),
         },
         request: Request {
             principal: Principal {
@@ -45,6 +46,10 @@ fn create_sample_context() -> EvaluationContext {
             source_ip: Some("10.0.1.42".parse().unwrap()),
             metadata: HashMap::new(),
         },
+        #[cfg(feature = "approvals")]
+        approval_store: None,
+        #[cfg(feature = "approvals")]
+        relationship_store: None,
     }
 }
 
