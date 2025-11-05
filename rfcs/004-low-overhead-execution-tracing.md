@@ -594,6 +594,295 @@ impl PolicyEngine {
 - Standardized sampling and tail-based sampling
 - Low overhead (~50-100μs for export, batched in background)
 
+#### Understanding the Full Sample Flow Through OpenTelemetry
+
+OpenTelemetry traces provide complete visibility into the policy evaluation flow, including:
+1. Which sampling selector matched (via span attributes)
+2. Full evaluation execution path (via span events)
+3. Performance breakdown per predicate
+4. Context values that influenced decisions
+5. Distributed tracing from API gateway to policy engine to database
+
+**Enhanced Span Structure with Sampling Metadata:**
+
+```rust
+impl EnrichedTrace {
+    pub fn export_otel_with_sampling_context(
+        &self,
+        tracer: &dyn Tracer,
+        sampling_decision: &SamplingDecision,
+    ) -> Result<()> {
+        let mut span = tracer.start("policy.evaluation");
+
+        // === Policy Metadata ===
+        span.set_attribute(KeyValue::new("policy.id", self.policy_id.clone()));
+        span.set_attribute(KeyValue::new("policy.result", self.result.to_string()));
+        span.set_attribute(KeyValue::new("policy.duration_us", self.evaluation_time_us as i64));
+
+        // === Request Context ===
+        span.set_attribute(KeyValue::new("principal.id", ctx.request.principal.id.clone()));
+        span.set_attribute(KeyValue::new("resource.type", ctx.request.resource.type.clone()));
+        span.set_attribute(KeyValue::new("action", ctx.request.action.clone()));
+        span.set_attribute(KeyValue::new("scope", ctx.scope.to_string()));
+
+        // === Sampling Decision Metadata ===
+        span.set_attribute(KeyValue::new("sampling.strategy", sampling_decision.strategy.to_string()));
+        span.set_attribute(KeyValue::new("sampling.rate", sampling_decision.rate));
+        span.set_attribute(KeyValue::new("sampling.selector_matched", sampling_decision.selector_matched.clone()));
+        span.set_attribute(KeyValue::new("sampling.reason", sampling_decision.reason.to_string()));
+
+        // Add span events for each predicate evaluation
+        for (idx, event) in self.events.iter().enumerate() {
+            span.add_event(
+                format!("predicate.{}", idx),
+                vec![
+                    KeyValue::new("predicate.expr", event.predicate_expr.clone()),
+                    KeyValue::new("predicate.result", event.result),
+                    KeyValue::new("predicate.duration_ns", event.duration_ns as i64),
+                    KeyValue::new("predicate.type", event.event_type.to_string()),
+                    // Include relevant context values
+                    KeyValue::new("context", format!("{:?}", event.context_values)),
+                ]
+            );
+        }
+
+        span.end();
+        Ok(())
+    }
+}
+
+/// Sampling decision metadata
+pub struct SamplingDecision {
+    /// Was this trace sampled?
+    pub sampled: bool,
+    /// Sampling rate applied
+    pub rate: f64,
+    /// Which selector matched (if any)
+    pub selector_matched: String,
+    /// Reason for sampling decision
+    pub reason: SamplingReason,
+    /// Strategy used
+    pub strategy: String,
+}
+
+pub enum SamplingReason {
+    SelectorMatch { selector_index: usize, selector_name: String },
+    AlwaysSampleError,
+    AlwaysSampleSlow,
+    ProbabilisticSample,
+    RateLimited,
+    DefaultRate,
+    ForcedSample,  // Runtime override
+}
+```
+
+**Example OpenTelemetry Trace in Jaeger:**
+
+```
+Trace: acme-corp-api-request-123
+Duration: 2.4ms
+
+┌─────────────────────────────────────────────────────────────┐
+│ Span: http.request (root)                                   │
+│ Duration: 2.4ms                                             │
+│ Attributes:                                                 │
+│   http.method: POST                                         │
+│   http.url: /api/deployments                                │
+│   http.status_code: 200                                     │
+│   trace_id: 7f8a9b2c3d4e5f6a                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ ┌─────────────────────────────────────────────────────┐   │
+│ │ Span: policy.evaluation (child)                     │   │
+│ │ Duration: 1.2ms                                     │   │
+│ │ Attributes:                                         │   │
+│ │   policy.id: policies/deploy/with-approval         │   │
+│ │   policy.result: allow                              │   │
+│ │   policy.duration_us: 1200                          │   │
+│ │   principal.id: bot-deploy-123                      │   │
+│ │   principal.role: deployer                          │   │
+│ │   resource.type: deployment                         │   │
+│ │   resource.id: deploy-456                           │   │
+│ │   action: CREATE                                    │   │
+│ │   scope: tenant=acme-corp,env=production            │   │
+│ │                                                     │   │
+│ │   # === Sampling Metadata ===                       │   │
+│ │   sampling.strategy: selector_based                 │   │
+│ │   sampling.rate: 1.0                                │   │
+│ │   sampling.selector_matched: production-deploys    │   │
+│ │   sampling.reason: selector_match                   │   │
+│ │                                                     │   │
+│ │ Events:                                             │   │
+│ │   [0.000ms] predicate.0                            │   │
+│ │     predicate.expr: resource.type == 'deployment'  │   │
+│ │     predicate.result: true                         │   │
+│ │     predicate.duration_ns: 120                     │   │
+│ │     context: {resource.type: "deployment"}         │   │
+│ │                                                     │   │
+│ │   [0.050ms] predicate.1                            │   │
+│ │     predicate.expr: has_approval(...)              │   │
+│ │     predicate.result: true                         │   │
+│ │     predicate.duration_ns: 950000                  │   │
+│ │     context: {principal.id: "bot-deploy-123", ...} │   │
+│ │                                                     │   │
+│ │ ┌─────────────────────────────────────────────┐   │   │
+│ │ │ Span: rocksdb.approval.lookup (child)       │   │   │
+│ │ │ Duration: 850μs                             │   │   │
+│ │ │ Attributes:                                 │   │   │
+│ │ │   db.system: rocksdb                        │   │   │
+│ │ │   db.operation: get                         │   │   │
+│ │ │   approval.key: bot-deploy-123:deploy-456   │   │   │
+│ │ └─────────────────────────────────────────────┘   │   │
+│ │                                                     │   │
+│ │   [1.100ms] predicate.2                            │   │
+│ │     predicate.expr: principal.role == 'deployer'  │   │
+│ │     predicate.result: true                         │   │
+│ │     predicate.duration_ns: 80                      │   │
+│ │     context: {principal.role: "deployer"}          │   │
+│ │                                                     │   │
+│ │   [1.200ms] policy.result                          │   │
+│ │     result: allow                                  │   │
+│ │     total_predicates: 3                            │   │
+│ │     slow_predicates: 1 (has_approval)              │   │
+│ └─────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Querying OpenTelemetry Traces:**
+
+1. **Find all sampled traces:**
+   ```
+   sampling.strategy = "selector_based"
+   ```
+
+2. **Find traces sampled by specific selector:**
+   ```
+   sampling.selector_matched = "production-deploys"
+   ```
+
+3. **Find traces sampled due to errors:**
+   ```
+   sampling.reason = "always_sample_error"
+   ```
+
+4. **Find slow evaluations:**
+   ```
+   policy.duration_us > 1000 AND sampling.reason = "always_sample_slow"
+   ```
+
+5. **Analyze sampling coverage for a tenant:**
+   ```
+   scope CONTAINS "tenant=acme-corp"
+   GROUP BY sampling.selector_matched
+   ```
+
+**Grafana Tempo Query Examples:**
+
+```promql
+# Sampling rate by policy
+histogram_quantile(0.95,
+  sum(rate(policy_evaluation_duration_seconds_bucket{sampled="true"}[5m])) by (policy_id, le)
+)
+
+# Traces sampled per selector
+sum(rate(traces_sampled_total[5m])) by (selector_matched)
+
+# Sampling overhead
+(sum(rate(trace_export_duration_seconds_sum[5m]))
+ / sum(rate(policy_evaluation_duration_seconds_sum[5m])))
+ * 100
+```
+
+**Jaeger UI Visualization:**
+
+In Jaeger, you can:
+1. Search for traces by `sampling.selector_matched`
+2. Filter by `principal.id`, `scope`, `policy.id`
+3. View flame graphs showing:
+   - Which predicates are slowest
+   - Database lookup latency
+   - Full evaluation timeline
+4. Compare sampled vs non-sampled population
+5. Trace dependencies (policy evaluation → approval lookup → RocksDB)
+
+**Sample Flow Diagram:**
+
+```
+┌───────────────────────────────────────────────────────────┐
+│ 1. Request arrives with W3C Trace Context header         │
+│    traceparent: 00-7f8a9b2c3d4e5f6a-1234567890abcdef-01  │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 2. Extract parent span context                           │
+│    trace_id: 7f8a9b2c3d4e5f6a                            │
+│    parent_span_id: 1234567890abcdef                       │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 3. Check sampling selectors (policy, scope, principal)   │
+│    Matched: "production-deploys" → rate: 1.0 (100%)      │
+│    Decision: SAMPLE                                       │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 4. Create child span: policy.evaluation                  │
+│    span_id: abcdef1234567890                              │
+│    Add attributes: policy.id, principal.id, scope, ...    │
+│    Add attribute: sampling.selector_matched              │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 5. Enable ring buffer tracing                            │
+│    Record events: predicate.0, predicate.1, ...           │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 6. Evaluate policy (predicate by predicate)              │
+│    Each predicate adds span event with context           │
+│    Slow operations (DB lookup) create child spans        │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 7. Enrich trace with symbols + context                   │
+│    predicate_id → source expression                       │
+│    context_hash → full context values                     │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 8. Export to OpenTelemetry collector (batched)           │
+│    Format: OTLP (gRPC or HTTP)                           │
+│    Compression: zstd                                      │
+│    Batch size: 1000 spans                                 │
+└────────────────────┬──────────────────────────────────────┘
+                     │
+                     ▼
+┌───────────────────────────────────────────────────────────┐
+│ 9. Visible in Jaeger/Tempo/Datadog                       │
+│    Full trace with sampling metadata                      │
+│    Searchable by selector, principal, scope              │
+└───────────────────────────────────────────────────────────┘
+```
+
+**Complete Visibility:**
+
+With OpenTelemetry, you can answer:
+- ✅ **Which selector triggered sampling?** → `sampling.selector_matched` attribute
+- ✅ **Why was this trace sampled?** → `sampling.reason` attribute
+- ✅ **What was the sampling rate?** → `sampling.rate` attribute
+- ✅ **Full evaluation flow?** → Span events with predicate results + context
+- ✅ **Slow predicates?** → Sort span events by `predicate.duration_ns`
+- ✅ **Database latency?** → Child spans for RocksDB operations
+- ✅ **Distributed trace?** → Follow W3C Trace Context across services
+- ✅ **Compare sampled populations?** → Filter by `sampling.selector_matched`
+
 ### BSON (Binary JSON)
 
 **Format:** Binary-encoded JSON
@@ -929,6 +1218,277 @@ sampling:
 **Pros:** Fine-grained control
 **Cons:** Requires policy knowledge
 
+#### 6. Selector-Based Sampling (Recommended)
+
+**Strategy:** Match evaluation context against flexible selectors (policy path, scope, principal, resource) with configurable sampling rates per selector.
+
+Sample selectors allow fine-grained control: "Always trace admin operations" or "Sample 50% of production requests" or "Never trace health checks."
+
+```rust
+/// Selector-based sampler with pattern matching
+pub struct SelectorBasedSampler {
+    /// Ordered list of selectors (first match wins)
+    selectors: Vec<SampleSelector>,
+    /// Default sampling rate if no selector matches
+    default_rate: f64,
+}
+
+/// Sample selector with matching criteria
+pub struct SampleSelector {
+    /// Sampling rate for this selector (0.0 - 1.0)
+    pub rate: f64,
+    /// Optional policy path pattern (glob or regex)
+    pub policy_path: Option<PathMatcher>,
+    /// Optional scope pattern
+    pub scope: Option<ScopeMatcher>,
+    /// Optional principal pattern
+    pub principal: Option<PrincipalMatcher>,
+    /// Optional resource pattern
+    pub resource: Option<ResourceMatcher>,
+    /// Optional action filter
+    pub action: Option<ActionMatcher>,
+}
+
+impl Sampler for SelectorBasedSampler {
+    fn should_sample(&mut self, ctx: &EvaluationContext) -> bool {
+        // Find first matching selector
+        for selector in &self.selectors {
+            if selector.matches(ctx) {
+                return thread_rng().gen::<f64>() < selector.rate;
+            }
+        }
+
+        // Use default rate if no selector matches
+        thread_rng().gen::<f64>() < self.default_rate
+    }
+}
+
+impl SampleSelector {
+    fn matches(&self, ctx: &EvaluationContext) -> bool {
+        // All specified criteria must match
+        if let Some(ref policy_matcher) = self.policy_path {
+            if !policy_matcher.matches(&ctx.policy_id) {
+                return false;
+            }
+        }
+
+        if let Some(ref scope_matcher) = self.scope {
+            if !scope_matcher.matches(&ctx.scope) {
+                return false;
+            }
+        }
+
+        if let Some(ref principal_matcher) = self.principal {
+            if !principal_matcher.matches(&ctx.request.principal) {
+                return false;
+            }
+        }
+
+        if let Some(ref resource_matcher) = self.resource {
+            if !resource_matcher.matches(&ctx.request.resource) {
+                return false;
+            }
+        }
+
+        if let Some(ref action_matcher) = self.action {
+            if !action_matcher.matches(&ctx.request.action) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
+/// Policy path matching (glob or regex)
+pub enum PathMatcher {
+    Exact(String),
+    Glob(glob::Pattern),
+    Regex(regex::Regex),
+}
+
+impl PathMatcher {
+    fn matches(&self, policy_id: &str) -> bool {
+        match self {
+            PathMatcher::Exact(s) => policy_id == s,
+            PathMatcher::Glob(pattern) => pattern.matches(policy_id),
+            PathMatcher::Regex(re) => re.is_match(policy_id),
+        }
+    }
+}
+
+/// Scope matching
+pub enum ScopeMatcher {
+    Exact(Scope),
+    Tenant(String),  // Match any scope for tenant
+    Environment(String),  // Match any scope for environment
+}
+
+/// Principal matching
+pub enum PrincipalMatcher {
+    Id(String),
+    IdPattern(PathMatcher),
+    Role(String),
+    Attribute { key: String, value: String },
+}
+
+/// Resource matching
+pub enum ResourceMatcher {
+    Type(String),
+    TypePattern(PathMatcher),
+    Attribute { key: String, value: String },
+}
+
+/// Action matching
+pub enum ActionMatcher {
+    Exact(String),
+    Pattern(PathMatcher),
+}
+```
+
+**Configuration:**
+
+```yaml
+sampling:
+  default: 0.01  # 1% baseline
+
+  # First-match-wins selector list
+  selectors:
+    # Always trace admin operations
+    - rate: 1.0
+      principal:
+        role: admin
+
+    # Always trace critical policies
+    - rate: 1.0
+      policy_path:
+        glob: "policies/critical/*"
+
+    # Always trace production scope
+    - rate: 0.50  # 50% sampling
+      scope:
+        environment: production
+
+    # High sampling for specific tenant during debugging
+    - rate: 1.0
+      scope:
+        tenant: "acme-corp"
+
+    # Trace specific principal for debugging
+    - rate: 1.0
+      principal:
+        id: "user-123"
+
+    # Never trace health checks (0% sampling)
+    - rate: 0.0
+      resource:
+        type: "healthcheck"
+
+    # Low sampling for high-volume APIs
+    - rate: 0.001  # 0.1%
+      policy_path:
+        glob: "policies/api/rate-limit-*"
+
+    # High sampling for sensitive resources
+    - rate: 1.0
+      resource:
+        attribute:
+          key: "sensitivity"
+          value: "high"
+
+    # Trace specific actions
+    - rate: 1.0
+      action:
+        exact: "DELETE"
+```
+
+**Complex Selector Examples:**
+
+```yaml
+# Trace all admin deletes in production
+- rate: 1.0
+  principal:
+    role: admin
+  action:
+    exact: "DELETE"
+  scope:
+    environment: production
+
+# Debug specific tenant + policy combination
+- rate: 1.0
+  scope:
+    tenant: "debug-tenant"
+  policy_path:
+    regex: "^policies/deploy/.*"
+
+# Sample service accounts differently
+- rate: 0.01  # 1%
+  principal:
+    id_pattern:
+      glob: "service-*"
+```
+
+**Advanced: Dynamic Selector Updates**
+
+```rust
+impl SelectorBasedSampler {
+    /// Add temporary selector (e.g., for debugging)
+    pub fn add_temporary_selector(&mut self, selector: SampleSelector, duration: Duration) {
+        let expiry = Instant::now() + duration;
+        self.selectors.insert(0, TemporarySelector {
+            selector,
+            expiry,
+        });
+    }
+
+    /// Remove expired temporary selectors
+    fn cleanup_expired(&mut self) {
+        let now = Instant::now();
+        self.selectors.retain(|s| {
+            if let TemporarySelector { expiry, .. } = s {
+                *expiry > now
+            } else {
+                true
+            }
+        });
+    }
+}
+```
+
+**Runtime API for Debugging:**
+
+```rust
+// Enable full tracing for specific principal for 5 minutes
+sampler.add_temporary_selector(
+    SampleSelector {
+        rate: 1.0,
+        principal: Some(PrincipalMatcher::Id("user-123".into())),
+        ..Default::default()
+    },
+    Duration::from_secs(300)
+);
+
+// Enable full tracing for specific policy during incident
+sampler.add_temporary_selector(
+    SampleSelector {
+        rate: 1.0,
+        policy_path: Some(PathMatcher::Exact("policies/broken-policy".into())),
+        ..Default::default()
+    },
+    Duration::from_secs(3600)
+);
+```
+
+**Pros:**
+- Extremely flexible: combine multiple criteria
+- Production debugging: add temporary selectors at runtime
+- Security: always trace sensitive operations
+- Performance: skip tracing for known high-volume, low-value paths
+
+**Cons:**
+- More complex configuration
+- Selector evaluation adds ~100-200ns overhead per evaluation
+
 ### Sampling Configuration
 
 ```rust
@@ -950,6 +1510,7 @@ pub enum SamplingStrategy {
     TailBased { base_rate: f64, slow_threshold_us: u64 },
     Adaptive { target_overhead_pct: f64 },
     PerPolicy { default_rate: f64, overrides: HashMap<String, f64> },
+    SelectorBased { selectors: Vec<SampleSelector>, default_rate: f64 },
 }
 
 impl Default for SamplingConfig {
@@ -1211,17 +1772,69 @@ tracing:
   ring_buffer_size: 2048
 ```
 
-### Production Environment
+### Production Environment (with Selector-Based Sampling)
 
 ```yaml
 tracing:
   enabled: true
   sampling:
-    strategy: tail_based
-    base_rate: 0.01  # 1% baseline
-    slow_threshold_us: 1000
+    strategy: selector_based
+    default: 0.01  # 1% baseline
+
+    # Ordered selectors (first match wins)
+    selectors:
+      # === Security & Compliance ===
+      # Always trace admin operations
+      - name: admin-operations
+        rate: 1.0
+        principal:
+          role: admin
+
+      # Always trace DELETE operations
+      - name: delete-operations
+        rate: 1.0
+        action:
+          exact: "DELETE"
+
+      # Always trace sensitive resources
+      - name: sensitive-resources
+        rate: 1.0
+        resource:
+          attribute:
+            key: "sensitivity"
+            value: "high"
+
+      # === Production Debugging ===
+      # Higher sampling for production scope
+      - name: production-scope
+        rate: 0.10  # 10%
+        scope:
+          environment: production
+
+      # Full tracing for critical policies
+      - name: critical-policies
+        rate: 1.0
+        policy_path:
+          glob: "policies/critical/*"
+
+      # === Performance Optimization ===
+      # Skip health checks (0% sampling)
+      - name: skip-healthchecks
+        rate: 0.0
+        resource:
+          type: "healthcheck"
+
+      # Low sampling for high-volume APIs
+      - name: high-volume-apis
+        rate: 0.001  # 0.1%
+        policy_path:
+          glob: "policies/api/rate-limit-*"
+
+    # Always capture errors and slow evaluations
     always_sample_errors: true
     always_sample_slow: true
+    slow_threshold_us: 1000
+
   export:
     format: opentelemetry
     destination:
@@ -1230,9 +1843,6 @@ tracing:
     flush_interval_secs: 10
     compression: zstd
   ring_buffer_size: 4096
-  per_policy_sampling:
-    critical-admin-access: 1.0  # Always trace admin access
-    high-volume-api-check: 0.001  # Minimal sampling for high-volume
 ```
 
 ### High-Performance Production (Minimal Overhead)
