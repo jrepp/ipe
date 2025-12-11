@@ -6,6 +6,7 @@ members = [
     "crates/ipe-wasm",
     "crates/ipe-ffi",
     "crates/ipe-web",
+    "crates/ipe-server",
 ]
 resolver = "2"
 
