@@ -1,0 +1,14 @@
+{{- if .Values.policies.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ipe.fullname" . }}-policies
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ipe.labels" . | nindent 4 }}
+data:
+  {{- range $filename, $content := .Values.policies.data }}
+  {{ $filename }}: |
+    {{- $content | nindent 4 }}
+  {{- end }}
+{{- end }}
