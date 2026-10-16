@@ -1,5 +1,6 @@
 # Stage 1: Build the IPE policy engine
-FROM rust:1.83-bookworm AS builder
+# bincode-next requires Rust 1.90 or newer.
+FROM rust:1.95.0-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -16,7 +17,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 
 # Build release binary (only ipe-server)
-RUN cargo build --release --package ipe-server
+RUN cargo build --locked --release --package ipe-server
 
 # Stage 2: Runtime image
 FROM debian:bookworm-slim
