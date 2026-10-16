@@ -68,7 +68,7 @@ class DocsContract(unittest.TestCase):
             self.assertTrue(0 <= workload["outliers"] <= workload["samples"])
 
     def test_html_links_and_assets_exist_in_artifact(self):
-        for page in (SITE / "docs").glob("*.html"):
+        for page in [SITE / "index.html", *(SITE / "docs").glob("*.html")]:
             parser = Links()
             parser.feed(page.read_text())
             for target in parser.targets:

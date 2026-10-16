@@ -45,10 +45,14 @@ def main():
     tracked = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT, capture_output=True, text=True, check=True)
     sources += [ROOT / path for path in tracked.stdout.splitlines()]
     sources += [ROOT / "crates/ipe-core/examples/docs_data.rs", ROOT / "crates/ipe-core/src/ast/nodes.rs"]
+    sources += [ROOT / "crates/ipe-core/src" / name for name in (
+        "engine.rs", "store.rs", "compiler.rs", "interpreter.rs",
+    )]
     for source in sources:
         output = package / source.relative_to(ROOT)
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, output)
+    shutil.copyfile(ROOT / "scripts/site-index.html", package / "index.html")
     print(f"Built {len(data['examples'])} parser trees and {len(data['workloads'])} measured workloads.")
     print(f"Portable artifact: {package}")
     print("Run make docs-serve, then open http://127.0.0.1:8000/docs/")

@@ -13,6 +13,8 @@ The first build downloads Cargo dependencies. If an older uv cannot install the
 pin, update uv or use `uvx --from uv uv python install 3.15.0` once.
 
 - [AST explorer](ast.html): rendered, expandable trees with source and node details.
+- [Contract summary](contract.html): inputs, decisions, application responsibilities,
+  and current implementation limits in plain language.
 - [Performance dashboard](performance.html): measured latency percentiles, throughput,
   outliers, downloadable results, and requirement coverage.
 
@@ -49,6 +51,26 @@ performance thresholds. JIT, end-to-end policy compilation, and production load
 remain outside the measurement scope. Dependency updates are proposed monthly
 by Dependabot; update `.python-version` after checking a new stable Python release
 and rerun `make docs-check`.
+
+### Automated publishing
+
+The same workflow publishes the checked artifact to GitHub Pages after a successful
+push to `main`. Pull requests build and validate the Pages archive without deploying.
+The live site address is `https://jrepp.github.io/ipe/`; its root forwards to `docs/`.
+Publication begins once the workflow change is merged into `main`.
+
+Repository Pages settings use **GitHub Actions** as the publishing source. The
+`github-pages` environment permits deployment from `main` only. The deploy job has
+the Pages and identity-token permissions it needs; the PR build stays read-only.
+Python comes from `.python-version` in both local builds and CI. Deployment runs
+are serialized, and a newer push does not interrupt a running main-branch build
+or deployment.
+
+To republish, run **Docs site → Run workflow** with `main` selected. To roll back,
+revert the unwanted change on `main`; the next successful workflow republishes the
+site. If a check fails, the deploy job does not run and the last published site
+remains available. The workflow's deployment environment links to the live site;
+the artifact also remains downloadable for review.
 
 This index provides a guided path through IPE's documentation based on your needs.
 
