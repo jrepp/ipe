@@ -46,7 +46,6 @@ cranelift-module = "0.102"
 cranelift-native = "0.102"
 cranelift-codegen = "0.102"
 target-lexicon = "0.12"
-region = "3.0"  # Memory protection for JIT pages
 
 # WASM
 wasm-bindgen = "0.2"
