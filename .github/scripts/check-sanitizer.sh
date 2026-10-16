@@ -14,7 +14,7 @@ export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE"
 export ASAN_OPTIONS="detect_leaks=1"
 # Absolute path: newer LLVM exits non-zero when the suppressions file
 # cannot be read, which masked real results with a false failure.
-LSAN_SUPPRESSIONS="suppressions=$PWD/lsan-suppressions.txt"
+LSAN_SUPPRESSIONS="suppressions=$PWD/lsan-suppressions.txt:fast_unwind_on_malloc=0"
 # Standalone LSan (from `-Zsanitizer=leak`) ignores ASAN_SYMBOLIZER_PATH;
 # its options parser only picks up external_symbolizer_path from
 # LSAN_OPTIONS itself. Final LSAN_OPTIONS is assembled after the
