@@ -15,6 +15,13 @@ export ASAN_OPTIONS="detect_leaks=1"
 # Absolute path: newer LLVM exits non-zero when the suppressions file
 # cannot be read, which masked real results with a false failure.
 export LSAN_OPTIONS="suppressions=$PWD/lsan-suppressions.txt"
+# Symbolize sanitizer reports: without a symbolizer, LSan suppression
+# rules (which match symbol names like `leak:rocksdb`) cannot be applied
+# and stacks print as raw addresses.
+symbolizer=$(command -v llvm-symbolizer || ls /usr/lib/llvm-*/bin/llvm-symbolizer 2>/dev/null | tail -n1 || true)
+if [ -n "$symbolizer" ]; then
+    export ASAN_SYMBOLIZER_PATH="$symbolizer"
+fi
 # Write ThreadSanitizer reports to files: the test harness swallows stderr,
 # so only the one-line summary would otherwise be visible.
 if [ "$SANITIZER_TYPE" = "thread" ]; then
