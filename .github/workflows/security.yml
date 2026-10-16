@@ -74,9 +74,17 @@ jobs:
         run: cargo miri setup
 
       - name: Run miri tests
-        run: cargo miri test --features jit,testing
+        # Scope to ipe-core and disable the approvals feature: workspace-wide
+        # runs unify features and ipe-server enables ipe-core/approvals, which
+        # pulls RocksDB FFI tests into Miri (Miri cannot execute C code).
+        run: cargo miri test -p ipe-core --no-default-features --features jit,testing
         env:
-          MIRIFLAGS: "-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check"
+          # -Zmiri-disable-isolation: approval/tiering tests call chrono::Utc::now()
+          # (SystemTime::now), which Miri's sandbox rejects as an unsupported
+          # foreign call. That is a sandbox limitation, not undefined behavior;
+          # strict-provenance and symbolic-alignment-check (the actual UB
+          # detectors) remain enabled.
+          MIRIFLAGS: "-Zmiri-strict-provenance -Zmiri-symbolic-alignment-check -Zmiri-disable-isolation"
         # Note: Excluding 'approvals' feature because RocksDB uses FFI which Miri cannot test
 
   sanitizers:

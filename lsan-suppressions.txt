@@ -1,0 +1,13 @@
+# LeakSanitizer suppressions for known third-party leaks.
+#
+# RocksDB's C library allocates internal buffers and background-thread
+# state that it never frees during process teardown; these are not
+# reachable from ipe code paths and cannot be fixed from Rust.
+leak:rocksdb
+#
+# cranelift-jit intentionally does not free executable code pages when a
+# JITModule is dropped: raw function pointers into those pages (see
+# JitCode::execute) must stay valid for the lifetime of the process, so
+# eager frees would be use-after-free by design. One 4 KiB page per
+# process remains at exit (cranelift-jit memory.rs Memory::allocate).
+leak:cranelift_jit

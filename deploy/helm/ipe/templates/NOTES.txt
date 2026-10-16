@@ -1,0 +1,37 @@
+IPE Policy Engine has been deployed!
+
+1. Get the application URL by running these commands:
+{{- if eq .Values.service.type "ClusterIP" }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "ipe.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Data plane available at: 127.0.0.1:9001"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 9001:$CONTAINER_PORT
+{{- else if eq .Values.service.type "NodePort" }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "ipe.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Data plane: http://$NODE_IP:$NODE_PORT"
+{{- else if eq .Values.service.type "LoadBalancer" }}
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "ipe.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Data plane: http://$SERVICE_IP:{{ .Values.service.dataPort }}"
+{{- end }}
+
+2. Check the deployment status:
+   kubectl get pods -n {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "ipe.name" . }}"
+
+3. View logs:
+   kubectl logs -n {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "ipe.name" . }}" -f
+
+4. To use IPE as a sidecar, add this to your pod spec:
+   volumes:
+   - name: ipe-socket
+     emptyDir: {}
+
+   Then mount /var/run/ipe in both your app and the IPE sidecar.
+
+{{- if .Values.metrics.enabled }}
+
+5. Metrics are available at port {{ .Values.service.metricsPort }} on path {{ .Values.config.observability.metricsPath }}
+{{- end }}
+
+For more information, visit: https://github.com/jrepp/ipe

@@ -1,0 +1,56 @@
+# IPE Policy Engine Default Configuration
+# This file is used as the default configuration for Docker/Kubernetes deployments
+
+[service]
+name = "ipe-sidecar"
+instance_id = "default"
+
+# Memory constraints (MB)
+max_heap_mb = 50
+policy_cache_mb = 10
+data_cache_mb = 5
+
+[data_plane]
+# Performance tuning
+worker_threads = 2
+max_concurrent_evals = 500
+
+# Unix socket listener (primary for sidecar pattern)
+[[data_plane.listeners]]
+type = "unix"
+path = "/var/run/ipe/eval.sock"
+mode = 0o666
+
+# TCP listener (for external access)
+[[data_plane.listeners]]
+type = "tcp"
+bind = "0.0.0.0:9001"
+max_connections = 1000
+
+[control_plane]
+type = "unix"
+path = "/var/run/ipe/control.sock"
+mode = 0o660
+
+# Security
+require_auth = false
+atomic_swap = true
+validation_required = true
+
+[storage]
+# Policy store backend: "memory" or "rocksdb"
+policy_backend = "memory"
+policy_path = "/var/lib/ipe/policies"
+
+# Data store backend: "memory" or "rocksdb"
+data_backend = "memory"
+data_path = "/var/lib/ipe/data"
+
+# Persistence
+persist_on_update = true
+snapshot_interval = 300
+
+[observability]
+metrics_enabled = true
+metrics_path = "/metrics"
+trace_sampling_rate = 0.01
