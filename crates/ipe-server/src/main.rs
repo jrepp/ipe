@@ -56,10 +56,7 @@ async fn metrics() -> impl IntoResponse {
     let metric_families = prometheus::gather();
     match encoder.encode_to_string(&metric_families) {
         Ok(output) => (StatusCode::OK, output),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Failed to encode metrics: {}", e),
-        ),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to encode metrics: {}", e)),
     }
 }
 
@@ -110,7 +107,7 @@ async fn evaluate(
                 } else {
                     continue;
                 }
-            }
+            },
             serde_json::Value::Bool(b) => AttributeValue::Bool(*b),
             _ => continue,
         };
@@ -122,9 +119,7 @@ async fn evaluate(
     let action = ipe_core::Action::new(operation, &req.action);
 
     // Build principal
-    let principal = ipe_core::Principal::user(
-        req.principal_id.as_deref().unwrap_or("anonymous"),
-    );
+    let principal = ipe_core::Principal::user(req.principal_id.as_deref().unwrap_or("anonymous"));
 
     // Build request
     let request = ipe_core::Request {
@@ -153,17 +148,16 @@ async fn evaluate(
 #[tokio::main]
 async fn main() {
     // Initialize tracing
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
-        .with_target(false)
-        .finish();
+    let subscriber =
+        FmtSubscriber::builder().with_max_level(Level::INFO).with_target(false).finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     // Get configuration from environment
     // Note: Using IPE_SERVER_ prefix to avoid conflicts with K8s service discovery env vars
     let host = std::env::var("IPE_SERVER_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = std::env::var("IPE_SERVER_PORT").unwrap_or_else(|_| "9001".to_string());
-    let metrics_port = std::env::var("IPE_SERVER_METRICS_PORT").unwrap_or_else(|_| "9090".to_string());
+    let metrics_port =
+        std::env::var("IPE_SERVER_METRICS_PORT").unwrap_or_else(|_| "9090".to_string());
 
     // Create policy engine (empty for now - policies loaded via control plane)
     let engine = PolicyEngine::new();

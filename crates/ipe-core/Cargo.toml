@@ -14,7 +14,6 @@ bumpalo = { workspace = true }
 arc-swap = { workspace = true }
 parking_lot = { workspace = true }
 dashmap = { workspace = true }
-lru = { workspace = true }
 memmap2 = { workspace = true }
 bincode = { workspace = true }
 chrono = { workspace = true }
