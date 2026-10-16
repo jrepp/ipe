@@ -1,0 +1,18 @@
+apiVersion: v2
+name: ipe
+description: Idempotent Predicate Engine - A fast, reliable authorization engine
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - authorization
+  - policy-engine
+  - security
+  - rbac
+  - abac
+home: https://github.com/jrepp/ipe
+sources:
+  - https://github.com/jrepp/ipe
+maintainers:
+  - name: IPE Contributors
+    url: https://github.com/jrepp/ipe

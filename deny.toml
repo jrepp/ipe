@@ -17,9 +17,7 @@ unmaintained = "all"
 # Yanked crates
 yanked = "deny"
 # Ignore specific advisories (use only when necessary)
-ignore = [
-    # Example: "RUSTSEC-2020-0001"
-]
+ignore = []
 
 [licenses]
 version = 2
