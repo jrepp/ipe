@@ -14,7 +14,11 @@ export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE"
 export ASAN_OPTIONS="detect_leaks=1"
 # Absolute path: newer LLVM exits non-zero when the suppressions file
 # cannot be read, which masked real results with a false failure.
-export LSAN_OPTIONS="suppressions=$PWD/lsan-suppressions.txt"
+LSAN_SUPPRESSIONS="suppressions=$PWD/lsan-suppressions.txt"
+# Standalone LSan (from `-Zsanitizer=leak`) ignores ASAN_SYMBOLIZER_PATH;
+# its options parser only picks up external_symbolizer_path from
+# LSAN_OPTIONS itself. Final LSAN_OPTIONS is assembled after the
+# symbolizer search below.
 # Symbolize sanitizer reports: without a symbolizer, LSan suppression
 # rules (which match symbol names like `leak:rocksdb`) cannot be applied
 # and stacks print as raw addresses.
@@ -28,8 +32,10 @@ if [ -z "$symbolizer" ]; then
 fi
 if [ -n "$symbolizer" ]; then
     export ASAN_SYMBOLIZER_PATH="$symbolizer"
+    export LSAN_OPTIONS="$LSAN_SUPPRESSIONS:external_symbolizer_path=$symbolizer"
     echo "🔤 Sanitizer symbolizer: $symbolizer"
 else
+    export LSAN_OPTIONS="$LSAN_SUPPRESSIONS"
     echo "⚠️  No llvm-symbolizer found; reports will not symbolicate"
 fi
 # Write ThreadSanitizer reports to files: the test harness swallows stderr,
