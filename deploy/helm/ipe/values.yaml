@@ -1,0 +1,174 @@
+# IPE Policy Engine Helm Values
+# Default values for deploying to Kubernetes
+
+# Replica count
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: ipe
+  pullPolicy: IfNotPresent
+  # Tag defaults to chart appVersion
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Service configuration
+service:
+  type: ClusterIP
+  # Data plane port (TCP evaluations)
+  dataPort: 9001
+  # Metrics port
+  metricsPort: 9090
+
+# Resource limits
+resources:
+  limits:
+    cpu: 200m
+    memory: 64Mi
+  requests:
+    cpu: 50m
+    memory: 32Mi
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# IPE Configuration
+config:
+  # Service identity
+  service:
+    name: "ipe-sidecar"
+    instanceId: ""  # Auto-generated from pod name if empty
+
+  # Memory constraints (MB)
+  memory:
+    maxHeap: 50
+    policyCache: 10
+    dataCache: 5
+
+  # Data plane configuration
+  dataPlane:
+    # TCP listener
+    tcp:
+      enabled: true
+      bind: "0.0.0.0"
+      port: 9001
+      maxConnections: 1000
+
+    # Unix socket listener (for sidecar pattern)
+    unix:
+      enabled: true
+      path: "/var/run/ipe/eval.sock"
+      mode: "0666"
+
+    # Performance tuning
+    workerThreads: 2
+    maxConcurrentEvals: 500
+
+  # Control plane configuration
+  controlPlane:
+    unix:
+      enabled: true
+      path: "/var/run/ipe/control.sock"
+      mode: "0660"
+
+    # Security
+    requireAuth: false
+    atomicSwap: true
+    validationRequired: true
+
+  # Storage backend
+  storage:
+    # Policy store: "memory" or "rocksdb"
+    policyBackend: "memory"
+    policyPath: "/var/lib/ipe/policies"
+
+    # Data store: "memory" or "rocksdb"
+    dataBackend: "memory"
+    dataPath: "/var/lib/ipe/data"
+
+    # Persistence settings
+    persistOnUpdate: true
+    snapshotInterval: 300
+
+  # Observability
+  observability:
+    metricsEnabled: true
+    metricsPath: "/metrics"
+    traceSamplingRate: 0.01
+
+# Persistence configuration
+persistence:
+  enabled: false
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  annotations: {}
+
+# ConfigMap for policies
+policies:
+  # Enable mounting policies from ConfigMap
+  enabled: false
+  # Policies to load (key: filename, value: policy content)
+  data: {}
+  #   example.ipe: |
+  #     predicate ExamplePolicy:
+  #       "Example policy description"
+  #       triggers when resource.type == "Example"
+  #       requires user.role == "admin"
+
+# Metrics/Prometheus
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+
+# Liveness and readiness probes
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
