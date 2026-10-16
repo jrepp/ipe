@@ -1,0 +1,27 @@
+# Node modules
+node_modules/
+package-lock.json
+
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
