@@ -1,4 +1,7 @@
-.PHONY: help build test bench lint fmt check clean install-tools coverage audit fuzz
+.PHONY: help build test bench lint fmt check clean install-tools coverage audit fuzz docs docs-site docs-serve docs-check
+
+# One exact version shared with actions/setup-python in docs CI.
+DOCS_PYTHON = uv run --no-project --python $(shell cat .python-version) python
 
 # Default target
 help:
@@ -18,6 +21,9 @@ help:
 	@echo "  make install-tools  - Install development tools"
 	@echo "  make release        - Build release binaries"
 	@echo "  make perf           - Run performance validation"
+	@echo "  make docs-site      - Generate parser trees and local performance dashboard data"
+	@echo "  make docs-serve     - Serve docs at http://127.0.0.1:8000/docs/"
+	@echo "  make docs-check     - Build and validate the docs (run npm ci --prefix docs first)"
 
 # Build all crates
 build:
@@ -128,6 +134,16 @@ perf:
 	@echo "✅ Performance validation complete"
 
 # Documentation
+docs-site:
+	$(DOCS_PYTHON) scripts/build-docs.py
+
+docs-check: docs-site
+	$(DOCS_PYTHON) -m unittest discover -s scripts/tests -v
+	npm test --prefix docs
+
+docs-serve:
+	$(DOCS_PYTHON) -m http.server 8000 --bind 127.0.0.1
+
 docs:
 	@echo "📚 Building documentation..."
 	cargo doc --all-features --no-deps --document-private-items

@@ -1,0 +1,10 @@
+{
+  "name": "ipe-docs-checks",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node --test tests/site.test.cjs"
+  },
+  "engines": { "node": ">=22.12.0" },
+  "devDependencies": { "jsdom": "30.1.3" }
+}

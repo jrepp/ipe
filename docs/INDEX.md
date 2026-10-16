@@ -2,6 +2,54 @@
 
 **Welcome to the Idempotent Predicate Engine documentation!**
 
+## Local Documentation Site
+
+Run `make docs-site` to export three real Rust parser trees and fresh interpreter
+microbenchmarks, then `make docs-serve` and open <http://127.0.0.1:8000/docs/>.
+The build requires Rust and [uv](https://docs.astral.sh/uv/). Python is pinned to
+**3.15.0** in `.python-version` (the stable release published October 9, 2026).
+Both local Make targets and CI read that file; the builder rejects other versions.
+The first build downloads Cargo dependencies. If an older uv cannot install the
+pin, update uv or use `uvx --from uv uv python install 3.15.0` once.
+
+- [AST explorer](ast.html): rendered, expandable trees with source and node details.
+- [Performance dashboard](performance.html): measured latency percentiles, throughput,
+  outliers, downloadable results, and requirement coverage.
+
+Generated data lives in `docs/data/site-data.json` and records the run time, platform,
+Rust version, and Git revision. Run `make docs-site` again after code changes.
+The dashboard measures hand-built bytecode through the real interpreter; it excludes
+parsing, compilation, context construction, and JIT. These are local microbenchmarks,
+not production performance validation. The existing Criterion evaluation suite has
+placeholder paths and is not the dashboard's data source.
+
+### Checks and pull request artifacts
+
+```sh
+npm ci --prefix docs --ignore-scripts
+make docs-check
+```
+
+The checks validate parser structure, percentile consistency, portable artifact
+links, expanded tree rendering, node selection, example switching, dashboard
+filters, and missing-data errors. JavaScript checks use jsdom; they do not verify
+browser layout. The new views need no CDN libraries. Existing architecture
+diagrams on the overview still use Mermaid from its CDN.
+
+The **Docs site / Build and check docs site** workflow runs on pull requests and
+main-branch pushes. It uses the Python pin, locked Cargo/npm dependencies, and
+immutable GitHub Action revisions. It uploads `target/docs-site/` as a 14-day
+artifact named for the commit. Download and extract the artifact, serve its root
+with `python -m http.server --bind 127.0.0.1`, then visit `/docs/`.
+This preserves the relative paths to Markdown and source references.
+
+Fresh measurements are generated in CI and kept in the artifact, not committed.
+Shared-runner timings are reported as evidence and never used as pass/fail
+performance thresholds. JIT, end-to-end policy compilation, and production load
+remain outside the measurement scope. Dependency updates are proposed monthly
+by Dependabot; update `.python-version` after checking a new stable Python release
+and rerun `make docs-check`.
+
 This index provides a guided path through IPE's documentation based on your needs.
 
 ## Getting Started
