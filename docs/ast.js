@@ -23,10 +23,9 @@
     selected = button;
     button.dataset.selected = 'true';
     const detail = document.getElementById('ast-detail');
-    if (detail) {
-      detail.textContent = JSON.stringify(node, null, 2);
-      document.getElementById('ast-explanation').textContent = descriptions[node.kind] || 'An expression node in the policy.';
-    }
+    if (detail) detail.textContent = JSON.stringify(node, null, 2);
+    const explanation = document.getElementById('ast-explanation');
+    if (explanation) explanation.textContent = `${node.kind}: ${descriptions[node.kind] || 'An expression node in the policy.'}`;
   }
   function render(index) {
     const example = examples[index];

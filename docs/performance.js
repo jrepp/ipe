@@ -22,7 +22,7 @@
     const max = Math.max(...data.workloads.map(w => w[metric]), 0.001) * 1.2;
     for (let tick = 0; tick <= 4; tick++) {
       const x = 130 + tick * 90;
-      latency.append(svg('line', { x1:x, y1:16, x2:x, y2:200, stroke:'#e5e8f1' }), svg('text', { x, y:225, 'text-anchor':'middle' }, number(max*tick/4)));
+      latency.append(svg('line', { x1:x, y1:16, x2:x, y2:200, class:'grid' }), svg('text', { x, y:225, 'text-anchor':'middle' }, number(max*tick/4)));
     }
     data.workloads.forEach((w, i) => {
       const y = 30+i*58;
@@ -34,13 +34,13 @@
     const peak = Math.max(chosen.max_us, 0.001)*1.1;
     for (let tick = 0; tick <= 4; tick++) {
       const y = 195-tick*42;
-      distribution.append(svg('line', { x1:65, x2:510, y1:y, y2:y, stroke:'#e5e8f1' }), svg('text', { x:57, y:y+4, 'text-anchor':'end' }, number(peak*tick/4)));
+      distribution.append(svg('line', { x1:65, x2:510, y1:y, y2:y, class:'grid' }), svg('text', { x:57, y:y+4, 'text-anchor':'end' }, number(peak*tick/4)));
     }
     for (const p of [1,25,50,75,100]) distribution.append(svg('text', { x:65+(p-1)/99*445, y:225, 'text-anchor':'middle' }, `p${p}`));
     const points = chosen.quantiles.map(q => `${65+(q.percentile-1)/99*445},${195-q.us/peak*168}`).join(' ');
-    distribution.append(svg('polyline', { points, fill:'none', stroke:'#6851b4', 'stroke-width':2.5 }));
+    distribution.append(svg('polyline', { points, class:'curve' }));
     for (const q of chosen.quantiles) {
-      const dot = svg('circle', { cx:65+(q.percentile-1)/99*445, cy:195-q.us/peak*168, r:2, fill:'#6851b4' });
+      const dot = svg('circle', { cx:65+(q.percentile-1)/99*445, cy:195-q.us/peak*168, r:2, class:'point' });
       dot.append(svg('title', {}, `p${q.percentile}: ${number(q.us)} µs`)); distribution.append(dot);
     }
     $('measurements').replaceChildren(...data.workloads.map(w => {

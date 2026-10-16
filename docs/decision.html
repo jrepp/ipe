@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How it decides · IPE</title>
+<meta name="description" content="Follow one request through IPE, from context to decision.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">ipe</span>Docs</a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html#paths">Paths</a>
+      <a href="https://github.com/jrepp/ipe">GitHub</a>
+    </nav>
+  </div>
+</header>
+<div class="layout">
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html" aria-current="page">How it decides</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html">Contract</a><a href="status.html">Project status</a><a href="performance.html">Performance</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Tools</span><a href="ast.html">AST explorer</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="AST.md" class="md">AST reference</a><a href="ARCHITECTURE.md" class="md">Architecture</a><a href="BYTECODE.md" class="md">Bytecode</a><a href="../rfcs/INDEX.md" class="md">RFCs</a><a href="../ROADMAP.md" class="md">Roadmap</a></div>
+  </nav>
+  <main class="content">
+    <article class="article">
+      <header class="page-head">
+        <div class="breadcrumb">Start / How it decides</div>
+        <h1>Follow one deploy request through IPE</h1>
+        <p class="lede">A deploy to production arrives with one approval. The policy requires two. These five steps show what IPE should decide, and where the current build differs.</p>
+        <div class="chips"><a class="chip chip-path" href="index.html#path-evaluate">Evaluate · 1 of 3</a><a class="chip chip-path" href="index.html#path-integrate">Integrate · 2 of 3</a><a class="chip chip-path" href="index.html#path-author">Write policies · 2 of 3</a></div>
+      </header>
+      <ol class="steps">
+        <li class="step" id="context">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div class="step-text"><h2>The request becomes a context</h2><p>Your application authenticates the caller and packs the resource, the action, and the request into one Resource–Action–Request context.</p></div>
+          <div class="step-figure"><pre class="dark">resource  type: Deployment
+          environment: "production"
+          approvals: 1
+action    deploy
+request   principal.role: "senior-engineer"</pre></div>
+        </li>
+        <li class="step" id="selection">
+          <span class="step-number" aria-hidden="true">2</span>
+          <div class="step-text"><h2>Policies are selected by resource type</h2><p>Both <code>PolicyEngine</code> and <code>PolicyDataStore</code> pick the policies registered for the resource type. The store reads from an immutable snapshot, so a policy update during the request cannot change what this evaluation sees.</p></div>
+          <div class="step-figure"><pre>resource type   Deployment
+selected        RequireApproval</pre></div>
+        </li>
+        <li class="step" id="trigger">
+          <span class="step-number" aria-hidden="true">3</span>
+          <div class="step-text"><h2>The trigger matches</h2><p>The resource is a Deployment and production is in the list, so the policy applies.</p><p class="small muted">Current build: the compiler does not evaluate trigger conditions yet.</p></div>
+          <div class="step-figure"><pre>triggers when
+  resource.type == "Deployment"       <span class="eval-true">true</span>
+  and resource.environment in [...]   <span class="eval-true">true</span></pre></div>
+        </li>
+        <li class="step" id="requirement">
+          <span class="step-number" aria-hidden="true">4</span>
+          <div class="step-text"><h2>The requirement fails</h2><p>The caller is a senior engineer, but one approval is fewer than two.</p></div>
+          <div class="step-figure"><pre>requires
+  resource.approvals &gt;= 2             <span class="eval-false">false</span>
+  where request.principal.role == ... <span class="eval-true">true</span></pre></div>
+        </li>
+        <li class="step" id="decision">
+          <span class="step-number" aria-hidden="true">5</span>
+          <div class="step-text"><h2>The decision, and a known gap</h2><p>The policy intends Deny. The current compiler ends every <code>requires</code> policy with <code>Return(true)</code>, so the interpreter can return Allow here.</p><p><a href="contract.html#limits">Read the current limits</a></p></div>
+          <div class="step-figure"><div class="outcomes">
+            <div class="outcome outcome-intended"><span>Intended</span><strong>Deny</strong></div>
+            <div class="outcome outcome-today"><span>Current build</span><strong>Allow</strong></div>
+          </div></div>
+        </li>
+      </ol>
+      <nav class="continue" aria-label="Continue">
+        <h2 class="small muted" style="margin:0;font-size:14px;font-weight:600">Continue</h2>
+        <div class="continue-grid"><a class="next" href="status.html"><span>Evaluate · Integrate: next</span><strong>Project status</strong></a><a class="next" href="AST.md"><span>Write policies: next</span><strong>AST reference</strong></a><a class="next" href="ast.html"><span>See this policy as a tree</span><strong>AST explorer</strong></a></div>
+      </nav>
+    </article>
+    <aside class="toc" aria-label="On this page"><span class="toc-label">On this page</span><a href="#context">1 · Context</a><a href="#selection">2 · Selection</a><a href="#trigger">3 · Trigger</a><a href="#requirement">4 · Requirement</a><a href="#decision">5 · Decision</a></aside>
+  </main>
+</div>
+</body>
+</html>

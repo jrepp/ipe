@@ -74,3 +74,38 @@ test('missing data produces actionable errors instead of fabricated measurements
     } finally { dom.window.close(); }
   }
 });
+
+test('interior pages share one sidebar and mark only themselves as current', () => {
+  const pages = ['decision.html', 'status.html', 'contract.html', 'ast.html', 'performance.html'];
+  const sidebars = pages.map(page => {
+    const { document } = new JSDOM(fs.readFileSync(path.join(root, page), 'utf8')).window;
+    const current = [...document.querySelectorAll('.sidebar [aria-current="page"]')].map(link => link.getAttribute('href'));
+    assert.deepEqual(current, [page]);
+    return [...document.querySelectorAll('.sidebar a')].map(link => `${link.getAttribute('href')}|${link.textContent}`);
+  });
+  for (const sidebar of sidebars.slice(1)) assert.deepEqual(sidebar, sidebars[0]);
+});
+
+test('journey chips and steps point at journeys and pages that exist', () => {
+  const { document } = new JSDOM(fs.readFileSync(path.join(root, 'index.html'), 'utf8')).window;
+  const journeys = new Set([...document.querySelectorAll('.path')].map(path => path.id));
+  assert.equal(journeys.size, 4);
+  for (const page of ['decision.html', 'status.html', 'contract.html', 'ast.html', 'performance.html']) {
+    const doc = new JSDOM(fs.readFileSync(path.join(root, page), 'utf8')).window.document;
+    const chips = [...doc.querySelectorAll('.chip-path')].map(chip => chip.getAttribute('href').split('#')[1]);
+    assert.ok(chips.length > 0, `${page} belongs to a journey`);
+    chips.forEach(id => assert.ok(journeys.has(id), `${page} → ${id}`));
+    const listed = [...document.querySelectorAll('.path a')].some(link => link.getAttribute('href') === page);
+    assert.ok(listed, `${page} appears in a landing journey`);
+  }
+});
+
+test('landing explains the selected node without the JSON detail panel', async () => {
+  const dom = await load('index.html', 'ast.js');
+  try {
+    const { document } = dom.window;
+    document.querySelector('[data-kind="Path"]').click();
+    assert.match(document.querySelector('#ast-explanation').textContent, /^Path: A field reference/);
+    assert.match(document.querySelector('#ast-source').textContent, /policy RequireApproval/);
+  } finally { dom.window.close(); }
+});
