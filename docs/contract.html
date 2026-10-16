@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Contract Summary · IPE</title>
-  <meta name="description" content="A plain-language guide to IPE's inputs, decisions, caller responsibilities, and current implementation limits.">
+  <meta name="description" content="IPE inputs, results, decision rules, implementation limits, and performance targets.">
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
@@ -20,53 +20,52 @@
   </div>
 
   <header class="hero">
-    <div class="eyebrow">The integration contract</div>
-    <h1>You provide the facts.<br>IPE evaluates the rules.</h1>
-    <p class="description">IPE is a policy decision component. Your application supplies the rules and request data, receives a decision or an error, and decides whether to carry out the action.</p>
-    <span class="badge">Current behavior and design targets, explained separately</span>
+    <h1>Contract summary</h1>
+    <p class="description">IPE evaluates policies and returns a decision or an error. Your application enforces the decision.</p>
+    <p class="small muted">Scope: the current Rust library.</p>
   </header>
-
-  <section class="panel" aria-labelledby="exchange">
-    <h2 id="exchange">What goes in, what comes out</h2>
-    <ol class="contract-flow">
-      <li><strong>1. Policies + facts</strong><span>Load rules and describe the requested action.</span></li>
-      <li><strong>2. Evaluation</strong><span>Find policies for the resource type and run their bytecode.</span></li>
-      <li><strong>3. Decision or error</strong><span>Return Allow, Deny, or an evaluation failure.</span></li>
-      <li><strong>4. Application action</strong><span>Your application permits or blocks the operation.</span></li>
-    </ol>
-    <p class="small muted">This page describes the Rust library. It does not define an HTTP endpoint or a JSON request format.</p>
-  </section>
 
   <div class="columns">
     <section class="panel">
-      <h2>What you supply</h2>
-      <p><strong>The policy set.</strong> Rules loaded into the selected evaluation API. The core <code>PolicyDB</code> accepts compiled bytecode, field mappings, names, and the resource types each policy applies to.</p>
-      <p><strong>The resource.</strong> What is being acted on: for example, a deployment, with attributes such as environment and approval count.</p>
-      <p><strong>The action.</strong> What someone wants to do: for example, deploy to production.</p>
-      <p><strong>The request.</strong> Who is asking, when, and any relevant request metadata.</p>
-      <p class="small muted">These three groups form the Resource–Action–Request context, or RAR. In the current Rust API, resource types use numeric <code>ResourceTypeId</code> values.</p>
+      <h2>Inputs</h2>
+      <dl>
+        <dt>Policies</dt>
+        <dd>The rules that apply to each resource type.</dd>
+        <dt>Resource</dt>
+        <dd>The object that the action affects, with its type and attributes.</dd>
+        <dt>Action</dt>
+        <dd>The operation and its target.</dd>
+        <dt>Request</dt>
+        <dd>Information about the caller and the request.</dd>
+      </dl>
+      <p>The Resource–Action–Request (RAR) context contains the data for one evaluation. Resource types use numeric <code>ResourceTypeId</code> values.</p>
     </section>
     <section class="panel">
-      <h2>What you receive</h2>
-      <p><strong>Allow.</strong> The selected evaluator accepted the request under its policy-combination rules.</p>
-      <p><strong>Deny.</strong> The selected evaluator rejected the request, including when no policies were found for the resource type.</p>
-      <p><strong>Error.</strong> Evaluation could not complete, for example because a required field or bytecode constant was missing. The caller must handle this separately from a policy denial.</p>
-      <p class="small muted">A successful Rust result contains <code>Decision { kind, reason, matched_policies }</code>. The reason is optional, and the policy-name list is not a complete audit trace. A failed result is <code>Err(Error::EvaluationError(...))</code>.</p>
+      <h2>Results</h2>
+      <dl>
+        <dt>Allow</dt>
+        <dd>The policy result permits the action.</dd>
+        <dt>Deny</dt>
+        <dd>The policy result rejects the action.</dd>
+        <dt>Error</dt>
+        <dd>Evaluation fails. For example, a required field is absent.</dd>
+      </dl>
+      <p>A successful call returns <code>Decision { kind, reason, matched_policies }</code>. The reason is optional. A Deny result can omit policy names.</p>
+      <p>An evaluation failure returns <code>Err(Error::EvaluationError(...))</code>.</p>
     </section>
   </div>
 
   <section class="panel">
-    <h2>How multiple policies combine today</h2>
-    <p>The two current entry points differ. Choose one explicitly; switching between them can change a decision.</p>
+    <h2>Decision rules</h2>
+    <p>Both APIs select policies by resource type. Their rules differ when policies return conflicting results.</p>
     <div class="table-scroll">
       <table>
-        <caption class="small muted">Outcomes after resource-type selection, assuming each policy evaluates without an error.</caption>
         <thead><tr><th scope="col">Policy results</th><th scope="col">PolicyEngine</th><th scope="col">PolicyDataStore</th></tr></thead>
         <tbody>
-          <tr><td>No matching policies</td><td>Deny</td><td>Deny</td></tr>
+          <tr><td>No policies for the resource type</td><td>Deny</td><td>Deny</td></tr>
           <tr><td>All allow</td><td>Allow</td><td>Allow</td></tr>
           <tr><td>All deny</td><td>Deny</td><td>Deny</td></tr>
-          <tr><td>Some allow, some deny</td><td>Deny — a denial takes precedence</td><td>Allow — one allowance is enough</td></tr>
+          <tr><td>Some allow, some deny</td><td>Deny</td><td>Allow</td></tr>
           <tr><td>Any evaluation fails</td><td>Error</td><td>Error</td></tr>
         </tbody>
       </table>
@@ -75,47 +74,44 @@
   </section>
 
   <section class="panel">
-    <h2>An everyday example</h2>
-    <p>Suppose a deployment requires two approvals and must also pass a change-freeze check. The approval rule allows it, but the freeze rule denies it.</p>
-    <p><code>PolicyEngine</code> returns <strong>Deny</strong>. <code>PolicyDataStore</code> currently returns <strong>Allow</strong>. This example assumes correctly constructed bytecode; the source compiler has the limitations described below.</p>
-    <p>Your application is still responsible for stopping the deployment. IPE does not perform or reverse the deployment itself.</p>
-  </section>
-
-  <section class="panel">
-    <h2>What your application owns</h2>
+    <h2>Application responsibilities</h2>
     <ul>
-      <li><strong>Trustworthy facts.</strong> Authenticate the caller and supply accurate, appropriately validated attributes.</li>
-      <li><strong>Policy administration.</strong> Decide who can change rules, how rules are reviewed, and which resource types they cover.</li>
-      <li><strong>Error handling.</strong> Choose an explicit failure policy. For an authorization integration, block the action when evaluation fails.</li>
-      <li><strong>Enforcement and records.</strong> Apply the decision and record the context, policy version, outcome, and relevant diagnostics.</li>
+      <li>Your application authenticates the caller and supplies the request data.</li>
+      <li>Your application controls who can change policies.</li>
+      <li>Your application handles evaluation errors.</li>
+      <li>Your application permits or blocks the action and records the result.</li>
     </ul>
-    <p class="small muted">These are integration responsibilities. An Allow result does not authenticate a user, grant permissions in another system, or execute a business operation.</p>
-  </section>
-
-  <section class="panel" aria-labelledby="limits">
-    <h2 id="limits">Current limits you need to know</h2>
-    <div class="notice">
-      <p><strong>Source-to-decision enforcement is incomplete.</strong> The current compiler skips trigger conditions and ends a <code>requires</code> policy with a fixed <code>Return(true)</code>. The interpreter returns that fixed value. A false condition can therefore still produce Allow.</p>
-      <p>Parsing or compiling a policy successfully is not evidence that its rules are enforced correctly. Validate the complete decision path before using source policies to control access.</p>
-    </div>
-    <p class="small muted">Evidence: <a href="../crates/ipe-core/src/compiler.rs">PolicyCompiler::compile</a> and <a href="../crates/ipe-core/src/interpreter.rs">Interpreter::evaluate</a>. The <a href="ast.html">AST explorer</a> shows parsed structure. The <a href="performance.html">dashboard</a> measures hand-built interpreter bytecode; neither proves the compiler path is correct.</p>
-    <details>
-      <summary>What does “same input, same result” mean?</summary>
-      <p>Deterministic and side-effect-free evaluation is a stated requirement. Reproducibility needs the same policy version, evaluator, context, and any external approval or relationship data. Changing the timestamp or external facts changes the input. This summary does not certify every execution path against that requirement.</p>
-    </details>
   </section>
 
   <section class="panel">
-    <h2>Targets are not guarantees</h2>
-    <p>The requirements aim for interpreter p99 latency below <strong>50 microseconds</strong> and at least <strong>100,000 evaluations per second per core</strong>. “p99” means 99% of measured evaluations finish within that time.</p>
-    <p>Those are design targets, not a service-level agreement. The dashboard reports limited local measurements. JIT latency, production workload behavior, uninterrupted updates, and consistency across execution paths need their own validation.</p>
-    <p class="small muted">See <a href="../REQUIREMENTS.md">REQ-EVAL-001–006, REQ-PERF-001–007, and REQ-REL-001–011</a> for the formal requirements.</p>
+    <h2>Current limits</h2>
+    <ul>
+      <li>The compiler does not evaluate trigger conditions.</li>
+      <li>The compiler ends a <code>requires</code> policy with <code>Return(true)</code>.</li>
+      <li>The interpreter returns the value in that instruction. A false condition can therefore produce Allow.</li>
+    </ul>
+    <p class="small muted">Sources: <a href="../crates/ipe-core/src/compiler.rs">PolicyCompiler::compile</a> and <a href="../crates/ipe-core/src/interpreter.rs">Interpreter::evaluate</a>.</p>
+    <p>The <a href="ast.html">AST explorer</a> shows parser output. The <a href="performance.html">dashboard</a> measures interpreter execution with hand-built bytecode (compiled policy instructions).</p>
   </section>
 
-  <footer>
-    <p>Scope: the current Rust implementation. Review this summary when changing decision combination, compiler returns, error handling, or the public context and decision types.</p>
-    <a href="index.html">Back to documentation</a> · <a href="ast.html">Explore a policy tree</a> · <a href="performance.html">Inspect measurements</a>
-  </footer>
+  <section class="panel">
+    <h2>Requirements</h2>
+    <p>The p99 latency is the time within which 99% of measured evaluations finish.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">Requirement</th><th scope="col">Target</th></tr></thead>
+        <tbody>
+          <tr><td>Interpreter p99 latency</td><td>Below 50 microseconds per evaluation</td></tr>
+          <tr><td>Interpreter throughput (evaluations per second)</td><td>At least 100,000 evaluations per second per core</td></tr>
+          <tr><td>Repeated evaluation</td><td>The same policies and inputs produce the same result without side effects</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>These are requirements. The dashboard reports measurements for three interpreter workloads. It does not measure JIT (compilation during execution) or production traffic.</p>
+    <p class="small muted">Source: <a href="../REQUIREMENTS.md">REQ-EVAL-005–006, REQ-PERF-001, and REQ-PERF-006</a>.</p>
+  </section>
+
+  <footer><a href="index.html">Documentation</a> · <a href="ast.html">AST explorer</a> · <a href="performance.html">Performance</a></footer>
 </main>
 </body>
 </html>
