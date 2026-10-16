@@ -12,6 +12,10 @@ declare -a ALLOWED_FAILURES=(
     "tokio"           # tokio minimal version issues
     "thiserror"       # thiserror 1.0.23 compatibility
     "regex"           # regex <1.5.5 has unresolved syntax module issues
+    "wasm-bindgen"    # wasm-bindgen-macro-support fails at its minimal version
+                      # (E0433 against minimal syn/quote) in the ipe-wasm
+                      # member; real builds use the resolved lockfile and
+                      # are unaffected.
 )
 
 # Run the check and capture output
