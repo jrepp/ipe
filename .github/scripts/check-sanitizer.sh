@@ -18,9 +18,19 @@ export LSAN_OPTIONS="suppressions=$PWD/lsan-suppressions.txt"
 # Symbolize sanitizer reports: without a symbolizer, LSan suppression
 # rules (which match symbol names like `leak:rocksdb`) cannot be applied
 # and stacks print as raw addresses.
-symbolizer=$(command -v llvm-symbolizer || ls /usr/lib/llvm-*/bin/llvm-symbolizer 2>/dev/null | tail -n1 || true)
+symbolizer=$(command -v llvm-symbolizer || true)
+if [ -z "$symbolizer" ]; then
+    rustup component add llvm-tools --toolchain nightly >/dev/null 2>&1 || true
+    symbolizer=$(find "$(rustc +nightly --print sysroot)" -name 'llvm-symbolizer*' -type f 2>/dev/null | head -n1 || true)
+fi
+if [ -z "$symbolizer" ]; then
+    symbolizer=$(ls /usr/lib/llvm-*/bin/llvm-symbolizer 2>/dev/null | tail -n1 || true)
+fi
 if [ -n "$symbolizer" ]; then
     export ASAN_SYMBOLIZER_PATH="$symbolizer"
+    echo "🔤 Sanitizer symbolizer: $symbolizer"
+else
+    echo "⚠️  No llvm-symbolizer found; reports will not symbolicate"
 fi
 # Write ThreadSanitizer reports to files: the test harness swallows stderr,
 # so only the one-line summary would otherwise be visible.
