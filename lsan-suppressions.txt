@@ -1,0 +1,6 @@
+# LeakSanitizer suppressions for known third-party leaks.
+#
+# RocksDB's C library allocates internal buffers and background-thread
+# state that it never frees during process teardown; these are not
+# reachable from ipe code paths and cannot be fixed from Rust.
+leak:rocksdb
