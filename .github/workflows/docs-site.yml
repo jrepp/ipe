@@ -34,6 +34,8 @@ jobs:
         run: npm ci --prefix docs --ignore-scripts
       - name: Validate generated data and artifact links
         run: python -m unittest discover -s scripts/tests -v
+      - name: Test site at the GitHub Pages project path
+        run: python scripts/check-docs-http.py
       - name: Check page interactions and error states
         run: npm test --prefix docs
       - name: Check exporter formatting

@@ -45,6 +45,11 @@ artifact named for the commit. Download and extract the artifact, serve its root
 with `python -m http.server --bind 127.0.0.1`, then visit `/docs/`.
 This preserves the relative paths to Markdown and source references.
 
+The HTTP test serves the packaged site under `/ipe/`, the GitHub Pages project path.
+It checks the root redirect and each local HTML link.
+It also checks that the server returns the generated parser and benchmark data.
+The same test runs through `make docs-check` and the PR workflow.
+
 Fresh measurements are generated in CI and kept in the artifact, not committed.
 Shared-runner timings are reported as evidence and never used as pass/fail
 performance thresholds. JIT, end-to-end policy compilation, and production load

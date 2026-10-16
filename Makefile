@@ -139,6 +139,7 @@ docs-site:
 
 docs-check: docs-site
 	$(DOCS_PYTHON) -m unittest discover -s scripts/tests -v
+	$(DOCS_PYTHON) scripts/check-docs-http.py
 	npm test --prefix docs
 
 docs-serve:
