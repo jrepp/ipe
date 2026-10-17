@@ -30,17 +30,18 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 |-----|-------|--------|---------|
 | [001](001-sidecar-service-architecture.md) | Sidecar Service Architecture | Draft | Minimal Rust service with data/control plane separation, <50MB footprint |
 | [002](002-sse-json-protocol.md) | SSE/JSON Protocol | Draft | MCP-inspired protocol using Server-Sent Events and JSON-RPC |
-| [003](003-policy-tree-storage.md) | Policy Tree Storage | Draft | Content-addressable tree structure with cryptographic hashing |
+| [003](003-policy-tree-storage.md) | Policy Tree Storage | Draft | Content-addressable tree structure with cryptographic hashing, RocksDB backend |
 | [004](004-low-overhead-execution-tracing.md) | Low-Overhead Execution Tracing | Draft | <5% overhead tracing with flat buffers, captures full execution context and branch decisions |
+| [005](005-control-plane.md) | Control Plane Architecture | Draft | GitOps-based policy synchronization with filesystem-to-tree mapping |
 
 ## Planned RFCs
 
 | Number | Title | Target | Description |
 |--------|-------|--------|-------------|
-| 005 | Data Storage | TBD | Dynamic data store for approvals and external signals |
 | 006 | Client Libraries | TBD | Official clients for Rust, Python, Node.js, Go |
 | 007 | Observability | TBD | Metrics, tracing, and monitoring specification |
 | 008 | Security Model | TBD | Authentication, authorization, and audit logging |
+| 009 | Dynamic Data Store | TBD | External signals and runtime data (approvals, etc.) |
 
 ## RFC Guidelines
 
