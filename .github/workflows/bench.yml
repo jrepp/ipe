@@ -44,7 +44,7 @@ jobs:
         run: cargo bench --all-features 2>&1 | tee benchmark-results.txt
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results
           path: benchmark-results.txt
@@ -178,7 +178,7 @@ jobs:
             cargo test --all-features 2>&1 | tee valgrind-output.txt
 
       - name: Upload valgrind report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: valgrind-report
           path: valgrind-output.txt
