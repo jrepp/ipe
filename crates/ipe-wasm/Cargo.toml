@@ -8,3 +8,6 @@ license.workspace = true
 [dependencies]
 wasm-bindgen = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
+# Not used directly: pins js-sys to a release that matches the wasm-bindgen
+# floor, since serde-wasm-bindgen only requires js-sys ^0.3.
+js-sys = { workspace = true }
