@@ -17,12 +17,7 @@ unmaintained = "all"
 # Yanked crates
 yanked = "deny"
 # Ignore specific advisories (use only when necessary)
-ignore = [
-    # bincode 1.x is unmaintained (RUSTSEC-2025-0141); no safe upgrade exists.
-    # bincode 2.x changes the serialization format used for persisted bytecode,
-    # which is a data-compatibility migration, not a dependency bump.
-    "RUSTSEC-2025-0141",
-]
+ignore = []
 
 [licenses]
 version = 2

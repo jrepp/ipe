@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Document · IPE</title>
+<meta name="description" content="IPE reference documentation rendered from the repository.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="site.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.6/marked.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js" defer></script>
+<script src="doc.js" defer></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">ipe</span>Docs</a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html#paths">Paths</a>
+      <a href="https://github.com/jrepp/ipe">GitHub</a>
+    </nav>
+  </div>
+</header>
+<div class="layout">
+  <nav class="sidebar" aria-label="Documentation">
+    <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html">Contract</a><a href="status.html">Project status</a><a href="performance.html">Performance</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Tools</span><a href="ast.html">AST explorer</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=AST.md">AST reference</a><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=BYTECODE.md">Bytecode</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
+  </nav>
+  <main class="content">
+    <article class="article">
+      <header class="page-head">
+        <div class="breadcrumb">Internals / <span id="doc-path">Document</span></div>
+        <p id="doc-status" class="small muted" role="status" style="margin:0">Loading document…</p>
+      </header>
+      <div id="doc-body" class="prose"></div>
+      <p class="small muted" style="margin:0"><a id="doc-source" href="#doc-body">View the Markdown source</a></p>
+    </article>
+    <aside class="toc" id="doc-toc" aria-label="On this page" hidden><span class="toc-label">On this page</span></aside>
+  </main>
+</div>
+</body>
+</html>

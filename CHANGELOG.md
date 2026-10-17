@@ -14,10 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive CI/CD pipeline with security audits
 
 ### Changed
+- Bytecode storage uses bincode-next with the existing version 1 encoding.
+- Bytecode encode and decode methods return `bytecode::SerializationError` instead of `bincode::Error`.
+- Cranelift uses version 0.123, which removes the unmaintained `mach` dependency.
 - Updated GitHub Actions workflows to use wrapper scripts for better error handling
 - Improved sanitizer checks to handle multiline output correctly
 
 ### Fixed
+- Dependency advisories: removed unused gRPC, LRU, and memory-map dependencies and updated affected locked versions.
+- Security checks cover all features and retain audit reports after failures.
 - Cargo deny failures due to missing license entries
 - Supply chain security checks for virtual manifests
 - Benchmark action parsing issues with colored output

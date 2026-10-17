@@ -51,7 +51,7 @@ pub enum Error {
     IoError(#[from] std::io::Error),
 
     #[error("Serialization error: {0}")]
-    SerializationError(#[from] bincode::Error),
+    SerializationError(#[from] bytecode::SerializationError),
 
     #[cfg(feature = "approvals")]
     #[error("Approval error: {0}")]
