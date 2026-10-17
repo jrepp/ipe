@@ -36,6 +36,15 @@ allow = [
     "MPL-2.0",      # Mozilla Public License 2.0 (for our project crates)
     "Zlib",         # zlib License (used by foldhash dependency)
 ]
+# Mozilla root certificates used by reqwest's rustls platform verifier.
+# Keep this allowance scoped to the reviewed data crate/version, rather than
+# allowing the license for every dependency. Redistributed data must include the
+# license text in licenses/webpki-root-certs-CDLA-Permissive-2.0.txt.
+[[licenses.exceptions]]
+name = "webpki-root-certs"
+version = "=1.0.9"
+allow = ["CDLA-Permissive-2.0"]
+
 # Clarifications for specific crates
 [[licenses.clarify]]
 name = "ring"

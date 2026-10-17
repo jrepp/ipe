@@ -45,6 +45,8 @@ build:
 release:
 	@echo "🚀 Building release binaries..."
 	cargo build --release --all-features
+	mkdir -p target/release/licenses
+	cp licenses/*.txt target/release/licenses/
 	@echo "✅ Release build complete"
 	@ls -lh target/release/ipe-* 2>/dev/null || true
 

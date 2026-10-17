@@ -398,3 +398,11 @@ public evaluation and candidate-test APIs always use the server clock. Test
 fixtures are trusted local files. Captured in-memory snapshots can be compared
 across updates; durable replay of arbitrary historical runtime snapshots is not
 implemented.
+
+
+When distributing runtime binaries, include
+[`licenses/webpki-root-certs-CDLA-Permissive-2.0.txt`](../licenses/webpki-root-certs-CDLA-Permissive-2.0.txt)
+with the bundled certificate data. `make release` copies the notice into
+`target/release/licenses/`; the Docker image includes it under
+`/usr/share/licenses/ipe/`. The dependency license allowance is scoped to the
+reviewed `webpki-root-certs` version.
