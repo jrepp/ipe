@@ -35,6 +35,7 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | [005](005-control-plane.md) | Control Plane Architecture | Draft | GitOps-based policy synchronization with filesystem-to-tree mapping |
 | [006](006-data-plane.md) | Data Plane Architecture | Draft | AP storage for dynamic data, message plane distribution, high write throughput |
 
+
 ## Planned RFCs
 
 | Number | Title | Target | Description |
@@ -42,6 +43,7 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | 006 | Client Libraries | TBD | Official clients for Rust, Python, Node.js, Go |
 | 007 | Observability | TBD | Metrics, tracing, and monitoring specification |
 | 008 | Security Model | TBD | Authentication, authorization, and audit logging |
+| 009 | Dynamic Data Store | TBD | External signals and runtime data (approvals, etc.) |
 
 ## RFC Guidelines
 

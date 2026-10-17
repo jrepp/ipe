@@ -606,6 +606,7 @@ secret = "webhook-secret"
 - [Git Internals](https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain)
 - [Kubernetes GitOps (Flux)](https://fluxcd.io/)
 - [RFC-001: Predicate Service Architecture](001-predicate-service-architecture.md)
+- [RFC-001: Sidecar Service Architecture](001-sidecar-service-architecture.md)
 - [RFC-002: SSE/JSON Protocol](002-sse-json-protocol.md)
 - [RFC-003: Policy Tree Storage](003-policy-tree-storage.md)
 - [RFC-006: Data Plane Architecture](006-data-plane.md)
