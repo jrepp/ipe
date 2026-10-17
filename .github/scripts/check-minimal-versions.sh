@@ -6,23 +6,14 @@ set -euo pipefail
 
 echo "🔍 Running minimal versions check..."
 
-# Known issues that are allowed (false negatives)
-declare -a ALLOWED_FAILURES=(
-    "tonic"           # tonic 1.0.23 has issues, needs 1.35+
-    "tokio"           # tokio minimal version issues
-    "thiserror"       # thiserror 1.0.23 compatibility
-    "regex"           # regex <1.5.5 has unresolved syntax module issues
-    "wasm-bindgen"    # wasm-bindgen-macro-support fails at its minimal version
-                      # (E0433 against minimal syn/quote) in the ipe-wasm
-                      # member; real builds use the resolved lockfile and
-                      # are unaffected.
-    "rustix"          # rustix 0.38.x at minimal versions fails against the
-                      # minimal linux-raw-sys/libc on Linux targets; real
-                      # builds use the resolved lockfile and are unaffected.
-)
+# Known issues that are allowed. Prefer raising the version floor in the
+# offending Cargo.toml over adding an entry here: with --keep-going below,
+# an allowed failure no longer hides later ones, but it still means a
+# minimum we advertise does not build.
+declare -a ALLOWED_FAILURES=()
 
 # Run the check and capture output
-if output=$(cargo minimal-versions check --all-features 2>&1); then
+if output=$(cargo minimal-versions check --all-features --keep-going 2>&1); then
     echo "✅ Minimal versions check passed"
     echo "$output"
     exit 0
@@ -49,7 +40,7 @@ echo ""
 all_allowed=true
 while IFS= read -r crate; do
     allowed=false
-    for allowed_crate in "${ALLOWED_FAILURES[@]}"; do
+    for allowed_crate in "${ALLOWED_FAILURES[@]+"${ALLOWED_FAILURES[@]}"}"; do
         if [[ "$crate" == *"$allowed_crate"* ]]; then
             allowed=true
             echo "✅ Allowing known issue with: $crate"
@@ -68,7 +59,7 @@ if [ "$all_allowed" = true ]; then
     echo "✅ All failures are known issues (allowlisted)"
     echo ""
     echo "Known issues:"
-    for allowed in "${ALLOWED_FAILURES[@]}"; do
+    for allowed in "${ALLOWED_FAILURES[@]+"${ALLOWED_FAILURES[@]}"}"; do
         echo "  - $allowed: needs dependency version constraints"
     done
     exit 0
