@@ -1349,7 +1349,7 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 
 | RFC | Title | Status | Location | Lines |
 |-----|-------|--------|----------|-------|
-| **RFC-001** | Sidecar Service Architecture | Draft | `rfcs/001-sidecar-service-architecture.md` | - |
+| **RFC-001** | Predicate Service Architecture | Draft | `rfcs/001-predicate-service-architecture.md` | - |
 | **RFC-002** | SSE/JSON Protocol (MCP-inspired) | Draft | `rfcs/002-sse-json-protocol.md` | - |
 | **RFC-003** | Policy Tree Storage | Draft | `rfcs/003-policy-tree-storage.md` | - |
 | **RFC-004** | Low-Overhead Execution Tracing | Draft | `rfcs/004-low-overhead-execution-tracing.md` | - |

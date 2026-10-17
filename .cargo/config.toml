@@ -1,0 +1,40 @@
+# Cargo configuration with custom aliases
+
+[alias]
+# Perftest shortcuts
+perftest = "test --release --package ipe-core --test perftest_predicate_execution -- --ignored --nocapture --test-threads=1 interpreter"
+perftest-jit = "test --release --package ipe-core --test perftest_predicate_execution --features jit -- --ignored --nocapture --test-threads=1 jit"
+perftest-all = "test --release --package ipe-core --test perftest_predicate_execution --features jit -- --ignored --nocapture --test-threads=1"
+perftest-build = "test --release --package ipe-core --test perftest_predicate_execution --features jit --no-run"
+
+# Quick perftest shortcuts for specific workloads
+perftest-simple = "test --release --package ipe-core --test perftest_predicate_execution -- --ignored --nocapture --test-threads=1 simple"
+perftest-cache = "test --release --package ipe-core --test perftest_predicate_execution -- --ignored --nocapture --test-threads=1 cache_heavy"
+perftest-mixed = "test --release --package ipe-core --test perftest_predicate_execution -- --ignored --nocapture --test-threads=1 mixed_workload"
+perftest-stress = "test --release --package ipe-core --test perftest_predicate_execution -- --ignored --nocapture --test-threads=1 bytecode_stress"
+
+# JIT comparison tests
+perftest-compare = "test --release --package ipe-core --test perftest_predicate_execution --features jit -- --ignored --nocapture --test-threads=1 comparison"
+
+# Development shortcuts
+dev = "test --workspace --all-features"
+dev-watch = "watch -x 'test --workspace --all-features'"
+lint-all = "clippy --all-targets --all-features -- -D warnings"
+build-all = "build --workspace --all-features"
+check-all = "check --workspace --all-features"
+
+# Release builds
+release = "build --release --workspace --all-features"
+release-core = "build --release --package ipe-core --all-features"
+
+# Quick development cycle
+quick = "test --workspace --all-features --lib"
+quick-watch = "watch -x 'test --workspace --all-features --lib'"
+
+# Documentation
+doc-open = "doc --all-features --no-deps --document-private-items --open"
+doc-private = "doc --all-features --document-private-items"
+
+# Benchmarks
+bench-all = "bench --workspace --all-features"
+bench-core = "bench --package ipe-core --all-features"

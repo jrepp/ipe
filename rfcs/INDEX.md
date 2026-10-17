@@ -24,15 +24,17 @@ Draft → Review → Accepted → Implemented → Final
 
 The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.md](../docs/archive/) for historical reference.
 
-### Sidecar Service (New Architecture)
+### Predicate Service (New Architecture)
 
 | RFC | Title | Status | Summary |
 |-----|-------|--------|---------|
-| [001](001-sidecar-service-architecture.md) | Sidecar Service Architecture | Draft | Minimal Rust service with data/control plane separation, <50MB footprint |
+| [001](001-predicate-service-architecture.md) | Predicate Service Architecture | Draft | Minimal Rust service with data/control plane separation, <50MB footprint |
 | [002](002-sse-json-protocol.md) | SSE/JSON Protocol | Draft | MCP-inspired protocol using Server-Sent Events and JSON-RPC |
 | [003](003-policy-tree-storage.md) | Policy Tree Storage | Draft | Content-addressable tree structure with cryptographic hashing, RocksDB backend |
 | [004](004-low-overhead-execution-tracing.md) | Low-Overhead Execution Tracing | Draft | <5% overhead tracing with flat buffers, captures full execution context and branch decisions |
 | [005](005-control-plane.md) | Control Plane Architecture | Draft | GitOps-based policy synchronization with filesystem-to-tree mapping |
+| [006](006-data-plane.md) | Data Plane Architecture | Draft | AP storage for dynamic data, message plane distribution, high write throughput |
+
 
 ## Planned RFCs
 
