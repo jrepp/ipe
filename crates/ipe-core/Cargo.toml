@@ -32,7 +32,6 @@ cranelift-module = { workspace = true, optional = true }
 cranelift-native = { workspace = true, optional = true }
 cranelift-codegen = { workspace = true, optional = true }
 target-lexicon = { workspace = true, optional = true }
-region = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -44,8 +43,7 @@ jit = [
     "cranelift-module",
     "cranelift-native",
     "cranelift-codegen",
-    "target-lexicon",
-    "region"
+    "target-lexicon"
 ]
 
 [dev-dependencies]
@@ -53,6 +51,7 @@ criterion = "0.5"
 tempfile = "3.8"
 # Fix minimal versions - criterion depends on regex, ensure we use >= 1.5.5 to avoid syntax module issues
 regex = ">=1.5.5"
+rand = "0.8"
 
 [[bench]]
 name = "evaluation"

@@ -1,20 +1,26 @@
 # Scope and TTL Implementation Summary
 
-## Overview
+## Recorded Results
 
-**Status**: ✅ Complete - All models implemented and tested
-**Date**: 2025-11-03
-**Branch**: feature/rocksdb-integration-tests
+Recorded results:
 
-This document summarizes the implementation of scope-based multi-tenant isolation and TTL-based automatic cleanup for the RocksDB data stores.
+- Status: All models implemented and tested
+- Date: 2025-11-03
+- Branch: feature/rocksdb-integration-tests
 
-## What Was Implemented
+This report records the scope and TTL implementation as of 2025-11-03.
+A scope separates records by tenant or environment.
+Time to live (TTL) sets the lifetime of a record.
+The RocksDB stores use scope for isolation and TTL for automatic cleanup.
 
-### 1. ✅ Comprehensive RFC (RFC 0002)
+## Implementation
 
-**File**: `docs/rfcs/0002-scope-and-ttl-model.md` (605 lines)
+### 1. RFC (RFC 0002)
 
-Designed complete scope and TTL model including:
+File: `docs/rfcs/0002-scope-and-ttl-model.md` (605 lines)
+
+The RFC defines the scope and TTL model:
+
 - Scope enum with 5 variants (Global, Tenant, Environment, TenantEnvironment, Custom)
 - TTL configuration with presets (temporary, short-lived, long-lived)
 - Storage key format changes
@@ -22,11 +28,12 @@ Designed complete scope and TTL model including:
 - Security considerations
 - Performance impact analysis
 
-### 2. ✅ Scope Implementation (Approval Module)
+### 2. Scope Implementation (Approval Module)
 
-**File**: `crates/ipe-core/src/approval.rs`
+File: `crates/ipe-core/src/approval.rs`
 
 #### Scope Enum
+
 ```rust
 pub enum Scope {
     Global,                                       // Cross-tenant access
@@ -37,13 +44,15 @@ pub enum Scope {
 }
 ```
 
-**Methods**:
+Methods:
+
 - `Scope::tenant(name)` - Create tenant scope
 - `Scope::env(name)` - Create environment scope
 - `Scope::tenant_env(tenant, env)` - Combined scope
 - `scope.encode()` - Convert to storage key component
 
 #### TTL Configuration
+
 ```rust
 pub struct TTLConfig {
     pub default_ttl_seconds: Option<i64>,
@@ -53,12 +62,13 @@ pub struct TTLConfig {
 }
 ```
 
-**Presets**:
+Presets:
+
 - `TTLConfig::temporary()` - 1 hour default, 1 day max
 - `TTLConfig::short_lived()` - 1 day default, 1 week max
 - `TTLConfig::long_lived()` - 30 days default, 1 year max
 
-### 3. ✅ Approval Data Model Updates
+### 3. Approval Data Model Updates
 
 ```rust
 pub struct Approval {
@@ -68,19 +78,21 @@ pub struct Approval {
 }
 ```
 
-**Builder Methods**:
+Builder Methods:
+
 ```rust
 Approval::new(...).with_scope(Scope::tenant("acme")).with_ttl(3600)
 ```
 
-**Storage Key Format**:
-- **Before**: `approvals:{identity}:{resource}:{action}`
-- **After**: `approvals:{scope}:{identity}:{resource}:{action}`
-- **Example**: `approvals:tenant:acme-corp:alice:https://api.example.com/data:GET`
+Storage Key Format:
 
-### 4. ✅ Scoped Store Methods (Approval)
+- Before: `approvals:{identity}:{resource}:{action}`
+- After: `approvals:{scope}:{identity}:{resource}:{action}`
+- Example: `approvals:tenant:acme-corp:alice:https://api.example.com/data:GET`
 
-All store methods now have scoped variants:
+### 4. Scoped Store Methods (Approval)
+
+All store methods have scoped variants:
 
 ```rust
 // Backward compatible (uses Global scope)
@@ -98,24 +110,25 @@ list_approvals_in_scope(identity, scope)
 is_in_approved_set_in_scope(identity, resource_pattern, scope)
 ```
 
-### 5. ✅ Test Suite (Scope/TTL)
+### 5. Test Suite (Scope/TTL)
 
-**File**: `crates/ipe-core/tests/integration/scope_ttl_tests.rs` (482 lines)
+File: `crates/ipe-core/tests/integration/scope_ttl_tests.rs` (482 lines)
 
-**20 comprehensive tests** covering:
-- ✅ Tenant scope isolation
-- ✅ Environment scope separation
-- ✅ Tenant+Environment combined scopes
-- ✅ Custom hierarchical scopes
-- ✅ Scope revocation
-- ✅ Global scope backward compatibility
-- ✅ TTL configuration
-- ✅ TTL + Scope combined
-- ✅ Multi-tenant isolation
-- ✅ Environment promotion workflows
-- ✅ Scope encoding
+The 20 tests cover these cases:
 
-### 6. ✅ All Tests Passing
+- Tenant scope isolation
+- Environment scope separation
+- Tenant+Environment combined scopes
+- Custom hierarchical scopes
+- Scope revocation
+- Global scope backward compatibility
+- TTL configuration
+- TTL + Scope combined
+- Multi-tenant isolation
+- Environment promotion workflows
+- Scope encoding
+
+### 6. Recorded Test Output
 
 ```bash
 $ cargo test --features approvals --lib
@@ -204,141 +217,160 @@ store.grant_approval(
 assert!(store.has_approval("user", "resource", "GET").unwrap());
 ```
 
-## Key Design Decisions
+## Design Decisions
 
 ### 1. Backward Compatible Defaults
-- All new `scope` fields default to `Scope::Global`
-- Existing methods work without modification
-- New scoped methods available for explicit scope control
+
+All new `scope` fields default to `Scope::Global`.
+Existing methods work without changes.
+New scoped methods give callers explicit control of the scope.
 
 ### 2. Storage Key Changes
-- Scope encoded as prefix in storage key
-- Enables efficient prefix scanning by scope
-- Maintains RocksDB performance characteristics
+
+The scope forms a prefix in the storage key.
+This prefix supports efficient scans by scope and preserves RocksDB performance characteristics.
 
 ### 3. Dual API (Scoped + Non-Scoped)
-- Non-scoped methods use Global scope (backward compatible)
-- Scoped methods require explicit scope parameter
-- Prevents accidental cross-tenant access
+
+Non-scoped methods use Global scope for backward compatibility.
+Scoped methods require an explicit scope parameter to prevent accidental access across tenants.
+
+Transitive traversal respects scope boundaries.
+It uses breadth-first search (BFS), which examines nearby nodes before more distant nodes.
 
 ### 4. TTL via RocksDB Compaction
-- TTL stored in record metadata
-- Cleanup happens during RocksDB compaction
-- No query-time overhead
-- Automatic background cleanup
+
+Record metadata stores the TTL.
+RocksDB compaction, a background process that rewrites storage files, removes expired records.
+Cleanup adds no query-time overhead.
 
 ## Implementation Status
 
-### ✅ Complete (All Components)
+### Completed Components
 
 #### Approvals
+
 - [x] Scope enum and encoding
 - [x] TTL configuration
 - [x] Approval data model with scope/TTL
 - [x] Scoped storage methods
 - [x] Backward compatible API
-- [x] All unit tests passing (272)
+- [x] All 272 unit tests passed
 - [x] Integration tests for approvals
-- [x] Comprehensive RFC documentation
+- [x] RFC documentation
 
 #### Relationships
+
 - [x] Relationship data model with scope/TTL
-- [x] Scoped relationship methods:
-  - `get_relationship_in_scope()`
-  - `has_relationship_in_scope()`
-  - `remove_relationship_in_scope()`
-  - `list_subject_relationships_in_scope()`
+- [x] Scoped method: `get_relationship_in_scope()`
+- [x] Scoped method: `has_relationship_in_scope()`
+- [x] Scoped method: `remove_relationship_in_scope()`
+- [x] Scoped method: `list_subject_relationships_in_scope()`
 - [x] Updated storage key format to include scope
-- [x] Transitive traversal working across scopes
-- [x] All relationship scope/TTL tests passing
+- [x] Transitive traversal across scopes
+- [x] All relationship scope/TTL tests passed
 
-#### Testing
-- [x] All 272 unit tests passing
-- [x] All 80 integration tests passing (including 16 scope/TTL tests)
-- [x] Multi-tenant isolation verified
+#### Recorded Test Results
+
+- [x] All 272 unit tests passed
+- [x] All 80 integration tests passed (including 16 scope/TTL tests)
+- [x] Tests covered multi-tenant isolation
 - [x] Environment promotion workflows tested
-- [x] TTL functionality validated
+- [x] Tests covered TTL behavior
 
-### 📋 Optional Future Work
+### Optional Future Work
 
 #### Performance Optimization (Optional)
-1. Add benchmarks for scoped queries
-2. Optimize scope-specific transitive traversal
-3. Add metrics collection for scope usage
 
-#### Documentation Enhancements (Optional)
-4. Add more usage examples to README
-5. Create migration guide for existing deployments
-6. Add API documentation with examples
+Optional performance tasks:
+
+1. Add benchmarks for scoped queries.
+2. Optimize scope-specific transitive traversal.
+3. Add metrics collection for scope usage.
+
+#### Documentation (Optional)
+
+Optional documentation tasks:
+
+4. Add more usage examples to README.
+5. Create a migration guide for existing deployments.
+6. Add API documentation with examples.
 
 ## Performance Impact
 
 ### Storage Overhead
-- **Scope**: +10-50 bytes per key (tenant/env strings)
-- **TTL**: Uses existing timestamp field
-- **Total**: ~2-5% storage increase
+
+- Scope: +10-50 bytes per key (tenant/env strings)
+- TTL: Uses existing timestamp field
+- Total: ~2-5% storage increase
 
 ### Query Performance
-- **Direct lookup**: No change (same O(log n))
-- **Prefix scan**: Same performance (scope is prefix)
-- **Compaction**: Background operation, no query impact
+
+- Direct lookup: No change (same O(log n))
+- Prefix scan: Same performance (scope is prefix)
+- Compaction: Background operation, no query impact
 
 ### Benchmark Targets
+
 - Scoped lookup: <5 μs (vs 1-5 μs non-scoped)
 - Multi-tenant query: <10% overhead
 - TTL expiration check: <1 μs overhead
 
-## Security Benefits
+## Security Behavior
 
 ### Multi-Tenant Isolation
-✅ **Data leakage prevention**: Scope enforced at storage key level
-✅ **Logical separation**: Different tenants cannot access each other's data
-✅ **Environment isolation**: Dev/staging/prod data separated
+
+Storage keys enforce scope boundaries.
+Different tenants cannot access each other's data.
+Development, staging, and production use separate scopes.
+Each environment can use a different TTL.
 
 ### Automatic Cleanup
-✅ **Reduced attack surface**: Expired credentials auto-removed
-✅ **Compliance**: Temporary access enforced
-✅ **No stale data**: Old approvals don't accumulate
+
+TTL limits temporary access.
+Compaction removes expired credentials and old approvals.
 
 ### Audit Trail
-✅ **Scope tracking**: All records tagged with scope
-✅ **TTL tracking**: Know when data expires
-✅ **Metadata support**: Rich context for auditing
 
-## Production Readiness
+Each record includes a scope and expiration information.
+Metadata provides context for audits.
 
-### ✅ Ready for Production
-- ✅ Complete implementation for both Approvals and Relationships
-- ✅ All 272 unit tests passing
-- ✅ All 80 integration tests passing
-- ✅ Backward compatible with existing code
-- ✅ Documented API in RFC 0002
-- ✅ Comprehensive test coverage
+## Deployment Status
 
-### Deployment Checklist
+The report records implementations for approvals and relationships.
+It records 272 unit tests and 80 integration tests that passed.
+RFC 0002 documents the API, which remains compatible with existing code.
 
-#### Before Deploying
-- [x] Complete relationship implementation
-- [x] Run full test suite (352 total tests: 272 unit + 80 integration)
-- [ ] Performance benchmarks (optional - can be added later)
-- [x] Review security implications (documented in RFC)
-- [ ] Migration plan for existing data (covered in RFC Phase 1-3)
+### Before Deployment
 
-#### After Deploying
-- [ ] Monitor query performance
-- [ ] Track scope distribution
-- [ ] Verify TTL cleanup working (requires RocksDB compaction)
-- [ ] Audit tenant isolation
+Complete these tasks before deployment:
+
+- [x] Complete the relationship implementation.
+- [x] Run the full test suite (352 total tests: 272 unit + 80 integration).
+- [ ] Run performance benchmarks. This task is optional.
+- [x] Review the security implications in the RFC.
+- [ ] Prepare a migration plan for existing data from RFC Phase 1-3.
+
+### After Deployment
+
+Complete these tasks after deployment:
+
+- [ ] Monitor query performance.
+- [ ] Track scope distribution.
+- [ ] Make sure that RocksDB compaction removes expired records.
+- [ ] Audit tenant isolation.
 
 ## Migration Path
 
 ### Phase 1: Deploy with Global Scope
+
 ```rust
 // Existing code works unchanged (defaults to Global)
 store.grant_approval(Approval::new("user", "resource", "GET", "admin")).unwrap();
 ```
 
 ### Phase 2: Migrate to Tenant Scopes
+
 ```rust
 // New code uses explicit scopes
 store.grant_approval(
@@ -348,6 +380,7 @@ store.grant_approval(
 ```
 
 ### Phase 3: Enforce Scoping
+
 ```rust
 // Deprecate non-scoped methods or restrict to admin
 // Require explicit scope for all operations
@@ -356,50 +389,36 @@ store.grant_approval(
 ## Metrics to Track
 
 ### Storage
+
 - Total approvals by scope
 - Average TTL per scope
 - Storage growth rate
 
 ### Performance
+
 - Query latency by scope depth
 - Compaction frequency
 - TTL cleanup effectiveness
 
 ### Security
-- Cross-scope access attempts (should be 0)
+
+- Cross-scope access attempts (target: 0)
 - TTL expirations per day
 - Scope distribution
 
 ## Related Files
 
 ### Implementation
+
 - `crates/ipe-core/src/approval.rs` - Approval model with scope/TTL
 - `crates/ipe-core/src/relationship.rs` - Relationship model (partial)
 
 ### Tests
+
 - `crates/ipe-core/tests/integration/scope_ttl_tests.rs` - 20 tests (482 lines)
-- `crates/ipe-core/src/approval.rs` - 14 unit tests (all passing)
+- `crates/ipe-core/src/approval.rs` - 14 unit tests (all passed)
 
 ### Documentation
-- `docs/rfcs/0002-scope-and-ttl-model.md` - Complete RFC (605 lines)
+
+- `docs/rfcs/0002-scope-and-ttl-model.md` - RFC (605 lines)
 - `docs/scope-ttl-implementation-summary.md` - This file
-
-## Summary
-
-✅ **Scope and TTL model successfully implemented for both Approvals and Relationships**
-✅ **Backward compatible - existing code works unchanged**
-✅ **All 272 unit tests passing**
-✅ **All 80 integration tests passing (including 16 scope/TTL tests)**
-✅ **Comprehensive RFC and documentation (RFC 0002)**
-✅ **Production-ready for multi-tenant deployments**
-
-### Key Features Delivered:
-
-1. **Multi-Tenant Isolation**: Scope-based data separation at storage key level
-2. **Environment Separation**: Separate dev/staging/prod data with different TTLs
-3. **Automatic Cleanup**: TTL-based expiration via RocksDB compaction
-4. **Backward Compatible**: All existing code continues to work with Global scope default
-5. **Transitive Relationships**: BFS-based graph traversal respecting scope boundaries
-6. **Comprehensive Testing**: 16 dedicated scope/TTL tests covering all use cases
-
-The implementation is complete and ready for production deployment.

@@ -111,6 +111,10 @@ pub struct TieredPolicy {
     #[cfg(feature = "jit")]
     pub jit_code: RwLock<Option<Arc<JitCode>>>,
 
+    /// JIT compiler (owns executable memory, must live as long as compiled code)
+    #[cfg(feature = "jit")]
+    compiler: RwLock<Option<JitCompiler>>,
+
     /// Profiling statistics
     pub stats: Arc<ProfileStats>,
 
@@ -124,6 +128,8 @@ impl TieredPolicy {
             bytecode: Arc::new(bytecode),
             #[cfg(feature = "jit")]
             jit_code: RwLock::new(None),
+            #[cfg(feature = "jit")]
+            compiler: RwLock::new(None),
             stats: Arc::new(ProfileStats::new()),
             name,
         }
@@ -172,51 +178,47 @@ impl TieredPolicy {
         })
     }
 
-    /// Trigger JIT compilation in background
+    /// Trigger JIT compilation (synchronous to avoid threading issues with JITModule)
     #[cfg(feature = "jit")]
     fn trigger_jit_compilation(&self) {
-        use std::thread;
-
-        let bytecode = Arc::clone(&self.bytecode);
-        let jit_code = Arc::new(RwLock::new(self.jit_code.read().clone()));
-        let name = self.name.clone();
-        let stats = Arc::clone(&self.stats);
-
-        thread::spawn(move || {
-            let mut compiler = match JitCompiler::new() {
-                Ok(c) => c,
+        // Create compiler if it doesn't exist
+        if self.compiler.read().is_none() {
+            match JitCompiler::new() {
+                Ok(c) => {
+                    *self.compiler.write() = Some(c);
+                },
                 Err(e) => {
                     tracing::error!("Failed to create JIT compiler: {}", e);
                     return;
                 },
-            };
+            }
+        }
 
-            match compiler.compile(&bytecode, &name) {
+        // Compile the policy
+        let mut compiler_guard = self.compiler.write();
+        if let Some(ref mut compiler) = *compiler_guard {
+            match compiler.compile(&self.bytecode, &self.name) {
                 Ok(compiled) => {
-                    *jit_code.write() = Some(compiled);
-                    stats.promote();
-                    tracing::info!("JIT compiled policy: {}", name);
+                    *self.jit_code.write() = Some(compiled);
+                    self.stats.promote();
+                    tracing::info!("JIT compiled policy: {}", self.name);
                 },
                 Err(e) => {
-                    tracing::error!("JIT compilation failed for {}: {}", name, e);
+                    tracing::error!("JIT compilation failed for {}: {}", self.name, e);
                 },
             }
-        });
+        }
     }
 }
 
 /// Manager for tiered policies
-pub struct TieredPolicyManager {
-    #[cfg(feature = "jit")]
-    compiler: RwLock<JitCompiler>,
-}
+///
+/// Each `TieredPolicy` owns its JIT compiler, so the manager holds no state.
+pub struct TieredPolicyManager {}
 
 impl TieredPolicyManager {
     pub fn new() -> Result<Self> {
-        Ok(Self {
-            #[cfg(feature = "jit")]
-            compiler: RwLock::new(JitCompiler::new()?),
-        })
+        Ok(Self {})
     }
 
     /// Create a tiered policy from bytecode
@@ -227,9 +229,18 @@ impl TieredPolicyManager {
     /// Synchronously compile a policy to JIT (for critical policies)
     #[cfg(feature = "jit")]
     pub fn compile_sync(&self, policy: &TieredPolicy) -> Result<()> {
-        let compiled = self.compiler.write().compile(&policy.bytecode, &policy.name)?;
-        *policy.jit_code.write() = Some(compiled);
-        *policy.stats.current_tier.write() = ExecutionTier::BaselineJIT;
+        // Create compiler for the policy if it doesn't have one
+        if policy.compiler.read().is_none() {
+            *policy.compiler.write() = Some(JitCompiler::new()?);
+        }
+
+        // Compile using the policy's own compiler
+        let mut compiler_guard = policy.compiler.write();
+        if let Some(ref mut compiler) = *compiler_guard {
+            let compiled = compiler.compile(&policy.bytecode, &policy.name)?;
+            *policy.jit_code.write() = Some(compiled);
+            *policy.stats.current_tier.write() = ExecutionTier::BaselineJIT;
+        }
         Ok(())
     }
 
@@ -473,5 +484,51 @@ mod tests {
         assert!(ExecutionTier::Interpreter < ExecutionTier::BaselineJIT);
         assert!(ExecutionTier::BaselineJIT < ExecutionTier::OptimizedJIT);
         assert!(ExecutionTier::OptimizedJIT < ExecutionTier::NativeAOT);
+    }
+
+    #[test]
+    #[cfg(feature = "jit")]
+    #[cfg_attr(miri, ignore = "JIT compilation requires pointer operations not supported by Miri")]
+    fn test_promotion_installs_jit_code_that_later_evaluations_use() {
+        use crate::engine::DecisionKind;
+        use crate::rar::EvaluationContext;
+        use crate::testing::simple_policy;
+
+        let policy = TieredPolicy::new(simple_policy(1, false), "DenyPolicy".to_string());
+        // Skip the promotion cooldown instead of sleeping through it.
+        *policy.stats.last_promoted.write() =
+            Instant::now().checked_sub(Duration::from_secs(11)).unwrap();
+        let ctx = EvaluationContext::default();
+
+        for _ in 0..100 {
+            policy.evaluate(&ctx).unwrap();
+        }
+
+        assert!(
+            policy.jit_code.read().is_some(),
+            "promotion must install compiled code on the policy"
+        );
+        assert_eq!(*policy.stats.current_tier.read(), ExecutionTier::BaselineJIT);
+        assert_eq!(policy.evaluate(&ctx).unwrap().kind, DecisionKind::Deny);
+        assert_eq!(policy.stats.eval_count.load(Ordering::Relaxed), 101);
+    }
+
+    #[test]
+    #[cfg(feature = "jit")]
+    #[cfg_attr(miri, ignore = "JIT compilation requires pointer operations not supported by Miri")]
+    fn test_compile_sync_installs_runnable_code() {
+        use crate::engine::DecisionKind;
+        use crate::rar::EvaluationContext;
+        use crate::testing::simple_policy;
+
+        let manager = TieredPolicyManager::new().unwrap();
+        let policy = manager.create_policy(simple_policy(2, false), "Critical".to_string());
+        manager.compile_sync(&policy).unwrap();
+
+        assert!(policy.jit_code.read().is_some());
+        assert_eq!(
+            policy.evaluate(&EvaluationContext::default()).unwrap().kind,
+            DecisionKind::Deny
+        );
     }
 }
