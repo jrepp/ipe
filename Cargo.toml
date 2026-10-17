@@ -25,16 +25,10 @@ serde_json = "1.0"
 thiserror = "1.0"
 anyhow = "1.0"
 
-# Parser
-nom = "7.1"
-# Fix minimal versions - logos 0.13 has compatibility issues, use 0.14+
-logos = "0.14"
-
 # Performance
-bumpalo = { version = "3.14", features = ["collections"] }
+# Used by policy store snapshot reads (see fix/policy-store-integrity)
 arc-swap = "1.6"
 parking_lot = "0.12"
-dashmap = "5.5"
 crossbeam-channel = "0.5"
 
 # JIT Compilation
