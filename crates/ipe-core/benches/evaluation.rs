@@ -6,9 +6,14 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ipe_core::{
-    bytecode::{CompiledPolicy, Instruction, PolicyHeader, Value},
-    engine::Decision,
-    rar::{Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource},
+    bytecode::{CompOp, CompiledPolicy, Instruction, PolicyHeader, Value},
+    engine::PolicyEngine,
+    index::PolicyDB,
+    interpreter::{FieldMapping, Interpreter},
+    rar::{
+        Action, AttributeValue, EvaluationContext, Operation, Principal, Request, Resource,
+        ResourceTypeId,
+    },
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -61,7 +66,7 @@ fn create_sample_policy() -> CompiledPolicy {
         Instruction::Compare { op: ipe_core::bytecode::CompOp::Eq },
         Instruction::Return { value: true },
     ];
-    let constants = vec![Value::String("Deployment".to_string())];
+    let constants = vec![Value::String("production".to_string())];
 
     CompiledPolicy {
         header: PolicyHeader {
@@ -76,18 +81,41 @@ fn create_sample_policy() -> CompiledPolicy {
     }
 }
 
+/// Sample field map for the sample policy: offset 0 -> resource.type
+fn sample_field_map() -> FieldMapping {
+    let mut field_map = FieldMapping::new();
+    field_map.insert(0, vec!["resource".to_string(), "environment".to_string()]);
+    field_map
+}
+
+/// Build a PolicyDB with `policy_count` allow-policies matching resource type 1
+fn build_policy_db(policy_count: usize) -> PolicyDB {
+    let mut db = PolicyDB::new();
+    for i in 0..policy_count {
+        let mut policy = CompiledPolicy::new(i as u64);
+        policy.emit(Instruction::LoadField { offset: 0 });
+        let idx = policy.add_constant(Value::String("production".to_string()));
+        policy.emit(Instruction::LoadConst { idx });
+        policy.emit(Instruction::Compare { op: CompOp::Eq });
+        policy.emit(Instruction::Return { value: true });
+        db.add_policy(format!("policy-{i}"), policy, sample_field_map(), vec![ResourceTypeId(1)]);
+    }
+    db
+}
+
 /// Benchmark: Single policy evaluation (interpreter)
 fn bench_single_policy_interpreter(c: &mut Criterion) {
     let policy = create_sample_policy();
     let context = create_sample_context();
+    let mut interpreter = Interpreter::new(sample_field_map());
 
     c.bench_function("single_policy_interpreter", |b| {
         b.iter(|| {
-            // Evaluate policy (interpreter mode)
-            // Note: This is a placeholder - actual implementation needed
-            black_box(&policy);
-            black_box(&context);
-            Decision::allow()
+            // Evaluate the policy for real through the bytecode interpreter
+            let result = interpreter
+                .evaluate(black_box(&policy), black_box(&context))
+                .expect("policy evaluation failed");
+            black_box(result)
         })
     });
 }
@@ -115,23 +143,35 @@ fn bench_multiple_policies(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("multiple_policies");
     for policy_count in [10, 100, 1000, 10000] {
-        let policies: Vec<_> = (0..policy_count).map(|_| create_sample_policy()).collect();
+        let engine = PolicyEngine::with_policy_db(build_policy_db(policy_count));
 
-        group.throughput(Throughput::Elements(policy_count));
-        group.bench_with_input(
-            BenchmarkId::from_parameter(policy_count),
-            &policies,
-            |b, policies| {
-                b.iter(|| {
-                    // Evaluate all policies
-                    for policy in policies {
-                        black_box(policy);
-                        black_box(&context);
-                        // Decision evaluation would go here
-                    }
-                })
-            },
-        );
+        group.throughput(Throughput::Elements(policy_count as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(policy_count), &engine, |b, engine| {
+            b.iter(|| {
+                // Evaluate all applicable policies through the engine
+                let decision = engine.evaluate(&context).expect("evaluation failed");
+                black_box(decision)
+            })
+        });
+    }
+    group.finish();
+}
+
+/// Benchmark: PolicyEngine::evaluate end to end (index lookup + interpreter)
+/// at small policy counts - the per-request hot path
+fn bench_engine_evaluate(c: &mut Criterion) {
+    let context = create_sample_context();
+
+    let mut group = c.benchmark_group("engine_evaluate");
+    for policy_count in [1, 8] {
+        let engine = PolicyEngine::with_policy_db(build_policy_db(policy_count));
+
+        group.bench_with_input(BenchmarkId::from_parameter(policy_count), &engine, |b, engine| {
+            b.iter(|| {
+                let decision = engine.evaluate(&context).expect("evaluation failed");
+                black_box(decision)
+            })
+        });
     }
     group.finish();
 }
@@ -217,6 +257,7 @@ criterion_group! {
     targets =
         bench_single_policy_interpreter,
         bench_multiple_policies,
+        bench_engine_evaluate,
         bench_policy_compilation,
         bench_context_creation,
         bench_policy_loading,
