@@ -55,7 +55,7 @@ jobs:
           path: target/llvm-cov/html/
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: lcov.info
           fail_ci_if_error: true
