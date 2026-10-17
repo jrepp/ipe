@@ -1,0 +1,29 @@
+// Control Plane Feature: Require Heartbeat
+// Path: _features.registry.require_heartbeat
+//
+// Controls heartbeat requirements for instance health monitoring
+
+policy RequireHeartbeat {
+    require context.operation == "registry"
+
+    // Get heartbeat parameters
+    let last_heartbeat = context.instance.last_heartbeat || 0
+    let current_time = context.timestamp
+    let heartbeat_interval = context.instance.heartbeat_interval || 30
+    let time_since_heartbeat = current_time - last_heartbeat
+
+    // Calculate if heartbeat is stale
+    let heartbeat_stale = time_since_heartbeat > (heartbeat_interval * 2)
+
+    // In production, mark instances as unhealthy if heartbeat is stale
+    if context.environment == "production" && heartbeat_stale {
+        deny("Instance heartbeat is stale (last: " + time_since_heartbeat + "s ago)")
+    }
+
+    // In staging/dev, more lenient heartbeat requirements
+    if heartbeat_stale && time_since_heartbeat > 120 {
+        deny("Instance heartbeat significantly stale")
+    }
+
+    allow("Heartbeat is current")
+}
