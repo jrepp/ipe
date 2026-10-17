@@ -1,0 +1,46 @@
+# merge-god merge rules — ipe (rapid-merge profile)
+#
+# IPE is a security-critical, latency-sensitive authorization engine. These
+# rules favor fast, safe landings of small PRs while keeping the invariants
+# that protect the evaluation path, tenant isolation, and history hygiene.
+# Grounded in the repository's own design corpus: MISSION.md, REQUIREMENTS.md,
+# docs/ARCHITECTURE.md, and MVP_PLAN.md.
+
+version: 1
+title: ipe rapid merge rules
+
+rules:
+  # Grounding and gates
+  - Ground every decision in the repository's design corpus: MISSION.md for mission and architecture boundaries, REQUIREMENTS.md for the numbered REQ-* requirements, docs/ARCHITECTURE.md for component boundaries, and MVP_PLAN.md for quality bars.
+  - Run the applicable gates, but prefer landing small safe PRs quickly over exhaustively collecting evidence.
+  - Continue collecting independent evidence after a non-terminal gate fails, so the final result reports the whole merge picture.
+  - Compare failing validation against the current base branch before classifying a failure as a PR regression.
+
+  # Performance and security invariants (evaluation path)
+  - Changes touching the evaluation path (parser, type checker, bytecode compiler, interpreter, JIT, policy store) must not regress the latency targets in MISSION.md (50 microseconds interpreted, 10 microseconds JIT); require benchmark evidence only when the diff touches that path.
+  - Preserve the three-plane separation (control plane, data plane, context plane) described in docs/ARCHITECTURE.md; remediation must not move responsibility across planes to make a failing gate pass.
+  - Preserve multi-tenant isolation and the trust boundaries described in MISSION.md; treat secret exposure, tenant-data leakage, and newly introduced dependency advisories as blockers.
+
+  # Remediation
+  - In mechanical-fixes mode, apply generated or mechanical fixes freely, then rerun affected gates.
+  - Remediation must preserve the PR's retained scope; stop before unrelated redesign, but do not block a landing on pre-existing debt outside the diff.
+
+  # Review takes (rapid)
+  - Review as a maintainer first: preserve author intent and project conventions; style nits are not blockers.
+  - Review as a test owner: require meaningful tests for changed behavior at the repository's existing coverage bar (codecov, currently 94 percent); docs- or comment-only changes do not need new test scaffolding.
+  - Review as a security reviewer: keep security review proportionate to the diff, but always check tenant isolation and secret handling for changes under crates/.
+  - Review as a docs reviewer: require docs updates only for user-facing policy-language, API, or deployment changes; keep docs/INDEX.md links valid.
+  - Review as a release manager: prefer small safe landings; when in doubt, merge and follow up rather than hold the queue.
+
+  # Final decision
+  - Commits added by merge-god must use Conventional Commits format, such as `fix:`, `feat:`, `docs:`, `test:`, `refactor:`, `chore:`.
+  - Preserve collaborator ancestry by merging the base branch into PR branches and landing PRs with merge commits; do not rebase, force-push, or rewrite existing commits.
+  - Commits, PR comments, review responses, documentation, and code must not include AI/model/assistant branding, attribution, signatures, or generated-by trailers.
+  - If the result is not safe to merge, publish the smallest useful blocker summary and the next required owner action.
+
+remediation:
+  mode: mechanical-fixes
+
+workflow_ir:
+  - git+https://github.com/jrepp/merge-god.git@4fd39b7d4592eec5bf3e1b969b3246f863779a41//docs/workflow-ir/review-workflows/pre-landing-review.workflow-ir.md
+  - git+https://github.com/jrepp/merge-god.git@4fd39b7d4592eec5bf3e1b969b3246f863779a41//docs/workflow-ir/review-workflows/specialist-review.workflow-ir.md

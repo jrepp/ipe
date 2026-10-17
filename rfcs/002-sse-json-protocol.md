@@ -23,8 +23,10 @@ Requirements:
 ✅ JSON-RPC 2.0 for consistency
 ✅ SSE for streaming (HTTP-compatible)
 ✅ Optional binary encoding (MessagePack)
-✅ Batch operations for efficiency
-✅ Capability discovery
+✅ Multiple eval requests (N >= 1) in sequence
+✅ Server-advertised capabilities in hello
+✅ Policy tree enumeration
+✅ Feature flags support
 
 ## Protocol Stack
 
@@ -60,7 +62,26 @@ Client → GET /eval HTTP/1.1
 
 Server → HTTP/1.1 200 OK
          Content-Type: text/event-stream
+
+         event: hello
+         data: {
+           "jsonrpc": "2.0",
+           "method": "hello",
+           "params": {
+             "protocol_version": "1.0",
+             "capabilities": ["evaluate", "subscribe", "list-policies", "feature-flags"],
+             "encodings": ["json", "msgpack"],
+             "server_version": "0.1.0",
+             "feature_flags": {
+               "streaming_enabled": true,
+               "policy_versioning": true,
+               "tree_enumeration": true
+             }
+           }
+         }
 ```
+
+The server MUST send a `hello` message immediately upon connection, advertising its capabilities and enabled feature flags.
 
 ### Request/Response Example
 
@@ -111,32 +132,31 @@ event: policy-updated
 data: {"method": "notification", "params": {"policy": "...", "version": "..."}}
 ```
 
-### Batch Evaluation
+### Multiple Evaluations
+
+Clients can send N evaluation requests (where N >= 1) without waiting for responses. The server will process them and send back results with matching request IDs:
 
 ```json
-// Request multiple evaluations
-event: evaluate-batch
-data: {
-  "method": "evaluate-batch",
-  "params": {
-    "evaluations": [
-      {"id": "e1", "policies": ["a"], "context": {...}},
-      {"id": "e2", "policies": ["b"], "context": {...}}
-    ]
-  }
-}
+// Client sends multiple requests with unique IDs
+event: evaluate
+id: req-001
+data: {"method": "evaluate", "params": {"policies": ["a"], "context": {...}}}
 
-// Response with all results
-event: result-batch
-data: {
-  "result": {
-    "results": [
-      {"id": "e1", "decision": "allow"},
-      {"id": "e2", "decision": "deny"}
-    ]
-  }
-}
+event: evaluate
+id: req-002
+data: {"method": "evaluate", "params": {"policies": ["b"], "context": {...}}}
+
+// Server responds with matching IDs (order not guaranteed)
+event: result
+id: req-001
+data: {"result": {"decision": "allow", ...}}
+
+event: result
+id: req-002
+data: {"result": {"decision": "deny", ...}}
 ```
+
+Clients MUST include unique IDs to correlate requests and responses.
 
 ## Control Plane Protocol
 
@@ -178,18 +198,62 @@ data: {
 }
 ```
 
-### Query Tree Example
+### Policy Tree Enumeration
+
+Clients can enumerate the policy tree to discover available policies and navigate the hierarchy:
 
 ```json
-// List policies
+// List policies with prefix filter
 event: list-policies
-data: {"method": "list-policies", "params": {"prefix": "prod."}}
+data: {
+  "method": "list-policies",
+  "params": {
+    "prefix": "prod.",
+    "depth": 2,          // Optional: limit tree depth
+    "include_metadata": true
+  }
+}
 
-// Response
+// Response with tree structure
 data: {
   "result": {
-    "policies": [
-      {"path": "prod.deployment.approval", "version": "abc123"}
+    "root": "prod",
+    "children": [
+      {
+        "name": "deployment",
+        "type": "directory",
+        "children": [
+          {
+            "name": "approval",
+            "type": "policy",
+            "path": "prod.deployment.approval",
+            "version": "abc123",
+            "hash": "sha256:...",
+            "updated_at": 1698765432
+          }
+        ]
+      },
+      {
+        "name": "api",
+        "type": "directory",
+        "children": [...]
+      }
+    ]
+  }
+}
+
+// Get subtree at specific path
+event: get-subtree
+data: {"method": "get-subtree", "params": {"path": "prod.deployment"}}
+
+// Response includes only that subtree
+data: {
+  "result": {
+    "path": "prod.deployment",
+    "type": "directory",
+    "children": [
+      {"name": "approval", "type": "policy", ...},
+      {"name": "validation", "type": "policy", ...}
     ]
   }
 }
@@ -260,21 +324,37 @@ curl --unix-socket /var/run/ipe/eval.sock \
   -d '{"method":"evaluate","params":{...}}'
 ```
 
-## Capability Negotiation
+## Feature Flags
+
+Feature flags allow servers to enable/disable functionality and clients to adapt behavior:
 
 ```json
-// Client hello
-data: {"method": "hello", "params": {"capabilities": ["evaluate", "batch"]}}
+// Server advertises feature flags in hello message (see Connection Handshake)
+"feature_flags": {
+  "streaming_enabled": true,
+  "policy_versioning": true,
+  "tree_enumeration": true,
+  "audit_logging": false,
+  "experimental_caching": false
+}
 
-// Server response
+// Client can query current feature flags
+event: get-feature-flags
+data: {"method": "get-feature-flags"}
+
+// Response
 data: {
   "result": {
-    "protocol_version": "1.0",
-    "capabilities": ["evaluate", "subscribe", "batch"],
-    "encodings": ["json"]
+    "flags": {
+      "streaming_enabled": true,
+      "policy_versioning": true,
+      ...
+    }
   }
 }
 ```
+
+Clients SHOULD check feature flags before using optional features. Servers MUST reject requests for disabled features with error code -32601 (Method not found).
 
 ## Security
 

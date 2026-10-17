@@ -1,4 +1,4 @@
-# RFC-005: Runtime Facts and Policy Language
+# RFC-009: Runtime Facts and Policy Language
 
 **Status:** Draft
 **Created:** 2026-10-16
@@ -19,7 +19,7 @@ IPE will evaluate policies against authenticated request input and a local, type
 
 The language will explicitly separate `input` from `data`, declare fact dependencies and freshness requirements, and support typed records, lists, membership, and bounded aggregates. Missing or expired evidence cannot silently become a negative value or an empty list. Evaluation correctness repairs precede these additions.
 
-All APIs, syntax, and guarantees below are proposed. This RFC fills the dynamic-data slot reserved as RFC-005. It replaces the earlier scope/TTL proposal's optional-expiration approach for policy-resolvable facts; it does not mark either proposal implemented. The initial deployment is one IPE instance with local durable storage. Replication is outside this release.
+All APIs, syntax, and guarantees below are proposed. This RFC fills the dynamic-data slot reserved as RFC-009. It replaces the earlier scope/TTL proposal's optional-expiration approach for policy-resolvable facts; it does not mark either proposal implemented. The initial deployment is one IPE instance with local durable storage. Replication is outside this release.
 
 ## Platform prerequisites
 

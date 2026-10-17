@@ -1,6 +1,8 @@
 # Bytecode Documentation
 
-The IPE bytecode is a stack-based instruction set optimized for policy evaluation. Policies compile to bytecode for fast interpretation and optional JIT compilation.
+IPE compiles policies to bytecode, a sequence of instructions for the interpreter.
+The instructions use a stack, which stores values in last-in, first-out order.
+Optional just-in-time (JIT) compilation converts bytecode to native code at runtime.
 
 ## Instruction Set
 
@@ -87,46 +89,51 @@ sequenceDiagram
 
 ### 1. LoadField { offset: u16 }
 
-Loads a field from the evaluation context (RAR) onto the stack.
+LoadField puts a field from the Resource/Action/Request (RAR) context on the stack.
 
-**Behavior**:
-- Read field at specified offset from field mapping
-- Navigate RAR structure (resource, action, request)
-- Push resulting value onto stack
+Behavior:
 
-**Example**:
+- The interpreter reads the field mapping at the specified offset.
+- It finds the field in the RAR structure (resource, action, request).
+- It puts the field value on the stack.
+
+Example:
+
 ```rust
 LoadField { offset: 0 }  // Load resource.type
 LoadField { offset: 1 }  // Load resource.owner
 ```
 
-**Stack Effect**: `[] → [Value]`
+Stack Effect: `[] → [Value]`
 
 ---
 
 ### 2. LoadConst { idx: u16 }
 
-Loads a constant from the constant pool onto the stack.
+LoadConst puts a constant on the stack. The constant pool stores values that the policy references.
 
-**Behavior**:
-- Read constant at index from constant pool
-- Clone value onto stack
+Behavior:
 
-**Example**:
+- The interpreter reads the constant at the specified index.
+- It clones the value onto the stack.
+
+Example:
+
 ```rust
 LoadConst { idx: 0 }  // Load constant "production"
 LoadConst { idx: 1 }  // Load constant 42
 ```
 
-**Stack Effect**: `[] → [Value]`
+Stack Effect: `[] → [Value]`
 
 ---
 
 ### 3. Compare { op: CompOp }
 
-Compares top two stack values using the specified comparison operator.
+Compare applies the specified comparison operator to the top two stack values.
 
-**Operators**:
+Operators:
+
 - `Eq`: Equal (==)
 - `Neq`: Not equal (!=)
 - `Lt`: Less than (<)
@@ -134,12 +141,14 @@ Compares top two stack values using the specified comparison operator.
 - `Gt`: Greater than (>)
 - `Gte`: Greater than or equal (>=)
 
-**Behavior**:
-- Pop two values from stack (b, then a)
-- Compare: a op b
-- Push boolean result
+Behavior:
 
-**Example**:
+- The interpreter removes two values from the stack (b, then a).
+- It compares a and b with op.
+- It puts the boolean result on the stack.
+
+Example:
+
 ```rust
 // Evaluate: resource.count >= 5
 LoadField { offset: 0 }
@@ -147,20 +156,22 @@ LoadConst { idx: 0 }      // 5
 Compare { op: CompOp::Gte }
 ```
 
-**Stack Effect**: `[Value, Value] → [Bool]`
+Stack Effect: `[Value, Value] → [Bool]`
 
 ---
 
 ### 4. And
 
-Logical AND of top two boolean values.
+And applies logical AND to the top two boolean values. A boolean value is true or false.
 
-**Behavior**:
-- Pop two booleans from stack
-- Compute: a AND b
-- Push boolean result
+Behavior:
 
-**Example**:
+- The interpreter removes two booleans from the stack.
+- It computes a AND b.
+- It puts the boolean result on the stack.
+
+Example:
+
 ```rust
 // Evaluate: is_admin and is_active
 LoadField { offset: 0 }   // is_admin
@@ -168,20 +179,22 @@ LoadField { offset: 1 }   // is_active
 And
 ```
 
-**Stack Effect**: `[Bool, Bool] → [Bool]`
+Stack Effect: `[Bool, Bool] → [Bool]`
 
 ---
 
 ### 5. Or
 
-Logical OR of top two boolean values.
+Or applies logical OR to the top two boolean values.
 
-**Behavior**:
-- Pop two booleans from stack
-- Compute: a OR b
-- Push boolean result
+Behavior:
 
-**Example**:
+- The interpreter removes two booleans from the stack.
+- It computes a OR b.
+- It puts the boolean result on the stack.
+
+Example:
+
 ```rust
 // Evaluate: is_admin or is_owner
 LoadField { offset: 0 }   // is_admin
@@ -189,57 +202,63 @@ LoadField { offset: 1 }   // is_owner
 Or
 ```
 
-**Stack Effect**: `[Bool, Bool] → [Bool]`
+Stack Effect: `[Bool, Bool] → [Bool]`
 
 ---
 
 ### 6. Not
 
-Logical NOT of top boolean value.
+Not applies logical NOT to the top boolean value.
 
-**Behavior**:
-- Pop boolean from stack
-- Compute: NOT a
-- Push boolean result
+Behavior:
 
-**Example**:
+- The interpreter removes a boolean from the stack.
+- It computes NOT a.
+- It puts the boolean result on the stack.
+
+Example:
+
 ```rust
 // Evaluate: not is_suspended
 LoadField { offset: 0 }   // is_suspended
 Not
 ```
 
-**Stack Effect**: `[Bool] → [Bool]`
+Stack Effect: `[Bool] → [Bool]`
 
 ---
 
 ### 7. Jump { offset: i16 }
 
-Unconditional jump to relative offset.
+Jump changes the program counter by a relative offset. The program counter records the position of the next instruction.
 
-**Behavior**:
-- Add offset to program counter
-- Continue execution at new location
+Behavior:
 
-**Example**:
+- The interpreter adds the offset to the program counter.
+- It continues at the new location.
+
+Example:
+
 ```rust
 Jump { offset: 5 }  // Skip next 5 instructions
 ```
 
-**Stack Effect**: No change
+Stack Effect: No change
 
 ---
 
 ### 8. JumpIfFalse { offset: i16 }
 
-Conditional jump if top of stack is false.
+If the top stack value is false, JumpIfFalse changes the program counter by a relative offset.
 
-**Behavior**:
-- Pop boolean from stack
-- If false, add offset to program counter
-- Otherwise, continue to next instruction
+Behavior:
 
-**Example**:
+- The interpreter removes a boolean from the stack.
+- If the value is false, the interpreter adds the offset to the program counter.
+- Otherwise, it continues to the next instruction.
+
+Example:
+
 ```rust
 // Short-circuit AND: if (!a) skip b
 LoadField { offset: 0 }    // a
@@ -248,20 +267,22 @@ LoadField { offset: 1 }    // b
 And
 ```
 
-**Stack Effect**: `[Bool] → []`
+Stack Effect: `[Bool] → []`
 
 ---
 
 ### 9. Call { func: u16, argc: u8 }
 
-Calls a built-in function.
+Call runs a built-in function.
 
-**Behavior**:
-- Pop argc arguments from stack
-- Call function with ID func
-- Push function result
+Behavior:
 
-**Example**:
+- The interpreter removes argc arguments from the stack.
+- It calls the function with ID func.
+- It puts the function result on the stack.
+
+Example:
+
 ```rust
 // Evaluate: max(a, b)
 LoadField { offset: 0 }   // a
@@ -269,37 +290,41 @@ LoadField { offset: 1 }   // b
 Call { func: 0, argc: 2 } // max function
 ```
 
-**Stack Effect**: `[Value × argc] → [Value]`
+Stack Effect: `[Value × argc] → [Value]`
 
 ---
 
 ### 10. Return { value: bool }
 
-Returns from policy evaluation with result.
+Return ends policy evaluation with a boolean decision.
 
-**Behavior**:
-- Clear stack
-- Return boolean decision
-- Halt execution
+Behavior:
 
-**Example**:
+- The interpreter clears the stack.
+- It returns the boolean decision.
+- It stops execution.
+
+Example:
+
 ```rust
 Return { value: true }   // Allow
 Return { value: false }  // Deny
 ```
 
-**Stack Effect**: `[*] → [] (terminates)`
+Stack Effect: `[*] → [] (terminates)`
 
 ## Compilation Examples
 
 ### Simple Comparison
 
-**Policy**:
+Policy:
+
 ```
 requires resource.count >= 5
 ```
 
-**Bytecode**:
+Bytecode:
+
 ```rust
 LoadField { offset: 0 }   // resource.count
 LoadConst { idx: 0 }      // 5
@@ -311,14 +336,16 @@ Return { value: true }
 
 ### Logical AND
 
-**Policy**:
+Policy:
+
 ```
 requires
   resource.type == "Document"
   and resource.confidential == true
 ```
 
-**Bytecode**:
+Bytecode:
+
 ```rust
 // resource.type == "Document"
 LoadField { offset: 0 }
@@ -339,12 +366,14 @@ Return { value: true }
 
 ### IN Expression
 
-**Policy**:
+Policy:
+
 ```
 requires environment in ["prod", "staging"]
 ```
 
-**Bytecode** (expanded to OR chain):
+Bytecode (expanded to OR chain):
+
 ```rust
 // environment == "prod"
 LoadField { offset: 0 }
@@ -365,12 +394,14 @@ Return { value: true }
 
 ### Short-Circuit AND
 
-**Policy**:
+Policy:
+
 ```
 requires is_admin and has_permission
 ```
 
-**Optimized Bytecode** (with short-circuit):
+Optimized Bytecode (with short-circuit):
+
 ```rust
 LoadField { offset: 0 }    // is_admin
 JumpIfFalse { offset: 3 }  // Skip if false
@@ -394,7 +425,7 @@ graph LR
 
 ### Constant Deduplication
 
-The compiler deduplicates constants to minimize bytecode size:
+The compiler stores each constant once to reduce bytecode size:
 
 ```rust
 // Before deduplication
@@ -419,7 +450,8 @@ graph TD
     FM --> F3["offset=3 → resource.confidential"]
 ```
 
-**Example Mapping**:
+Example Mapping:
+
 ```rust
 HashMap {
     0 => vec!["resource", "type"],
@@ -461,16 +493,16 @@ graph TB
 
 ### Stack
 
-- **Type**: Vec<Value>
-- **Max Size**: 1024 elements
-- **Operations**: push, pop, peek, clear
-- **Bounds Checking**: Yes (prevents overflow/underflow)
+- Type: Vec<Value>
+- Max Size: 1024 elements
+- Operations: push, pop, peek, clear
+- Bounds Checking: Yes (prevents overflow/underflow)
 
 ### Program Counter
 
-- **Type**: usize
-- **Range**: 0 to code.len()
-- **Bounds Checking**: Yes (prevents out-of-bounds access)
+- Type: usize
+- Range: 0 to code.len()
+- Bounds Checking: Yes (prevents out-of-bounds access)
 
 ## Performance Characteristics
 
@@ -486,13 +518,15 @@ graph TB
 
 ### Memory Usage
 
-**Typical Policy**:
+Typical Policy:
+
 - Code: ~50-200 bytes
 - Constants: ~20-100 bytes
 - Field Mapping: ~50-150 bytes
-- **Total**: ~120-450 bytes per policy
+- Total: ~120-450 bytes per policy
 
-**Stack**:
+Stack:
+
 - Size: 8 bytes × stack_depth
 - Max: 8 KB (1024 elements)
 
@@ -537,7 +571,7 @@ LoadConst { idx: 0 }  // Double negation eliminated
 
 ## JIT Compilation
 
-Bytecode can be JIT-compiled to native code using Cranelift:
+Cranelift can compile bytecode to native code:
 
 ```mermaid
 graph LR
@@ -549,11 +583,13 @@ graph LR
     I --> E
 ```
 
-**Thresholds**:
-- Baseline JIT: 100+ evaluations
-- Optimized JIT: 10,000+ evaluations, avg latency > 20μs
+Thresholds:
 
-**Performance**:
+- Baseline JIT: 100+ evaluations
+- Optimized JIT: 10,000+ evaluations, average latency > 20μs
+
+Performance:
+
 - Interpreter: ~50μs per policy
 - Baseline JIT: ~20μs per policy (2-3x faster)
 - Optimized JIT: ~10μs per policy (5-10x faster)

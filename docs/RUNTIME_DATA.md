@@ -5,7 +5,7 @@ configured HTTPS JSON pull connector in the same server. Policies check a local
 snapshot of typed facts. Every fact has a finite TTL, and unavailable evidence
 produces a denial with an `indeterminate` status.
 
-This is the implemented first slice of [RFC-005](../rfcs/005-runtime-facts-and-policy-language.md).
+This is the implemented first slice of [RFC-009](../rfcs/009-runtime-facts-and-policy-language.md).
 The RFC describes the broader target; it is not a claim that all its release gates
 are complete. The server uses the new runtime modules and does not call the legacy
 compiler, policy store, tiered evaluator, or JIT.

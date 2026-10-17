@@ -215,7 +215,7 @@ Performance metrics will be added after comprehensive benchmarking with profile-
 
 ### New: Sidecar Architecture RFCs
 
-- **[RFC-001](rfcs/001-sidecar-service-architecture.md)** - Minimal sidecar service (<50MB)
+- **[RFC-001](rfcs/001-predicate-service-architecture.md)** - Minimal sidecar service (<50MB)
 - **[RFC-002](rfcs/002-sse-json-protocol.md)** - SSE/JSON protocol (MCP-inspired)
 - **[RFC-003](rfcs/003-policy-tree-storage.md)** - Content-addressable policy storage
 

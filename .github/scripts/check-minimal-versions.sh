@@ -16,6 +16,9 @@ declare -a ALLOWED_FAILURES=(
                       # (E0433 against minimal syn/quote) in the ipe-wasm
                       # member; real builds use the resolved lockfile and
                       # are unaffected.
+    "rustix"          # rustix 0.38.x at minimal versions fails against the
+                      # minimal linux-raw-sys/libc on Linux targets; real
+                      # builds use the resolved lockfile and are unaffected.
 )
 
 # Run the check and capture output

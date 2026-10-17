@@ -1,6 +1,8 @@
 # Abstract Syntax Tree (AST) Documentation
 
-The IPE AST represents the parsed structure of policy definitions. The AST provides a typed, validated representation that can be compiled to bytecode or analyzed for correctness.
+The IPE abstract syntax tree (AST) represents the structure of a policy.
+The type checker makes sure that the AST uses compatible types.
+The compiler converts the AST to bytecode, a sequence of instructions for the interpreter.
 
 ## AST Node Structure
 
@@ -89,12 +91,13 @@ classDiagram
 
 ## Policy Structure
 
-A policy consists of:
-1. **Name**: Unique identifier for the policy
-2. **Intent**: Natural language description of policy purpose
-3. **Triggers**: Conditions that determine when the policy applies
-4. **Requirements**: What must be satisfied (Requires) or denied (Denies)
-5. **Metadata**: Optional key-value pairs for additional context
+A policy contains these parts:
+
+1. Name: Unique identifier for the policy
+2. Intent: Natural language description of policy purpose
+3. Triggers: Conditions that determine whether the policy applies
+4. Requirements: Conditions that must hold (Requires) or a denial (Denies)
+5. Metadata: Optional key-value pairs for additional context
 
 ### Example Policy
 
@@ -144,7 +147,8 @@ graph TD
 ## Expression Types
 
 ### 1. Literal
-Direct values embedded in the policy.
+
+A literal contains a value in the policy.
 
 ```rust
 Expression::Literal(Value::Int(42))
@@ -153,7 +157,8 @@ Expression::Literal(Value::Bool(true))
 ```
 
 ### 2. Path
-Field references in RAR (Resource/Action/Request) context.
+
+A path refers to a field in the Resource/Action/Request (RAR) context.
 
 ```rust
 Expression::Path(vec!["resource", "type"])
@@ -161,7 +166,8 @@ Expression::Path(vec!["request", "principal", "id"])
 ```
 
 ### 3. Binary
-Comparison and arithmetic operations.
+
+A binary expression compares two values or applies arithmetic to them.
 
 ```rust
 Expression::Binary(
@@ -172,7 +178,8 @@ Expression::Binary(
 ```
 
 ### 4. Logical
-Boolean operations (AND, OR, NOT).
+
+A logical expression applies AND, OR, or NOT to boolean values. A boolean value is true or false.
 
 ```rust
 Expression::Logical(
@@ -182,7 +189,8 @@ Expression::Logical(
 ```
 
 ### 5. In
-Membership testing.
+
+An In expression tests whether a value belongs to a set.
 
 ```rust
 Expression::In(
@@ -192,7 +200,8 @@ Expression::In(
 ```
 
 ### 6. Aggregate
-Collection operations.
+
+An aggregate expression calculates a value from a collection.
 
 ```rust
 Expression::Aggregate(
@@ -202,7 +211,8 @@ Expression::Aggregate(
 ```
 
 ### 7. Call
-Function invocations.
+
+A Call expression calls a function.
 
 ```rust
 Expression::Call(
@@ -237,11 +247,12 @@ classDiagram
 
 ### Type Checking
 
-The type checker ensures:
-- Binary operations have compatible operands
-- Logical operations work on boolean expressions
-- Path expressions resolve to valid fields
-- Function calls have correct argument types
+The type checker makes sure that these rules hold:
+
+- Binary operations have compatible operands.
+- Logical operations work on boolean expressions.
+- Path expressions resolve to valid fields.
+- Function calls have correct argument types.
 
 ### Type Compatibility Rules
 
@@ -255,13 +266,14 @@ The type checker ensures:
 
 ### Int/Float Coercion
 
-The type system allows Int to coerce to Float for comparison operations:
+The type system can convert Int to Float for comparisons:
+
 - `5 < 3.14` → Valid (Int coerces to Float)
 - `3.14 > 5` → Valid (Int coerces to Float)
 
 ## Visitor Pattern
 
-The AST implements the visitor pattern for traversal and analysis.
+The AST supports visitors, objects that examine nodes in a tree. A visitor can collect information or analyze expressions.
 
 ```mermaid
 classDiagram
@@ -294,7 +306,9 @@ classDiagram
 ### Example Visitors
 
 #### CountingVisitor
-Counts nodes in the AST:
+
+CountingVisitor counts nodes in the AST:
+
 ```rust
 let mut visitor = CountingVisitor { count: 0 };
 walk_policy(&mut visitor, &policy);
@@ -302,7 +316,9 @@ println!("Total nodes: {}", visitor.count);
 ```
 
 #### PathCollector
-Collects all field paths referenced:
+
+PathCollector collects all field paths that the AST references:
+
 ```rust
 let mut visitor = PathCollector::new();
 walk_policy(&mut visitor, &policy);
@@ -311,7 +327,7 @@ println!("Paths: {:?}", visitor.paths);
 
 ## Construction Helpers
 
-The AST provides builder methods for ergonomic construction:
+Builder methods create AST nodes:
 
 ```rust
 // Expression builders
@@ -332,7 +348,7 @@ Requirements::denies(reason)
 
 ## Source Location Tracking
 
-Each AST node includes source location information for error reporting:
+Each AST node records its location in the source text:
 
 ```rust
 pub struct SourceLocation {
@@ -342,7 +358,8 @@ pub struct SourceLocation {
 }
 ```
 
-This enables precise error messages:
+Error messages use this location to identify the source of an error:
+
 ```
 Error at line 12, column 5: Type mismatch in comparison
   resource.count == "five"

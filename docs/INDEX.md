@@ -114,7 +114,7 @@ See **[rfcs/INDEX.md](../rfcs/INDEX.md)** for the complete RFC collection, inclu
 - **RFC-001:** Sidecar service architecture
 - **RFC-002:** SSE/JSON protocol specification
 - **RFC-003:** Predicate tree storage system
-- **[RFC-005](../rfcs/005-runtime-facts-and-policy-language.md):** Runtime facts, authenticated push/pull ingestion, mandatory TTL, and typed policy language (draft)
+- **[RFC-009](../rfcs/009-runtime-facts-and-policy-language.md):** Runtime facts, authenticated push/pull ingestion, mandatory TTL, and typed policy language (draft)
 
 ## Crate Documentation
 
