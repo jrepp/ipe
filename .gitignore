@@ -17,6 +17,11 @@ Thumbs.db
 # Node
 node_modules/
 package-lock.json
+!docs/package-lock.json
+
+# Rebuilt locally and in docs CI; never commit machine-specific timings.
+docs/data/site-data.json
+__pycache__/
 
 # Playwright
 playwright-report/
