@@ -1,0 +1,31 @@
+{
+  "export_timestamp": "2025-10-28T15:35:37.377223+00:00",
+  "git_commit": "5a5985c",
+  "git_branch": "perftest/predicate-execution",
+  "benchmarks": [
+    {
+      "name": "policy_eval_interpreter",
+      "timestamp": "2025-10-28T15:35:37.377207+00:00",
+      "mean_ns": 36.27,
+      "median_ns": 42.0,
+      "std_dev_ns": 17.346962270092142,
+      "throughput": 27570995.312930793
+    },
+    {
+      "name": "policy_eval_jit",
+      "timestamp": "2025-10-28T15:35:37.377214+00:00",
+      "mean_ns": 3.33,
+      "median_ns": 0.0,
+      "std_dev_ns": 11.293409582583994,
+      "throughput": 300300300.3003003
+    },
+    {
+      "name": "context_creation",
+      "timestamp": "2025-10-28T15:35:37.377219+00:00",
+      "mean_ns": 13.35,
+      "median_ns": 0.0,
+      "std_dev_ns": 19.462463872798832,
+      "throughput": 74906367.0411985
+    }
+  ]
+}

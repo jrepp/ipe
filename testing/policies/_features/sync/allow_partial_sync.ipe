@@ -1,0 +1,27 @@
+// Control Plane Feature: Allow Partial Sync
+// Path: _features.sync.allow_partial_sync
+//
+// Controls whether the control plane can apply a partial sync
+// (some policies succeed, others fail) or requires all-or-nothing.
+
+policy AllowPartialSync {
+    require context.operation == "sync"
+
+    // Get sync parameters
+    let total_policies = context.sync_params.total_policies || 0
+    let failed_policies = context.sync_params.failed_policies || 0
+    let allow_partial = context.sync_params.allow_partial || false
+
+    // Never allow partial sync in production
+    if context.environment == "production" {
+        deny("Partial sync not allowed in production - all policies must compile")
+    }
+
+    // In dev/staging, allow partial sync only if explicitly requested
+    if context.environment != "production" && allow_partial == true {
+        allow("Partial sync allowed in non-production environment")
+    }
+
+    // Default: require all policies to compile
+    deny("All policies must compile successfully")
+}

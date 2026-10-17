@@ -1,6 +1,6 @@
 # Architecture Overview
 
-IPE is a high-performance policy evaluation engine with multi-tier execution and lock-free concurrent access.
+IPE evaluates policies through several execution tiers. An execution tier is a method that runs a policy. Concurrent readers can access policies without locks.
 
 ## System Architecture
 
@@ -76,7 +76,9 @@ graph TB
 
 ### 1. Lexer & Parser
 
-**Purpose**: Transform policy source code into structured AST
+The lexer splits policy text into tokens, the units of source text.
+The parser converts these tokens into an abstract syntax tree (AST).
+An AST represents the structure of a policy.
 
 ```mermaid
 sequenceDiagram
@@ -93,18 +95,19 @@ sequenceDiagram
     AST-->>P: Policy AST
 ```
 
-**Key Files**:
+Files:
+
 - [`crates/ipe-core/src/parser/lexer.rs`](../crates/ipe-core/src/parser/lexer.rs) - Tokenization
 - [`crates/ipe-core/src/parser/parse.rs`](../crates/ipe-core/src/parser/parse.rs) - Recursive descent parser
 - [`crates/ipe-core/src/parser/token.rs`](../crates/ipe-core/src/parser/token.rs) - Token definitions
 
-**Output**: Abstract Syntax Tree (AST)
+Output: Abstract Syntax Tree (AST)
 
 ---
 
 ### 2. AST & Type System
 
-**Purpose**: Provide typed, validated representation of policies
+The AST represents policies with types. The type system makes sure that policy expressions use compatible types.
 
 ```mermaid
 classDiagram
@@ -132,24 +135,27 @@ classDiagram
     TypeChecker --> Policy
 ```
 
-**Key Features**:
+Features:
+
 - Type inference from literals
 - Type compatibility checking
 - Int/Float coercion
 - Path resolution
 
-**Key Files**:
+Files:
+
 - [`crates/ipe-core/src/ast/nodes.rs`](../crates/ipe-core/src/ast/nodes.rs) - AST node definitions
 - [`crates/ipe-core/src/ast/types.rs`](../crates/ipe-core/src/ast/types.rs) - Type system
 - [`crates/ipe-core/src/ast/visitor.rs`](../crates/ipe-core/src/ast/visitor.rs) - Visitor pattern
 
-**Documentation**: [AST Documentation](AST.md)
+Documentation: [AST Documentation](AST.md)
 
 ---
 
 ### 3. Bytecode Compiler
 
-**Purpose**: Compile AST to stack-based bytecode
+The compiler converts the AST to bytecode, a sequence of instructions for the interpreter.
+The instructions use a stack, which stores values in last-in, first-out order.
 
 ```mermaid
 graph LR
@@ -162,22 +168,24 @@ graph LR
     CP -.contains.-> V[Values]
 ```
 
-**Optimizations**:
+Optimizations:
+
 - Constant deduplication
 - IN expression expansion to OR chains
 - Field offset allocation
 
-**Key Files**:
+Files:
+
 - [`crates/ipe-core/src/compiler.rs`](../crates/ipe-core/src/compiler.rs) - AST to bytecode compiler
 - [`crates/ipe-core/src/bytecode.rs`](../crates/ipe-core/src/bytecode.rs) - Bytecode definitions
 
-**Documentation**: [Bytecode Documentation](BYTECODE.md)
+Documentation: [Bytecode Documentation](BYTECODE.md)
 
 ---
 
 ### 4. PolicyDataStore (Lock-Free)
 
-**Purpose**: High-performance, concurrent policy storage
+PolicyDataStore stores policies for concurrent readers.
 
 ```mermaid
 graph TB
@@ -200,18 +208,21 @@ graph TB
     style NS fill:#fff4e1
 ```
 
-**Key Features**:
-- **Lock-free reads**: Arc::clone() with no locking
-- **Atomic updates**: Immutable snapshots swapped atomically
-- **Background validation**: Worker pool validates policies asynchronously
-- **Zero downtime**: Old readers continue with old snapshot
+Features:
 
-**Performance**:
+- Lock-free reads: Arc::clone() reads require no locks.
+- Atomic updates: The store replaces each immutable snapshot in one operation.
+- Background validation: A worker pool makes sure that policies are valid.
+- Continuous access: Existing readers retain their snapshot during updates.
+
+Performance:
+
 - Reads: O(1) with Arc clone
 - Updates: Asynchronous, non-blocking
-- Memory: Copy-on-write (old snapshots dropped when unused)
+- Memory: Copy-on-write (the store drops unused old snapshots)
 
-**Key Files**:
+Files:
+
 - [`crates/ipe-core/src/store.rs`](../crates/ipe-core/src/store.rs) - Lock-free store implementation
 - [`crates/ipe-core/src/index.rs`](../crates/ipe-core/src/index.rs) - Resource type indexing
 
@@ -219,7 +230,7 @@ graph TB
 
 ### 5. Execution Tiers
 
-**Purpose**: Adaptive optimization based on policy usage
+Policy usage determines the execution tier.
 
 ```mermaid
 stateDiagram-v2
@@ -244,7 +255,8 @@ stateDiagram-v2
     end note
 ```
 
-**Promotion Logic**:
+Promotion Logic:
+
 ```rust
 match tier {
     Interpreter => {
@@ -262,7 +274,8 @@ match tier {
 }
 ```
 
-**Key Files**:
+Files:
+
 - [`crates/ipe-core/src/tiering.rs`](../crates/ipe-core/src/tiering.rs) - Adaptive tiering
 - [`crates/ipe-core/src/jit.rs`](../crates/ipe-core/src/jit.rs) - JIT compiler (Cranelift)
 
@@ -270,7 +283,7 @@ match tier {
 
 ### 6. Interpreter
 
-**Purpose**: Execute bytecode policies
+The interpreter runs bytecode policies.
 
 ```mermaid
 sequenceDiagram
@@ -300,13 +313,15 @@ sequenceDiagram
     end
 ```
 
-**Stack Operations**:
-- **Push**: Add value to stack
-- **Pop**: Remove and return top value
-- **Peek**: View top without removing
-- **Clear**: Reset for next evaluation
+Stack Operations:
 
-**Key Files**:
+- Push adds a value to the stack.
+- Pop removes and returns the top value.
+- Peek returns the top value without removal.
+- Clear resets the stack for the next evaluation.
+
+Files:
+
 - [`crates/ipe-core/src/interpreter.rs`](../crates/ipe-core/src/interpreter.rs) - Bytecode interpreter
 - [`crates/ipe-core/src/rar.rs`](../crates/ipe-core/src/rar.rs) - Resource/Action/Request context
 
@@ -314,7 +329,7 @@ sequenceDiagram
 
 ### 7. PolicyEngine (Public API)
 
-**Purpose**: High-level policy evaluation interface
+PolicyEngine provides the public interface for policy evaluation.
 
 ```mermaid
 graph TB
@@ -332,13 +347,15 @@ graph TB
     D -.contains.-> R[Reason]
 ```
 
-**Decision Resolution**:
-1. **No policies**: Default deny
-2. **All policies allow**: Allow with matched list
-3. **Any policy denies**: Deny (deny overrides allow)
-4. **Evaluation errors**: Propagate with policy name context
+Decision Resolution:
 
-**Key Files**:
+1. No policies: The engine denies the request.
+2. All policies allow: The engine allows the request and lists the matched policies.
+3. Any policy denies: The engine denies the request. A deny overrides an allow.
+4. Evaluation errors: The engine returns the error with the policy name.
+
+Files:
+
 - [`crates/ipe-core/src/engine.rs`](../crates/ipe-core/src/engine.rs) - Public API
 - [`crates/ipe-core/src/index.rs`](../crates/ipe-core/src/index.rs) - Policy database
 
@@ -389,7 +406,8 @@ flowchart LR
 | Interpreter | Evaluate | O(k) | k = instruction count |
 | Engine | Query | O(p) | p = matching policies |
 
-**Typical Latencies**:
+Typical Latencies:
+
 - Parsing: 100-500μs per policy
 - Compilation: 200-800μs per policy
 - Evaluation (Interpreter): 10-50μs per policy
@@ -427,15 +445,17 @@ sequenceDiagram
     note over R1,R2: Both readers run concurrently<br/>without blocking
 ```
 
-**Key Benefits**:
-- No reader/writer locks
-- No reader/reader contention
-- Writers don't block readers
-- Readers see consistent snapshot
+Read behavior:
+
+- Readers and writers do not share locks.
+- Readers do not compete with other readers for locks.
+- Writers do not block readers.
+- Readers see a consistent snapshot.
 
 ### Memory Management
 
-**Reference Counting**:
+Reference Counting:
+
 ```rust
 Arc<PolicySnapshot> // Atomic reference counted
 
@@ -445,7 +465,8 @@ Arc<PolicySnapshot> // Atomic reference counted
 //  3. Constant pools freed
 ```
 
-**Typical Memory Usage**:
+Typical Memory Usage:
+
 - 1 Policy: ~500 bytes
 - 100 Policies: ~50 KB
 - 10,000 Policies: ~5 MB
@@ -453,9 +474,10 @@ Arc<PolicySnapshot> // Atomic reference counted
 
 ## Testing & Quality
 
-**Test Coverage**: 93.67% (248 tests)
+Test Coverage: 93.67% (248 tests)
 
-**Test Pyramid**:
+Test Pyramid:
+
 ```mermaid
 graph TB
     U[Unit Tests<br/>171 tests]
@@ -470,13 +492,14 @@ graph TB
     style E2E fill:#e1f5ff
 ```
 
-**Key Test Files**:
+Key Test Files:
+
 - [`crates/ipe-core/src/testing.rs`](../crates/ipe-core/src/testing.rs) - Test helpers
-- Each module has comprehensive tests in `mod tests`
+- Each module has tests in `mod tests`
 
 ## Related Documentation
 
 - [AST Documentation](AST.md) - Abstract syntax tree details
 - [Bytecode Documentation](BYTECODE.md) - Instruction set and execution
 - [README](../README.md) - Project overview and quick start
-- [RFC](../RFC.md) - Complete technical specification
+- [RFC](../RFC.md) - Technical specification
