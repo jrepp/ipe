@@ -1,4 +1,4 @@
-.PHONY: help build test bench lint fmt check clean install-tools coverage audit fuzz docs docs-site docs-serve docs-check
+.PHONY: help build test bench lint fmt check clean install-tools coverage audit fuzz docs docs-site docs-serve docs-check runtime-acceptance policy-acceptance
 
 # One exact version shared with actions/setup-python in docs CI.
 DOCS_PYTHON = uv run --no-project --python $(shell cat .python-version) python
@@ -24,6 +24,17 @@ help:
 	@echo "  make docs-site      - Generate parser trees and local performance dashboard data"
 	@echo "  make docs-serve     - Serve docs at http://127.0.0.1:8000/docs/"
 	@echo "  make docs-check     - Build and validate the docs (run npm ci --prefix docs first)"
+
+# Exercise the public runtime-data workflow against a real server.
+runtime-acceptance:
+	cargo build --locked -p ipe-server
+	python3 scripts/accept-runtime-data.py
+
+# Test immutable policy data, mutable evidence, and external policy imports.
+policy-acceptance:
+	cargo build --locked -p ipe-server
+	cargo run --locked -p ipe-core --features approvals --example policy_scenarios -- acceptance/policy-data/pr-landing.json target/policy-data-scenarios.json
+	python3 scripts/accept-policy-data.py
 
 # Build all crates
 build:

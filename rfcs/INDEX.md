@@ -32,12 +32,12 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | [002](002-sse-json-protocol.md) | SSE/JSON Protocol | Draft | MCP-inspired protocol using Server-Sent Events and JSON-RPC |
 | [003](003-policy-tree-storage.md) | Policy Tree Storage | Draft | Content-addressable tree structure with cryptographic hashing |
 | [004](004-low-overhead-execution-tracing.md) | Low-Overhead Execution Tracing | Draft | <5% overhead tracing with flat buffers, captures full execution context and branch decisions |
+| [005](005-runtime-facts-and-policy-language.md) | Runtime Facts and Policy Language | Draft | Authenticated push and pull ingestion, mandatory fact expiry, local consistency, typed policy queries, and execution prerequisites |
 
 ## Planned RFCs
 
 | Number | Title | Target | Description |
 |--------|-------|--------|-------------|
-| 005 | Data Storage | TBD | Dynamic data store for approvals and external signals |
 | 006 | Client Libraries | TBD | Official clients for Rust, Python, Node.js, Go |
 | 007 | Observability | TBD | Metrics, tracing, and monitoring specification |
 | 008 | Security Model | TBD | Authentication, authorization, and audit logging |
@@ -159,4 +159,4 @@ Links to relevant documentation, papers, prior art.
 
 ---
 
-**Last updated:** 2025-11-04
+**Last updated:** 2026-10-16

@@ -11,6 +11,13 @@
 
 ## Overview
 
+The experimental [runtime data workflow](docs/RUNTIME_DATA.md) provides scoped,
+authenticated fact writes, an HTTPS pull connector, mandatory TTL, and typed
+language-2 policies. Its [external acceptance suite](acceptance/runtime-data/README.md)
+exercises the real server with several data shapes. This profile has explicit
+deployment and feature limits; the legacy APIs and architecture described below
+are not a production-readiness guarantee.
+
 IPE is a production-grade authorization engine that evaluates policies in under 50 microseconds with zero-downtime updates. The core engine features a bytecode compiler, lock-free policy store, and optional RocksDB-backed stores for approvals and relationships with multi-tenant isolation. Built in Rust for predictable performance without garbage collection pauses.
 
 **Quick facts:** 248 tests (94% coverage) | Sub-100μs latency | Zero-downtime updates | Multi-tenant isolation
@@ -304,3 +311,9 @@ Licensed under the Mozilla Public License Version 2.0 ([LICENSE](LICENSE) or htt
 **Status:** RFC / Prototype Phase  
 **Version:** 0.1.0  
 **Contact:** [Your contact info]
+
+Policy documents now separate immutable typed `policy.*` parameters from expiring
+`data.*` evidence, with named sections and external-source provenance. Run
+`make policy-acceptance` for PR-landing scenarios and the HTTPS import workflow.
+See [policy data and provenance](docs/RUNTIME_DATA.md#separate-policy-data-from-runtime-evidence)
+for the management API, agent trust boundary, and experimental limits.

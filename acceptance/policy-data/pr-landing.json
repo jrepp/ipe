@@ -1,0 +1,724 @@
+{
+  "input_schema": {
+    "type": "record",
+    "fields": {
+      "operation": {
+        "schema": {
+          "type": "string"
+        }
+      },
+      "commit": {
+        "schema": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "collections": {
+    "pull_requests": {
+      "schema": {
+        "type": "record",
+        "fields": {
+          "approvers": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "max_items": 20
+            }
+          },
+          "passed_checks": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "max_items": 20
+            }
+          }
+        }
+      },
+      "max_ttl_seconds": 600,
+      "max_observation_age_seconds": 600,
+      "source_id": "forge-runtime",
+      "mode": "push"
+    }
+  },
+  "documents": [
+    {
+      "id": "pr-landing",
+      "title": "Pull request landing requirements",
+      "data": {
+        "schema": {
+          "type": "record",
+          "fields": {
+            "review": {
+              "schema": {
+                "type": "record",
+                "fields": {
+                  "minimum": {
+                    "schema": {
+                      "type": "int"
+                    }
+                  }
+                }
+              }
+            },
+            "required_checks": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "max_items": 20
+              }
+            }
+          }
+        },
+        "value": {
+          "review": {
+            "minimum": 2
+          },
+          "required_checks": [
+            "test",
+            "lint"
+          ]
+        }
+      },
+      "external": {
+        "system": "example-forge",
+        "locator": "https://forge.example/repos/acme/app/rules/main",
+        "source_revision": "rules-7",
+        "source_digest": "c7719b265189208486fd4eff751fc82a7bec41fc228d1aabdb211213b8972b65",
+        "observed_at": 100,
+        "valid_until": 400
+      },
+      "sections": [
+        {
+          "id": "reviews",
+          "title": "Distinct approving reviewers",
+          "source_pointer": "/review/minimum",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires count_distinct(a for a in pr.value.approvers) >= policy.review.minimum"
+          }
+        },
+        {
+          "id": "checks",
+          "title": "Required checks on this commit",
+          "source_pointer": "/required_checks",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires all(check in pr.value.passed_checks for check in policy.required_checks)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-landing",
+      "title": "Pull request landing requirements",
+      "data": {
+        "schema": {
+          "type": "record",
+          "fields": {
+            "review": {
+              "schema": {
+                "type": "record",
+                "fields": {
+                  "minimum": {
+                    "schema": {
+                      "type": "int"
+                    }
+                  }
+                }
+              }
+            },
+            "required_checks": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "max_items": 20
+              }
+            }
+          }
+        },
+        "value": {
+          "review": {
+            "minimum": 3
+          },
+          "required_checks": [
+            "test",
+            "lint"
+          ]
+        }
+      },
+      "external": {
+        "system": "example-forge",
+        "locator": "https://forge.example/repos/acme/app/rules/main",
+        "source_revision": "rules-8",
+        "source_digest": "ffe83c4d452f11d1a183881aa732bdeb5ed2aa9aa4af26ce6b9ab07161517fae",
+        "observed_at": 101,
+        "valid_until": 400
+      },
+      "sections": [
+        {
+          "id": "reviews",
+          "title": "Distinct approving reviewers",
+          "source_pointer": "/review/minimum",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires count_distinct(a for a in pr.value.approvers) >= policy.review.minimum"
+          }
+        },
+        {
+          "id": "checks",
+          "title": "Required checks on this commit",
+          "source_pointer": "/required_checks",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires all(check in pr.value.passed_checks for check in policy.required_checks)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-landing",
+      "title": "Pull request landing requirements",
+      "data": {
+        "schema": {
+          "type": "record",
+          "fields": {
+            "review": {
+              "schema": {
+                "type": "record",
+                "fields": {
+                  "minimum": {
+                    "schema": {
+                      "type": "int"
+                    }
+                  }
+                }
+              }
+            },
+            "required_checks": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "max_items": 20
+              }
+            }
+          }
+        },
+        "value": {
+          "review": {
+            "minimum": 2
+          },
+          "required_checks": [
+            "test",
+            "lint"
+          ]
+        }
+      },
+      "external": {
+        "system": "example-forge",
+        "locator": "https://forge.example/repos/acme/app/rules/main",
+        "source_revision": "rules-7",
+        "source_digest": "c7719b265189208486fd4eff751fc82a7bec41fc228d1aabdb211213b8972b65",
+        "observed_at": 100,
+        "valid_until": 400
+      },
+      "sections": [
+        {
+          "id": "reviews",
+          "title": "Distinct approving reviewers",
+          "source_pointer": "/review/minimum",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires count_distinct(a for a in pr.value.approvers) >= policy.review.minimum"
+          }
+        },
+        {
+          "id": "checks",
+          "title": "Required checks on this commit",
+          "source_pointer": "/required_checks",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires all(check in pr.value.passed_checks for check in policy.required_checks)"
+          }
+        },
+        {
+          "id": "unknown",
+          "title": "Unmodeled external rule",
+          "source_pointer": "/merge_queue",
+          "rule": {
+            "kind": "unsupported",
+            "reason": "Merge queue semantics are not modeled"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pr-landing",
+      "title": "Pull request landing requirements",
+      "data": {
+        "schema": {
+          "type": "record",
+          "fields": {
+            "review": {
+              "schema": {
+                "type": "record",
+                "fields": {
+                  "minimum": {
+                    "schema": {
+                      "type": "int"
+                    }
+                  }
+                }
+              }
+            },
+            "required_checks": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "max_items": 20
+              }
+            }
+          }
+        },
+        "value": {
+          "review": {
+            "minimum": 2
+          },
+          "required_checks": [
+            "test",
+            "lint"
+          ]
+        }
+      },
+      "external": null,
+      "sections": [
+        {
+          "id": "reviews",
+          "title": "Distinct approving reviewers",
+          "source_pointer": "/review/minimum",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires count_distinct(a for a in pr.value.approvers) >= policy.review.minimum"
+          }
+        },
+        {
+          "id": "checks",
+          "title": "Required checks on this commit",
+          "source_pointer": "/required_checks",
+          "rule": {
+            "kind": "modeled",
+            "source": "language 2\npolicy Landing: \"Required pull request checks\"\ntriggers when input.operation == \"merge\"\nfacts\n  pr = data.pull_requests[input.commit] fresh within 5m\nrequires all(check in pr.value.passed_checks for check in policy.required_checks)"
+          }
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "matching immutable policy and fresh runtime facts",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "allow"
+    },
+    {
+      "name": "missing evidence",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "expiry equality",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 170,
+      "completed_at": 170,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "expires during execution",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 169,
+      "completed_at": 170,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "new policy requires more reviews",
+      "document": 1,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "deny"
+    },
+    {
+      "name": "unsupported external rule",
+      "document": 2,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "runtime approval removed",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "deny"
+    },
+    {
+      "name": "duplicate reviewers do not satisfy quorum",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "alice"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "deny"
+    },
+    {
+      "name": "required check fails",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "deny"
+    },
+    {
+      "name": "evidence for another commit is missing",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-def"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "expired external observation",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 400,
+      "completed_at": 400,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 390,
+          "received_at": 390,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "local policy data has no TTL",
+      "document": 3,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 400,
+      "completed_at": 400,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 390,
+          "received_at": 390,
+          "ttl_seconds": 60
+        }
+      ],
+      "expected": "allow"
+    },
+    {
+      "name": "inapplicable action",
+      "document": 0,
+      "input": {
+        "operation": "read",
+        "commit": "commit-abc"
+      },
+      "now": 120,
+      "completed_at": 120,
+      "facts": [],
+      "expected": "not_applicable"
+    },
+    {
+      "name": "future external observation",
+      "document": 0,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 99,
+      "completed_at": 99,
+      "facts": [],
+      "expected": "indeterminate"
+    },
+    {
+      "name": "freshness tighter than TTL",
+      "document": 3,
+      "input": {
+        "operation": "merge",
+        "commit": "commit-abc"
+      },
+      "now": 410,
+      "completed_at": 410,
+      "facts": [
+        {
+          "collection": "pull_requests",
+          "key": "commit-abc",
+          "value": {
+            "approvers": [
+              "alice",
+              "bob"
+            ],
+            "passed_checks": [
+              "test",
+              "lint"
+            ]
+          },
+          "observed_at": 110,
+          "received_at": 110,
+          "ttl_seconds": 600
+        }
+      ],
+      "expected": "indeterminate"
+    }
+  ]
+}
