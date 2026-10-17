@@ -3,8 +3,8 @@
 //! and the merge policy (mechanical-fixes) should apply `cargo fmt` and land
 //! the result.
 
-fn    main( ) {
-let greeting="merge-god rustfmt remediation demo";
-        println!( "{greeting}" );
-            println!( "if this file lands tidy, mechanical remediation works" );
+fn main() {
+    let greeting = "merge-god rustfmt remediation demo";
+    println!("{greeting}");
+    println!("if this file lands tidy, mechanical remediation works");
 }

@@ -87,9 +87,8 @@ fn compute_policy_hash(policy: &PolicyNode) -> Hash {
 
 | Backend | Persistence | Performance | Use Case |
 |---------|-------------|-------------|----------|
-| **In-Memory** | ❌ | 1M ops/s | Development |
-| **RocksDB** | ✅ | 100K ops/s | Production |
-| **SQLite** | ✅ | 10K ops/s | Edge/IoT |
+| **In-Memory** | ❌ | 1M ops/s | Development/Testing |
+| **RocksDB** | ✅ | 100K ops/s | Production (Primary) |
 
 ### 1. In-Memory (Default)
 
@@ -117,18 +116,8 @@ metadata:    "root" → root_hash
 - Persistent, LSM-tree
 - LRU caching
 - Atomic batch writes
-
-### 3. SQLite (Portable)
-
-```sql
-CREATE TABLE objects (hash BLOB PRIMARY KEY, data BLOB);
-CREATE TABLE path_index (path TEXT PRIMARY KEY, hash BLOB);
-CREATE INDEX idx_path_prefix ON path_index(path);
-```
-
-- ACID transactions
-- SQL queries for debugging
-- Single .db file
+- Production-ready with proven reliability
+- Excellent write throughput for GitOps updates
 
 ## Core Operations
 
@@ -151,13 +140,30 @@ prod.deployment.approval → hash lookup → PolicyNode
 
 **Incremental:** Only changed path recomputed (not entire tree)
 
-### 3. Tree Traversal
+### 3. Tree Traversal and Enumeration
 ```rust
 // List all policies with prefix
 fn list_policies(prefix: &str) -> Vec<String>
+
+// Get subtree structure
+fn get_subtree(path: &str, depth: Option<usize>) -> TreeNode
+
+// Enumerate directory children
+fn list_children(path: &str) -> Vec<(String, NodeType)>
 ```
-- DFS traversal
-- Filter by path prefix
+
+**Enumeration Features:**
+- DFS/BFS traversal with configurable depth limits
+- Filter by path prefix for scoped queries
+- Return full tree structure with metadata
+- Distinguish between directory and policy nodes
+- Efficient caching of frequently accessed subtrees
+
+**Implementation Notes:**
+- Use path index for O(1) prefix lookups
+- Lazy-load policy content (return metadata only by default)
+- Support pagination for large directories
+- Cache directory listings (invalidate on update)
 
 ### 4. Version History
 ```
@@ -223,7 +229,7 @@ struct TieredStore {
 | 1 | In-memory store, hash computation, CRUD ops |
 | 2 | RocksDB backend, snapshot/restore |
 | 3 | Hot/cold caching, path index warming |
-| 4 | SQLite backend, migration tools |
+| 4 | Tree enumeration API, subtree queries, GitOps integration |
 
 ## Success Metrics
 
