@@ -83,6 +83,8 @@ This index provides a guided path through IPE's documentation based on your need
 
 **New to IPE?** Start here:
 
+- **[Runtime data workflow](RUNTIME_DATA.md)** — implemented authenticated push/pull, TTL, language-2 policies, deployment limits, and external HTTP acceptance tests.
+
 1. **[README](../README.md)** - Project overview, badges, and quick links
 2. **[QUICKSTART](../QUICKSTART.md)** - Get IPE running in 5 minutes
 3. **[END_TO_END_EXAMPLE](../END_TO_END_EXAMPLE.md)** - Complete walkthrough of predicate lifecycle
@@ -112,6 +114,7 @@ See **[rfcs/INDEX.md](../rfcs/INDEX.md)** for the complete RFC collection, inclu
 - **RFC-001:** Sidecar service architecture
 - **RFC-002:** SSE/JSON protocol specification
 - **RFC-003:** Predicate tree storage system
+- **[RFC-009](../rfcs/009-runtime-facts-and-policy-language.md):** Runtime facts, authenticated push/pull ingestion, mandatory TTL, and typed policy language (draft)
 
 ## Crate Documentation
 

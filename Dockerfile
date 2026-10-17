@@ -40,6 +40,9 @@ WORKDIR /app
 # Copy server binary from builder
 COPY --from=builder /app/target/release/ipe-server /usr/local/bin/ipe-server
 
+# Include the license for bundled certificate data in distributed images.
+COPY licenses/ /usr/share/licenses/ipe/
+
 # Copy default configuration
 COPY --chown=ipe:nogroup deploy/config/default.toml /etc/ipe/config.toml
 

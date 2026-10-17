@@ -2,6 +2,13 @@
 
 This directory contains deployment configurations for the IPE Policy Engine.
 
+The Helm/TOML examples below describe the legacy server profile. The new
+[runtime data server](../docs/RUNTIME_DATA.md) requires `IPE_RUNTIME_CONFIG`,
+credential environment variables, and a loopback listener; these charts have not
+been migrated to that profile. Use the external acceptance workflow for a local
+runtime-2 deployment. Native remote serving and the former metrics listener are
+not part of the new profile.
+
 ## Prerequisites
 
 - Docker Desktop with Kubernetes enabled, or another local Kubernetes cluster

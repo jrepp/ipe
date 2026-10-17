@@ -18,6 +18,18 @@ pub mod approval;
 #[cfg(feature = "approvals")]
 pub mod relationship;
 
+#[cfg(feature = "approvals")]
+pub mod runtime_facts;
+
+#[cfg(feature = "approvals")]
+pub mod runtime_policy;
+
+#[cfg(feature = "approvals")]
+pub mod policy_document;
+
+#[cfg(feature = "approvals")]
+pub mod policy_scenarios;
+
 // Test utilities (available in tests and when used as a dependency with dev profile)
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;

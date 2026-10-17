@@ -34,6 +34,7 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | [004](004-low-overhead-execution-tracing.md) | Low-Overhead Execution Tracing | Draft | <5% overhead tracing with flat buffers, captures full execution context and branch decisions |
 | [005](005-control-plane.md) | Control Plane Architecture | Draft | GitOps-based policy synchronization with filesystem-to-tree mapping |
 | [006](006-data-plane.md) | Data Plane Architecture | Draft | AP storage for dynamic data, message plane distribution, high write throughput |
+| [009](009-runtime-facts-and-policy-language.md) | Runtime Facts and Policy Language | Draft | Authenticated push and pull ingestion, mandatory fact expiry, local consistency, typed policy queries, and execution prerequisites |
 
 
 ## Planned RFCs
@@ -43,7 +44,6 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | 006 | Client Libraries | TBD | Official clients for Rust, Python, Node.js, Go |
 | 007 | Observability | TBD | Metrics, tracing, and monitoring specification |
 | 008 | Security Model | TBD | Authentication, authorization, and audit logging |
-| 009 | Dynamic Data Store | TBD | External signals and runtime data (approvals, etc.) |
 
 ## RFC Guidelines
 
@@ -162,4 +162,4 @@ Links to relevant documentation, papers, prior art.
 
 ---
 
-**Last updated:** 2025-11-04
+**Last updated:** 2026-10-16
