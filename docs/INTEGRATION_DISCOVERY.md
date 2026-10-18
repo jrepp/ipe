@@ -1,45 +1,49 @@
 # Standalone integration discovery
 
-The initial slice runs an independent `ipe-integration` workload with CLI and MCP
-access. It checks an operator-configured ServiceNow credential and discovers bounded
-metadata through a native HTTPS broker. It does not execute agent-authored adapters,
-publish enforcement facts, or claim to recover complete ServiceNow business rules.
+The independent Rust `ipe-integration` workload hosts a WASM metadata adapter and
+an authenticated native HTTPS broker. Rust CLI and MCP clients expose bounded
+ServiceNow discovery. TypeScript provides the synthetic provider facade for local
+testing. This slice does not publish enforcement facts or claim to recover complete
+ServiceNow business rules.
 
 ## Local deployment proof
 
-Prerequisites: Rust/Cargo, Python 3.10 or newer, and OpenSSL. No real ServiceNow
-credential or enterprise installation is needed for the stand-in demonstration.
+Prerequisites: Rust/Cargo, Node >=22.18, and OpenSSL. No Python, real ServiceNow
+credential, or enterprise installation is needed for this integration slice.
 
 ```sh
-cargo build --locked -p ipe-integration
-python3 scripts/accept-integration-discovery.py
-python3 scripts/demo-integration-discovery.py
+cargo build --locked -p ipe-integration --bins
+cargo test --locked -p ipe-integration
+cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored
+cargo run --locked -p ipe-integration --example integration-demo -- --report target/integration-demo-report.json
 ```
 
-The demo launches the real workload and a lightweight HTTPS ServiceNow-style
-stand-in, exercises API/CLI/MCP, writes `target/integration-demo-report.json`, and
-stops the processes. Acceptance adds negative cases and writes its own report.
-Synthetic fixtures are not live ServiceNow validation.
+The Rust acceptance test launches both Rust binaries and the TypeScript HTTPS
+facade. It checks authenticated reads, hostile provider responses, strict input,
+masked identities, deadline cancellation, CLI, and MCP. Unit tests additionally
+exercise the WASM sandbox and client transport boundaries. Synthetic fixtures are
+not live ServiceNow validation.
 
-For an interactive local deployment:
+For a standalone acceptance report or interactive deployment:
 
 ```sh
-python3 scripts/demo-integration-discovery.py --serve
+cargo run --locked -p ipe-integration --example integration-demo -- --acceptance --report target/integration-discovery-report.json
+cargo run --locked -p ipe-integration --example integration-demo -- --serve
 ```
 
 The launcher reports the local workload address, opaque connection reference and
 an operator-only temporary environment file. Source that file in a second shell;
 use the printed address and reference with the CLI. Ctrl-C stops the deployment
-and removes temporary credentials and certificates.
+and removes temporary credentials and certificates. `--binary` and `--toolkit`
+can override the default executable paths next to the built example.
 
 ```sh
-python3 scripts/integration-toolkit.py --url http://127.0.0.1:PORT capabilities
-python3 scripts/integration-toolkit.py --url http://127.0.0.1:PORT check CONNECTION_REF
-python3 scripts/integration-toolkit.py --url http://127.0.0.1:PORT discover CONNECTION_REF
+target/debug/integration-toolkit --url http://127.0.0.1:PORT capabilities
+target/debug/integration-toolkit --url http://127.0.0.1:PORT check CONNECTION_REF
+target/debug/integration-toolkit --url http://127.0.0.1:PORT discover CONNECTION_REF
 ```
 
-`PORT` and `CONNECTION_REF` are placeholders for the launcher output. The client
-reads `IPE_INTEGRATION_TOKEN`; it does not take bearer tokens as command arguments.
+The client reads `IPE_INTEGRATION_TOKEN`; bearer tokens are not command arguments.
 JSON results distinguish observed metadata from unknown or unavailable coverage.
 
 ## MCP access
@@ -47,28 +51,25 @@ JSON results distinguish observed metadata from unknown or unavailable coverage.
 Configure a stdio MCP client to launch:
 
 ```text
-python3 /absolute/path/to/ipe/scripts/integration-toolkit.py --url http://127.0.0.1:PORT mcp
+/absolute/path/to/ipe/target/debug/integration-toolkit --url http://127.0.0.1:PORT mcp
 ```
 
 Supply the workload token through the client's protected process environment.
-The server negotiates MCP `2025-11-25` and exposes only:
+The server negotiates MCP `2025-11-25` and exposes:
 
 - `integration_capabilities`
 - `integration_check_connection` with `connection_ref`
 - `integration_discover` with `connection_ref`
 
-The client must complete `initialize` and `notifications/initialized` before tool
-calls. Messages are newline-delimited JSON-RPC; stdout contains protocol messages
-only. This slice has no Streamable HTTP MCP endpoint, task/resumption interface,
-dynamic package deployment, or per-user elevation service. The same workload
-authorization applies to CLI and MCP.
+Complete `initialize` and `notifications/initialized` before tool calls. Messages
+are newline-delimited JSON-RPC; stdout contains protocol messages only. The same
+workload authorization applies to CLI and MCP. Streamable HTTP, durable tasks,
+dynamic package deployment and per-user elevation remain future capabilities.
 
 ## Operator configuration
 
-The workload accepts one private JSON configuration path:
-
 ```sh
-cargo run --locked -p ipe-integration -- /private/path/integration.json
+cargo run --locked -p ipe-integration --bin ipe-integration -- /private/path/integration.json
 ```
 
 A discovery-first configuration has no preselected business tables:
@@ -85,41 +86,50 @@ A discovery-first configuration has no preselected business tables:
 }
 ```
 
-This is operator configuration, not policy data or agent output. Use independent
-random secrets for the workload token and stable identity key, and a separately
-issued ServiceNow bearer credential. Keep them out of source control and command
-arguments. Retain the identity key and opaque connection reference across restarts
-to preserve discovered resource identities. Rotation of the identity key changes
-those derived references and needs coordinated migration.
+This is private operator configuration, not policy data or agent output. Use
+independent random secrets for the workload token and stable identity key, and a
+separately issued ServiceNow bearer credential. Keep them out of source control
+and command arguments. Retain the identity key and opaque connection reference
+across restarts; rotating the identity key changes derived references.
 
-The configured origin must be HTTPS. An optional `ca_cert_path` supplies a private
-CA for a fixture or authorized installation; verification remains enabled. Redirects
-and ambient proxies are disabled. Internal origins are a trusted operator choice,
-not an agent-supplied URL. The control API binds only to loopback HTTP; remote
-operation requires separately configured authenticated TLS termination. This local
-slice is not a production ingress or multi-tenant credential-management system.
+The configured origin must be HTTPS. Optional `ca_cert_path` supplies a private CA;
+verification remains enabled. Redirects and ambient proxies are disabled. Internal
+origins are a trusted operator choice, not an agent-supplied URL. The control API
+binds only to loopback HTTP; remote operation requires separately configured
+authenticated TLS termination. This is not a production ingress or multi-tenant
+credential-management system.
 
-An empty resource list explicitly opts into bounded metadata inventory. The broker
-reads fixed metadata routes and returns opaque resource/field references and safe
-recognized type/role information. It does not expose table names, raw labels,
-reference links, source record IDs, or source error text. Inventory is limited by
-the credential and request budgets; it is not an exhaustive catalog. Where the
-operator wants narrower access, configure explicit resource/table and field mappings
-instead; see the acceptance fixture configuration.
+An empty resource list opts into bounded metadata inventory. The broker reads
+fixed metadata routes and returns opaque resource/field references and recognized
+type/role information. It does not expose table names, raw labels, reference links,
+source record IDs, or source error text. Inventory is limited by credentials and
+request budgets. Operators can instead configure explicit resource/table and
+field mappings to restrict access further.
 
-A successful connection check means the metadata read succeeded. It does not prove
-permission to read remediation records, inspect all constraints, or perform an
-operation. Workflow semantics remain explicitly unknown in this slice. Discovery
-results guide the next selection of authorized records and constraint sources.
+A successful connection check proves only that a metadata read succeeded. It does
+not establish remediation-record access or discover complete workflow constraints.
+Workflow semantics remain explicitly unknown.
 
-## What the first slice proves
+## Hosted WASM adapters
 
-The local deployment proves standalone workload execution, authenticated broker
-reads, bounded schema discovery, opaque references, sanitized errors, and equivalent
-CLI/MCP access. The reusable [stand-in](../testing/integration/README.md) provides
-synthetic success, denied access, malformed responses and other failure modes.
+The default ServiceNow field-role classifier executes inside the workload's Wasmi
+interpreter. An operator can set `adapter_path` to a binary WASM module implementing
+the [metadata ABI](../crates/ipe-integration/adapters/README.md). Loading a different
+module and restarting the workload changes its integration interpretation without
+changing native transport code. Capability and discovery output identify the
+module by digest, not its physical path.
 
-[The MVP design](../rfcs/010-remediation-adapters-and-external-policy-discovery.md)
-tracks later milestones: sandboxed adapter authoring and deployment, shared-domain
-constraint projections, fact synchronization into enforcement, upgrades, and
-forensic reconstruction. They are not implied by this discovery demonstration.
+The initial ABI accepts a validated field identifier, recognized type and required
+flag and returns a finite semantic-role code. Native Rust owns transport,
+credentials, opaque identity, response shaping and output validation. Guests have
+no imports, WASI, filesystem, environment or network access. Each discovery run
+gets a fresh instance with bounded memory, stack and shared fuel. Guest traps or
+invalid output become unknown coverage; they cannot publish facts or enforce policy.
+
+This proves configurable sandboxed interpretation, not the complete future adapter
+package lifecycle. Artifact signing, agent build/stage/deploy, hot upgrades,
+shared-domain constraint projection, synchronization and durable forensic auditing
+remain separate milestones.
+
+See the [integration architecture and MVP](../rfcs/010-remediation-adapters-and-external-policy-discovery.md)
+for the roadmap and focused design contracts.

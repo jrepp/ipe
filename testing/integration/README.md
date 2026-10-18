@@ -1,23 +1,47 @@
-# ServiceNow integration stand-in
+# TypeScript integration test facades
 
-`python3 testing/integration/servicenow_standin.py` starts a loopback HTTPS server,
-generates a temporary certificate, and prints its endpoint and CA certificate path.
-Stop with Ctrl-C. It requires Python 3 and `openssl`, with no Python packages.
-Use `--directory PATH` to retain the generated fixture certificate and key.
+Run `node testing/integration/servicenow-standin.ts` with Node 22.18+ and
+`openssl`. The facade has no runtime package dependencies. It starts a loopback
+HTTPS ServiceNow stand-in, generates a temporary CA and server certificate, and
+prints one JSON readiness line:
 
-The stand-in requires the synthetic Bearer token declared as `SECRET` in its source;
-the demo and acceptance runner configure that token automatically. Do not configure
-a production credential for this fixture.
+```json
+{"origin":"https://127.0.0.1:PORT","ca_cert_path":"/temporary/ca.crt","control_url":"http://127.0.0.1:PORT","control_token":"random-fixture-control-token","mode":"success"}
+```
 
-The stand-in provides synthetic `sys_db_object`, `sys_dictionary`, and `sys_choice`
-Table API envelopes. It deliberately includes hostile labels, internal-looking
-links, and raw source identities to test disclosure boundaries. These are synthetic
-markers, never real credentials or topology. It does not emulate ServiceNow ACLs,
-OAuth, business rules, or application licensing; successful tests prove the local
-contract, not compatibility with a particular ServiceNow instance.
+Stop with Ctrl-C or SIGTERM. Temporary certificates are removed on shutdown.
+`--directory PATH` retains certificates and keys in an operator-selected fixture
+directory. `--mode MODE` selects an initial fault. Never supply production
+credentials. The provider requires the synthetic Bearer token
+`provider-secret-DO-NOT-DISCLOSE`; only the native workload receives this token.
 
-`--mode` selects success, empty, truncated, wrong_shape, denied, unauthorized,
-failure, unsupported, redirect, malformed, or oversize. The acceptance runner
-changes modes in-process and records upstream requests to inspect their bounds.
-The standalone URL and fixture certificate are operator configuration; they must
-never appear in agent discovery responses.
+The facade provides synthetic `sys_db_object`, `sys_dictionary`, and `sys_choice`
+Table API envelopes, including hostile labels, internal-looking links, and raw
+identities for disclosure tests. It does not emulate ServiceNow ACLs, OAuth,
+business rules, or licensing. Passing fixture tests proves the local contract,
+not compatibility with a particular ServiceNow instance.
+
+The separate loopback HTTP control server is test-only and requires
+`Authorization: Bearer <control_token>`. `GET /state` returns
+`{mode, delay_seconds, requests:[{path,headers}]}`. `POST /control` accepts any
+subset of `{mode, delay_seconds, expected_token, clear_requests}` and returns the
+same state. Control credentials and recorded provider headers belong only to the
+trusted test harness; never project them into agent or policy outputs.
+
+Modes: `success`, `empty`, `truncated`, `wrong_shape`, `denied`, `unauthorized`,
+`failure`, `unsupported`, `redirect`, `malformed`, `oversize`. Delay supports
+concurrency and cancellation tests. Credential rotation tests use `expected_token`.
+
+For development:
+
+```sh
+cd testing/integration
+npm ci
+npm run check
+npm test
+npm run build
+node dist/servicenow-standin.js
+```
+
+TypeScript and Node declarations are development-only dependencies. The Rust
+acceptance runner launches the `.ts` facade directly, requiring no npm install.

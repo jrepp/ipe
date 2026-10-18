@@ -23,8 +23,8 @@
   <nav class="sidebar" aria-label="Documentation">
     <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html" aria-current="page">Contract</a><a href="status.html">Project status</a><a href="performance.html">Performance</a></div>
-    <div class="sidebar-group"><span class="sidebar-label">Tools</span><a href="ast.html">AST explorer</a></div>
-    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=AST.md">AST reference</a><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=BYTECODE.md">Bytecode</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Tools</span></div>
+    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
   </nav>
   <main class="content">
     <article class="article">
@@ -67,7 +67,7 @@ Err(Error::EvaluationError(..))</pre>
             <tr><td>Any evaluation fails</td><td>Error</td><td>Error</td></tr>
           </tbody>
         </table></div>
-        <p class="small muted">Source: <a href="../crates/ipe-core/src/engine.rs">PolicyEngine::evaluate</a>. (PolicyDataStore was removed in #36.)</p>
+        <p class="small muted">Source: PolicyEngine::evaluate. (PolicyDataStore was removed in #36; the legacy engine stack was deleted in the legacy-cluster disposition.)</p>
       </section>
       <section class="section" id="responsibilities">
         <h2>Application responsibilities</h2>
@@ -85,7 +85,7 @@ Err(Error::EvaluationError(..))</pre>
           <li>The compiler ends a <code>requires</code> policy with <code>Return(true)</code>.</li>
           <li>The interpreter returns the value in that instruction. A false condition can therefore produce Allow.</li>
         </ul></div>
-        <p class="small muted">Sources: <a href="../crates/ipe-core/src/compiler.rs">PolicyCompiler::compile</a> and <a href="../crates/ipe-core/src/interpreter.rs">Interpreter::evaluate</a>.</p>
+        <p class="small muted">Sources: PolicyCompiler::compile and Interpreter::evaluate (both removed with the legacy engine stack).</p>
       </section>
       <section class="section" id="requirements">
         <h2>Requirements</h2>

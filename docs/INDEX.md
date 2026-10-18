@@ -12,7 +12,6 @@ Both local Make targets and CI read that file; the builder rejects other version
 The first build downloads Cargo dependencies. If an older uv cannot install the
 pin, update uv or use `uvx --from uv uv python install 3.15.0` once.
 
-- [AST explorer](ast.html): rendered, expandable trees with source and node details.
 - [Contract summary](contract.html): inputs, decisions, application responsibilities,
   and current implementation limits in plain language.
 - [Performance dashboard](performance.html): measured latency percentiles, throughput,
@@ -88,7 +87,6 @@ This index provides a guided path through IPE's documentation based on your need
 
 1. **[README](../README.md)** - Project overview, badges, and quick links
 2. **[QUICKSTART](../QUICKSTART.md)** - Get IPE running in 5 minutes
-3. **[END_TO_END_EXAMPLE](../END_TO_END_EXAMPLE.md)** - Complete walkthrough of predicate lifecycle
 
 ## Understanding IPE
 
@@ -102,8 +100,6 @@ This index provides a guided path through IPE's documentation based on your need
 
 **Deep dives into IPE internals:**
 
-- **[AST](AST.md)** - Abstract syntax tree specification
-- **[BYTECODE](BYTECODE.md)** - Bytecode instruction set and execution model
 - **[RFC Collection](../rfcs/INDEX.md)** - Design proposals and specifications
 
 ## RFCs (Request for Comments)
@@ -183,7 +179,6 @@ ipe/
 ├── README.md              # Project overview and entry point
 ├── QUICKSTART.md          # 5-minute getting started guide
 ├── SUMMARY.md             # Executive summary and vision
-├── END_TO_END_EXAMPLE.md  # Complete usage walkthrough
 ├── ROADMAP.md             # Development roadmap
 ├── MVP_PLAN.md            # MVP scope and progress
 │

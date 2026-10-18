@@ -13,53 +13,22 @@ anyhow = { workspace = true }
 arc-swap = { workspace = true }
 parking_lot = { workspace = true }
 
-bincode-next = { workspace = true, optional = true }
 chrono = { workspace = true }
 tracing = { workspace = true }
-
 
 # Approval storage (optional feature)
 rocksdb = { workspace = true, optional = true }
 sha2 = { version = "0.10.9", optional = true }
 tempfile = { version = "3.8", optional = true }
 
-# JIT compilation (optional feature)
-cranelift = { workspace = true, optional = true }
-cranelift-jit = { workspace = true, optional = true }
-cranelift-module = { workspace = true, optional = true }
-cranelift-native = { workspace = true, optional = true }
-cranelift-codegen = { workspace = true, optional = true }
-target-lexicon = { workspace = true, optional = true }
-
 [features]
 default = []
-# Legacy engine stack (parser/ast/compiler/bytecode/engine/index/interpreter/jit).
-# Unreachable from the v2 runtime; kept compilable for benches and one release
-# cycle before deletion (see PR #36 decision record).
-legacy = ["bincode-next"]
-testing = ["legacy"]
 approvals = ["rocksdb", "tempfile", "sha2"]
-jit = [
-    "legacy",
-    "cranelift",
-    "cranelift-jit",
-    "cranelift-module",
-    "cranelift-native",
-    "cranelift-codegen",
-    "target-lexicon"
-]
 
 [dev-dependencies]
 criterion = "0.5"
-tempfile = "3.10"
 # Fix minimal versions - criterion depends on regex, ensure we use >= 1.5.5 to avoid syntax module issues
 regex = ">=1.5.5"
-rand = "0.8"
-
-[[bench]]
-name = "evaluation"
-harness = false
-required-features = ["legacy"]
 
 [[bench]]
 name = "approval_benchmarks"
@@ -76,31 +45,6 @@ name = "integration"
 path = "tests/integration/mod.rs"
 required-features = ["approvals"]
 
-[[test]]
-name = "perftest_predicate_execution"
-path = "tests/perftest_predicate_execution.rs"
-required-features = ["jit"]
-
-[[bin]]
-name = "bench_continuous"
-path = "src/bin/bench_continuous.rs"
-required-features = ["legacy"]
-
-[[bin]]
-name = "bench_export"
-path = "src/bin/bench_export.rs"
-required-features = ["legacy"]
-
-[[bin]]
-name = "perftest_runner"
-path = "src/bin/perftest_runner.rs"
-required-features = ["legacy"]
-
 [[example]]
 name = "policy_scenarios"
 required-features = ["approvals"]
-
-[[example]]
-name = "docs_data"
-path = "examples/docs_data.rs"
-required-features = ["legacy"]

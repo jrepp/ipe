@@ -19,8 +19,10 @@ node_modules/
 package-lock.json
 !docs/package-lock.json
 
-# Rebuilt locally and in docs CI; never commit machine-specific timings.
-docs/data/site-data.json
+# AST explorer and performance dashboard render this frozen final export of the
+# legacy-engine exporter (deleted with the legacy cluster); build-docs.py
+# packages the committed file instead of regenerating it.
+!docs/data/site-data.json
 __pycache__/
 
 # Playwright
