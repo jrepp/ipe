@@ -123,6 +123,7 @@ fn bench_single_policy_interpreter(c: &mut Criterion) {
 /// Benchmark: Single policy evaluation (JIT) - when implemented
 #[cfg(feature = "jit")]
 fn bench_single_policy_jit(c: &mut Criterion) {
+    use ipe_core::engine::Decision;
     let policy = create_sample_policy();
     let context = create_sample_context();
 
