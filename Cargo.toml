@@ -26,10 +26,8 @@ thiserror = "1.0"
 anyhow = "1.0"
 
 # Performance
-# Used by policy store snapshot reads (see fix/policy-store-integrity)
 arc-swap = "1.6"
 parking_lot = "0.12"
-crossbeam-channel = "0.5"
 
 # JIT Compilation
 cranelift = "0.123"

@@ -46,7 +46,7 @@ def main():
     sources += [ROOT / path for path in tracked.stdout.splitlines()]
     sources += [ROOT / "crates/ipe-core/examples/docs_data.rs", ROOT / "crates/ipe-core/src/ast/nodes.rs"]
     sources += [ROOT / "crates/ipe-core/src" / name for name in (
-        "engine.rs", "store.rs", "compiler.rs", "interpreter.rs",
+        "engine.rs", "compiler.rs", "interpreter.rs",
     )]
     for source in sources:
         output = package / source.relative_to(ROOT)
