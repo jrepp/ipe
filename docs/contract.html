@@ -67,7 +67,7 @@ Err(Error::EvaluationError(..))</pre>
             <tr><td>Any evaluation fails</td><td>Error</td><td>Error</td></tr>
           </tbody>
         </table></div>
-        <p class="small muted">Source: <a href="../crates/ipe-core/src/engine.rs">PolicyEngine::evaluate</a>. (PolicyDataStore was removed in #36.)</p>
+        <p class="small muted">Source: PolicyEngine::evaluate. (PolicyDataStore was removed in #36; the legacy engine stack was deleted in the legacy-cluster disposition.)</p>
       </section>
       <section class="section" id="responsibilities">
         <h2>Application responsibilities</h2>
@@ -85,7 +85,7 @@ Err(Error::EvaluationError(..))</pre>
           <li>The compiler ends a <code>requires</code> policy with <code>Return(true)</code>.</li>
           <li>The interpreter returns the value in that instruction. A false condition can therefore produce Allow.</li>
         </ul></div>
-        <p class="small muted">Sources: <a href="../crates/ipe-core/src/compiler.rs">PolicyCompiler::compile</a> and <a href="../crates/ipe-core/src/interpreter.rs">Interpreter::evaluate</a>.</p>
+        <p class="small muted">Sources: PolicyCompiler::compile and Interpreter::evaluate (both removed with the legacy engine stack).</p>
       </section>
       <section class="section" id="requirements">
         <h2>Requirements</h2>
