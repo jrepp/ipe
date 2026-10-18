@@ -62,7 +62,7 @@ fn state(policies: Vec<CompiledPolicy>) -> Arc<AppState> {
                 inspect: false,
                 manage_policies: false,
             },
-            token: write_token.into_bytes(),
+            token: SecretString::from(write_token),
         },
         Credential {
             config: CredentialConfig {
@@ -74,10 +74,11 @@ fn state(policies: Vec<CompiledPolicy>) -> Arc<AppState> {
                 inspect: false,
                 manage_policies: false,
             },
-            token: evaluate_token.into_bytes(),
+            token: SecretString::from(evaluate_token),
         },
     ];
     Arc::new(AppState {
+        workers: WorkerLifecycle::default(),
         store,
         input_schema: input_schema(),
         credentials,
@@ -205,7 +206,7 @@ fn management_state() -> Arc<AppState> {
             inspect: true,
             manage_policies: true,
         },
-        token: "m".repeat(32).into_bytes(),
+        token: SecretString::from("m".repeat(32)),
     });
     app
 }
@@ -334,4 +335,104 @@ async fn imports_cannot_bind_collections_removed_from_bootstrap() {
         publish_policy(&app, &"m".repeat(32), &document, None).await,
         Err(StatusCode::UNPROCESSABLE_ENTITY)
     );
+}
+
+#[tokio::test]
+async fn bind_failure_does_not_spawn_workers() {
+    let app = state(vec![]);
+    let occupied = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let references = Arc::strong_count(&app);
+    assert!(bind_and_start_workers(occupied.local_addr().unwrap(), &app).await.is_err());
+    tokio::task::yield_now().await;
+    assert_eq!(Arc::strong_count(&app), references);
+    assert!(!app.workers.cancellation.is_cancelled());
+}
+
+#[tokio::test]
+async fn canceled_delayed_connector_cannot_commit_or_extend_expiry_and_workers_join() {
+    let mut app = state(vec![]);
+    let now = app.clock.now().unwrap();
+    app.store
+        .register_collection(
+            scope(),
+            "pulled",
+            CollectionConfig {
+                schema: Schema::Bool,
+                max_ttl_seconds: 600,
+                max_observation_age_seconds: 600,
+                source_id: "upstream".into(),
+                mode: IngestionMode::Pull,
+            },
+        )
+        .unwrap();
+    app.store
+        .replace_snapshot(
+            &scope(),
+            "pulled",
+            "upstream",
+            SnapshotInput {
+                source_revision: 1,
+                observed_at: now,
+                ttl_seconds: 30,
+                items: BTreeMap::from([("key".into(), json!(true))]),
+            },
+            now,
+        )
+        .unwrap();
+    let before = app.store.snapshot(scope());
+    let request_seen = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let seen = Arc::clone(&request_seen);
+    let respond = Arc::clone(&release);
+    let provider = Router::new().route("/", get(move || {
+        let (seen, respond) = (Arc::clone(&seen), Arc::clone(&respond));
+        async move {
+            seen.notify_one();
+            respond.notified().await;
+            Json(json!({"source_revision":2,"observed_at":now,"ttl_seconds":600,"items":[{"key":"key","value":false}]}))
+        }
+    }));
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}/", listener.local_addr().unwrap());
+    let provider_task = tokio::spawn(async move { axum::serve(listener, provider).await.unwrap() });
+    Arc::get_mut(&mut app).unwrap().connectors.push(Arc::new(Connector {
+        config: ConnectorConfig {
+            scope: scope(),
+            collection: "pulled".into(),
+            source_id: "upstream".into(),
+            url,
+            token_env: None,
+            ca_certificate: None,
+            poll_interval_seconds: 300,
+            timeout_seconds: 60,
+            max_bytes: 4096,
+        },
+        // HTTP is only for this loopback test; configuration loading requires HTTPS.
+        client: reqwest::Client::builder().no_proxy().build().unwrap(),
+        token: None,
+        gate: tokio::sync::Mutex::new(()),
+        status: Mutex::new(json!({})),
+    }));
+    let mut workers = start_workers(&app);
+    tokio::time::timeout(Duration::from_secs(2), request_seen.notified())
+        .await
+        .unwrap();
+    app.workers.cancel();
+    release.notify_one();
+    tokio::time::timeout(Duration::from_secs(2), finish_workers(&mut workers))
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(workers.is_empty());
+    let after = app.store.snapshot(scope());
+    assert_eq!(after.revision(), before.revision());
+    assert_eq!(after.snapshot_metadata("pulled"), before.snapshot_metadata("pulled"));
+    assert_eq!(
+        after.get("pulled", "key", now, None).unwrap(),
+        before.get("pulled", "key", now, None).unwrap()
+    );
+    assert!(poll_connector(&app, &app.connectors[0]).await.is_err());
+    assert_eq!(app.store.snapshot(scope()).revision(), before.revision());
+    provider_task.abort();
+    let _ = provider_task.await;
 }

@@ -8,6 +8,7 @@ members = [
     "crates/ipe-web",
     "crates/ipe-server",
     "crates/ipe-integration",
+    "crates/ipe-json",
 ]
 resolver = "2"
 

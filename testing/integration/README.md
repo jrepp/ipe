@@ -45,3 +45,33 @@ node dist/servicenow-standin.js
 
 TypeScript and Node declarations are development-only dependencies. The Rust
 acceptance runner launches the `.ts` facade directly, requiring no npm install.
+
+## Independent external agent client
+
+`external-agent-client.ts` probes an already-running **synthetic discovery demo**
+through CLI subprocesses, direct HTTP, and a hand-written JSON-RPC MCP client.
+It imports neither the workload implementation nor its MCP SDK. It reads only the
+explicit agent token handoff file and the two executable files for SHA256 hashing;
+it does not inspect operator configuration or provider credentials.
+
+```sh
+node testing/integration/external-agent-client.ts \
+  --url http://127.0.0.1:PORT \
+  --token-file /private/demo/agent.env \
+  --toolkit target/debug/integration-toolkit \
+  --workload target/debug/ipe-integration \
+  --connection-ref conn_acceptance \
+  --report target/external-agent-validation.json
+```
+
+The client permits only loopback HTTP and uses the demo's synthetic metadata
+expectations. The report contains sanitized results, observation time, executable
+hashes and observed adapter digest. An optional `--source-revision FULL_COMMIT_HASH`
+records the operator-supplied build revision; the client cannot prove that a binary
+was built from that revision. It validates masking, bounded discovery and explicit
+unknown workflow semantics, then rejection of invalid authentication, foreign
+connections, URL injection and unknown MCP tools. Public JSON Schema URLs are
+allowed in tool schemas; provider URLs and known hostile markers are forbidden.
+It stops its own MCP subprocess and leaves the deployment running. This is a
+same-machine external-client check, not a separate OS sandbox or live ServiceNow
+compatibility suite.

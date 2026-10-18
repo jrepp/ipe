@@ -1124,6 +1124,7 @@ dependencies = [
  "axum",
  "clap",
  "hmac",
+ "ipe-json",
  "reqwest",
  "rmcp",
  "secrecy",
@@ -1135,6 +1136,14 @@ dependencies = [
  "tokio",
  "wasmi",
  "wat",
+]
+
+[[package]]
+name = "ipe-json"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1151,13 +1160,16 @@ dependencies = [
  "axum",
  "chrono",
  "ipe-core",
+ "ipe-json",
  "prometheus",
  "reqwest",
  "rustix",
+ "secrecy",
  "serde",
  "serde_json",
  "subtle",
  "tokio",
+ "tokio-util",
  "tower 0.4.13",
  "tower-http 0.5.2",
  "tracing",
@@ -2543,6 +2555,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
  "libc",
  "pin-project-lite",
  "tokio",

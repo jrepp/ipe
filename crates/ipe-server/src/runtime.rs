@@ -13,6 +13,7 @@ use ipe_core::runtime_facts::{
     SnapshotInput,
 };
 use ipe_core::runtime_policy::{CompileEnvironment, CompiledPolicy, EvalBudget, PolicyOutcome};
+use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::{
@@ -23,6 +24,8 @@ use std::{
 };
 use subtle::ConstantTimeEq;
 use tokio::net::TcpListener;
+use tokio::task::JoinSet;
+use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 #[cfg(test)]
@@ -66,7 +69,7 @@ struct CredentialConfig {
 }
 struct Credential {
     config: CredentialConfig,
-    token: Vec<u8>,
+    token: SecretString,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -99,7 +102,7 @@ struct ConnectorConfig {
 struct Connector {
     config: ConnectorConfig,
     client: reqwest::Client,
-    token: Option<String>,
+    token: Option<SecretString>,
     gate: tokio::sync::Mutex<()>,
     status: Mutex<Value>,
 }
@@ -132,7 +135,22 @@ impl Clock {
         Ok(*high)
     }
 }
+#[derive(Default)]
+struct WorkerLifecycle {
+    cancellation: CancellationToken,
+    // Serialize the cancellation boundary with synchronous snapshot publication.
+    publication: Mutex<()>,
+}
+impl WorkerLifecycle {
+    // An in-progress synchronous commit completes before this fence. Storage I/O
+    // is not preemptible; shutdown deadlines cover cooperative async work only.
+    fn cancel(&self) {
+        let _gate = self.publication.lock().unwrap();
+        self.cancellation.cancel();
+    }
+}
 struct AppState {
+    workers: WorkerLifecycle,
     store: FactStore,
     input_schema: Schema,
     credentials: Vec<Credential>,
@@ -195,7 +213,8 @@ fn authorize<'a>(
     let mut recognized = false;
     let mut matched = None;
     for credential in &state.credentials {
-        let equal = bool::from(credential.token.as_slice().ct_eq(supplied.as_bytes()));
+        let equal =
+            bool::from(credential.token.expose_secret().as_bytes().ct_eq(supplied.as_bytes()));
         recognized |= equal;
         if equal && credential.config.scope == *scope {
             matched = Some(&credential.config);
@@ -541,7 +560,7 @@ async fn poll_connector(state: &AppState, connector: &Connector) -> Result<Value
     let fetch = async {
         let mut request = connector.client.get(&connector.config.url);
         if let Some(token) = &connector.token {
-            request = request.bearer_auth(token);
+            request = request.bearer_auth(token.expose_secret());
         }
         let mut response =
             request.send().await.map_err(|_| "upstream request failed".to_string())?;
@@ -568,6 +587,10 @@ async fn poll_connector(state: &AppState, connector: &Connector) -> Result<Value
                 return Err("duplicate snapshot key".into());
             }
         }
+        let _publication = state.workers.publication.lock().unwrap();
+        if state.workers.cancellation.is_cancelled() {
+            return Err("connector canceled".into());
+        }
         let records = state
             .store
             .replace_snapshot(
@@ -587,9 +610,13 @@ async fn poll_connector(state: &AppState, connector: &Connector) -> Result<Value
             json!({"status":"ok","source_revision":envelope.source_revision,"items":records.len(),"checked_at":chrono::Utc::now().timestamp()}),
         )
     };
-    let result = tokio::time::timeout(Duration::from_secs(connector.config.timeout_seconds), fetch)
-        .await
-        .unwrap_or_else(|_| Err("upstream deadline exceeded".into()));
+    let result = tokio::select! {
+        biased;
+        _ = state.workers.cancellation.cancelled() => Err("connector canceled".into()),
+        result = tokio::time::timeout(Duration::from_secs(connector.config.timeout_seconds), fetch) => {
+            result.unwrap_or_else(|_| Err("upstream deadline exceeded".into()))
+        }
+    };
     *connector.status.lock().unwrap() = match &result {
         Ok(value) => value.clone(),
         Err(message) => {
@@ -679,16 +706,15 @@ fn load(config: Config) -> Result<(SocketAddr, Arc<AppState>), Box<dyn std::erro
     }
     let mut credentials = Vec::new();
     for entry in config.credentials {
-        let token = std::env::var(&entry.token_env)
-            .map_err(|_| format!("credential environment variable {} is not set", entry.token_env))?
-            .into_bytes();
-        if token.len() < 32 {
+        let token = SecretString::from(std::env::var(&entry.token_env).map_err(|_| {
+            format!("credential environment variable {} is not set", entry.token_env)
+        })?);
+        if token.expose_secret().len() < 32 {
             return Err("API credentials must contain at least 32 bytes".into());
         }
-        if credentials
-            .iter()
-            .any(|c: &Credential| c.token == token && c.config.scope == entry.scope)
-        {
+        if credentials.iter().any(|c: &Credential| {
+            c.token.expose_secret() == token.expose_secret() && c.config.scope == entry.scope
+        }) {
             return Err("duplicate credential in scope; combine grants".into());
         }
         for collection in &entry.write_collections {
@@ -755,7 +781,9 @@ fn load(config: Config) -> Result<(SocketAddr, Arc<AppState>), Box<dyn std::erro
             .token_env
             .as_ref()
             .map(|name| {
-                std::env::var(name).map_err(|_| format!("connector credential {name} is not set"))
+                std::env::var(name)
+                    .map(SecretString::from)
+                    .map_err(|_| format!("connector credential {name} is not set"))
             })
             .transpose()?;
         connectors.push(Arc::new(Connector {
@@ -769,6 +797,7 @@ fn load(config: Config) -> Result<(SocketAddr, Arc<AppState>), Box<dyn std::erro
     Ok((
         config.bind,
         Arc::new(AppState {
+            workers: WorkerLifecycle::default(),
             store,
             input_schema: config.input_schema,
             credentials,
@@ -793,29 +822,8 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         return Err("bootstrap configuration exceeds 4 MiB".into());
     }
     let (bind, state) = load(crate::strict_json::parse(&bytes)?)?;
-    let cleanup_state = Arc::clone(&state);
-    tokio::spawn(async move {
-        loop {
-            tokio::time::sleep(Duration::from_secs(30)).await;
-            if let Ok(now) = cleanup_state.clock.now() {
-                if let Err(error) = cleanup_state.store.cleanup_expired(now) {
-                    warn!(%error,"expired fact cleanup failed; resolver still enforces expiry");
-                }
-            }
-        }
-    });
-    for connector in &state.connectors {
-        let (state, connector) = (Arc::clone(&state), Arc::clone(connector));
-        tokio::spawn(async move {
-            loop {
-                if let Err(error) = poll_connector(&state, &connector).await {
-                    warn!(collection=%connector.config.collection,error,"refresh failed; expiry unchanged");
-                }
-                tokio::time::sleep(Duration::from_secs(connector.config.poll_interval_seconds))
-                    .await;
-            }
-        });
-    }
+    // Binding must succeed before any background tasks can access the store.
+    let (listener, mut workers) = bind_and_start_workers(bind, &state).await?;
     let app = Router::new()
         .route("/health", get(|| async { Json(json!({"status":"healthy"})) }))
         .route("/ready", get(ready))
@@ -831,13 +839,122 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         .route("/v1/scopes/:tenant/:environment/facts/:collection/commit", post(commit))
         .route("/v1/scopes/:tenant/:environment/facts/:collection/:key", get(inspect_fact))
         .layer(DefaultBodyLimit::max(MAX_BODY))
-        .with_state(state);
-    let listener = TcpListener::bind(bind).await?;
+        .with_state(Arc::clone(&state));
     info!(address=%listener.local_addr()?,"runtime API listening");
-    axum::serve(listener, app)
-        .with_graceful_shutdown(async {
-            let _ = tokio::signal::ctrl_c().await;
+    let (stop_tx, stop_rx) = tokio::sync::oneshot::channel();
+    let server = axum::serve(listener, app).with_graceful_shutdown(async {
+        let _ = stop_rx.await;
+    });
+    let server = std::future::IntoFuture::into_future(server);
+    tokio::pin!(server);
+    let result: Result<(), Box<dyn std::error::Error>> = tokio::select! {
+        result = &mut server => result.map_err(Into::into),
+        signal = shutdown_signal() => {
+            // Fence publication before starting HTTP drain. Completed publications
+            // precede this boundary; pending network responses cannot commit afterward.
+            state.workers.cancel();
+            let _ = stop_tx.send(());
+            match signal {
+                Err(error) => Err(error.into()),
+                Ok(()) => match tokio::time::timeout(Duration::from_secs(13), &mut server).await {
+                    Ok(result) => result.map_err(Into::into),
+                    Err(_) => Err("HTTP shutdown deadline exceeded".into()),
+                },
+            }
+        }
+    };
+    state.workers.cancel();
+    finish_workers(&mut workers).await?;
+    result
+}
+
+async fn bind_and_start_workers(
+    bind: SocketAddr,
+    state: &Arc<AppState>,
+) -> Result<(TcpListener, JoinSet<()>), std::io::Error> {
+    let listener = TcpListener::bind(bind).await?;
+    Ok((listener, start_workers(state)))
+}
+
+fn start_workers(state: &Arc<AppState>) -> JoinSet<()> {
+    let mut workers = JoinSet::new();
+    let cleanup_state = Arc::clone(state);
+    workers.spawn(async move {
+        loop {
+            tokio::select! {
+                biased;
+                _ = cleanup_state.workers.cancellation.cancelled() => break,
+                _ = tokio::time::sleep(Duration::from_secs(30)) => {},
+            }
+            let _gate = cleanup_state.workers.publication.lock().unwrap();
+            if cleanup_state.workers.cancellation.is_cancelled() {
+                break;
+            }
+            if let Ok(now) = cleanup_state.clock.now() {
+                if let Err(error) = cleanup_state.store.cleanup_expired(now) {
+                    warn!(%error,"expired fact cleanup failed; resolver still enforces expiry");
+                }
+            }
+        }
+    });
+    for connector in &state.connectors {
+        let (state, connector) = (Arc::clone(state), Arc::clone(connector));
+        workers.spawn(async move {
+            loop {
+                if state.workers.cancellation.is_cancelled() {
+                    break;
+                }
+                if let Err(error) = poll_connector(&state, &connector).await {
+                    if state.workers.cancellation.is_cancelled() {
+                        break;
+                    }
+                    warn!(collection=%connector.config.collection,error,"refresh failed; expiry unchanged");
+                }
+                tokio::select! {
+                    biased;
+                    _ = state.workers.cancellation.cancelled() => break,
+                    _ = tokio::time::sleep(Duration::from_secs(connector.config.poll_interval_seconds)) => {},
+                }
+            }
+        });
+    }
+    workers
+}
+
+async fn finish_workers(workers: &mut JoinSet<()>) -> Result<(), &'static str> {
+    if tokio::time::timeout(Duration::from_secs(2), async {
+        while let Some(result) = workers.join_next().await {
+            if let Err(error) = result {
+                warn!(%error, "runtime worker stopped unexpectedly");
+            }
+        }
+    })
+    .await
+    .is_err()
+    {
+        workers.abort_all();
+        // Cancellation is cooperative: abort cannot preempt a synchronous RocksDB
+        // call already executing. Bound the async join wait; do not claim a hard
+        // process-exit deadline for blocked storage or OS calls.
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while workers.join_next().await.is_some() {}
         })
-        .await?;
+        .await
+        .map_err(|_| "worker shutdown deadline exceeded")?;
+    }
     Ok(())
+}
+
+async fn shutdown_signal() -> Result<(), std::io::Error> {
+    #[cfg(unix)]
+    {
+        let mut terminate =
+            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+        tokio::select! {
+            result = tokio::signal::ctrl_c() => result,
+            _ = terminate.recv() => Ok(()),
+        }
+    }
+    #[cfg(not(unix))]
+    tokio::signal::ctrl_c().await
 }

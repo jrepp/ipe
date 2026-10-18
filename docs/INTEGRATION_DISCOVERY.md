@@ -166,8 +166,8 @@ key in `secrecy::SecretString`; the toolkit uses the same wrapper for its bearer
 token. Access is explicit at native validation, authentication, HMAC and HTTP
 boundaries. Wrappers protect against accidental debug output and zeroize their
 owned storage on drop. They do not erase process environment values or copies
-made by HTTP/TLS libraries. These changes do not add a credential vault or change
-the enforcement server's credential storage.
+made by HTTP/TLS libraries. The enforcement server also wraps API and connector
+credentials in `SecretString`. These wrappers do not add a credential vault.
 
 Ctrl-C, or SIGTERM on Unix, stops workload intake and lets active requests drain
 for up to 13 seconds, covering the existing 12-second request deadline plus cleanup.
@@ -182,3 +182,16 @@ is a fallback for interrupted paths. Acceptance verifies successful SIGTERM drai
 while discovery is in progress; the interactive demo closes its children and
 removes temporary files after Ctrl-C. This is local process lifecycle management,
 not durable integration jobs or a deployment controller.
+
+The enforcement server binds its listener before starting tracked connector and
+cleanup workers. `CancellationToken` and Tokio `JoinSet` coordinate shutdown;
+a publication fence prevents canceled connector responses from replacing snapshots
+or renewing freshness. HTTP drain allows 13 seconds, followed by a two-second
+worker join and a two-second abort/join fallback. These are cooperative async
+limits: an already-running synchronous storage or OS call cannot be preempted.
+The publication fence is outside policy evaluation.
+
+Toolkit and enforcement input boundaries share `ipe-json`, a small Serde visitor
+that rejects duplicate decoded keys recursively before typed deserialization.
+It retains serde_json's depth limit and returns opaque errors. Each caller still
+owns byte limits, request schemas and authorization.
