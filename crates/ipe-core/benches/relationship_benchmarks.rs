@@ -123,13 +123,11 @@ fn bench_trust_chain_traversal(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::from_parameter(chain_length), chain_length, |b, _| {
             b.iter(|| {
-                black_box(
-                    store.find_relationship_path(
-                        "cert-0",
-                        "trusted_by",
-                        &format!("ca-{}", chain_length - 1),
-                    ),
-                )
+                black_box(store.find_relationship_path(
+                    "cert-0",
+                    "trusted_by",
+                    &format!("ca-{}", chain_length - 1),
+                ))
             });
         });
     }
