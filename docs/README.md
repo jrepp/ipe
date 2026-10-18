@@ -17,9 +17,6 @@ https://[username].github.io/ipe/
 
 ## 📄 Data Files
 
-- **perftest-results.json** - Performance test data (18 tests)
-- **benchmark-latest.json** - Latest Criterion benchmark snapshot
-- **benchmark-history.json** - Historical benchmark data (last 100 runs)
 
 ## 🧪 Testing Infrastructure
 
@@ -62,9 +59,6 @@ just bench-all
 ```
 
 This will generate/update:
-1. `perftest-results.json` - 18 performance tests with statistics
-2. `benchmark-latest.json` - Current benchmark snapshot
-3. `benchmark-history.json` - Appends to history (keeps last 100)
 
 ## 🎨 Features
 
@@ -138,7 +132,6 @@ See [TESTING_SUMMARY.md](TESTING_SUMMARY.md) for complete test results and analy
 
 ## 🔄 CI/CD Integration
 
-The `docs/perftest-results.json` file should be updated and committed after running performance tests. Consider:
 
 1. Running tests on a schedule (weekly/monthly)
 2. Committing updated results to track performance over time
@@ -149,8 +142,6 @@ The `docs/perftest-results.json` file should be updated and committed after runn
 - **Testing Guide:** [TESTING_SUMMARY.md](TESTING_SUMMARY.md) - Complete testing results
 - **Test Analysis:** [TEST_RESULTS.md](TEST_RESULTS.md) - Detailed failure analysis
 - **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
-- **Bytecode:** [BYTECODE.md](BYTECODE.md) - Bytecode specification
-- **AST:** [AST.md](AST.md) - Abstract syntax tree
 - **Index:** [INDEX.md](INDEX.md) - Policy indexing
 
 ## 🎯 Quick Commands

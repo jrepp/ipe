@@ -197,13 +197,10 @@ slated for feature-gating and deletion.
 
 - **[QUICKSTART](QUICKSTART.md)** - Get running in 5 minutes
 - **[SUMMARY](SUMMARY.md)** - Executive summary and vision
-- **[END_TO_END_EXAMPLE](END_TO_END_EXAMPLE.md)** - Complete usage walkthrough
 
 ### Technical Reference
 
 - **[ARCHITECTURE](docs/ARCHITECTURE.md)** - System architecture with diagrams
-- **[AST](docs/AST.md)** - Abstract syntax tree specification
-- **[BYTECODE](docs/BYTECODE.md)** - Instruction set and execution model
 - **[RFCs](rfcs/INDEX.md)** - Design proposals and specifications
 
 ### New: Sidecar Architecture RFCs

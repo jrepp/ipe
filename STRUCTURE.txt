@@ -4,7 +4,6 @@ ipe-rfc/
 │   ├── RFC.md                    ⭐ 150+ pages, complete technical spec
 │   ├── SUMMARY.md                📊 Executive summary for decision-makers
 │   ├── README.md                 🚀 Quick start guide
-│   ├── END_TO_END_EXAMPLE.md     🔄 Complete policy lifecycle
 │   ├── FILES.md                  📁 This file listing
 │   └── STRUCTURE.txt             🌲 Project tree
 │
