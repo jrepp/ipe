@@ -83,25 +83,31 @@ impl PolicyEngine {
 
     /// Evaluate a single policy against the context
     pub fn evaluate(&self, ctx: &EvaluationContext) -> Result<Decision> {
-        // Get policies for this resource type
-        let policies = self.policy_db.get_policies_for_resource(ctx.resource.type_id);
+        // Get indices of policies for this resource type (borrowed, no allocation)
+        let policy_indices = self.policy_db.policy_indices_for_resource(ctx.resource.type_id);
 
-        if policies.is_empty() {
+        if policy_indices.is_empty() {
             // No policies found - default deny
             return Ok(
                 Decision::deny().with_reason("No policies found for resource type".to_string())
             );
         }
 
+        let all_policies = self.policy_db.get_all_policies();
+
         let mut decision = Decision::deny();
         let mut any_allow = false;
         let mut any_deny = false;
 
-        // Evaluate each policy
-        for stored_policy in policies {
-            let mut interp = Interpreter::new(stored_policy.field_map.clone());
+        // One interpreter is reused across all policies: its stack is cleared
+        // per evaluation and each policy's field map is borrowed, never cloned.
+        let mut interp = Interpreter::bare();
 
-            match interp.evaluate(&stored_policy.policy, ctx) {
+        // Evaluate each policy
+        for policy_idx in policy_indices {
+            let stored_policy = &all_policies[*policy_idx];
+
+            match interp.evaluate_borrowed(&stored_policy.policy, &stored_policy.field_map, ctx) {
                 Ok(result) => {
                     if result {
                         // Policy allows

@@ -95,7 +95,20 @@ impl Interpreter {
         Self { stack: Stack::new(), field_map }
     }
 
-    /// Evaluate a compiled policy against an evaluation context
+    /// Create a new interpreter without an owned field mapping.
+    ///
+    /// Pair with [`Interpreter::evaluate_borrowed`] to evaluate many policies
+    /// while reusing this interpreter and its stack without cloning each
+    /// policy's field map.
+    pub fn bare() -> Self {
+        Self {
+            stack: Stack::new(),
+            field_map: HashMap::new(),
+        }
+    }
+
+    /// Evaluate a compiled policy against an evaluation context using the
+    /// interpreter's own field mapping.
     /// Hot path - performance critical
     #[inline]
     pub fn evaluate(
@@ -103,7 +116,36 @@ impl Interpreter {
         policy: &CompiledPolicy,
         ctx: &EvaluationContext,
     ) -> Result<bool, String> {
-        self.stack.clear();
+        // Disjoint field borrows: the loop reads self.field_map while the
+        // stack is borrowed mutably.
+        Self::eval_loop(&mut self.stack, policy, &self.field_map, ctx)
+    }
+
+    /// Evaluate a compiled policy with an externally owned field mapping.
+    ///
+    /// This is the zero-allocation hot path used by `PolicyEngine::evaluate`:
+    /// one interpreter (and its stack) is reused across many policies, and
+    /// each policy's field map is only borrowed, never cloned.
+    /// Hot path - performance critical
+    #[inline]
+    pub fn evaluate_borrowed(
+        &mut self,
+        policy: &CompiledPolicy,
+        field_map: &FieldMapping,
+        ctx: &EvaluationContext,
+    ) -> Result<bool, String> {
+        Self::eval_loop(&mut self.stack, policy, field_map, ctx)
+    }
+
+    /// The single shared interpreter loop. Static so it can borrow the stack
+    /// mutably and the field map immutably at the same time.
+    fn eval_loop(
+        stack: &mut Stack,
+        policy: &CompiledPolicy,
+        field_map: &FieldMapping,
+        ctx: &EvaluationContext,
+    ) -> Result<bool, String> {
+        stack.clear();
         let mut pc = 0; // Program counter
 
         // Main interpreter loop - keep hot path simple
@@ -113,8 +155,8 @@ impl Interpreter {
 
             match instr {
                 Instruction::LoadField { offset } => {
-                    let value = self.load_field(*offset, ctx)?;
-                    self.stack.push(value)?;
+                    let value = Self::load_field(*offset, field_map, ctx)?;
+                    stack.push(value)?;
                 },
 
                 Instruction::LoadConst { idx } => {
@@ -124,34 +166,34 @@ impl Interpreter {
                         .get(*idx as usize)
                         .ok_or_else(|| format!("Invalid constant index: {}", idx))?
                         .clone();
-                    self.stack.push(value)?;
+                    stack.push(value)?;
                 },
 
                 Instruction::Compare { op } => {
-                    let b = self.stack.pop()?;
-                    let a = self.stack.pop()?;
+                    let b = stack.pop()?;
+                    let a = stack.pop()?;
                     let result = a.compare(&b, *op)?;
-                    self.stack.push(Value::Bool(result))?;
+                    stack.push(Value::Bool(result))?;
                 },
 
                 Instruction::And => {
-                    let b = self.stack.pop()?;
-                    let a = self.stack.pop()?;
+                    let b = stack.pop()?;
+                    let a = stack.pop()?;
                     let result = a.is_truthy() && b.is_truthy();
-                    self.stack.push(Value::Bool(result))?;
+                    stack.push(Value::Bool(result))?;
                 },
 
                 Instruction::Or => {
-                    let b = self.stack.pop()?;
-                    let a = self.stack.pop()?;
+                    let b = stack.pop()?;
+                    let a = stack.pop()?;
                     let result = a.is_truthy() || b.is_truthy();
-                    self.stack.push(Value::Bool(result))?;
+                    stack.push(Value::Bool(result))?;
                 },
 
                 Instruction::Not => {
-                    let a = self.stack.pop()?;
+                    let a = stack.pop()?;
                     let result = !a.is_truthy();
-                    self.stack.push(Value::Bool(result))?;
+                    stack.push(Value::Bool(result))?;
                 },
 
                 Instruction::Return { value } => {
@@ -164,7 +206,7 @@ impl Interpreter {
                 },
 
                 Instruction::JumpIfFalse { offset } => {
-                    let cond = self.stack.pop()?;
+                    let cond = stack.pop()?;
                     if !cond.is_truthy() {
                         pc = (pc as i32 + *offset as i32) as usize;
                         continue;
@@ -188,9 +230,12 @@ impl Interpreter {
 
     /// Load a field value from the evaluation context
     #[inline]
-    fn load_field(&self, offset: u16, ctx: &EvaluationContext) -> Result<Value, String> {
-        let path = self
-            .field_map
+    fn load_field(
+        offset: u16,
+        field_map: &FieldMapping,
+        ctx: &EvaluationContext,
+    ) -> Result<Value, String> {
+        let path = field_map
             .get(&offset)
             .ok_or_else(|| format!("Unknown field offset: {}", offset))?;
 
@@ -202,19 +247,15 @@ impl Interpreter {
         // First component determines which part of RAR to access
         // Using unsafe get since we checked is_empty above
         match unsafe { path.get_unchecked(0) }.as_str() {
-            "resource" => self.access_resource(&path[1..], &ctx.resource),
-            "action" => self.access_action(&path[1..], &ctx.action),
-            "request" => self.access_request(&path[1..], &ctx.request),
+            "resource" => Self::access_resource(&path[1..], &ctx.resource),
+            "action" => Self::access_action(&path[1..], &ctx.action),
+            "request" => Self::access_request(&path[1..], &ctx.request),
             _ => Err(format!("Unknown RAR component: {}", path[0])),
         }
     }
 
     #[inline]
-    fn access_resource(
-        &self,
-        path: &[String],
-        resource: &crate::rar::Resource,
-    ) -> Result<Value, String> {
+    fn access_resource(path: &[String], resource: &crate::rar::Resource) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Resource path cannot be empty".to_string());
         }
@@ -226,17 +267,13 @@ impl Interpreter {
                     .attributes
                     .get(attr_name)
                     .ok_or_else(|| format!("Attribute not found: {}", attr_name))?;
-                self.attr_to_value(attr)
+                Self::attr_to_value(attr)
             },
         }
     }
 
     #[inline]
-    fn access_action(
-        &self,
-        path: &[String],
-        _action: &crate::rar::Action,
-    ) -> Result<Value, String> {
+    fn access_action(path: &[String], _action: &crate::rar::Action) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Action path cannot be empty".to_string());
         }
@@ -246,11 +283,7 @@ impl Interpreter {
     }
 
     #[inline]
-    fn access_request(
-        &self,
-        path: &[String],
-        request: &crate::rar::Request,
-    ) -> Result<Value, String> {
+    fn access_request(path: &[String], request: &crate::rar::Request) -> Result<Value, String> {
         if path.is_empty() {
             return Err("Request path cannot be empty".to_string());
         }
@@ -260,21 +293,20 @@ impl Interpreter {
                 if path.len() < 2 {
                     return Err("Principal path too short".to_string());
                 }
-                self.access_principal(&path[1..], &request.principal)
+                Self::access_principal(&path[1..], &request.principal)
             },
             attr_name => {
                 let attr = request
                     .metadata
                     .get(attr_name)
                     .ok_or_else(|| format!("Request metadata not found: {}", attr_name))?;
-                self.attr_to_value(attr)
+                Self::attr_to_value(attr)
             },
         }
     }
 
     #[inline]
     fn access_principal(
-        &self,
         path: &[String],
         principal: &crate::rar::Principal,
     ) -> Result<Value, String> {
@@ -289,13 +321,13 @@ impl Interpreter {
                     .attributes
                     .get(attr_name)
                     .ok_or_else(|| format!("Principal attribute not found: {}", attr_name))?;
-                self.attr_to_value(attr)
+                Self::attr_to_value(attr)
             },
         }
     }
 
     #[inline]
-    fn attr_to_value(&self, attr: &AttributeValue) -> Result<Value, String> {
+    fn attr_to_value(attr: &AttributeValue) -> Result<Value, String> {
         match attr {
             AttributeValue::String(s) => Ok(Value::String(s.clone())),
             AttributeValue::Int(i) => Ok(Value::Int(*i)),
@@ -766,5 +798,73 @@ mod tests {
 
         interp.evaluate(&policy, &ctx).unwrap();
         assert_eq!(*interp.stack.peek().unwrap(), Value::Bool(true));
+    }
+
+    // Borrowed field-map evaluation (zero-allocation hot path)
+    #[test]
+    fn test_interpreter_evaluate_borrowed_matches_owned() {
+        let mut policy = CompiledPolicy::new(1);
+        policy.emit(Instruction::LoadField { offset: 0 });
+        policy.emit(Instruction::Return { value: true });
+
+        let mut field_map = FieldMapping::new();
+        field_map.insert(0, vec!["resource".to_string(), "priority".to_string()]);
+
+        let mut ctx = EvaluationContext::default();
+        ctx.resource.attributes.insert("priority".to_string(), AttributeValue::Int(5));
+
+        // Owned path
+        let mut owned = Interpreter::new(field_map.clone());
+        assert!(owned.evaluate(&policy, &ctx).unwrap());
+
+        // Borrowed path must produce the identical result
+        let mut borrowed = Interpreter::bare();
+        assert!(borrowed.evaluate_borrowed(&policy, &field_map, &ctx).unwrap());
+    }
+
+    #[test]
+    fn test_interpreter_evaluate_borrowed_unknown_offset() {
+        let mut policy = CompiledPolicy::new(1);
+        policy.emit(Instruction::LoadField { offset: 999 });
+        policy.emit(Instruction::Return { value: true });
+
+        let field_map = FieldMapping::new();
+        let mut borrowed = Interpreter::bare();
+        let ctx = EvaluationContext::default();
+
+        let result = borrowed.evaluate_borrowed(&policy, &field_map, &ctx);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unknown field offset"));
+    }
+
+    #[test]
+    fn test_interpreter_bare_reusable_across_policies() {
+        // One interpreter, two policies with different field maps: the stack
+        // must be reusable and each evaluation independent.
+        let mut policy_a = CompiledPolicy::new(1);
+        policy_a.emit(Instruction::LoadField { offset: 0 });
+        policy_a.emit(Instruction::Return { value: true });
+
+        let mut policy_b = CompiledPolicy::new(2);
+        let idx = policy_b.add_constant(Value::Bool(true));
+        policy_b.emit(Instruction::LoadConst { idx });
+        policy_b.emit(Instruction::Return { value: true });
+
+        let mut field_map_a = FieldMapping::new();
+        field_map_a.insert(0, vec!["resource".to_string(), "priority".to_string()]);
+
+        let mut interp = Interpreter::bare();
+
+        let mut ctx = EvaluationContext::default();
+        ctx.resource.attributes.insert("priority".to_string(), AttributeValue::Int(7));
+
+        assert!(interp.evaluate_borrowed(&policy_a, &field_map_a, &ctx).unwrap());
+        // Second evaluation reuses the same interpreter with a different map
+        // (note: Return leaves intermediate values on the stack; eval_loop
+        // clears it at the start of each evaluation, so reuse is safe).
+        assert!(interp.evaluate_borrowed(&policy_b, &FieldMapping::new(), &ctx).unwrap());
+        // A third evaluation on the reused interpreter still yields the
+        // correct result despite leftover stack state from the previous one.
+        assert!(interp.evaluate_borrowed(&policy_a, &field_map_a, &ctx).unwrap());
     }
 }
