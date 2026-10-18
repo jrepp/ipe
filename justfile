@@ -32,12 +32,6 @@ perftest-visualize:
     @echo "📊 Generating visualization..."
     @echo "✅ Visualization ready: crates/ipe-core/perftest-results.html"
 
-# Run specific perftest by name
-perftest TEST:
-    cd crates/ipe-core && cargo test --release --test perftest_predicate_execution --features jit \
-      -- --ignored --nocapture --test-threads=1 {{TEST}}
-
-# Build perftests without running
 perftest-build:
     cd crates/ipe-core && cargo test --release --test perftest_predicate_execution --no-run
     cd crates/ipe-core && cargo test --release --test perftest_predicate_execution --features jit --no-run
@@ -113,21 +107,9 @@ clean:
 bench:
     cargo bench
 
-# Export benchmark results to GitHub Pages
-bench-export:
-    cd crates/ipe-core && cargo run --release --bin bench_export
-
-# Run benchmarks and export results
-bench-all: bench bench-export
+bench-all: bench
     @echo "✅ Benchmarks complete! Results exported to docs/"
 
-# Run continuous benchmarks (1-second intervals) for time-series charts
-bench-continuous DURATION="60":
-    @echo "🚀 Running continuous benchmarks for {{DURATION}} seconds..."
-    cd crates/ipe-core && cargo run --release --bin bench_continuous --features jit {{DURATION}}
-    @echo "✅ Continuous benchmark complete! View at http://localhost:8080/benchmarks.html"
-
-# Start Docker nginx server for docs
 docs-serve:
     @echo "🐳 Starting nginx server with Docker..."
     cd docs && docker-compose up -d docs
