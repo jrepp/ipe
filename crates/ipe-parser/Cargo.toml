@@ -6,6 +6,5 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-nom = { workspace = true }
-logos = { workspace = true }
+
 thiserror = { workspace = true }
