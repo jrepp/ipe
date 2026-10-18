@@ -457,6 +457,9 @@ Traditional authorization systems lock during policy updates, causing:
 
 **IPE's Solution: Atomic Snapshot Swaps**
 
+> Removed with the legacy policy store (#36); the v2 runtime uses per-scope snapshots
+> (`crates/ipe-core/src/runtime_facts.rs`).
+
 ```rust
 // Readers get immutable snapshot (no blocking)
 let snapshot: Arc<PolicySnapshot> = store.snapshot(); // Arc::clone is <10ns
@@ -484,7 +487,7 @@ store.update(new_snapshot); // <100ns, lock-free
 sequenceDiagram
     participant R1 as Reader 1
     participant R2 as Reader 2
-    participant Store as PolicyDataStore
+    participant Store as PolicyDataStore (removed, #36)
     participant V1 as Snapshot v1
     participant V2 as Snapshot v2
     participant Writer as Update Worker

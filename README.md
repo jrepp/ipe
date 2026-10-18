@@ -92,9 +92,7 @@ IPE uses a multi-tier execution model:
 
 ### Performance
 - Bytecode interpretation for fast baseline execution
-- Optional JIT compilation via Cranelift for hot paths
-- Adaptive tiering automatically optimizes frequently-evaluated predicates
-- Lock-free reads using atomic snapshots
+- Optional JIT compilation via Cranelift for hot paths (legacy engine)
 - Memory-mapped predicate storage
 
 ### Developer Experience
@@ -184,17 +182,12 @@ cargo build --release
 └───────────────┘
 ```
 
-### Tiered Execution
+### Tiered Execution (removed)
 
-IPE uses adaptive tiering to automatically optimize frequently-used predicates:
-
-| Tier | Trigger | Compilation | Notes |
-|------|---------|-------------|-------|
-| Interpreter | Default | Pre-compiled bytecode | Baseline performance |
-| Baseline JIT | 100+ evaluations | Fast compilation | Performance boost |
-| Optimized JIT | 10k+ evaluations | Full optimization | Maximum speed |
-
-Performance metrics will be added after comprehensive benchmarking with profile-guided optimization.
+The legacy adaptive-tiering engine (`TieredPolicy`, `PolicyDataStore`) was removed in #36; the
+shipping v2 runtime evaluates policies via `runtime_policy` with eval budgets and evidence
+deadlines (see `crates/ipe-core/src/runtime_policy.rs`). The remaining legacy engine modules are
+slated for feature-gating and deletion.
 
 ## Documentation
 

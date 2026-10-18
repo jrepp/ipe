@@ -183,9 +183,11 @@ Documentation: [Bytecode Documentation](BYTECODE.md)
 
 ---
 
-### 4. PolicyDataStore (Lock-Free)
+### 4. PolicyDataStore (removed)
 
-PolicyDataStore stores policies for concurrent readers.
+Removed in #36 - the v2 runtime uses per-scope snapshots from `runtime_facts.rs` instead. (Historical section retained below for context.)
+
+PolicyDataStore stored policies for concurrent readers.
 
 ```mermaid
 graph TB
@@ -371,11 +373,8 @@ flowchart LR
     T -->|Parser| AST[AST]
     AST -->|TypeCheck| VAST[Validated AST]
     VAST -->|Compiler| BC[Bytecode]
-    BC -->|Store| DS[PolicyDataStore]
-
     style PS fill:#e1f5ff
     style BC fill:#fff4e1
-    style DS fill:#f0f0f0
 ```
 
 ### Policy Evaluation

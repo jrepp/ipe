@@ -1,5 +1,8 @@
 # End-to-End Example: Policy Lifecycle with JIT
 
+> **Note:** sections using `TieredPolicy`/`PolicyDataStore` illustrate the legacy engine, which is
+> being decommissioned (#36). The shipping v2 runtime evaluates via `runtime_policy` - see the repo README.
+
 This document demonstrates the complete lifecycle of a policy in IPE, from creation to JIT-optimized execution.
 
 ## Step 1: Write Policy (Human)
