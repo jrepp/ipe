@@ -1,4 +1,5 @@
-//! Bounded native discovery. No adapter execution or enforcement publication.
+//! Bounded native discovery with sandboxed WASM metadata interpretation.
+mod wasm;
 use axum::{
     extract::{DefaultBodyLimit, State},
     http::{HeaderMap, StatusCode},
@@ -22,6 +23,7 @@ pub struct Config {
     ca_cert_path: Option<String>,
     resources: Vec<Resource>,
     identity_key_env: Option<String>,
+    adapter_path: Option<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -37,6 +39,7 @@ struct Field {
     name: String,
 }
 struct Runtime {
+    adapter: wasm::Adapter,
     identity_key: Option<String>,
     config: Config,
     token: String,
@@ -131,7 +134,9 @@ pub fn application(config: Config) -> Result<Router, &'static str> {
         builder = builder.add_root_certificate(cert);
     }
     let client = builder.build().map_err(|_| "client_configuration_failed")?;
+    let adapter = wasm::Adapter::load(config.adapter_path.as_deref())?;
     let state = Arc::new(Runtime {
+        adapter,
         identity_key,
         config,
         token,
@@ -185,7 +190,7 @@ async fn capabilities(
 ) -> Result<Json<Value>, ApiError> {
     authorize(&state, &headers)?;
     Ok(Json(
-        json!({"version":"v1","connection_refs":[state.config.connection_ref],"operations":["connections.check","discovery.run"],"publication":false,"limits":{"resources":8,"fields_per_resource":32,"response_bytes":65536,"request_timeout_seconds":5,"run_timeout_seconds":12,"concurrent_runs":1},"coverage":if state.config.resources.is_empty() {"bounded_catalog"} else {"operator_configured_candidates"}}),
+        json!({"version":"v1","connection_refs":[state.config.connection_ref],"operations":["connections.check","discovery.run"],"publication":false,"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest,"engine":"wasmi","fuel_per_run":1000000,"memory_bytes":65536,"imports":false},"limits":{"resources":8,"fields_per_resource":32,"response_bytes":65536,"request_timeout_seconds":5,"run_timeout_seconds":12,"concurrent_runs":1},"coverage":if state.config.resources.is_empty() {"bounded_catalog"} else {"operator_configured_candidates"}}),
     ))
 }
 async fn check(
@@ -225,8 +230,12 @@ async fn discover(
         .permit
         .try_acquire()
         .map_err(|_| error(StatusCode::TOO_MANY_REQUESTS, "busy"))?;
+    let mut adapter_run = state
+        .adapter
+        .run()
+        .map_err(|code| error(StatusCode::SERVICE_UNAVAILABLE, code))?;
     if state.config.resources.is_empty() {
-        return Ok(Json(catalog(&state).await));
+        return Ok(Json(catalog(&state, &mut adapter_run).await));
     }
     let mut resources = Vec::new();
     for r in &state.config.resources {
@@ -265,12 +274,13 @@ async fn discover(
             let row = matches[0];
             let kind = match row.get("internal_type").and_then(Value::as_str) { Some("string") => "string",Some("integer") => "integer",Some("boolean") => "boolean",Some("reference") => "reference",_=>"unknown" };
             let required = match row.get("mandatory") { Some(Value::Bool(v))=>Some(*v),Some(Value::String(v)) if v=="true"=>Some(true),Some(Value::String(v)) if v=="false"=>Some(false),_=>None };
-            json!({"field_ref":f.field_ref,"status":"observed","code":"ok","kind":kind,"required":required})
+            let role = adapter_run.classify(&f.name, kind, required);
+            json!({"field_ref":f.field_ref,"status":"observed","code":role.as_ref().err().copied().unwrap_or("ok"),"kind":kind,"required":required,"role":role.unwrap_or("unknown"),"role_basis":"field_identifier_hint"})
         }).collect();
         resources.push(json!({"resource_ref":r.resource_ref,"status":if table_code=="ok" {"observed"} else {"unknown"},"code":table_code,"fields":fields}));
     }
     Ok(Json(
-        json!({"connection_ref":state.config.connection_ref,"coverage":"bounded","resources":resources,"constraints":{"status":"unknown","code":"workflow_semantics_not_discovered"}}),
+        json!({"connection_ref":state.config.connection_ref,"coverage":"bounded","resources":resources,"constraints":{"status":"unknown","code":"workflow_semantics_not_discovered"},"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest}}),
     ))
 }
 fn opaque(state: &Runtime, domain: &str, value: &str) -> String {
@@ -286,7 +296,7 @@ fn opaque(state: &Runtime, domain: &str, value: &str) -> String {
     let digest = mac.finalize().into_bytes();
     format!("{}_{}", domain, digest.iter().map(|b| format!("{b:02x}")).collect::<String>())
 }
-async fn catalog(state: &Runtime) -> Value {
+async fn catalog(state: &Runtime, adapter_run: &mut wasm::Run) -> Value {
     let rows = read(state, "sys_db_object", "sys_idISNOTEMPTY", "name", 9).await;
     let mut resources = Vec::new();
     let mut code = "ok";
@@ -337,14 +347,6 @@ async fn catalog(state: &Runtime) -> Value {
                         field_code = "duplicate_metadata";
                         continue;
                     }
-                    let role = match name {
-                        "state" => "lifecycle_state",
-                        "assigned_to" => "assignee",
-                        "assignment_group" => "assignment_group",
-                        "active" => "active",
-                        "sys_updated_on" => "last_updated",
-                        _ => "unknown",
-                    };
                     let kind = match entry.get("internal_type").and_then(Value::as_str) {
                         Some("string") => "string",
                         Some("integer") => "integer",
@@ -361,6 +363,11 @@ async fn catalog(state: &Runtime) -> Value {
                     if required.is_none() || kind == "unknown" {
                         field_code = "metadata_gap";
                     }
+                    let role = adapter_run.classify(name, kind, required);
+                    if let Err(code) = role {
+                        field_code = code;
+                    }
+                    let role = role.unwrap_or("unknown");
                     fields.push(json!({"field_ref":opaque(state,"field",&format!("{table}.{name}")),"status":"observed","kind":kind,"required":required,"role":role,"role_basis":"field_identifier_hint"}));
                 }
             }
@@ -369,7 +376,7 @@ async fn catalog(state: &Runtime) -> Value {
     } else {
         code = rows.as_ref().err().copied().unwrap_or("unknown");
     }
-    json!({"connection_ref":state.config.connection_ref,"coverage":"bounded","code":code,"resources":resources,"constraints":{"status":"unknown","code":"workflow_semantics_not_discovered"}})
+    json!({"connection_ref":state.config.connection_ref,"coverage":"bounded","code":code,"resources":resources,"constraints":{"status":"unknown","code":"workflow_semantics_not_discovered"},"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest}})
 }
 async fn read(
     state: &Runtime,
@@ -478,6 +485,7 @@ mod tests {
     #[test]
     fn opaque_ids_are_stable_and_domain_and_connection_scoped() {
         let mut state = Runtime {
+            adapter: wasm::Adapter::load(None).unwrap(),
             config: test_config("https://example.com"),
             identity_key: Some("independent-test-identity-key-32-bytes".into()),
             token: String::new(),

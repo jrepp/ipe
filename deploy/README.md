@@ -6,7 +6,8 @@ For the standalone Integration Workload, use the
 [local discovery deployment](../docs/INTEGRATION_DISCOVERY.md):
 
 ```sh
-python3 scripts/demo-integration-discovery.py --build
+cargo build --locked -p ipe-integration --bins
+cargo run --locked -p ipe-integration --example integration-demo
 ```
 
 It launches the workload plus a synthetic HTTPS ServiceNow stand-in and exercises
