@@ -54,6 +54,18 @@ impl PolicyDB {
         }
     }
 
+    /// Get the index slice for policies matching a specific resource type.
+    ///
+    /// Returns an empty slice when no policies apply to the given resource
+    /// type. This avoids allocation by returning a borrowed slice into the
+    /// internal index, suitable for zero-allocation hot paths.
+    pub fn policy_indices_for_resource(&self, resource_type: ResourceTypeId) -> &[usize] {
+        match self.index_by_resource_type.get(&resource_type) {
+            Some(indices) => indices,
+            None => &[] as &[usize],
+        }
+    }
+
     /// Get all policies
     pub fn get_all_policies(&self) -> &[StoredPolicy] {
         &self.policies
@@ -158,6 +170,13 @@ mod tests {
         // Get policies for non-existent resource type
         let policies_for_type3 = db.get_policies_for_resource(ResourceTypeId(3));
         assert_eq!(policies_for_type3.len(), 0);
+
+        // Verify the new zero-allocation API
+        let indices = db.policy_indices_for_resource(ResourceTypeId(1));
+        assert_eq!(indices.len(), 2);
+
+        let empty_indices = db.policy_indices_for_resource(ResourceTypeId(3));
+        assert_eq!(empty_indices.len(), 0);
     }
 
     #[test]
@@ -203,5 +222,45 @@ mod tests {
         assert_eq!(db.get_policies_for_resource(ResourceTypeId(1)).len(), 1);
         assert_eq!(db.get_policies_for_resource(ResourceTypeId(2)).len(), 1);
         assert_eq!(db.get_policies_for_resource(ResourceTypeId(3)).len(), 1);
+
+        // Verify the new zero-allocation API
+        assert_eq!(db.policy_indices_for_resource(ResourceTypeId(1)).len(), 1);
+    }
+
+    #[test]
+    fn test_policy_indices_for_resource_returns_expected_slice() {
+        let mut db = PolicyDB::new();
+
+        let mut policy1 = CompiledPolicy::new(1);
+        policy1.emit(Instruction::Return { value: true });
+
+        let mut policy2 = CompiledPolicy::new(2);
+        policy2.emit(Instruction::Return { value: false });
+
+        let field_map = FieldMapping::new();
+
+        // Policy 1 at index 0 applies to resource type 1
+        db.add_policy("policy1".to_string(), policy1, field_map.clone(), vec![ResourceTypeId(1)]);
+
+        // Policy 2 at index 1 applies to resource types 1 and 2
+        db.add_policy(
+            "policy2".to_string(),
+            policy2,
+            field_map.clone(),
+            vec![ResourceTypeId(1), ResourceTypeId(2)],
+        );
+
+        // Policy 3 at index 2 applies to resource type 1 only
+        let mut policy3 = CompiledPolicy::new(3);
+        policy3.emit(Instruction::Return { value: true });
+        db.add_policy("policy3".to_string(), policy3, field_map.clone(), vec![ResourceTypeId(1)]);
+
+        // Verify indices for resource type 1: should be [0, 1, 2]
+        let indices = db.policy_indices_for_resource(ResourceTypeId(1));
+        assert_eq!(indices.len(), 3);
+
+        // Verify empty slice for unknown resource type
+        let empty = db.policy_indices_for_resource(ResourceTypeId(99));
+        assert_eq!(empty.len(), 0);
     }
 }
