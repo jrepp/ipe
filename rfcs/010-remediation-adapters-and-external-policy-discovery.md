@@ -85,8 +85,10 @@ check, not a claim that ServiceNow will accept a transition.
 | M4 operational proof | Upgrade and compatible rollback, restart both workloads, terminate integration, inspect masked audit record | Single publisher, stable identities, no expiry renewal, local decisions remain bounded, authorized reconstruction and scoped elevation expiry |
 
 M1 is the initial vertical slice. The end-to-end MVP comprises M1–M4; do not describe
-M1 as having guest deployment, policy synchronization or forensic retention until
-those milestones exist. The live M3 trial requires a credential with sufficient
+M1 as having agent-managed deployment, policy synchronization or forensic retention
+until those milestones exist. The implemented metadata sandbox is an initial M2
+component; it does not complete the package lifecycle. The live M3 trial requires
+a credential with sufficient
 record access and an explicitly selected resource after M1 discovery. If only
 metadata is accessible, report that limitation and retain the stand-in proof.
 
@@ -112,17 +114,26 @@ integration may follow the minimal scoped elevation proof.
 
 ## Implementation grounding
 
-The initial M1 implementation is [ipe-integration](../crates/ipe-integration/src/lib.rs),
-with [CLI/MCP access](../scripts/integration-toolkit.py), a reusable HTTPS stand-in,
-and [deployment/acceptance commands](../docs/INTEGRATION_DISCOVERY.md). It proves
-bounded credential-first metadata discovery locally. It uses a fixed native recipe,
-one operator scope, and secret-keyed opaque identity derivation; it does not yet
-provide an adapter sandbox, dynamic deployment, source finding retrieval, fact
-synchronization, a general identity vault, or durable forensic audit. M2–M4 remain
-design work. No live ServiceNow tenant validation is claimed.
+The initial discovery implementation is [ipe-integration](../crates/ipe-integration/src/lib.rs),
+with a [Rust CLI/MCP client](../crates/ipe-integration/src/bin/integration-toolkit.rs),
+a [TypeScript HTTPS test facade](../testing/integration/servicenow-standin.ts), and
+[Rust deployment/acceptance commands](../docs/INTEGRATION_DISCOVERY.md). The Rust
+workload now hosts a [Wasmi metadata sandbox](../crates/ipe-integration/src/wasm.rs)
+with a bounded [metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md).
+Every discovery runs the bundled WASM semantic mapping; operator configuration can
+select another immutable-at-startup WASM artifact without rebuilding the host.
+Credentials, transport, opaque identities and output validation remain native.
+
+This proves bounded credential-first metadata discovery locally and the initial
+sandbox component of M2. Agent-managed package deployment, general operation
+descriptors, source finding retrieval, fact synchronization, a general identity
+vault, and durable forensic audit remain proposed. M2–M4 are not complete. No live
+ServiceNow tenant validation is claimed. TypeScript currently supplies test
+facades; a TypeScript-to-WASM authoring toolchain is not implemented.
 
 Verified against the repository on 2026-10-18. [Runtime data documentation](../docs/RUNTIME_DATA.md)
-remains the reference for implemented behavior. The capabilities above are proposed.
+remains the reference for enforcement behavior. Roadmap capabilities beyond the
+explicit implementation grounding remain proposed.
 
 | Current implementation | Design consequence |
 | --- | --- |
@@ -132,7 +143,7 @@ remains the reference for implemented behavior. The capabilities above are propo
 | [PolicyDocument](../crates/ipe-core/src/policy_document.rs) models executable sections; active documents participate in decisions | Add distinct domain constraint and description types outside the enforcement catalog |
 | Managed document evaluation prepares revisions and reaches compilation | Investigate preparing immutable revisions at publication/recovery; discovery growth must not increase evaluation work |
 | External provenance contains `locator`; evaluation returns that provenance | Version and migrate outward projections, including stored documents and trace paths, before claiming topology protection |
-| [ipe-wasm](../crates/ipe-wasm/Cargo.toml) uses wasm-bindgen | It is not a guest adapter host; engine choice remains open |
+| [ipe-wasm](../crates/ipe-wasm/Cargo.toml) uses wasm-bindgen; [ipe-integration](../crates/ipe-integration/src/wasm.rs) hosts Wasmi | The enforcement export and integration guest host are separate; Wasmi is selected for the initial metadata sandbox |
 | Existing inspection is scope-level; historical facts and complete audit retention are not provided | Need-to-know projection, elevation, protected evidence retention, and audit spool require new contracts |
 
 Preserve existing executable-policy semantics during migration. Do not silently

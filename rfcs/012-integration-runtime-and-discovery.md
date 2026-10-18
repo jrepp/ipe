@@ -9,9 +9,11 @@
 **Initial implementation:** [standalone discovery slice](../docs/INTEGRATION_DISCOVERY.md).
 M1 uses an operator-configured HTTPS origin and secret environment references,
 one bearer-protected scope, a fixed metadata recipe, and bounded inventory without
-preselected tables. Opaque discovered IDs use a retained private HMAC key. Guest
-execution, secret enrollment UI, durable jobs and general provider packages remain
-proposed below.
+preselected tables. Opaque discovered IDs use a retained private HMAC key. The Rust
+workload hosts Wasmi for bounded metadata interpretation, with a bundled WASM
+mapping and optional operator-selected artifact at startup. The CLI/MCP client and
+acceptance/deployment harness are Rust; test provider facades are TypeScript.
+Secret enrollment UI, durable jobs and general provider packages remain proposed.
 
 Own the native broker, connection onboarding, first-class discovery, sandbox execution,
 and portable adapter packages inside the Integration Workload. This is one functional
@@ -79,7 +81,7 @@ existing authority; this design does not require manual approval of every packag
 [RFC 011](011-agent-integration-toolkit.md) specifies the agent-facing toolkit for
 probing, replay, staging, deployment, upgrades, and monitoring over these boundaries.
 
-The initial guest interface is a bounded step:
+The proposed general guest interface is a bounded step:
 `step(context, responses, state) -> requests | outputs`.
 Requests select named descriptor operations and validated parameters. The host
 executes them and resumes the guest. State and request counts are bounded. This
@@ -98,24 +100,39 @@ inputs, and have no production credentials. Package identity proves what ran, no
 whether its interpretation was correct. Installation revocation fences old runs;
 rollback changes the package selection without rewriting evidence history.
 
-**Execution hypothesis:** TypeScript authored against a small generated SDK,
-transpiled to JavaScript and executed in Wasm, hosted by the native Rust runtime.
-[Javy](https://github.com/bytecodealliance/javy) supplies a JavaScript-in-Wasm path;
-[Wasmtime](https://docs.wasmtime.dev/security.html) supplies explicit host interfaces
-and [execution interruption](https://docs.wasmtime.dev/examples-interrupting-wasm.html).
-Compare it with a restricted [QuickJS](https://bellard.org/quickjs/) worker using
-the same contract. Deno, Python workers, and Rust-to-Wasm remain alternatives if
-those experiments fail. Node APIs and arbitrary npm compatibility are not assumed;
-[Node vm](https://nodejs.org/api/vm.html) is not a standalone security boundary.
-Measure authoring effort, compatibility, diagnosis, latency, memory, and build cost
-before selecting an engine.
+**Implemented engine and ABI:** [Wasmi](https://docs.rs/wasmi/2.0.0/wasmi/) is the
+initial interpreter hosted by [Rust](../crates/ipe-integration/src/wasm.rs).
+The implemented [metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md)
+exports memory and `classify(pointer, length, kind, required) -> role`. Inputs are
+bounded permitted field identifiers and normalized metadata; outputs are a finite
+validated semantic-role enum. Transport, provider resource selection, credentials,
+identity derivation and public output construction remain native. Guest failures
+produce explicit unknown roles and coverage codes, never workflow constraints.
+
+The default ServiceNow mapping is WAT compiled to WASM at Cargo build time. An
+operator may select a binary WASM module with `adapter_path`; the workload loads
+it once at startup and reports its SHA-256 digest. Each discovery gets a fresh
+instance with one million fuel units shared across field calls, 64 KiB memory,
+64 KiB value stack and call depth 64. Modules are capped at 256 KiB; tables, imports
+and start functions are forbidden. No WASI interfaces are linked. Fuel bounds
+synchronous execution; the native HTTP deadline does not preempt a synchronous
+WASM call. Compilation happens at operator startup rather than on the request path.
+
+This validates a useful bounded interpretation extension, not the general step
+contract or package registry. TypeScript currently implements lightweight HTTPS
+test facades and their functional tests. It is not yet a guest authoring language.
+A generated SDK and TypeScript-to-WASM build path remain future experiments;
+[Javy](https://github.com/bytecodealliance/javy) is one candidate, subject to the
+host ABI, imports and resource limits. Do not promise Node APIs, arbitrary npm
+compatibility or WASI access. Extending beyond this ABI requires separate design
+and evidence for build isolation, semantic coverage and lifecycle authority.
 
 ## Area roadmap
 
 | Phase | Deliverable | Proof |
 | --- | --- | --- |
 | M1 onboarding and discovery | Standalone workload, configured credential, opaque handle, bounded metadata discovery | CLI/MCP agent learns permitted schemas and gaps against HTTPS stand-in; no secret/topology disclosure |
-| M2 adapter iteration | One guest engine, package manifest, immutable build, fixed native recipes | Agent modifies only mappings/descriptors; replay and resource-limit tests pass |
+| M2 adapter iteration | Wasmi metadata host implemented; package manifest, general step ABI, immutable agent build and staging remain proposed | Sandbox resource-limit tests pass; still require agent edits/replay/stage proof without native changes |
 | M3 first live integration | Scoped ServiceNow reads for a discovery-selected record and constraint source | Actual provider responses mapped with explicit coverage and no arbitrary networking |
 | M4 operational proof | Fencing, cancellation and bounded execution under upgrades | Old runs cannot publish after cutover; workload survives malformed upstream data |
 | Later | Additional protocol/auth recipes, self-service enrollment, second provider | New provider using existing recipes requires no native code change |
@@ -123,5 +140,5 @@ before selecting an engine.
 ## Review questions
 
 - Which metadata operations are supported by the first credential, and what can be safely exposed?
-- Which guest engine meets isolation, authoring and deployment budgets?
+- Does the selected Wasmi host meet production latency and authoring budgets as the ABI grows?
 - Which provider behaviors need reusable recipes rather than semantic code?

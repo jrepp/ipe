@@ -7,8 +7,12 @@
 ## Purpose and boundary
 
 **Initial implementation:** the [discovery toolkit](../docs/INTEGRATION_DISCOVERY.md)
-exposes capability listing, connection checks and metadata discovery through CLI
-and MCP stdio. The remaining lifecycle operations in this RFC are proposed, not
+exposes capability listing, connection checks and metadata discovery through a
+[Rust CLI and MCP stdio client](../crates/ipe-integration/src/bin/integration-toolkit.rs).
+The Rust acceptance/deployment harness uses a TypeScript HTTPS test facade. Discovery
+executes a hosted WASM metadata mapping; artifact selection is operator configuration
+at startup, not an agent deployment tool. The remaining lifecycle operations in
+this RFC are proposed, not
 advertised as available tools by that slice.
 
 Provide an agent-neutral **Integration Toolkit** for discovering capabilities,

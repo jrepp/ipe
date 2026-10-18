@@ -10,13 +10,17 @@ it did not run a security experiment or performance benchmark.
 
 ## Initial slice evidence
 
-The subsequent M1 implementation has [standalone acceptance and deployment
-checks](../acceptance/integration-discovery/README.md): 20 black-box checks against
-a local HTTPS stand-in, six native unit tests, and five independent CLI/MCP boundary
-tests. The local deployment demo exercises actual API, CLI and MCP and supports
-interactive startup/cleanup. These support the initial single-scope discovery
-boundary; they do not close the broader deployment, synchronization, audit or
-performance gates below. Live ServiceNow and enforcement-load validation remain open.
+The discovery implementation has [Rust acceptance and deployment
+checks](../acceptance/integration-discovery/README.md) against a TypeScript HTTPS
+test facade, plus native and CLI/MCP process tests. The
+[hosted WASM tests](../crates/ipe-integration/src/wasm.rs) exercise fuel exhaustion,
+memory and stack bounds, imports/start rejection, invalid exports and outputs,
+and fresh-run isolation. The local deployment demo exercises actual API, CLI and
+MCP and supports interactive startup/cleanup. These support the initial
+single-scope discovery boundary and metadata sandbox; they do not close the
+broader package deployment, synchronization, audit or performance gates below.
+Live ServiceNow and enforcement-load validation remain open. Repeatable commands,
+not historical test counts, define the current verification surface.
 
 ## Enforcement and synchronization
 
