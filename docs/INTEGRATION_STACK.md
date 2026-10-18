@@ -1,8 +1,8 @@
 # Integration stack and crate reuse audit
 
-Reviewed 2026-10-18 against integration code commit `e882cc2` and its design branch.
-This records the implemented stack and the next dependency choices. Recommendations
-below are not installed dependencies or completed migrations.
+Reviewed 2026-10-18; updated after the integration MCP SDK migration.
+This records the implemented stack and the next dependency choices. Rows marked implemented describe shipped branch code; remaining recommendations
+are not installed dependencies or completed migrations.
 
 ## Stack and ownership
 
@@ -10,11 +10,11 @@ below are not installed dependencies or completed migrations.
 | --- | --- | --- |
 | Enforcement | Existing `ipe-core` policy/fact semantics and `ipe-server` | Preserve local evaluation; no MCP or adapter execution on the evaluation path |
 | Integration workload | Rust `ipe-integration`, Tokio, Axum, reqwest with rustls | Keep native connection/authentication, bounded reads, identity generation and safe projection |
-| Agent protocol | Rust `integration-toolkit` with custom MCP stdio dispatch | Replace protocol machinery with official `rmcp`; keep the three typed IPE tools |
+| Agent protocol | Rust `integration-toolkit` using `rmcp` 3.5.1 with typed tools | SDK owns lifecycle/dispatch; a bounded strict transport guard owns frame and disclosure limits |
 | HTTP MCP | Not implemented | Mount `rmcp` Streamable HTTP as a Tower service in the Integration Workload's Axum router |
 | CLI | Handwritten argument parsing in Rust binaries/example | Use `clap` derives for commands, options and help |
 | Sandbox | Wasmi interpreter, binary WASM, bundled WAT compiled at build time | Keep the bounded metadata ABI; expand only with explicit capability contracts |
-| Serialization | Serde/serde_json; custom strict JSON visitors in toolkit and enforcement server | Typed wire models; generated tool schemas; retain recursive duplicate-key rejection |
+| Serialization | Serde/serde_json, schemars-generated MCP schemas; strict JSON visitors in toolkit and enforcement server | Consolidate strict parsing while retaining recursive duplicate-key rejection |
 | Identity and cryptography | `hmac`, `sha2`, `subtle` | Keep crate primitives and IPE-owned scope/domain separation; add secret wrappers |
 | Local proof | Rust acceptance/deployment harness and `tempfile`; TypeScript HTTPS provider facade | Keep provider semantics in TypeScript; keep orchestration and assertions in Rust |
 
@@ -34,9 +34,12 @@ cannot bypass controls enforced only by HTTP middleware.
 Current lockfile: Axum 0.7.9, Tokio 1.48.0, Hyper 1.7.0, reqwest 0.13.5,
 rustls 0.23.46 and Wasmi 2.0.0. Tower resolves both 0.4.13 and 0.5.2;
 tower-http resolves both 0.5.2 and 0.6.11. These are observed resolutions, not a
-recommendation to pin old versions indefinitely. Before adding `rmcp`, select a
-published release, inspect its feature/dependency graph and align compatible
-HTTP types. Do not copy a git-main dependency into production or assume upgrading
+recommendation to pin old versions indefinitely. The SDK migration uses published `rmcp` 3.5.1 (Apache-2.0, declared Rust minimum
+1.88), with server/macros/stdio features and a development-only SDK client. It
+does not add an HTTP transport or change Axum. The dependency-tree review found
+no new HTTP-stack version introduced by this migration; cargo-audit reported no
+vulnerabilities or warnings for the resulting lockfile. Recheck these findings
+when updating dependencies. Do not copy a git-main dependency into production or assume upgrading
 Axum is behavior-neutral: the existing enforcement routes use 0.7 path syntax.
 Keep an Axum migration separate from adopting MCP stdio unless the chosen SDK
 actually requires it.
@@ -51,9 +54,9 @@ candidate with primary documentation, subject to version and compatibility check
 
 | Priority | Current contribution and evidence | Crate reuse decision | Behavior that must survive |
 | --- | --- | --- | --- |
-| P0 | [Toolkit](../crates/ipe-integration/src/bin/integration-toolkit.rs): `Session::handle`, protocol negotiation, method dispatch, framing and tool schemas | Prefer `rmcp` for MCP protocol and transports; delete the custom state machine after parity tests | Same tool authority, bounded input/output, sanitized failures, stdout protocol-only, no secret exposure; validate SDK behavior for duplicate keys and malformed frames |
+| Implemented | [Toolkit](../crates/ipe-integration/src/bin/integration-toolkit.rs): custom protocol state machine removed | `rmcp` handles protocol and typed tools; strict framing guard remains | Same tool authority, bounded input/output, sanitized failures, stdout protocol-only, no secret exposure; validate SDK behavior for duplicate keys and malformed frames |
 | P1 | Toolkit `main`, [workload main](../crates/ipe-integration/src/main.rs), [demo](../crates/ipe-integration/examples/integration-demo.rs): manual argument loops | Prefer [`clap` Parser/Subcommand](https://docs.rs/clap/latest/clap/_derive/index.html) | Existing command names, token environment references, private config path; MCP startup failures remain on stderr without echoing sensitive input |
-| P1 | Toolkit `tools`: handwritten JSON input schemas independent of invocation validation | Prefer [`schemars`](https://docs.rs/schemars/latest/schemars/) with SDK typed parameters | Generated schema and deserialization agree; deny unknown fields; do not describe private operator configuration as agent inputs |
+| Implemented | Toolkit input schemas previously handwritten separately from validation | [`schemars`](https://docs.rs/schemars/latest/schemars/) derives schemas from SDK parameter types | Generated schema and deserialization agree; deny unknown fields; do not describe private operator configuration as agent inputs |
 | P1 | Integration `Runtime`, toolkit `Client`, server `Credential`/`Connector`: credentials stored as ordinary strings/bytes | Prefer [`secrecy`](https://docs.rs/secrecy/latest/secrecy/) wrappers, backed by `zeroize` | Explicit credential exposure only when building authorized requests; no debug/serialization leakage. Wrapping does not erase environment variables or copies made by HTTP libraries |
 | P1 | [Server `run`](../crates/ipe-server/src/runtime.rs): detached cleanup and connector loops; integration server has no graceful shutdown hook | Prefer Tokio `JoinSet` and `tokio-util` cancellation; use [`TaskTracker`](https://docs.rs/tokio-util/latest/tokio_util/task/task_tracker/struct.TaskTracker.html) when its lifecycle fits | Stop intake, cancel or drain within a bounded deadline, await workers; shutdown must not renew fact freshness or allow stale publication. Cancellation primitives do not provide durable jobs |
 | P2 | [Integration `deadline`](../crates/ipe-integration/src/lib.rs), per-operation semaphore | Evaluate Tower/tower-http timeout, concurrency and load-shed layers; retain small wrappers where semantics differ | Existing 504 `run_deadline`, immediate 429 for concurrent discovery, permit release on cancellation. Tower readiness can queue rather than reject; timeout layers can return empty bodies. No blanket timeout on long-lived MCP streams |
@@ -95,11 +98,11 @@ only a stub, not an existing custom RPC implementation to replace.
 
 ## Migration order and proof
 
-1. Replace MCP protocol machinery with a selected published `rmcp` release and
-   typed tools. Exercise the server with an SDK client plus independent malformed
-   wire tests; preserve both capability discovery and live discovery results.
+1. **Implemented:** `rmcp` 3.5.1 protocol machinery and typed tools. Live acceptance
+   uses an SDK client; independent wire tests cover malformed/fragmented frames,
+   typed-argument rejection, sanitized errors and outstanding-request limits.
    SDK conformance alone does not prove IPE authorization or masking.
-2. Introduce `clap` and typed schemas, then secret wrappers. Keep public command and
+2. Introduce `clap`, then secret wrappers; typed MCP schemas are already generated. Keep public command and
    error contracts stable; record any intentional change. Reject source URLs,
    arbitrary operations and extra parameters before contacting the provider.
 3. Add explicit process/task shutdown; prove cancellation releases permits and
@@ -117,4 +120,7 @@ runtime features. These are adoption checks, not a claim that every candidate ha
 already passed a supply-chain review.
 
 The existing [acceptance suite](../acceptance/integration-discovery/README.md) is
-the regression baseline. This document changes no runtime dependency or behavior.
+the regression baseline. The SDK migration preserves CLI commands and tool operations; its documented
+protocol differences include concurrent response ordering, strict SDK initialization,
+and typed parameter failures that may use `isError` results. See the discovery
+guide for frame, outstanding-request and shutdown bounds.
