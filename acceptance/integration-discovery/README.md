@@ -10,7 +10,9 @@ cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored
 cargo run --locked -p ipe-integration --example integration-demo -- --acceptance --report target/integration-discovery-report.json
 ```
 
-Rust owns acceptance and process orchestration. Prerequisites are Rust, Node
+Rust owns acceptance and process orchestration. The live MCP acceptance uses an
+`rmcp` SDK client against the toolkit process; independent wire tests exercise
+malformed and fragmented frames, typed-argument rejection, and channel isolation. Prerequisites are Rust, Node
 >=22.18 and OpenSSL. No Python is needed. Tests tear down temporary processes,
 certificates and configuration. The example accepts `--binary`, `--toolkit` and
 `--report` to select executables and a JSON report destination.

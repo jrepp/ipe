@@ -2,13 +2,13 @@
 use serde::de::{self, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use serde_json::{json, Map, Value};
-use std::io::{self, BufRead, Write};
+use std::io::{self, Write};
 use std::time::Duration;
 
 const MAX_MESSAGE: usize = 65536;
 const MAX_RESPONSE: usize = 1048576;
-const PROTOCOL_VERSION: &str = "2025-11-25";
-type Result<T> = std::result::Result<T, &'static str>;
+
+type Result<T, E = &'static str> = std::result::Result<T, E>;
 
 // Reject duplicate keys throughout documents rather than silently interpreting the last value.
 struct Unique(Value);
@@ -171,126 +171,236 @@ impl Client {
         Ok(data)
     }
 }
-fn tool(name: &str, description: &str, has_ref: bool) -> Value {
-    let mut schema = json!({"type":"object", "properties":{}, "additionalProperties":false});
-    if has_ref {
-        schema["properties"] = json!({"connection_ref":{"type":"string","pattern":"^[A-Za-z0-9_-]{1,128}$","description":"Opaque connection reference returned by integration_capabilities"}});
-        schema["required"] = json!(["connection_ref"]);
+use rmcp::service::{RxJsonRpcMessage, TxJsonRpcMessage};
+use rmcp::{
+    handler::server::wrapper::Parameters,
+    model::{CallToolResult, ServerCapabilities, ServerConfig},
+    schemars, tool, tool_handler, tool_router, ServerHandler, ServiceExt,
+};
+use rmcp::{transport::Transport, RoleServer};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
+
+#[derive(Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+struct EmptyArguments {}
+#[derive(Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+struct ConnectionArguments {
+    /// Opaque connection reference returned by integration_capabilities.
+    #[schemars(regex(pattern = "^[A-Za-z0-9_-]{1,128}$"))]
+    connection_ref: String,
+}
+struct Toolkit {
+    client: Client,
+}
+#[tool_router]
+impl Toolkit {
+    fn new(client: Client) -> Self {
+        Self { client }
     }
-    json!({"name":name,"description":description,"inputSchema":schema,"annotations":{"readOnlyHint":true,"openWorldHint":has_ref}})
-}
-fn tools() -> Value {
-    json!([
-    tool("integration_capabilities", "List authorized connections and implemented discovery capabilities. No provider credentials are returned.", false),
-    tool("integration_check_connection", "Check configured ServiceNow metadata access through the native broker. This bounded upstream read does not prove business-record access.", true),
-    tool("integration_discover", "Discover bounded permitted ServiceNow metadata and explicit coverage gaps. Does not publish facts or execute discovered scripts.", true)
-])
-}
-fn error(id: Value, code: i64, message: &str) -> Value {
-    json!({"jsonrpc":"2.0","id":id,"error":{"code":code,"message":message}})
-}
-#[derive(Default)]
-struct Session {
-    initialized: bool,
-    ready: bool,
-}
-impl Session {
-    async fn handle(&mut self, client: &Client, raw: &[u8]) -> Option<Value> {
-        let message = match decode(raw) {
-            Ok(v) => v,
-            Err(_) => return Some(error(Value::Null, -32700, "Invalid JSON")),
-        };
-        let id = message.get("id").cloned().unwrap_or(Value::Null);
-        let has_id = message.get("id").is_some();
-        if !message.is_object()
-            || message["jsonrpc"] != "2.0"
-            || !message["method"].is_string()
-            || (has_id && !(id.is_string() || id.is_i64() || id.is_u64()))
-        {
-            return Some(error(Value::Null, -32600, "Invalid request"));
+    async fn invoke(&self, operation: &str, reference: Option<&str>) -> CallToolResult {
+        match self.client.call(operation, reference).await {
+            Ok(data) => CallToolResult::structured(data),
+            Err(code) => CallToolResult::structured_error(json!({"error":{"code":code}})),
         }
-        let method = message["method"].as_str().unwrap();
-        let empty = json!({});
-        let params = message.get("params").unwrap_or(&empty);
-        if !params.is_object() {
-            return has_id.then(|| error(id, -32602, "Invalid params"));
-        }
-        if !has_id {
-            if method == "notifications/initialized" && self.initialized {
-                self.ready = true;
+    }
+    #[tool(
+        description = "List authorized connections and implemented discovery capabilities. No provider credentials are returned.",
+        annotations(read_only_hint = true, open_world_hint = false)
+    )]
+    async fn integration_capabilities(
+        &self,
+        Parameters(_): Parameters<EmptyArguments>,
+    ) -> CallToolResult {
+        self.invoke("capabilities", None).await
+    }
+    #[tool(
+        description = "Check configured ServiceNow metadata access through the native broker. This bounded upstream read does not prove business-record access.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn integration_check_connection(
+        &self,
+        Parameters(args): Parameters<ConnectionArguments>,
+    ) -> CallToolResult {
+        self.invoke("check", Some(&args.connection_ref)).await
+    }
+    #[tool(
+        description = "Discover bounded permitted ServiceNow metadata and explicit coverage gaps. Does not publish facts or execute discovered scripts.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn integration_discover(
+        &self,
+        Parameters(args): Parameters<ConnectionArguments>,
+    ) -> CallToolResult {
+        self.invoke("discover", Some(&args.connection_ref)).await
+    }
+}
+#[tool_handler]
+impl ServerHandler for Toolkit {
+    fn get_info(&self) -> ServerConfig {
+        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
+            .with_instructions("Credentials are operator-configured. Discovery is bounded and may be partial; these tools do not deploy adapters or policy facts.")
+    }
+}
+
+// A framing/security transport only: rmcp owns protocol negotiation, lifecycle,
+// request dispatch, typed tools, cancellation and responses. Reject ambiguous JSON
+// before passing it to the SDK and prevent SDK diagnostics from echoing input.
+struct StrictStdio {
+    input: tokio::io::BufReader<tokio::io::Stdin>,
+    raw: Vec<u8>,
+    output: Arc<tokio::sync::Mutex<tokio::io::Stdout>>,
+    failed: Arc<AtomicBool>,
+    pending: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+}
+const MAX_MCP_RESPONSE: usize = 8 * MAX_RESPONSE;
+async fn write_frame(
+    output: &tokio::sync::Mutex<tokio::io::Stdout>,
+    value: Value,
+) -> io::Result<()> {
+    let mut bytes =
+        serde_json::to_vec(&value).map_err(|_| io::Error::other("invalid_mcp_output"))?;
+    if bytes.len() > MAX_MCP_RESPONSE {
+        return Err(io::Error::other("mcp_output_limit"));
+    }
+    bytes.push(b'\n');
+    tokio::time::timeout(Duration::from_secs(5), async {
+        let mut output = output.lock().await;
+        output.write_all(&bytes).await?;
+        output.flush().await
+    })
+    .await
+    .map_err(|_| io::Error::other("mcp_output_timeout"))?
+}
+fn framing_error(code: i64) -> Value {
+    json!({"jsonrpc":"2.0","id":null,"error":{"code":code,"message":"Invalid request"}})
+}
+impl Transport<RoleServer> for StrictStdio {
+    type Error = io::Error;
+    fn send(
+        &mut self,
+        item: TxJsonRpcMessage<RoleServer>,
+    ) -> impl std::future::Future<Output = io::Result<()>> + Send + 'static {
+        let output = self.output.clone();
+        let pending = self.pending.clone();
+        async move {
+            let mut value =
+                serde_json::to_value(item).map_err(|_| io::Error::other("invalid_mcp_output"))?;
+            if let Some(error) = value.get_mut("error") {
+                let code = error["code"].clone();
+                *error = json!({"code":code,"message":"Invalid request"});
             }
-            return None;
+            // rmcp renders parameter deserialization failures as tool errors. Those
+            // diagnostics may include caller-supplied unknown keys or values.
+            if value["result"]["isError"] == true
+                && value["result"]["structuredContent"]["error"]["code"].as_str().is_none()
+            {
+                value["result"] = serde_json::to_value(CallToolResult::structured_error(
+                    json!({"error":{"code":"invalid_tool_arguments"}}),
+                ))
+                .map_err(|_| io::Error::other("invalid_mcp_output"))?;
+            }
+            let id = value.get("id").map(Value::to_string);
+            let result = write_frame(&output, value).await;
+            if let Some(id) = id {
+                pending.lock().unwrap().remove(&id);
+            }
+            result
         }
-        let result = match method {
-            "initialize" => {
-                if self.initialized || !params["protocolVersion"].is_string() {
-                    return Some(error(id, -32602, "Invalid initialization"));
+    }
+    async fn receive(&mut self) -> Option<RxJsonRpcMessage<RoleServer>> {
+        loop {
+            if self.raw.last() != Some(&b'\n') && self.raw.len() <= MAX_MESSAGE {
+                match (&mut self.input)
+                    .take((MAX_MESSAGE + 1 - self.raw.len()) as u64)
+                    .read_until(b'\n', &mut self.raw)
+                    .await
+                {
+                    Ok(0) => return None,
+                    Ok(_) => {},
+                    Err(_) => {
+                        self.failed.store(true, Ordering::Relaxed);
+                        return None;
+                    },
                 }
-                self.initialized = true;
-                json!({"protocolVersion":PROTOCOL_VERSION,"capabilities":{"tools":{}},"serverInfo":{"name":"ipe-integration-toolkit","version":env!("CARGO_PKG_VERSION")},"instructions":"Credentials are operator-configured. Discovery is bounded and may be partial; these tools do not deploy adapters or policy facts."})
-            },
-            "ping" => json!({}),
-            _ if !self.ready => return Some(error(id, -32000, "Initialization required")),
-            "tools/list" => json!({"tools":tools()}),
-            "tools/call" => {
-                let operation = match params["name"].as_str() {
-                    Some("integration_capabilities") => "capabilities",
-                    Some("integration_check_connection") => "check",
-                    Some("integration_discover") => "discover",
-                    _ => return Some(error(id, -32602, "Unknown tool")),
-                };
-                let arguments = params.get("arguments").unwrap_or(&empty);
-                let reference = arguments["connection_ref"].as_str();
-                let valid = arguments.as_object().is_some_and(|a| {
-                    if operation == "capabilities" {
-                        a.is_empty()
-                    } else {
-                        a.len() == 1 && reference.is_some_and(valid_ref)
+            }
+            if self.raw.len() > MAX_MESSAGE {
+                self.failed.store(true, Ordering::Relaxed);
+                let _ = write_frame(&self.output, framing_error(-32700)).await;
+                return None;
+            }
+            let parsed = decode(&self.raw);
+            self.raw.clear();
+            let value = match parsed {
+                Ok(value) => value,
+                Err(_) => {
+                    if write_frame(&self.output, framing_error(-32700)).await.is_err() {
+                        return None;
                     }
-                });
-                if !valid {
-                    return Some(error(id, -32602, "Invalid tool arguments"));
-                }
-                match client.call(operation, reference).await {
-                    Ok(data) => {
-                        json!({"content":[{"type":"text","text":data.to_string()}],"structuredContent":data,"isError":false})
-                    },
-                    Err(code) => {
-                        json!({"content":[{"type":"text","text":json!({"error":{"code":code}}).to_string()}],"isError":true})
-                    },
-                }
-            },
-            _ => return Some(error(id, -32601, "Method not found")),
-        };
-        Some(json!({"jsonrpc":"2.0","id":id,"result":result}))
+                    continue;
+                },
+            };
+            let id = if value.get("method").is_some() {
+                value.get("id").map(Value::to_string)
+            } else {
+                None
+            };
+            match serde_json::from_value(value) {
+                Ok(message) => {
+                    if let Some(id) = id {
+                        let mut pending = self.pending.lock().unwrap();
+                        // Bound SDK-dispatched concurrent work without implementing protocol dispatch.
+                        if pending.len() >= 8 || !pending.insert(id) {
+                            self.failed.store(true, Ordering::Relaxed);
+                            return None;
+                        }
+                    }
+                    return Some(message);
+                },
+
+                Err(_) => {
+                    if write_frame(&self.output, framing_error(-32600)).await.is_err() {
+                        return None;
+                    }
+                },
+            }
+        }
+    }
+    async fn close(&mut self) -> io::Result<()> {
+        self.output.lock().await.flush().await
     }
 }
 fn emit(output: &mut impl Write, value: &Value) -> io::Result<()> {
     writeln!(output, "{value}")?;
     output.flush()
 }
-async fn mcp(client: &Client) -> i32 {
-    let mut input = io::stdin().lock();
-    let mut output = io::stdout().lock();
-    let mut session = Session::default();
-    loop {
-        let mut raw = Vec::new();
-        // take() bounds allocation even when the sender never supplies a newline.
-        match io::Read::take(&mut input, (MAX_MESSAGE + 1) as u64).read_until(b'\n', &mut raw) {
-            Ok(0) => return 0,
-            Ok(_) => {},
-            Err(_) => return 1,
-        }
-        if raw.len() > MAX_MESSAGE {
-            let _ = emit(&mut output, &error(Value::Null, -32700, "Message exceeds limit"));
-            return 1;
-        }
-        if let Some(reply) = session.handle(client, &raw).await {
-            if emit(&mut output, &reply).is_err() {
-                return 0;
+async fn mcp(client: Client) -> i32 {
+    let failed = Arc::new(AtomicBool::new(false));
+    let transport = StrictStdio {
+        raw: Vec::new(),
+        input: tokio::io::BufReader::new(tokio::io::stdin()),
+        output: Arc::new(tokio::sync::Mutex::new(tokio::io::stdout())),
+        failed: failed.clone(),
+        pending: Arc::new(std::sync::Mutex::new(std::collections::HashSet::new())),
+    };
+    match Toolkit::new(client).serve(transport).await {
+        Ok(service) => {
+            if service.waiting().await.is_err() {
+                return 1;
             }
-        }
+        },
+        Err(_) => {
+            if !failed.load(Ordering::Relaxed) {
+                let _ = emit(&mut io::stderr(), &json!({"error":{"code":"mcp_session_failed"}}));
+            }
+            return 1;
+        },
     }
+    i32::from(failed.load(Ordering::Relaxed))
 }
 #[tokio::main]
 async fn main() {
@@ -331,7 +441,7 @@ async fn main() {
         usage();
     }
     let result = match Client::new(&url, std::env::var(token_env).unwrap_or_default()) {
-        Ok(client) if command == "mcp" => std::process::exit(mcp(&client).await),
+        Ok(client) if command == "mcp" => std::process::exit(mcp(client).await),
         Ok(client) => client.call(command, positional.get(1).map(String::as_str)).await,
         Err(code) => Err(code),
     };
@@ -445,49 +555,6 @@ mod tests {
             let (url, thread) = server(response);
             assert_eq!(client(&url).call("capabilities", None).await, Err(expected));
             thread.join().unwrap();
-        }
-    }
-    #[tokio::test]
-    async fn mcp_initialization_and_validation() {
-        let client = client("http://127.0.0.1:1");
-        let mut session = Session::default();
-        let requests = [
-            ("{bad json", Some(-32700)),
-            (r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#, Some(-32000)),
-            (
-                r#"{"jsonrpc":"2.0","id":2,"method":"initialize","params":{"protocolVersion":"2025-11-25"}}"#,
-                None,
-            ),
-            (r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#, None),
-            (r#"{"jsonrpc":"2.0","id":3,"method":"tools/list"}"#, None),
-            (
-                r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"arbitrary_http","arguments":{"url":"secret.internal"}}}"#,
-                Some(-32602),
-            ),
-            (
-                r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"integration_discover","arguments":{"connection_ref":"conn_test","url":"secret.internal"}}}"#,
-                Some(-32602),
-            ),
-            (
-                r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"integration_discover","arguments":{"connection_ref":"../../secrets"}}}"#,
-                Some(-32602),
-            ),
-            (r#"{"jsonrpc":"2.0","id":true,"method":"ping"}"#, Some(-32600)),
-        ];
-        for (raw, expected) in requests {
-            let response = session.handle(&client, raw.as_bytes()).await;
-            if let Some(code) = expected {
-                assert_eq!(response.as_ref().unwrap()["error"]["code"], code);
-            } else if let Some(ref response) = response {
-                assert!(response.get("result").is_some());
-                if response["id"] == 3 {
-                    assert_eq!(response["result"]["tools"].as_array().unwrap().len(), 3);
-                }
-            }
-            assert!(!response
-                .map(|v| v.to_string())
-                .unwrap_or_default()
-                .contains("secret.internal"));
         }
     }
 }

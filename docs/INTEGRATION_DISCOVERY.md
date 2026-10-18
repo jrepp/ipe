@@ -55,16 +55,29 @@ Configure a stdio MCP client to launch:
 ```
 
 Supply the workload token through the client's protected process environment.
-The server negotiates MCP `2025-11-25` and exposes:
+The server uses the official `rmcp` SDK for protocol negotiation and typed tools,
+including compatibility with MCP `2025-11-25`, and exposes:
 
 - `integration_capabilities`
 - `integration_check_connection` with `connection_ref`
 - `integration_discover` with `connection_ref`
 
-Complete `initialize` and `notifications/initialized` before tool calls. Messages
-are newline-delimited JSON-RPC; stdout contains protocol messages only. The same
+Complete `initialize`, wait for its response, then send `notifications/initialized`
+before tool calls. Keep stdin open until outstanding responses arrive. Request
+IDs correlate responses; concurrent replies need not preserve request order. Messages
+are newline-delimited JSON-RPC; stdout contains protocol messages only. A narrow
+transport guard retains bounded frames, recursive duplicate-key rejection and
+sanitized SDK errors. The SDK owns lifecycle, dispatch and cancellation. The same
 workload authorization applies to CLI and MCP. Streamable HTTP, durable tasks,
 dynamic package deployment and per-user elevation remain future capabilities.
+
+The stdio guard accepts frames up to 64 KiB and at most eight outstanding request
+IDs. Exceeding that count or reusing an outstanding ID closes the session; clients
+must reconnect. Serialized replies are capped at 8 MiB (including both structured
+and text content), with a five-second write deadline. The SDK may drain in-flight
+handlers for up to five seconds on input closure. Invalid typed tool parameters
+can return `isError` tool results rather than JSON-RPC parameter errors; diagnostics
+remain sanitized. Pre-initialization requests follow SDK lifecycle rules.
 
 ## Operator configuration
 
