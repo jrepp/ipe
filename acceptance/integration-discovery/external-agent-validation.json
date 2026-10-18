@@ -1,0 +1,305 @@
+{
+  "validation": "independent external-client deployment exploration",
+  "observed_at": "2026-10-18T18:14:21.667Z",
+  "scope": "Same-machine independent agent against existing Rust deployment and synthetic TypeScript ServiceNow facade; no separate OS sandbox or real ServiceNow validation.",
+  "method": "CLI subprocesses with agent-only environment; direct authenticated HTTP; independent Node JSON-RPC line client, sequential initialize then initialized notification then tool requests, no rmcp SDK client.",
+  "disclosure_check": "Agent token, synthetic provider secret/topology/raw identity markers, physical table identifiers and physical URLs rejected; public json-schema.org schema references permitted.",
+  "toolkit_binary_sha256": "dfa179c2c71a53310d9eccb087e12175e5d86eb268d14ee92fe51a271603f2d3",
+  "workload_binary_sha256": "88cad72b63abdd9fe4d5dd098e91ab6c5d579fb34b49fed2618680f7c03a6bf0",
+  "operations": [
+    {
+      "name": "CLI capabilities",
+      "outcome": "passed",
+      "details": {
+        "adapter": {
+          "abi": "metadata-field-v1",
+          "digest": "sha256:7eefd01eff6a4926a84f786c950bc38cbcf316640251fb124f1792da940f40e4",
+          "engine": "wasmi",
+          "fuel_per_run": 1000000,
+          "imports": false,
+          "memory_bytes": 65536
+        },
+        "connection_refs": [
+          "conn_acceptance"
+        ],
+        "coverage": "bounded_catalog",
+        "limits": {
+          "concurrent_runs": 1,
+          "fields_per_resource": 32,
+          "request_timeout_seconds": 5,
+          "resources": 8,
+          "response_bytes": 65536,
+          "run_timeout_seconds": 12
+        },
+        "operations": [
+          "connections.check",
+          "discovery.run"
+        ],
+        "publication": false,
+        "version": "v1"
+      }
+    },
+    {
+      "name": "CLI connection check",
+      "outcome": "passed",
+      "details": {
+        "code": "ok",
+        "connection_ref": "conn_acceptance",
+        "status": "available"
+      }
+    },
+    {
+      "name": "CLI discovery and constraint gaps",
+      "outcome": "passed",
+      "details": {
+        "adapter": {
+          "abi": "metadata-field-v1",
+          "digest": "sha256:7eefd01eff6a4926a84f786c950bc38cbcf316640251fb124f1792da940f40e4"
+        },
+        "code": "ok",
+        "connection_ref": "conn_acceptance",
+        "constraints": {
+          "code": "workflow_semantics_not_discovered",
+          "status": "unknown"
+        },
+        "coverage": "bounded",
+        "resources": [
+          {
+            "code": "ok",
+            "field_code": "metadata_gap",
+            "field_coverage": "bounded",
+            "fields": [
+              {
+                "field_ref": "field_b5e8b3e29ce5e3126310a789303befac02a95039b2146405114aea552d95c4b9",
+                "kind": "unknown",
+                "required": true,
+                "role": "lifecycle_state",
+                "role_basis": "field_identifier_hint",
+                "status": "observed"
+              }
+            ],
+            "resource_ref": "resource_5245fcdab227c650c57b58859fed3b45b71fdf70dff136b4ddfeebcc6f25f18b",
+            "status": "observed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CLI bad agent token",
+      "outcome": "passed",
+      "details": {
+        "exit_code": 1,
+        "stdout": "{\"error\":{\"code\":\"unauthenticated\"}}",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "HTTP authenticated discovery",
+      "outcome": "passed",
+      "details": {
+        "status": 200,
+        "coverage": "bounded",
+        "constraints": {
+          "code": "workflow_semantics_not_discovered",
+          "status": "unknown"
+        }
+      }
+    },
+    {
+      "name": "HTTP bad token",
+      "outcome": "passed",
+      "details": {
+        "status": 401,
+        "body": {
+          "code": "unauthorized"
+        }
+      }
+    },
+    {
+      "name": "HTTP foreign reference",
+      "outcome": "passed",
+      "details": {
+        "status": 404,
+        "body": {
+          "code": "connection_unavailable"
+        }
+      }
+    },
+    {
+      "name": "HTTP injected URL",
+      "outcome": "passed",
+      "details": {
+        "status": 400,
+        "body": {
+          "code": "invalid_request"
+        }
+      }
+    },
+    {
+      "name": "Independent JSON-RPC MCP initialization",
+      "outcome": "passed",
+      "details": {
+        "capabilities": {
+          "tools": {}
+        },
+        "instructions": "Credentials are operator-configured. Discovery is bounded and may be partial; these tools do not deploy adapters or policy facts.",
+        "protocolVersion": "2025-11-25",
+        "serverInfo": {
+          "name": "ipe-integration-toolkit",
+          "version": "0.1.0"
+        }
+      }
+    },
+    {
+      "name": "MCP tool listing",
+      "outcome": "passed",
+      "details": {
+        "names": [
+          "integration_capabilities",
+          "integration_check_connection",
+          "integration_discover"
+        ]
+      }
+    },
+    {
+      "name": "MCP integration_capabilities",
+      "outcome": "passed",
+      "details": {
+        "adapter": {
+          "abi": "metadata-field-v1",
+          "digest": "sha256:7eefd01eff6a4926a84f786c950bc38cbcf316640251fb124f1792da940f40e4",
+          "engine": "wasmi",
+          "fuel_per_run": 1000000,
+          "imports": false,
+          "memory_bytes": 65536
+        },
+        "connection_refs": [
+          "conn_acceptance"
+        ],
+        "coverage": "bounded_catalog",
+        "limits": {
+          "concurrent_runs": 1,
+          "fields_per_resource": 32,
+          "request_timeout_seconds": 5,
+          "resources": 8,
+          "response_bytes": 65536,
+          "run_timeout_seconds": 12
+        },
+        "operations": [
+          "connections.check",
+          "discovery.run"
+        ],
+        "publication": false,
+        "version": "v1"
+      }
+    },
+    {
+      "name": "MCP integration_check_connection",
+      "outcome": "passed",
+      "details": {
+        "code": "ok",
+        "connection_ref": "conn_acceptance",
+        "status": "available"
+      }
+    },
+    {
+      "name": "MCP integration_discover",
+      "outcome": "passed",
+      "details": {
+        "adapter": {
+          "abi": "metadata-field-v1",
+          "digest": "sha256:7eefd01eff6a4926a84f786c950bc38cbcf316640251fb124f1792da940f40e4"
+        },
+        "code": "ok",
+        "connection_ref": "conn_acceptance",
+        "constraints": {
+          "code": "workflow_semantics_not_discovered",
+          "status": "unknown"
+        },
+        "coverage": "bounded",
+        "resources": [
+          {
+            "code": "ok",
+            "field_code": "metadata_gap",
+            "field_coverage": "bounded",
+            "fields": [
+              {
+                "field_ref": "field_b5e8b3e29ce5e3126310a789303befac02a95039b2146405114aea552d95c4b9",
+                "kind": "unknown",
+                "required": true,
+                "role": "lifecycle_state",
+                "role_basis": "field_identifier_hint",
+                "status": "observed"
+              }
+            ],
+            "resource_ref": "resource_5245fcdab227c650c57b58859fed3b45b71fdf70dff136b4ddfeebcc6f25f18b",
+            "status": "observed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MCP rejects unknown tool",
+      "outcome": "passed",
+      "details": {
+        "error": {
+          "code": -32602,
+          "message": "Invalid request"
+        },
+        "id": 6,
+        "jsonrpc": "2.0"
+      }
+    },
+    {
+      "name": "MCP rejects foreign reference",
+      "outcome": "passed",
+      "details": {
+        "id": 7,
+        "jsonrpc": "2.0",
+        "result": {
+          "content": [
+            {
+              "text": "{\"error\":{\"code\":\"not_found\"}}",
+              "type": "text"
+            }
+          ],
+          "isError": true,
+          "structuredContent": {
+            "error": {
+              "code": "not_found"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "MCP rejects injected URL",
+      "outcome": "passed",
+      "details": {
+        "id": 8,
+        "jsonrpc": "2.0",
+        "result": {
+          "content": [
+            {
+              "text": "{\"error\":{\"code\":\"invalid_tool_arguments\"}}",
+              "type": "text"
+            }
+          ],
+          "isError": true,
+          "resultType": "complete",
+          "structuredContent": {
+            "error": {
+              "code": "invalid_tool_arguments"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "MCP protocol-only stdout and clean teardown",
+      "outcome": "passed"
+    }
+  ],
+  "observed_adapter_digest": "sha256:7eefd01eff6a4926a84f786c950bc38cbcf316640251fb124f1792da940f40e4",
+  "passed": true
+}

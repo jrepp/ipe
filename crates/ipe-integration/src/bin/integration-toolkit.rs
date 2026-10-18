@@ -1,9 +1,8 @@
 //! Agent CLI and MCP transport. Provider credentials belong exclusively to the workload.
 use clap::{CommandFactory, Parser, Subcommand};
 use secrecy::{ExposeSecret, SecretString};
-use serde::de::{self, MapAccess, SeqAccess, Visitor};
-use serde::{Deserialize, Deserializer};
-use serde_json::{json, Map, Value};
+use serde::Deserialize;
+use serde_json::{json, Value};
 use std::io::{self, Write};
 use std::process::ExitCode;
 use std::time::Duration;
@@ -13,69 +12,8 @@ const MAX_RESPONSE: usize = 1048576;
 
 type Result<T, E = &'static str> = std::result::Result<T, E>;
 
-// Reject duplicate keys throughout documents rather than silently interpreting the last value.
-struct Unique(Value);
-impl<'de> Deserialize<'de> for Unique {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> std::result::Result<Self, D::Error> {
-        struct JsonVisitor;
-        impl<'de> Visitor<'de> for JsonVisitor {
-            type Value = Unique;
-            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                f.write_str("JSON without duplicate keys")
-            }
-            fn visit_bool<E: de::Error>(self, v: bool) -> std::result::Result<Unique, E> {
-                Ok(Unique(v.into()))
-            }
-            fn visit_i64<E: de::Error>(self, v: i64) -> std::result::Result<Unique, E> {
-                Ok(Unique(v.into()))
-            }
-            fn visit_u64<E: de::Error>(self, v: u64) -> std::result::Result<Unique, E> {
-                Ok(Unique(v.into()))
-            }
-            fn visit_f64<E: de::Error>(self, v: f64) -> std::result::Result<Unique, E> {
-                serde_json::Number::from_f64(v)
-                    .map(|n| Unique(Value::Number(n)))
-                    .ok_or_else(|| E::custom("invalid number"))
-            }
-            fn visit_str<E: de::Error>(self, v: &str) -> std::result::Result<Unique, E> {
-                Ok(Unique(v.into()))
-            }
-            fn visit_none<E: de::Error>(self) -> std::result::Result<Unique, E> {
-                Ok(Unique(Value::Null))
-            }
-            fn visit_unit<E: de::Error>(self) -> std::result::Result<Unique, E> {
-                Ok(Unique(Value::Null))
-            }
-            fn visit_seq<A: SeqAccess<'de>>(
-                self,
-                mut seq: A,
-            ) -> std::result::Result<Unique, A::Error> {
-                let mut items = Vec::new();
-                while let Some(Unique(v)) = seq.next_element()? {
-                    items.push(v);
-                }
-                Ok(Unique(Value::Array(items)))
-            }
-            fn visit_map<A: MapAccess<'de>>(
-                self,
-                mut map: A,
-            ) -> std::result::Result<Unique, A::Error> {
-                let mut items = Map::new();
-                while let Some((key, Unique(value))) = map.next_entry::<String, Unique>()? {
-                    if items.insert(key, value).is_some() {
-                        return Err(de::Error::custom("duplicate key"));
-                    }
-                }
-                Ok(Unique(Value::Object(items)))
-            }
-        }
-        d.deserialize_any(JsonVisitor)
-    }
-}
 fn decode(data: &[u8]) -> Result<Value> {
-    serde_json::from_slice::<Unique>(data)
-        .map(|v| v.0)
-        .map_err(|_| "invalid_workload_response")
+    ipe_json::parse_value(data).map_err(|_| "invalid_workload_response")
 }
 fn valid_ref(value: &str) -> bool {
     !value.is_empty()
@@ -248,6 +186,9 @@ impl Toolkit {
 impl ServerHandler for Toolkit {
     fn get_info(&self) -> ServerConfig {
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
+            .with_server_info(rmcp::model::Implementation::new(
+                "ipe-integration-toolkit", env!("CARGO_PKG_VERSION"),
+            ))
             .with_instructions("Credentials are operator-configured. Discovery is bounded and may be partial; these tools do not deploy adapters or policy facts.")
     }
 }

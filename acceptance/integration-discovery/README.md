@@ -54,3 +54,18 @@ regressions cover help/error channel isolation, hidden environment values, requi
 arguments and URL precedence. Harness cleanup uses bounded Tokio child waits and
 runs before reporting acceptance success or failure; the interactive demo uses the
 same explicit cleanup path.
+
+## Independent agent deployment validation
+
+The [recorded deployment pass](external-agent-validation.json) contains 17 passing
+operations against running workload and toolkit binaries, with separate SHA256
+hashes and the observed WASM adapter digest. An independent subagent used only the
+agent credential handoff, CLI, raw HTTP and a hand-written MCP client. It checked
+discovery, explicit unknown constraints, masking and rejected hostile requests.
+The pass found SDK-default MCP identification; the toolkit now identifies itself
+as `ipe-integration-toolkit`, and the final binaries passed the repeated check.
+
+Use the [reusable external client](../../testing/integration/README.md#independent-external-agent-client)
+to repeat this against `integration-demo --serve`. This proves same-machine
+external-client operation against the synthetic facade, not a separate OS sandbox,
+a remote deployment, or live ServiceNow compatibility.

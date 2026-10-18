@@ -11,6 +11,9 @@ name = "ipe-server"
 path = "src/main.rs"
 
 [dependencies]
+ipe-json = { path = "../ipe-json" }
+secrecy = "0.10.3"
+tokio-util = { version = "0.7.19", features = ["rt"] }
 ipe-core = { path = "../ipe-core", features = ["approvals"] }
 
 axum = { workspace = true }

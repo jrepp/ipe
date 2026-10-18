@@ -49,6 +49,7 @@ impl Session {
         self.send(json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"independent-test","version":"1"}}})).await;
         let response = self.read().await;
         assert_eq!(response["id"], 1);
+        assert_eq!(response["result"]["serverInfo"]["name"], "ipe-integration-toolkit");
         assert_eq!(response["result"]["protocolVersion"], "2025-11-25");
         self.send(json!({"jsonrpc":"2.0","method":"notifications/initialized"})).await;
     }
