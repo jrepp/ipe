@@ -8,7 +8,7 @@ use ipe_core::relationship::{Relationship, RelationshipQuery, RelationshipStore}
 fn bench_relationship_add(c: &mut Criterion) {
     let mut group = c.benchmark_group("relationship_add");
 
-    let store = RelationshipStore::new_temp().unwrap();
+    let store = RelationshipStore::new_temp().unwrap().with_max_depth(15);
 
     group.bench_function("single_add", |b| {
         let mut counter = 0;
@@ -124,13 +124,11 @@ fn bench_trust_chain_traversal(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(chain_length), chain_length, |b, _| {
             b.iter(|| {
                 black_box(
-                    store
-                        .find_relationship_path(
-                            "cert-0",
-                            "trusted_by",
-                            &format!("ca-{}", chain_length - 1),
-                        )
-                        .unwrap(),
+                    store.find_relationship_path(
+                        "cert-0",
+                        "trusted_by",
+                        &format!("ca-{}", chain_length - 1),
+                    ),
                 )
             });
         });
