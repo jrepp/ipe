@@ -40,6 +40,11 @@ name = "relationship_benchmarks"
 harness = false
 required-features = ["approvals"]
 
+[[bench]]
+name = "v2_evaluation"
+harness = false
+required-features = ["approvals"]
+
 [[test]]
 name = "integration"
 path = "tests/integration/mod.rs"
