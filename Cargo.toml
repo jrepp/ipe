@@ -35,7 +35,6 @@ bumpalo = { version = "3.14", features = ["collections"] }
 arc-swap = "1.6"
 parking_lot = "0.12"
 dashmap = "5.5"
-crossbeam-channel = "0.5"
 
 # JIT Compilation
 cranelift = "0.123"

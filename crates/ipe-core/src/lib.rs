@@ -6,8 +6,6 @@ pub mod index;
 pub mod interpreter;
 pub mod parser;
 pub mod rar;
-pub mod store;
-pub mod tiering;
 
 #[cfg(feature = "jit")]
 pub mod jit;
