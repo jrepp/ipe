@@ -141,3 +141,12 @@ platform stdin reads that cannot be canceled. No new task framework was needed
 inside the integration workload. Enforcement uses `tokio-util` cancellation and
 Tokio task ownership; these changes do not complete the durable integration
 lifecycle roadmap.
+
+
+Deployment validation also has an automated external-client replay via
+`integration-demo --external-agent`. It starts the real binaries, runs the
+independent CLI/HTTP/MCP probe, and records cleanup before reporting success. CI
+runs the replay and retains sanitized reports; shared `ipe-json` changes trigger
+this workflow. The client has bounded output and subprocess cleanup regression
+tests. This is repeatable same-machine synthetic validation, not a new agent
+reasoning session, OS sandbox proof, or live ServiceNow compatibility test.
