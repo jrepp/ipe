@@ -253,42 +253,62 @@ impl Deployment {
             };
             require(valid, "CLI operation did not succeed")?;
         }
-        let calls = [
-            json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"acceptance","version":"1"}}}),
-            json!({"jsonrpc":"2.0","method":"notifications/initialized"}),
-            json!({"jsonrpc":"2.0","id":2,"method":"tools/list"}),
-            json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"integration_capabilities","arguments":{}}}),
-            json!({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"integration_check_connection","arguments":{"connection_ref":"conn_acceptance"}}}),
-            json!({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"integration_discover","arguments":{"connection_ref":"conn_acceptance"}}}),
-        ];
-        let input = calls.iter().map(|v| format!("{v}\n")).collect();
-        let output = self.toolkit(&["mcp"], Some(input)).await?;
-        let responses: Vec<Value> = output
-            .lines()
-            .map(serde_json::from_str)
-            .collect::<std::result::Result<_, _>>()?;
-        require(responses.len() == 5, "MCP response count mismatch")?;
-        for (index, response) in responses.iter().enumerate() {
-            require(
-                response["id"] == index + 1
-                    && response.get("result").is_some()
-                    && response["result"]["isError"] != true,
-                "MCP call failed",
-            )?;
-        }
-        let names: Vec<_> = responses[1]["result"]["tools"]
-            .as_array()
-            .ok_or("missing tools")?
-            .iter()
-            .filter_map(|t| t["name"].as_str())
-            .collect();
+        tokio::time::timeout(Duration::from_secs(30), self.sdk_mcp()).await?
+    }
+    async fn sdk_mcp(&self) -> Result<()> {
+        use rmcp::{model::CallToolRequestParams, ServiceExt};
+        let mut child = tokio::process::Command::new(&self.toolkit)
+            .args(["--url", &self.url, "mcp"])
+            .env_clear()
+            .env("IPE_INTEGRATION_TOKEN", &self.token)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()?;
+        let service = ().serve((child.stdout.take().unwrap(), child.stdin.take().unwrap())).await?;
+        let listed = service.list_tools(None).await?;
+        self.redacted(&serde_json::to_string(&listed)?)?;
+        let names: Vec<_> = listed.tools.iter().map(|tool| tool.name.as_ref()).collect();
         require(
             names.len() == 3
                 && names.contains(&"integration_discover")
                 && names.contains(&"integration_capabilities")
                 && names.contains(&"integration_check_connection"),
             "MCP surface changed",
-        )
+        )?;
+        for (name, args, key, expected) in [
+            ("integration_capabilities", json!({}), "publication", json!(false)),
+            (
+                "integration_check_connection",
+                json!({"connection_ref":"conn_acceptance"}),
+                "status",
+                json!("available"),
+            ),
+            (
+                "integration_discover",
+                json!({"connection_ref":"conn_acceptance"}),
+                "coverage",
+                json!("bounded"),
+            ),
+        ] {
+            let response = service
+                .call_tool(
+                    CallToolRequestParams::new(name)
+                        .with_arguments(args.as_object().unwrap().clone()),
+                )
+                .await?;
+            self.redacted(&serde_json::to_string(&response)?)?;
+            require(
+                response.is_error != Some(true)
+                    && response.structured_content.as_ref().is_some_and(|v| v[key] == expected),
+                "SDK client received unsuccessful tool result",
+            )?;
+        }
+        service.cancel().await?;
+        let output = child.wait_with_output().await?;
+        self.redacted(&String::from_utf8_lossy(&output.stderr))?;
+        require(output.status.success(), "MCP child failed at shutdown")
     }
     pub async fn smoke(&self) -> Result<Value> {
         let (code, result) = self.discover().await?;
