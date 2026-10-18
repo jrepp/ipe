@@ -29,6 +29,9 @@ def main():
     sources = list((ROOT / "docs").glob("*.html"))
     sources += list((ROOT / "docs").glob("*.css")) + list((ROOT / "docs").glob("*.js"))
     sources += [data_file]
+    # Source references from contract.html resolve inside the packaged artifact.
+    sources += [ROOT / "crates/ipe-core/src/runtime_policy.rs",
+                ROOT / "crates/ipe-core/src/runtime_facts.rs"]
     tracked = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT, capture_output=True, text=True, check=True)
     sources += [ROOT / path for path in tracked.stdout.splitlines()]
     for source in sources:
