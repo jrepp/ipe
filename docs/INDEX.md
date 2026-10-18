@@ -84,6 +84,7 @@ This index provides a guided path through IPE's documentation based on your need
 **New to IPE?** Start here:
 
 - **[Runtime data workflow](RUNTIME_DATA.md)** — implemented authenticated push/pull, TTL, language-2 policies, deployment limits, and external HTTP acceptance tests.
+- **[Integration discovery](INTEGRATION_DISCOVERY.md)** — standalone Integration Workload, CLI/MCP access, credential-first metadata discovery, and a local HTTPS stand-in deployment.
 
 1. **[README](../README.md)** - Project overview, badges, and quick links
 2. **[QUICKSTART](../QUICKSTART.md)** - Get IPE running in 5 minutes

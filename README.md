@@ -18,6 +18,10 @@ exercises the real server with several data shapes. This profile has explicit
 deployment and feature limits; the legacy APIs and architecture described below
 are not a production-readiness guarantee.
 
+The separate [Integration Workload discovery slice](docs/INTEGRATION_DISCOVERY.md)
+provides CLI and MCP access to bounded ServiceNow metadata discovery. Its local
+deployment demo uses a lightweight HTTPS stand-in and needs no real provider account.
+
 IPE is a production-grade authorization engine that evaluates policies in under 50 microseconds with zero-downtime updates. The core engine features a bytecode compiler, lock-free policy store, and optional RocksDB-backed stores for approvals and relationships with multi-tenant isolation. Built in Rust for predictable performance without garbage collection pauses.
 
 **Quick facts:** 248 tests (94% coverage) | Sub-100μs latency | Zero-downtime updates | Multi-tenant isolation

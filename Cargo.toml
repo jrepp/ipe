@@ -7,6 +7,7 @@ members = [
     "crates/ipe-ffi",
     "crates/ipe-web",
     "crates/ipe-server",
+    "crates/ipe-integration",
 ]
 resolver = "2"
 

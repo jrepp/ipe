@@ -2,6 +2,17 @@
 
 This directory contains deployment configurations for the IPE Policy Engine.
 
+For the standalone Integration Workload, use the
+[local discovery deployment](../docs/INTEGRATION_DISCOVERY.md):
+
+```sh
+python3 scripts/demo-integration-discovery.py --build
+```
+
+It launches the workload plus a synthetic HTTPS ServiceNow stand-in and exercises
+API, CLI, and MCP. `--serve` keeps the deployment running for interactive use.
+This demonstration does not deploy an Enforcement Workload or contact ServiceNow.
+
 The Helm/TOML examples below describe the legacy server profile. The new
 [runtime data server](../docs/RUNTIME_DATA.md) requires `IPE_RUNTIME_CONFIG`,
 credential environment variables, and a loopback listener; these charts have not
