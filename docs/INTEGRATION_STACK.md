@@ -1,6 +1,6 @@
 # Integration stack and crate reuse audit
 
-Reviewed 2026-10-18; updated after MCP, CLI, secret-wrapper and local lifecycle migrations.
+Reviewed 2026-10-18; updated after MCP, CLI, shared JSON, secret-wrapper and enforcement worker lifecycle migrations.
 This records the implemented stack and the next dependency choices. Rows marked
 implemented describe branch code; remaining recommendations
 are not installed dependencies or completed migrations.
@@ -15,8 +15,8 @@ are not installed dependencies or completed migrations.
 | HTTP MCP | Not implemented | Mount `rmcp` Streamable HTTP as a Tower service in the Integration Workload's Axum router |
 | CLI | `clap` derives in workload, toolkit and demo | Keep sanitized parse errors and MCP channel isolation |
 | Sandbox | Wasmi interpreter, binary WASM, bundled WAT compiled at build time | Keep the bounded metadata ABI; expand only with explicit capability contracts |
-| Serialization | Serde/serde_json, schemars-generated MCP schemas; strict JSON visitors in toolkit and enforcement server | Consolidate strict parsing while retaining recursive duplicate-key rejection |
-| Identity and cryptography | `hmac`, `sha2`, `subtle`, `secrecy` in integration | Keep native scope/domain separation and explicit secret exposure |
+| Serialization | Shared `ipe-json` over Serde/serde_json; schemars-generated MCP schemas | Keep recursive duplicate-key rejection and sanitized errors at untrusted JSON boundaries |
+| Identity and cryptography | `hmac`, `sha2`, `subtle`; `secrecy` in integration and enforcement | Keep native scope/domain separation and explicit secret exposure |
 | Local proof | Rust/Tokio async child lifecycle and `tempfile`; TypeScript HTTPS provider facade | Bounded readiness/cleanup; provider semantics stay in TypeScript |
 
 The native workload is the security boundary around provider connections. WASM
@@ -58,10 +58,10 @@ candidate with primary documentation, subject to version and compatibility check
 | Implemented | [Toolkit](../crates/ipe-integration/src/bin/integration-toolkit.rs): custom protocol state machine removed | `rmcp` handles protocol and typed tools; strict framing guard remains | Same tool authority, bounded input/output, sanitized failures, stdout protocol-only, no secret exposure; validate SDK behavior for duplicate keys and malformed frames |
 | Implemented | Toolkit `run`, [workload main](../crates/ipe-integration/src/main.rs), [demo](../crates/ipe-integration/examples/integration-demo.rs) | [`clap` Parser/Subcommand](https://docs.rs/clap/latest/clap/_derive/index.html) replaces manual argument loops | Existing command names, token environment references, private config path; MCP startup failures remain on stderr without echoing sensitive input |
 | Implemented | Toolkit input schemas previously handwritten separately from validation | [`schemars`](https://docs.rs/schemars/latest/schemars/) derives schemas from SDK parameter types | Generated schema and deserialization agree; deny unknown fields; do not describe private operator configuration as agent inputs |
-| Partial: integration implemented | Integration `Runtime` and toolkit `Client` now use secret wrappers; enforcement server `Credential`/`Connector` still use ordinary storage | [`secrecy`](https://docs.rs/secrecy/latest/secrecy/) with `zeroize`; enforcement follow-up remains | Explicit credential exposure only when building authorized requests; no debug/serialization leakage. Wrapping does not erase environment variables or copies made by HTTP libraries |
-| Partial: integration implemented | Integration workload now handles Ctrl-C/SIGTERM with bounded Axum drain; [enforcement server `run`](../crates/ipe-server/src/runtime.rs) still has detached cleanup/connector loops | Existing Tokio/Axum primitives cover integration; prefer `JoinSet` or [`TaskTracker`](https://docs.rs/tokio-util/latest/tokio_util/task/task_tracker/struct.TaskTracker.html) and cancellation for enforcement workers | Stop intake, cancel or drain within a bounded deadline, await workers; shutdown must not renew fact freshness or allow stale publication. Cancellation primitives do not provide durable jobs |
+| Implemented | Integration `Runtime`, toolkit `Client`, and enforcement server `Credential`/`Connector` use secret wrappers | [`secrecy`](https://docs.rs/secrecy/latest/secrecy/) with `zeroize` | Explicit exposure at validation, authorization and authorized-request boundaries; no debug/serialization leakage. Wrapping does not erase environment variables or copies made by HTTP libraries |
+| Implemented | Integration signal drain; [enforcement server `run`](../crates/ipe-server/src/runtime.rs) owns cleanup/connector workers and starts them only after binding succeeds | Tokio `JoinSet` and [`CancellationToken`](https://docs.rs/tokio-util/latest/tokio_util/sync/struct.CancellationToken.html), with bounded async drain and join waits | Cancellation fences connector publication and expired-fact cleanup; pending network responses cannot publish after that boundary. The fence is outside the evaluation hot path. Async deadlines cannot preempt synchronous storage; cancellation does not provide durable jobs |
 | P2 | [Integration `deadline`](../crates/ipe-integration/src/lib.rs), per-operation semaphore | Evaluate Tower/tower-http timeout, concurrency and load-shed layers; retain small wrappers where semantics differ | Existing 504 `run_deadline`, immediate 429 for concurrent discovery, permit release on cancellation. Tower readiness can queue rather than reject; timeout layers can return empty bodies. No blanket timeout on long-lived MCP streams |
-| P2 | Toolkit `Unique` and [server `StrictValue`](../crates/ipe-server/src/strict_json.rs): duplicate recursive JSON visitors | Consolidate one tested strict boundary; use [`serde_with` duplicate prevention](https://docs.rs/serde_with/latest/serde_with/rust/maps_duplicate_key_is_error/index.html) for typed map fields where applicable | Nested duplicate keys and trailing data remain rejected. A field-level map helper is not a drop-in replacement for recursive `serde_json::Value` validation |
+| Implemented | [Shared `ipe-json`](../crates/ipe-json/src/lib.rs) replaces the toolkit and enforcement server visitors | One recursive Serde visitor exposes typed and `Value` decoding with opaque errors; [`serde_with` duplicate prevention](https://docs.rs/serde_with/latest/serde_with/rust/maps_duplicate_key_is_error/index.html) remains an option for isolated typed map fields | Reject nested and escaped-equivalent duplicate keys, trailing data, invalid JSON and excess depth. Callers retain byte limits and domain validation. A field-level map helper cannot replace recursive `serde_json::Value` validation |
 | Implemented | [Harness](../crates/ipe-integration/examples/support/mod.rs): blocking readiness reader and custom polling removed | Tokio child handles, async wait/read, timeout, explicit bounded kill/reap and kill-on-drop fallback | Reap both children, bounded startup/output, private files, Ctrl-C cleanup, environment isolation. Keep synthetic provider behavior in TypeScript |
 
 The [tower-http timeout documentation](https://docs.rs/tower-http/latest/tower_http/timeout/index.html)
@@ -103,17 +103,22 @@ only a stub, not an existing custom RPC implementation to replace.
    uses an SDK client; independent wire tests cover malformed/fragmented frames,
    typed-argument rejection, sanitized errors and outstanding-request limits.
    SDK conformance alone does not prove IPE authorization or masking.
-2. **Implemented for integration:** `clap`, generated MCP schemas and `secrecy`.
-   Extend secret wrappers to enforcement separately. Keep public command and
-   error contracts stable; record any intentional change. Reject source URLs,
-   arbitrary operations and extra parameters before contacting the provider.
-3. **Implemented locally:** workload signal drain and async harness cleanup, tested
-   with SIGTERM during discovery. Enforcement worker shutdown remains open.
-   Evaluate middleware replacement against the existing
-   12-second deadline and concurrent-run acceptance cases.
-4. Consolidate strict parsing only after demonstrating equivalent rejection for
-   nested objects, arrays, duplicate keys and oversized input. Do not quietly weaken
-   the parser while moving protocol ownership to the SDK.
+2. **Implemented:** `clap`, generated MCP schemas, and `secrecy` in integration
+   and enforcement. Keep public command and error contracts stable; record any
+   intentional change. Reject source URLs, arbitrary operations and extra
+   parameters before contacting the provider.
+3. **Implemented:** integration signal drain and async harness cleanup, plus
+   enforcement `CancellationToken`/`JoinSet` worker ownership. The enforcement
+   publication fence coordinates connector commits and cleanup with cancellation;
+   evaluation does not acquire this lock. An in-progress synchronous storage call
+   can delay the fence and cannot be preempted by an async timeout. Evaluate
+   middleware replacement against the existing 12-second discovery deadline and
+   concurrent-run acceptance cases.
+4. **Implemented:** shared `ipe-json` decoding in the toolkit and enforcement
+   server. Tests cover nested objects/arrays, escaped-equivalent duplicate keys,
+   trailing input, invalid JSON, depth limits, typed decoding and error redaction.
+   Byte budgets remain the caller's responsibility; this migration does not change
+   integration provider/configuration parsing semantics.
 
 For each dependency: use a published release and lockfile; inspect license,
 Rust/toolchain compatibility, advisory results and enabled features; run
@@ -133,5 +138,6 @@ features) and `secrecy` 0.10.3. Cargo audit reports no vulnerabilities or warnin
 for this lockfile. The workload drains for at most 13 seconds on shutdown; the
 harness uses explicit async cleanup, and toolkit runtime teardown is bounded for
 platform stdin reads that cannot be canceled. No new task framework was needed
-inside the integration workload. These changes do not complete enforcement worker
-management or the durable integration lifecycle roadmap.
+inside the integration workload. Enforcement uses `tokio-util` cancellation and
+Tokio task ownership; these changes do not complete the durable integration
+lifecycle roadmap.
