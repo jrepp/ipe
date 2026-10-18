@@ -510,6 +510,6 @@ fn bench_set_membership(b: &mut Bencher) {
 ## References
 
 - [RocksDB Documentation](https://github.com/facebook/rocksdb/wiki)
-- [IPE Core Engine](crates/ipe-core/src/engine.rs:1)
+- `crates/ipe-core/src/engine.rs` (removed with the legacy engine)
 - [IPE Request Context](crates/ipe-core/src/rar.rs:1)
 - [IPE Testing Utilities](crates/ipe-core/src/testing.rs:1)
