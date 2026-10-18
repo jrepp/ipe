@@ -94,7 +94,9 @@ jobs:
           # Target: Throughput > 20k ops/sec
 
           # Run benchmarks and extract results
-          cargo bench --bench evaluation 2>&1 > bench_out.txt
+          # (--bench evaluation was deleted with the legacy engine cluster;
+          # the remaining benches require the approvals feature)
+          cargo bench --all-features 2>&1 > bench_out.txt
 
           # Parse results (this is a placeholder - actual implementation needed)
           echo "✅ Performance targets validated"

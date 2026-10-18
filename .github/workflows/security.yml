@@ -82,9 +82,12 @@ jobs:
         # Scope to ipe-core and disable the approvals feature: workspace-wide
         # runs unify features and ipe-server enables ipe-core/approvals, which
         # pulls RocksDB FFI tests into Miri (Miri cannot execute C code).
-        run: cargo miri test -p ipe-core --no-default-features --features jit,testing
+        # The jit,testing features (and the legacy engine they exercised) were
+        # deleted with the legacy engine cluster, so Miri now covers the
+        # default-feature unit tests (rar) only.
+        run: cargo miri test -p ipe-core --no-default-features
         env:
-          # -Zmiri-disable-isolation: approval/tiering tests call chrono::Utc::now()
+          # -Zmiri-disable-isolation: tests may call chrono::Utc::now()
           # (SystemTime::now), which Miri's sandbox rejects as an unsupported
           # foreign call. That is a sandbox limitation, not undefined behavior;
           # strict-provenance and symbolic-alignment-check (the actual UB

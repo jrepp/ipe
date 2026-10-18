@@ -1336,14 +1336,11 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 | **Summary** | Executive summary and vision | `SUMMARY.md` | 8KB |
 | **Requirements** | Formal requirements specification | `REQUIREMENTS.md` | - |
 | **Quick Start** | 5-minute getting started guide | `QUICKSTART.md` | - |
-| **End-to-End Example** | Complete usage walkthrough | `END_TO_END_EXAMPLE.md` | - |
 
 ### Technical Specifications
 
 | Document | Description | Location | Lines |
 |----------|-------------|----------|-------|
-| **AST Specification** | Abstract syntax tree design | `docs/AST.md` | - |
-| **Bytecode Documentation** | Instruction set reference | `docs/BYTECODE.md` | - |
 | **Relationship Implementation** | Entity graph design | `docs/relationship-implementation-summary.md` | - |
 | **Scope & TTL Model** | Multi-tenant isolation design | `docs/scope-ttl-implementation-summary.md` | 406 lines |
 | **Test Coverage Analysis** | Coverage report and gaps | `docs/test-coverage-analysis.md` | - |
