@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'crates/ipe-integration/**'
+      - 'crates/ipe-json/**'
+      - 'acceptance/integration-discovery/**'
       - 'testing/integration/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -11,13 +13,18 @@ on:
     branches: [main]
     paths:
       - 'crates/ipe-integration/**'
+      - 'crates/ipe-json/**'
+      - 'acceptance/integration-discovery/**'
       - 'testing/integration/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/integration.yml'
+permissions:
+  contents: read
 jobs:
   discovery:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -31,8 +38,20 @@ jobs:
       - run: npm ci --prefix testing/integration
       - run: npm run check --prefix testing/integration
       - run: npm test --prefix testing/integration
-      - run: cargo clippy --locked -p ipe-integration --all-targets -- -D warnings
-      - run: cargo test --locked -p ipe-integration
+      - run: cargo clippy --locked -p ipe-json -p ipe-integration --all-targets -- -D warnings
+      - run: cargo test --locked -p ipe-json -p ipe-integration --all-targets
       - run: cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored
       - run: cargo build --locked -p ipe-integration --bins
       - run: cargo run --locked -p ipe-integration --example integration-demo -- --report target/integration-demo-report.json
+      - name: Replay independent external client against deployed binaries
+        run: cargo run --locked -p ipe-integration --example integration-demo -- --external-agent --report target/external-agent-validation.json
+      - name: Preserve sanitized deployment reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-deployment-reports
+          path: |
+            target/integration-demo-report.json
+            target/external-agent-validation.json
+          if-no-files-found: warn
+          retention-days: 14

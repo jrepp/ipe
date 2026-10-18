@@ -16,7 +16,7 @@ credential, or enterprise installation is needed for this integration slice.
 
 ```sh
 cargo build --locked -p ipe-integration --bins
-cargo test --locked -p ipe-integration
+cargo test --locked -p ipe-json -p ipe-integration
 cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored
 cargo run --locked -p ipe-integration --example integration-demo -- --report target/integration-demo-report.json
 ```
@@ -26,6 +26,20 @@ facade. It checks authenticated reads, hostile provider responses, strict input,
 masked identities, deadline cancellation, CLI, and MCP. Unit tests additionally
 exercise the WASM sandbox and client transport boundaries. Synthetic fixtures are
 not live ServiceNow validation.
+
+The independent external-client replay starts a fresh deployment, exercises CLI,
+HTTP and handwritten MCP requests, saves a sanitized report, and tears down the
+processes:
+
+```sh
+cargo run --locked -p ipe-integration --example integration-demo -- --external-agent --report target/external-agent-validation.json
+```
+
+CI runs this replay and retains deployment reports as artifacts. Changes to the
+shared `ipe-json` boundary also trigger integration checks. A replay exercises the
+client developed during the independent agent pass; it does not launch a new
+reasoning agent or establish OS sandbox isolation. Live ServiceNow validation
+remains separate.
 
 For a standalone acceptance report or interactive deployment:
 

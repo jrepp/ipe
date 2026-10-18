@@ -624,6 +624,79 @@ impl Deployment {
         checks.push("workload log redaction");
         Ok(json!({"suite":"rust-integration-discovery","passed":true,"checks":checks}))
     }
+    /// Run the separate wire client as an automated black-box validation process.
+    pub async fn external_agent(&self) -> Result<Value> {
+        let handoff = self.directory.path().join("external-agent.env");
+        private_write(&handoff, &format!("export IPE_INTEGRATION_TOKEN='{}'\n", self.token))?;
+        let report = self.directory.path().join("external-agent-report.json");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut command = Command::new("node");
+        command
+            .env_clear()
+            .env("PATH", std::env::var_os("PATH").unwrap_or_default())
+            .arg(root.join("testing/integration/external-agent-client.ts"))
+            .arg("--url")
+            .arg(&self.url)
+            .arg("--token-file")
+            .arg(&handoff)
+            .arg("--toolkit")
+            .arg(&self.toolkit)
+            .arg("--workload")
+            .arg(&self.binary)
+            .arg("--report")
+            .arg(&report)
+            .arg("--connection-ref")
+            .arg("conn_acceptance")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .kill_on_drop(true);
+        // The client starts a toolkit subprocess. A deadline must stop both.
+        #[cfg(unix)]
+        command.process_group(0);
+        let mut process = Process(command.spawn().map_err(|_| "external_client_start_failed")?);
+        let status = tokio::time::timeout(Duration::from_secs(60), process.0.wait()).await;
+        let status = match status {
+            Ok(Ok(status)) => status,
+            _ => {
+                #[cfg(unix)]
+                if let Some(pid) = process.0.id() {
+                    let mut kill = Command::new("/bin/kill");
+                    kill.env_clear()
+                        .args(["-KILL", "--", &format!("-{pid}")])
+                        .stdin(Stdio::null())
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .kill_on_drop(true);
+                    let _ = tokio::time::timeout(Duration::from_secs(2), kill.status()).await;
+                }
+                process.close().await.map_err(|_| "external_client_cleanup_failed")?;
+                return Err("external_client_deadline_or_wait_failed".into());
+            },
+        };
+        // Read only a bounded report from the private staging directory. The caller
+        // writes the requested report after this disclosure/schema check succeeds.
+        let file = fs::File::open(&report).map_err(|_| "external_client_report_missing")?;
+        let mut bytes = Vec::new();
+        std::io::Read::read_to_end(&mut std::io::Read::take(file, 1_048_577), &mut bytes)?;
+        require(bytes.len() <= 1_048_576, "external_client_report_too_large")?;
+        let text = std::str::from_utf8(&bytes).map_err(|_| "external_client_report_invalid")?;
+        self.redacted(text)?;
+        let mut result: Value =
+            ipe_json::parse(&bytes).map_err(|_| "external_client_report_invalid")?;
+        require(
+            result.is_object() && result["passed"].is_boolean() && result["operations"].is_array(),
+            "external_client_report_invalid",
+        )?;
+        require(
+            status.success() == (result["passed"] == true),
+            "external_client_status_mismatch",
+        )?;
+        result["binary_hash_scope"] = json!("Hashes of supplied executable files launched by this deployment harness; not runtime attestation.");
+        result["validation"] = json!("automated external-client deployment validation");
+        result["scope"] = json!("Same-machine automated external client against the actual Rust binaries and synthetic TypeScript ServiceNow facade; not a new independent agent reasoning session, separate OS sandbox, or live ServiceNow validation.");
+        Ok(result)
+    }
     pub async fn serve(&mut self) -> Result<()> {
         let handoff = self.directory.path().join("agent.env");
         private_write(&handoff, &format!("export IPE_INTEGRATION_TOKEN='{}'\n", self.token))?;

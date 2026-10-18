@@ -69,3 +69,13 @@ Use the [reusable external client](../../testing/integration/README.md#independe
 to repeat this against `integration-demo --serve`. This proves same-machine
 external-client operation against the synthetic facade, not a separate OS sandbox,
 a remote deployment, or live ServiceNow compatibility.
+
+The deployment runner can replay the external client without manual handoff:
+
+```sh
+cargo run --locked -p ipe-integration --example integration-demo -- --external-agent --report target/external-agent-validation.json
+```
+
+CI runs this command and retains the sanitized reports. Each replay creates and
+cleans up its own deployment. The checked-in independent-agent report is historical
+evidence; CI artifacts describe each subsequent automated run.
