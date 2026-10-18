@@ -105,8 +105,8 @@ jobs:
       - name: Run doc tests
         run: cargo test --doc --all-features --verbose
 
-  # The legacy stack is gated behind the `legacy` feature (PR #37); without
-  # this job a stray `legacy` default-enablement would go unnoticed.
+  # Approval storage is opt-in via the `approvals` feature; without this job a
+  # stray default-enablement of heavy optional deps would go unnoticed.
   test-default-features:
     name: Test Suite (default features)
     runs-on: ubuntu-latest

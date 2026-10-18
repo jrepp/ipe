@@ -23,8 +23,8 @@
   <nav class="sidebar" aria-label="Documentation">
     <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html">Contract</a><a href="status.html" aria-current="page">Project status</a><a href="performance.html">Performance</a></div>
-    <div class="sidebar-group"><span class="sidebar-label">Tools</span><a href="ast.html">AST explorer</a></div>
-    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=AST.md">AST reference</a><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=BYTECODE.md">Bytecode</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Tools</span></div>
+    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
   </nav>
   <main class="content">
     <article class="article">
@@ -53,7 +53,7 @@
         <div class="table-scroll"><table>
           <thead><tr><th scope="col">Component</th><th scope="col">Where</th><th scope="col">State</th><th scope="col">What that means today</th></tr></thead>
           <tbody>
-            <tr><td><strong>Parser → AST</strong></td><td><code>ipe-core::parser</code></td><td><span class="status status-">Implemented</span></td><td>Triggers, requires, where and denies clauses. See the <a href="ast.html">AST explorer</a>.</td></tr>
+            <tr><td><strong>Parser → AST</strong></td><td><code>ipe-core::parser</code></td><td><span class="status status-">Implemented</span></td><td>Triggers, requires, where and denies clauses. See the .</td></tr>
             <tr><td><strong>Compiler</strong></td><td><code>ipe-core::compiler</code></td><td><span class="status status-partial">Partial</span></td><td>Trigger conditions are skipped; <code>requires</code> ends in <code>Return(true)</code>.</td></tr>
             <tr><td><strong>Interpreter</strong></td><td><code>ipe-core::interpreter</code></td><td><span class="status status-">Implemented</span></td><td>Stack-based. <a href="performance.html">Measured</a> on hand-built bytecode.</td></tr>
             <tr><td><strong>Policy store</strong></td><td><code>ipe-core::store</code></td><td><span class="status status-">Implemented</span></td><td>Atomic snapshot swaps with lock-free reads.</td></tr>

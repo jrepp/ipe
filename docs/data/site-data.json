@@ -1,0 +1,1522 @@
+{
+  "engine": "Interpreter",
+  "examples": [
+    {
+      "name": "RequireApproval",
+      "source": "policy RequireApproval:\n  \"Production deployments need senior approval\"\n\n  triggers when\n    resource.type == \"Deployment\" and resource.environment in [\"production\", \"staging\"]\n\n  requires\n    resource.approvals >= 2\n    where request.principal.role == \"senior-engineer\"\n",
+      "tree": {
+        "children": [
+          {
+            "children": [],
+            "kind": "Intent",
+            "label": "Production deployments need senior approval"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "children": [],
+                            "kind": "Path",
+                            "label": "resource.type"
+                          },
+                          {
+                            "children": [],
+                            "kind": "Literal",
+                            "label": "String(\"Deployment\")"
+                          }
+                        ],
+                        "kind": "Binary",
+                        "label": "Comparison(Eq)"
+                      },
+                      {
+                        "children": [
+                          {
+                            "children": [],
+                            "kind": "Path",
+                            "label": "resource.environment"
+                          },
+                          {
+                            "children": [],
+                            "kind": "Array",
+                            "label": "[String(\"production\"), String(\"staging\")]"
+                          }
+                        ],
+                        "kind": "In",
+                        "label": "membership"
+                      }
+                    ],
+                    "kind": "Logical",
+                    "label": "and"
+                  }
+                ],
+                "kind": "Condition",
+                "label": "expression"
+              }
+            ],
+            "kind": "Triggers",
+            "label": "when"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [],
+                        "kind": "Path",
+                        "label": "resource.approvals"
+                      },
+                      {
+                        "children": [],
+                        "kind": "Literal",
+                        "label": "Int(2)"
+                      }
+                    ],
+                    "kind": "Binary",
+                    "label": "Comparison(GtEq)"
+                  }
+                ],
+                "kind": "Condition",
+                "label": "expression"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "children": [],
+                            "kind": "Path",
+                            "label": "request.principal.role"
+                          },
+                          {
+                            "children": [],
+                            "kind": "Literal",
+                            "label": "String(\"senior-engineer\")"
+                          }
+                        ],
+                        "kind": "Binary",
+                        "label": "Comparison(Eq)"
+                      }
+                    ],
+                    "kind": "Condition",
+                    "label": "expression"
+                  }
+                ],
+                "kind": "Where",
+                "label": "filter"
+              }
+            ],
+            "kind": "Requires",
+            "label": "allow conditions"
+          }
+        ],
+        "kind": "Policy",
+        "label": "RequireApproval"
+      }
+    },
+    {
+      "name": "FeatureAccess",
+      "source": "policy FeatureAccess:\n  \"Enable access for paid or beta accounts\"\n\n  triggers when\n    resource.type == \"Feature\"\n\n  requires\n    resource.plan == \"paid\" or resource.beta == true\n",
+      "tree": {
+        "children": [
+          {
+            "children": [],
+            "kind": "Intent",
+            "label": "Enable access for paid or beta accounts"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [],
+                        "kind": "Path",
+                        "label": "resource.type"
+                      },
+                      {
+                        "children": [],
+                        "kind": "Literal",
+                        "label": "String(\"Feature\")"
+                      }
+                    ],
+                    "kind": "Binary",
+                    "label": "Comparison(Eq)"
+                  }
+                ],
+                "kind": "Condition",
+                "label": "expression"
+              }
+            ],
+            "kind": "Triggers",
+            "label": "when"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "children": [],
+                            "kind": "Path",
+                            "label": "resource.plan"
+                          },
+                          {
+                            "children": [],
+                            "kind": "Literal",
+                            "label": "String(\"paid\")"
+                          }
+                        ],
+                        "kind": "Binary",
+                        "label": "Comparison(Eq)"
+                      },
+                      {
+                        "children": [
+                          {
+                            "children": [],
+                            "kind": "Path",
+                            "label": "resource.beta"
+                          },
+                          {
+                            "children": [],
+                            "kind": "Literal",
+                            "label": "Bool(true)"
+                          }
+                        ],
+                        "kind": "Binary",
+                        "label": "Comparison(Eq)"
+                      }
+                    ],
+                    "kind": "Logical",
+                    "label": "or"
+                  }
+                ],
+                "kind": "Condition",
+                "label": "expression"
+              }
+            ],
+            "kind": "Requires",
+            "label": "allow conditions"
+          }
+        ],
+        "kind": "Policy",
+        "label": "FeatureAccess"
+      }
+    },
+    {
+      "name": "BlockProduction",
+      "source": "policy BlockProduction:\n  \"Freeze production deployments\"\n\n  triggers when\n    resource.environment == \"production\"\n\n  denies with reason \"Change freeze is active\"\n",
+      "tree": {
+        "children": [
+          {
+            "children": [],
+            "kind": "Intent",
+            "label": "Freeze production deployments"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [],
+                        "kind": "Path",
+                        "label": "resource.environment"
+                      },
+                      {
+                        "children": [],
+                        "kind": "Literal",
+                        "label": "String(\"production\")"
+                      }
+                    ],
+                    "kind": "Binary",
+                    "label": "Comparison(Eq)"
+                  }
+                ],
+                "kind": "Condition",
+                "label": "expression"
+              }
+            ],
+            "kind": "Triggers",
+            "label": "when"
+          },
+          {
+            "children": [],
+            "kind": "Denies",
+            "label": "Change freeze is active"
+          }
+        ],
+        "kind": "Policy",
+        "label": "BlockProduction"
+      }
+    }
+  ],
+  "generated_at": "2026-10-18T15:26:50.550997+00:00",
+  "platform": "macos / aarch64",
+  "profile": "release",
+  "revision": "3d54de2",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "schema_version": 1,
+  "working_tree_modified": false,
+  "workloads": [
+    {
+      "comparisons": 1,
+      "instructions": 6,
+      "max_us": 0.167,
+      "name": "1 comparison",
+      "outlier_threshold_us": 0.105,
+      "outliers": 48,
+      "p50_us": 0.041,
+      "p95_us": 0.041999999999999996,
+      "p99_us": 0.041999999999999996,
+      "quantiles": [
+        {
+          "percentile": 1,
+          "us": 0.0
+        },
+        {
+          "percentile": 2,
+          "us": 0.0
+        },
+        {
+          "percentile": 3,
+          "us": 0.0
+        },
+        {
+          "percentile": 4,
+          "us": 0.0
+        },
+        {
+          "percentile": 5,
+          "us": 0.0
+        },
+        {
+          "percentile": 6,
+          "us": 0.0
+        },
+        {
+          "percentile": 7,
+          "us": 0.0
+        },
+        {
+          "percentile": 8,
+          "us": 0.0
+        },
+        {
+          "percentile": 9,
+          "us": 0.0
+        },
+        {
+          "percentile": 10,
+          "us": 0.0
+        },
+        {
+          "percentile": 11,
+          "us": 0.0
+        },
+        {
+          "percentile": 12,
+          "us": 0.0
+        },
+        {
+          "percentile": 13,
+          "us": 0.0
+        },
+        {
+          "percentile": 14,
+          "us": 0.0
+        },
+        {
+          "percentile": 15,
+          "us": 0.0
+        },
+        {
+          "percentile": 16,
+          "us": 0.0
+        },
+        {
+          "percentile": 17,
+          "us": 0.0
+        },
+        {
+          "percentile": 18,
+          "us": 0.0
+        },
+        {
+          "percentile": 19,
+          "us": 0.0
+        },
+        {
+          "percentile": 20,
+          "us": 0.0
+        },
+        {
+          "percentile": 21,
+          "us": 0.0
+        },
+        {
+          "percentile": 22,
+          "us": 0.0
+        },
+        {
+          "percentile": 23,
+          "us": 0.0
+        },
+        {
+          "percentile": 24,
+          "us": 0.0
+        },
+        {
+          "percentile": 25,
+          "us": 0.0
+        },
+        {
+          "percentile": 26,
+          "us": 0.0
+        },
+        {
+          "percentile": 27,
+          "us": 0.0
+        },
+        {
+          "percentile": 28,
+          "us": 0.0
+        },
+        {
+          "percentile": 29,
+          "us": 0.0
+        },
+        {
+          "percentile": 30,
+          "us": 0.0
+        },
+        {
+          "percentile": 31,
+          "us": 0.0
+        },
+        {
+          "percentile": 32,
+          "us": 0.0
+        },
+        {
+          "percentile": 33,
+          "us": 0.0
+        },
+        {
+          "percentile": 34,
+          "us": 0.0
+        },
+        {
+          "percentile": 35,
+          "us": 0.0
+        },
+        {
+          "percentile": 36,
+          "us": 0.0
+        },
+        {
+          "percentile": 37,
+          "us": 0.0
+        },
+        {
+          "percentile": 38,
+          "us": 0.0
+        },
+        {
+          "percentile": 39,
+          "us": 0.0
+        },
+        {
+          "percentile": 40,
+          "us": 0.0
+        },
+        {
+          "percentile": 41,
+          "us": 0.0
+        },
+        {
+          "percentile": 42,
+          "us": 0.041
+        },
+        {
+          "percentile": 43,
+          "us": 0.041
+        },
+        {
+          "percentile": 44,
+          "us": 0.041
+        },
+        {
+          "percentile": 45,
+          "us": 0.041
+        },
+        {
+          "percentile": 46,
+          "us": 0.041
+        },
+        {
+          "percentile": 47,
+          "us": 0.041
+        },
+        {
+          "percentile": 48,
+          "us": 0.041
+        },
+        {
+          "percentile": 49,
+          "us": 0.041
+        },
+        {
+          "percentile": 50,
+          "us": 0.041
+        },
+        {
+          "percentile": 51,
+          "us": 0.041
+        },
+        {
+          "percentile": 52,
+          "us": 0.041
+        },
+        {
+          "percentile": 53,
+          "us": 0.041
+        },
+        {
+          "percentile": 54,
+          "us": 0.041
+        },
+        {
+          "percentile": 55,
+          "us": 0.041
+        },
+        {
+          "percentile": 56,
+          "us": 0.041
+        },
+        {
+          "percentile": 57,
+          "us": 0.041
+        },
+        {
+          "percentile": 58,
+          "us": 0.041
+        },
+        {
+          "percentile": 59,
+          "us": 0.041
+        },
+        {
+          "percentile": 60,
+          "us": 0.041
+        },
+        {
+          "percentile": 61,
+          "us": 0.041
+        },
+        {
+          "percentile": 62,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 63,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 64,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 65,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 66,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 67,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 68,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 69,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 70,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 71,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 72,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 73,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 74,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 75,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 76,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 77,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 78,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 79,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 80,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 81,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 82,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 83,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 84,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 85,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 86,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 87,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 88,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 89,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 90,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 91,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 92,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 93,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 94,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 95,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 96,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 97,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 98,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 99,
+          "us": 0.041999999999999996
+        },
+        {
+          "percentile": 100,
+          "us": 0.167
+        }
+      ],
+      "samples": 10000,
+      "throughput": 41263351.78905515
+    },
+    {
+      "comparisons": 8,
+      "instructions": 34,
+      "max_us": 21.25,
+      "name": "8 comparisons",
+      "outlier_threshold_us": 0.2695,
+      "outliers": 75,
+      "p50_us": 0.167,
+      "p95_us": 0.25,
+      "p99_us": 0.25,
+      "quantiles": [
+        {
+          "percentile": 1,
+          "us": 0.166
+        },
+        {
+          "percentile": 2,
+          "us": 0.166
+        },
+        {
+          "percentile": 3,
+          "us": 0.166
+        },
+        {
+          "percentile": 4,
+          "us": 0.166
+        },
+        {
+          "percentile": 5,
+          "us": 0.166
+        },
+        {
+          "percentile": 6,
+          "us": 0.166
+        },
+        {
+          "percentile": 7,
+          "us": 0.166
+        },
+        {
+          "percentile": 8,
+          "us": 0.166
+        },
+        {
+          "percentile": 9,
+          "us": 0.166
+        },
+        {
+          "percentile": 10,
+          "us": 0.166
+        },
+        {
+          "percentile": 11,
+          "us": 0.166
+        },
+        {
+          "percentile": 12,
+          "us": 0.166
+        },
+        {
+          "percentile": 13,
+          "us": 0.166
+        },
+        {
+          "percentile": 14,
+          "us": 0.166
+        },
+        {
+          "percentile": 15,
+          "us": 0.166
+        },
+        {
+          "percentile": 16,
+          "us": 0.166
+        },
+        {
+          "percentile": 17,
+          "us": 0.166
+        },
+        {
+          "percentile": 18,
+          "us": 0.166
+        },
+        {
+          "percentile": 19,
+          "us": 0.166
+        },
+        {
+          "percentile": 20,
+          "us": 0.167
+        },
+        {
+          "percentile": 21,
+          "us": 0.167
+        },
+        {
+          "percentile": 22,
+          "us": 0.167
+        },
+        {
+          "percentile": 23,
+          "us": 0.167
+        },
+        {
+          "percentile": 24,
+          "us": 0.167
+        },
+        {
+          "percentile": 25,
+          "us": 0.167
+        },
+        {
+          "percentile": 26,
+          "us": 0.167
+        },
+        {
+          "percentile": 27,
+          "us": 0.167
+        },
+        {
+          "percentile": 28,
+          "us": 0.167
+        },
+        {
+          "percentile": 29,
+          "us": 0.167
+        },
+        {
+          "percentile": 30,
+          "us": 0.167
+        },
+        {
+          "percentile": 31,
+          "us": 0.167
+        },
+        {
+          "percentile": 32,
+          "us": 0.167
+        },
+        {
+          "percentile": 33,
+          "us": 0.167
+        },
+        {
+          "percentile": 34,
+          "us": 0.167
+        },
+        {
+          "percentile": 35,
+          "us": 0.167
+        },
+        {
+          "percentile": 36,
+          "us": 0.167
+        },
+        {
+          "percentile": 37,
+          "us": 0.167
+        },
+        {
+          "percentile": 38,
+          "us": 0.167
+        },
+        {
+          "percentile": 39,
+          "us": 0.167
+        },
+        {
+          "percentile": 40,
+          "us": 0.167
+        },
+        {
+          "percentile": 41,
+          "us": 0.167
+        },
+        {
+          "percentile": 42,
+          "us": 0.167
+        },
+        {
+          "percentile": 43,
+          "us": 0.167
+        },
+        {
+          "percentile": 44,
+          "us": 0.167
+        },
+        {
+          "percentile": 45,
+          "us": 0.167
+        },
+        {
+          "percentile": 46,
+          "us": 0.167
+        },
+        {
+          "percentile": 47,
+          "us": 0.167
+        },
+        {
+          "percentile": 48,
+          "us": 0.167
+        },
+        {
+          "percentile": 49,
+          "us": 0.167
+        },
+        {
+          "percentile": 50,
+          "us": 0.167
+        },
+        {
+          "percentile": 51,
+          "us": 0.167
+        },
+        {
+          "percentile": 52,
+          "us": 0.167
+        },
+        {
+          "percentile": 53,
+          "us": 0.167
+        },
+        {
+          "percentile": 54,
+          "us": 0.167
+        },
+        {
+          "percentile": 55,
+          "us": 0.167
+        },
+        {
+          "percentile": 56,
+          "us": 0.167
+        },
+        {
+          "percentile": 57,
+          "us": 0.167
+        },
+        {
+          "percentile": 58,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 59,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 60,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 61,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 62,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 63,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 64,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 65,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 66,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 67,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 68,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 69,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 70,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 71,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 72,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 73,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 74,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 75,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 76,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 77,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 78,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 79,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 80,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 81,
+          "us": 0.20800000000000002
+        },
+        {
+          "percentile": 82,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 83,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 84,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 85,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 86,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 87,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 88,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 89,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 90,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 91,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 92,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 93,
+          "us": 0.20900000000000002
+        },
+        {
+          "percentile": 94,
+          "us": 0.25
+        },
+        {
+          "percentile": 95,
+          "us": 0.25
+        },
+        {
+          "percentile": 96,
+          "us": 0.25
+        },
+        {
+          "percentile": 97,
+          "us": 0.25
+        },
+        {
+          "percentile": 98,
+          "us": 0.25
+        },
+        {
+          "percentile": 99,
+          "us": 0.25
+        },
+        {
+          "percentile": 100,
+          "us": 21.25
+        }
+      ],
+      "samples": 10000,
+      "throughput": 5681656.7711144565
+    },
+    {
+      "comparisons": 32,
+      "instructions": 130,
+      "max_us": 7.583,
+      "name": "32 comparisons",
+      "outlier_threshold_us": 0.9795,
+      "outliers": 163,
+      "p50_us": 0.709,
+      "p95_us": 0.875,
+      "p99_us": 1.0,
+      "quantiles": [
+        {
+          "percentile": 1,
+          "us": 0.625
+        },
+        {
+          "percentile": 2,
+          "us": 0.625
+        },
+        {
+          "percentile": 3,
+          "us": 0.625
+        },
+        {
+          "percentile": 4,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 5,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 6,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 7,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 8,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 9,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 10,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 11,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 12,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 13,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 14,
+          "us": 0.6659999999999999
+        },
+        {
+          "percentile": 15,
+          "us": 0.667
+        },
+        {
+          "percentile": 16,
+          "us": 0.667
+        },
+        {
+          "percentile": 17,
+          "us": 0.667
+        },
+        {
+          "percentile": 18,
+          "us": 0.667
+        },
+        {
+          "percentile": 19,
+          "us": 0.667
+        },
+        {
+          "percentile": 20,
+          "us": 0.667
+        },
+        {
+          "percentile": 21,
+          "us": 0.667
+        },
+        {
+          "percentile": 22,
+          "us": 0.667
+        },
+        {
+          "percentile": 23,
+          "us": 0.667
+        },
+        {
+          "percentile": 24,
+          "us": 0.667
+        },
+        {
+          "percentile": 25,
+          "us": 0.667
+        },
+        {
+          "percentile": 26,
+          "us": 0.667
+        },
+        {
+          "percentile": 27,
+          "us": 0.667
+        },
+        {
+          "percentile": 28,
+          "us": 0.667
+        },
+        {
+          "percentile": 29,
+          "us": 0.667
+        },
+        {
+          "percentile": 30,
+          "us": 0.667
+        },
+        {
+          "percentile": 31,
+          "us": 0.667
+        },
+        {
+          "percentile": 32,
+          "us": 0.667
+        },
+        {
+          "percentile": 33,
+          "us": 0.667
+        },
+        {
+          "percentile": 34,
+          "us": 0.667
+        },
+        {
+          "percentile": 35,
+          "us": 0.667
+        },
+        {
+          "percentile": 36,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 37,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 38,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 39,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 40,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 41,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 42,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 43,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 44,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 45,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 46,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 47,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 48,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 49,
+          "us": 0.7080000000000001
+        },
+        {
+          "percentile": 50,
+          "us": 0.709
+        },
+        {
+          "percentile": 51,
+          "us": 0.709
+        },
+        {
+          "percentile": 52,
+          "us": 0.709
+        },
+        {
+          "percentile": 53,
+          "us": 0.709
+        },
+        {
+          "percentile": 54,
+          "us": 0.709
+        },
+        {
+          "percentile": 55,
+          "us": 0.709
+        },
+        {
+          "percentile": 56,
+          "us": 0.709
+        },
+        {
+          "percentile": 57,
+          "us": 0.709
+        },
+        {
+          "percentile": 58,
+          "us": 0.75
+        },
+        {
+          "percentile": 59,
+          "us": 0.75
+        },
+        {
+          "percentile": 60,
+          "us": 0.75
+        },
+        {
+          "percentile": 61,
+          "us": 0.75
+        },
+        {
+          "percentile": 62,
+          "us": 0.75
+        },
+        {
+          "percentile": 63,
+          "us": 0.75
+        },
+        {
+          "percentile": 64,
+          "us": 0.75
+        },
+        {
+          "percentile": 65,
+          "us": 0.75
+        },
+        {
+          "percentile": 66,
+          "us": 0.75
+        },
+        {
+          "percentile": 67,
+          "us": 0.791
+        },
+        {
+          "percentile": 68,
+          "us": 0.791
+        },
+        {
+          "percentile": 69,
+          "us": 0.792
+        },
+        {
+          "percentile": 70,
+          "us": 0.792
+        },
+        {
+          "percentile": 71,
+          "us": 0.792
+        },
+        {
+          "percentile": 72,
+          "us": 0.792
+        },
+        {
+          "percentile": 73,
+          "us": 0.792
+        },
+        {
+          "percentile": 74,
+          "us": 0.792
+        },
+        {
+          "percentile": 75,
+          "us": 0.792
+        },
+        {
+          "percentile": 76,
+          "us": 0.833
+        },
+        {
+          "percentile": 77,
+          "us": 0.833
+        },
+        {
+          "percentile": 78,
+          "us": 0.833
+        },
+        {
+          "percentile": 79,
+          "us": 0.833
+        },
+        {
+          "percentile": 80,
+          "us": 0.833
+        },
+        {
+          "percentile": 81,
+          "us": 0.833
+        },
+        {
+          "percentile": 82,
+          "us": 0.833
+        },
+        {
+          "percentile": 83,
+          "us": 0.833
+        },
+        {
+          "percentile": 84,
+          "us": 0.834
+        },
+        {
+          "percentile": 85,
+          "us": 0.834
+        },
+        {
+          "percentile": 86,
+          "us": 0.834
+        },
+        {
+          "percentile": 87,
+          "us": 0.834
+        },
+        {
+          "percentile": 88,
+          "us": 0.875
+        },
+        {
+          "percentile": 89,
+          "us": 0.875
+        },
+        {
+          "percentile": 90,
+          "us": 0.875
+        },
+        {
+          "percentile": 91,
+          "us": 0.875
+        },
+        {
+          "percentile": 92,
+          "us": 0.875
+        },
+        {
+          "percentile": 93,
+          "us": 0.875
+        },
+        {
+          "percentile": 94,
+          "us": 0.875
+        },
+        {
+          "percentile": 95,
+          "us": 0.875
+        },
+        {
+          "percentile": 96,
+          "us": 0.916
+        },
+        {
+          "percentile": 97,
+          "us": 0.9169999999999999
+        },
+        {
+          "percentile": 98,
+          "us": 0.958
+        },
+        {
+          "percentile": 99,
+          "us": 1.0
+        },
+        {
+          "percentile": 100,
+          "us": 7.583
+        }
+      ],
+      "samples": 10000,
+      "throughput": 1485819.7228779804
+    }
+  ]
+}
+
