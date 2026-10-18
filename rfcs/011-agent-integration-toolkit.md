@@ -18,7 +18,8 @@ advertised as available tools by that slice.
 **Stack grounding:** the toolkit now uses official `rmcp` 3.5.1 for MCP protocol
 and typed tool handlers with generated schemas. A small transport guard retains
 bounded framing, duplicate-key rejection and sanitized diagnostics. Streamable
-HTTP remains proposed. `clap` and secret wrappers are the next reuse candidates;
+HTTP remains proposed. Integration CLI parsing now uses `clap`; credentials use
+`secrecy`, and the workload/harness have bounded local shutdown paths;
 see the [stack and crate reuse audit](../docs/INTEGRATION_STACK.md) for ownership,
 compatibility constraints and regression gates.
 

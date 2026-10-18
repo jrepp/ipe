@@ -1,6 +1,6 @@
 # Integration stack and crate reuse audit
 
-Reviewed 2026-10-18; updated after the integration MCP SDK migration.
+Reviewed 2026-10-18; updated after MCP, CLI, secret-wrapper and local lifecycle migrations.
 This records the implemented stack and the next dependency choices. Rows marked
 implemented describe branch code; remaining recommendations
 are not installed dependencies or completed migrations.
@@ -13,11 +13,11 @@ are not installed dependencies or completed migrations.
 | Integration workload | Rust `ipe-integration`, Tokio, Axum, reqwest with rustls | Keep native connection/authentication, bounded reads, identity generation and safe projection |
 | Agent protocol | Rust `integration-toolkit` using `rmcp` 3.5.1 with typed tools | SDK owns lifecycle/dispatch; a bounded strict transport guard owns frame and disclosure limits |
 | HTTP MCP | Not implemented | Mount `rmcp` Streamable HTTP as a Tower service in the Integration Workload's Axum router |
-| CLI | Handwritten argument parsing in Rust binaries/example | Use `clap` derives for commands, options and help |
+| CLI | `clap` derives in workload, toolkit and demo | Keep sanitized parse errors and MCP channel isolation |
 | Sandbox | Wasmi interpreter, binary WASM, bundled WAT compiled at build time | Keep the bounded metadata ABI; expand only with explicit capability contracts |
 | Serialization | Serde/serde_json, schemars-generated MCP schemas; strict JSON visitors in toolkit and enforcement server | Consolidate strict parsing while retaining recursive duplicate-key rejection |
-| Identity and cryptography | `hmac`, `sha2`, `subtle` | Keep crate primitives and IPE-owned scope/domain separation; add secret wrappers |
-| Local proof | Rust acceptance/deployment harness and `tempfile`; TypeScript HTTPS provider facade | Keep provider semantics in TypeScript; keep orchestration and assertions in Rust |
+| Identity and cryptography | `hmac`, `sha2`, `subtle`, `secrecy` in integration | Keep native scope/domain separation and explicit secret exposure |
+| Local proof | Rust/Tokio async child lifecycle and `tempfile`; TypeScript HTTPS provider facade | Bounded readiness/cleanup; provider semantics stay in TypeScript |
 
 The native workload is the security boundary around provider connections. WASM
 receives permitted field metadata, never credentials, origin URLs or identity
@@ -56,13 +56,13 @@ candidate with primary documentation, subject to version and compatibility check
 | Priority | Current contribution and evidence | Crate reuse decision | Behavior that must survive |
 | --- | --- | --- | --- |
 | Implemented | [Toolkit](../crates/ipe-integration/src/bin/integration-toolkit.rs): custom protocol state machine removed | `rmcp` handles protocol and typed tools; strict framing guard remains | Same tool authority, bounded input/output, sanitized failures, stdout protocol-only, no secret exposure; validate SDK behavior for duplicate keys and malformed frames |
-| P1 | Toolkit `main`, [workload main](../crates/ipe-integration/src/main.rs), [demo](../crates/ipe-integration/examples/integration-demo.rs): manual argument loops | Prefer [`clap` Parser/Subcommand](https://docs.rs/clap/latest/clap/_derive/index.html) | Existing command names, token environment references, private config path; MCP startup failures remain on stderr without echoing sensitive input |
+| Implemented | Toolkit `run`, [workload main](../crates/ipe-integration/src/main.rs), [demo](../crates/ipe-integration/examples/integration-demo.rs) | [`clap` Parser/Subcommand](https://docs.rs/clap/latest/clap/_derive/index.html) replaces manual argument loops | Existing command names, token environment references, private config path; MCP startup failures remain on stderr without echoing sensitive input |
 | Implemented | Toolkit input schemas previously handwritten separately from validation | [`schemars`](https://docs.rs/schemars/latest/schemars/) derives schemas from SDK parameter types | Generated schema and deserialization agree; deny unknown fields; do not describe private operator configuration as agent inputs |
-| P1 | Integration `Runtime`, toolkit `Client`, server `Credential`/`Connector`: credentials stored as ordinary strings/bytes | Prefer [`secrecy`](https://docs.rs/secrecy/latest/secrecy/) wrappers, backed by `zeroize` | Explicit credential exposure only when building authorized requests; no debug/serialization leakage. Wrapping does not erase environment variables or copies made by HTTP libraries |
-| P1 | [Server `run`](../crates/ipe-server/src/runtime.rs): detached cleanup and connector loops; integration server has no graceful shutdown hook | Prefer Tokio `JoinSet` and `tokio-util` cancellation; use [`TaskTracker`](https://docs.rs/tokio-util/latest/tokio_util/task/task_tracker/struct.TaskTracker.html) when its lifecycle fits | Stop intake, cancel or drain within a bounded deadline, await workers; shutdown must not renew fact freshness or allow stale publication. Cancellation primitives do not provide durable jobs |
+| Partial: integration implemented | Integration `Runtime` and toolkit `Client` now use secret wrappers; enforcement server `Credential`/`Connector` still use ordinary storage | [`secrecy`](https://docs.rs/secrecy/latest/secrecy/) with `zeroize`; enforcement follow-up remains | Explicit credential exposure only when building authorized requests; no debug/serialization leakage. Wrapping does not erase environment variables or copies made by HTTP libraries |
+| Partial: integration implemented | Integration workload now handles Ctrl-C/SIGTERM with bounded Axum drain; [enforcement server `run`](../crates/ipe-server/src/runtime.rs) still has detached cleanup/connector loops | Existing Tokio/Axum primitives cover integration; prefer `JoinSet` or [`TaskTracker`](https://docs.rs/tokio-util/latest/tokio_util/task/task_tracker/struct.TaskTracker.html) and cancellation for enforcement workers | Stop intake, cancel or drain within a bounded deadline, await workers; shutdown must not renew fact freshness or allow stale publication. Cancellation primitives do not provide durable jobs |
 | P2 | [Integration `deadline`](../crates/ipe-integration/src/lib.rs), per-operation semaphore | Evaluate Tower/tower-http timeout, concurrency and load-shed layers; retain small wrappers where semantics differ | Existing 504 `run_deadline`, immediate 429 for concurrent discovery, permit release on cancellation. Tower readiness can queue rather than reject; timeout layers can return empty bodies. No blanket timeout on long-lived MCP streams |
 | P2 | Toolkit `Unique` and [server `StrictValue`](../crates/ipe-server/src/strict_json.rs): duplicate recursive JSON visitors | Consolidate one tested strict boundary; use [`serde_with` duplicate prevention](https://docs.rs/serde_with/latest/serde_with/rust/maps_duplicate_key_is_error/index.html) for typed map fields where applicable | Nested duplicate keys and trailing data remain rejected. A field-level map helper is not a drop-in replacement for recursive `serde_json::Value` validation |
-| P2 | [Harness](../crates/ipe-integration/examples/support/mod.rs): `Process` drop guard, `WaitAsync` polling, blocking readiness read | Prefer existing `tokio::process::Child` async wait/kill-on-drop and Tokio timeout primitives before adding another process framework | Reap both children, bounded startup/output, private files, Ctrl-C cleanup, environment isolation. Keep synthetic provider behavior in TypeScript |
+| Implemented | [Harness](../crates/ipe-integration/examples/support/mod.rs): blocking readiness reader and custom polling removed | Tokio child handles, async wait/read, timeout, explicit bounded kill/reap and kill-on-drop fallback | Reap both children, bounded startup/output, private files, Ctrl-C cleanup, environment isolation. Keep synthetic provider behavior in TypeScript |
 
 The [tower-http timeout documentation](https://docs.rs/tower-http/latest/tower_http/timeout/index.html)
 distinguishes service timeouts from body-transfer timeouts. A middleware swap must
@@ -103,11 +103,13 @@ only a stub, not an existing custom RPC implementation to replace.
    uses an SDK client; independent wire tests cover malformed/fragmented frames,
    typed-argument rejection, sanitized errors and outstanding-request limits.
    SDK conformance alone does not prove IPE authorization or masking.
-2. Introduce `clap`, then secret wrappers; typed MCP schemas are already generated. Keep public command and
+2. **Implemented for integration:** `clap`, generated MCP schemas and `secrecy`.
+   Extend secret wrappers to enforcement separately. Keep public command and
    error contracts stable; record any intentional change. Reject source URLs,
    arbitrary operations and extra parameters before contacting the provider.
-3. Add explicit process/task shutdown; prove cancellation releases permits and
-   terminates child processes. Evaluate middleware replacement against the existing
+3. **Implemented locally:** workload signal drain and async harness cleanup, tested
+   with SIGTERM during discovery. Enforcement worker shutdown remains open.
+   Evaluate middleware replacement against the existing
    12-second deadline and concurrent-run acceptance cases.
 4. Consolidate strict parsing only after demonstrating equivalent rejection for
    nested objects, arrays, duplicate keys and oversized input. Do not quietly weaken
@@ -125,3 +127,11 @@ the regression baseline. The SDK migration preserves CLI commands and tool opera
 protocol differences include concurrent response ordering, strict SDK initialization,
 and typed parameter failures that may use `isError` results. See the discovery
 guide for frame, outstanding-request and shutdown bounds.
+
+CLI/secret migration dependencies are published `clap` 4.6.7 (minimal parsing/help
+features) and `secrecy` 0.10.3. Cargo audit reports no vulnerabilities or warnings
+for this lockfile. The workload drains for at most 13 seconds on shutdown; the
+harness uses explicit async cleanup, and toolkit runtime teardown is bounded for
+platform stdin reads that cannot be canceled. No new task framework was needed
+inside the integration workload. These changes do not complete enforcement worker
+management or the durable integration lifecycle roadmap.
