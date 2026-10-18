@@ -48,6 +48,17 @@ acceptance runner launches the `.ts` facade directly, requiring no npm install.
 
 ## Independent external agent client
 
+For a managed run with automatic deployment and cleanup:
+
+```sh
+cargo build --locked -p ipe-integration --bins
+cargo run --locked -p ipe-integration --example integration-demo -- --external-agent --report target/external-agent-validation.json
+```
+
+The integration CI job runs this client and uploads sanitized reports. This is an
+automated replay of the independent agent's protocol checks, not a fresh reasoning
+agent or an OS sandbox test.
+
 `external-agent-client.ts` probes an already-running **synthetic discovery demo**
 through CLI subprocesses, direct HTTP, and a hand-written JSON-RPC MCP client.
 It imports neither the workload implementation nor its MCP SDK. It reads only the
@@ -66,7 +77,8 @@ node testing/integration/external-agent-client.ts \
 
 The client permits only loopback HTTP and uses the demo's synthetic metadata
 expectations. The report contains sanitized results, observation time, executable
-hashes and observed adapter digest. An optional `--source-revision FULL_COMMIT_HASH`
+hashes of the supplied executable files and observed adapter digest. File hashes
+do not attest the identity of an arbitrary endpoint's running process. An optional `--source-revision FULL_COMMIT_HASH`
 records the operator-supplied build revision; the client cannot prove that a binary
 was built from that revision. It validates masking, bounded discovery and explicit
 unknown workflow semantics, then rejection of invalid authentication, foreign

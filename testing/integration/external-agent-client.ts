@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { spawnSync, spawn } from 'node:child_process';
-import { createInterface } from 'node:readline';
+import { spawnSync } from 'node:child_process';
+import { boundedResponse, RESPONSE_LIMIT, WireClient } from './external-client-transport.ts';
 import { parseArgs } from 'node:util';
 // Independent external wire client: never imports workload or MCP SDK implementation.
 const { values } = parseArgs({ options: {
@@ -23,9 +23,10 @@ const connectionRef = values['connection-ref'];
 const report: Record<string, any> & { operations: Record<string, unknown>[] } = {
   validation: 'independent external-client deployment exploration',
   observed_at: new Date().toISOString(),
-  scope: 'Same-machine independent agent against existing Rust deployment and synthetic TypeScript ServiceNow facade; no separate OS sandbox or real ServiceNow validation.',
+  scope: 'Same-machine deterministic external client against an existing Rust deployment and synthetic TypeScript ServiceNow facade; no separate OS sandbox, autonomous reasoning claim, or real ServiceNow validation.',
   method: 'CLI subprocesses with agent-only environment; direct authenticated HTTP; independent Node JSON-RPC line client, sequential initialize then initialized notification then tool requests, no rmcp SDK client.',
   disclosure_check: 'Agent token, synthetic provider secret/topology/raw identity markers, physical table identifiers and physical URLs rejected; public json-schema.org schema references permitted.',
+  hash_scope: 'SHA256 identifies supplied executable files. The client launches the supplied toolkit, but does not attest that the existing HTTP workload process runs the supplied workload file.',
   toolkit_binary_sha256: createHash('sha256').update(readFileSync(binary)).digest('hex'),
   workload_binary_sha256: createHash('sha256').update(readFileSync(values.workload!)).digest('hex'),
   operations: [],
@@ -48,16 +49,17 @@ async function check(name: string, operation: () => Promise<unknown>) {
   report.operations.push({name, outcome:'passed', details});
 }
 function cli(args: string[], bearer = token!) {
-  const output = spawnSync(binary, ['--url',endpoint,...args], {env:{IPE_INTEGRATION_TOKEN:bearer}, encoding:'utf8', timeout:15000});
+  const output = spawnSync(binary, ['--url',endpoint,...args], {env:{IPE_INTEGRATION_TOKEN:bearer}, encoding:'utf8', timeout:15000, maxBuffer:RESPONSE_LIMIT, killSignal:'SIGKILL'});
+  require(!output.error && output.signal === null, 'CLI process failed');
   safe(output.stdout); safe(output.stderr);
   return output;
 }
 async function http(method: string, route: string, body: unknown, bearer = token!) {
   const response = await fetch(endpoint+route, {method, redirect:'manual', headers:{authorization:`Bearer ${bearer}`, 'content-type':'application/json'}, ...(body ? {body:JSON.stringify(body)} : {}), signal:AbortSignal.timeout(15000)});
-  const raw = await response.text(); safe(raw);
+  const raw = await boundedResponse(response); safe(raw);
   return {status:response.status, body:raw ? JSON.parse(raw) : null};
 }
-let child: ReturnType<typeof spawn> | undefined;
+let wire: WireClient | undefined;
 try {
   await check('CLI capabilities', async () => {
     const output = cli(['capabilities']); require(output.status === 0,'CLI capabilities failed');
@@ -76,7 +78,7 @@ try {
     require(value.resources[0].fields[0].role === 'lifecycle_state','WASM classification absent'); return value;
   });
   await check('CLI bad agent token', async () => {
-    const output = cli(['discover',connectionRef],'invalid-agent-token'); require(output.status !== 0,'bad token accepted');
+    const output = cli(['discover',connectionRef],'invalid-agent-token'); require(output.status === 1 && JSON.parse(output.stdout).error?.code === 'unauthenticated','incorrect bad-token rejection');
     return {exit_code:output.status, stdout:output.stdout.trim(), stderr:output.stderr.trim()};
   });
   await check('HTTP authenticated discovery', async () => {
@@ -84,33 +86,19 @@ try {
     require(result.status === 200 && result.body.constraints.status === 'unknown','HTTP discovery failed');
     return {status:result.status,coverage:result.body.coverage,constraints:result.body.constraints};
   });
-  for (const [name,body,bearer] of [
-    ['HTTP bad token',{connection_ref:connectionRef},'invalid-agent-token'],
-    ['HTTP foreign reference',{connection_ref:'conn_foreign'},token],
-    ['HTTP injected URL',{connection_ref:connectionRef,url:'https://attacker.invalid'},token],
-  ] as const) await check(name, async () => { const result = await http('POST','/v1/discovery',body,bearer); require(result.status >=400 && result.status <500,'invalid request accepted'); return result; });
-  child = spawn(binary,['--url',endpoint,'mcp'],{env:{IPE_INTEGRATION_TOKEN:token},stdio:['pipe','pipe','pipe']});
-  const pending = new Map(); let nextId=1, stderr='';
-  const mcp = child;
-  mcp.stderr!.setEncoding('utf8'); mcp.stderr!.on('data', text => { stderr+=text; });
-  const lines = createInterface({input:mcp.stdout!});
-  let protocolError;
-  lines.on('line', line => {
-    try { safe(line); const message=JSON.parse(line); const item=pending.get(message.id); if(item){clearTimeout(item.timer);pending.delete(message.id);item.resolve(message);} }
-    catch(error){protocolError=error;for(const item of pending.values())item.reject(error);}
-  });
-  function send(method: string,params: unknown): Promise<Record<string, any>> {
-    const id=nextId++;
-    return new Promise((resolve,reject) => {
-      const timer=setTimeout(()=>{pending.delete(id);reject(Error('MCP response timeout'));},15000);
-      pending.set(id,{resolve,reject,timer}); mcp.stdin!.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');
-    });
-  }
+  for (const [name,body,bearer,expectedStatus,expectedCode] of [
+    ['HTTP bad token',{connection_ref:connectionRef},'invalid-agent-token',401,'unauthorized'],
+    ['HTTP foreign reference',{connection_ref:'conn_foreign'},token,404,'connection_unavailable'],
+    ['HTTP injected URL',{connection_ref:connectionRef,url:'https://attacker.invalid'},token,400,'invalid_request'],
+  ] as const) await check(name, async () => { const result = await http('POST','/v1/discovery',body,bearer); require(result.status === expectedStatus && result.body.code === expectedCode,'incorrect HTTP rejection'); return result; });
+  wire = new WireClient(binary,['--url',endpoint,'mcp'],{IPE_INTEGRATION_TOKEN:token},safe);
+  const mcp = wire;
+  const send = (method: string, params: unknown) => mcp.send(method, params);
   await check('Independent JSON-RPC MCP initialization',async()=>{
     const value=await send('initialize',{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'independent-agent-probe',version:'1'}});
     require(value.result?.protocolVersion === '2025-11-25','MCP negotiation failed');
     require(value.result?.serverInfo?.name === 'ipe-integration-toolkit','MCP server identity incorrect');
-    mcp.stdin!.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');return value.result;
+    mcp.notify('notifications/initialized');return value.result;
   });
   await check('MCP tool listing',async()=>{
     const value=await send('tools/list',{}); const names=value.result?.tools.map((t: {name: string})=>t.name).sort();
@@ -127,19 +115,21 @@ try {
     ['foreign reference','integration_discover',{connection_ref:'conn_foreign'}],
     ['injected URL','integration_discover',{connection_ref:connectionRef,url:'https://attacker.invalid'}]
   ]) await check(`MCP rejects ${label}`,async()=>{
-    const value=await send('tools/call',{name,arguments:args});require(value.error || value.result?.isError,'invalid MCP operation accepted');return value;
+    const value=await send('tools/call',{name,arguments:args});
+    if (label === 'unknown tool') require(value.error?.code === -32602, 'incorrect unknown-tool rejection');
+    else require(value.result?.isError === true && value.result.structuredContent?.error?.code === (label === 'foreign reference' ? 'not_found' : 'invalid_tool_arguments'), 'incorrect MCP rejection');
+    return value;
   });
-  mcp.stdin!.end();
-  await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('MCP exit timeout')),10000);mcp.once('exit',(code)=>{clearTimeout(timer);code===0?resolve():reject(Error('MCP nonzero exit'));});});
-  safe(stderr); require(!protocolError,'nonprotocol stdout observed');
+  await mcp.finish();
   report.operations.push({name:'MCP protocol-only stdout and clean teardown',outcome:'passed'});
   require(createHash('sha256').update(readFileSync(binary)).digest('hex') === report.toolkit_binary_sha256, 'toolkit binary changed during validation');
   require(createHash('sha256').update(readFileSync(values.workload!)).digest('hex') === report.workload_binary_sha256, 'workload binary changed during validation');
   report.passed=true;
 } catch(error) {
   report.passed=false;report.failure={operation:activeName,message:'validation_failed'};
-  if(child)child.kill();
 } finally {
+  try { await wire?.close(); }
+  catch { report.passed=false;report.failure={operation:'MCP cleanup',message:'validation_failed'}; }
   safe(report);
   writeFileSync(values.report!,JSON.stringify(report,null,2)+'\n');
   process.stdout.write(JSON.stringify({passed:report.passed,operations:report.operations.length,failure:report.failure,toolkit_binary_sha256:report.toolkit_binary_sha256,workload_binary_sha256:report.workload_binary_sha256,adapter_digest:report.observed_adapter_digest})+'\n');
