@@ -119,6 +119,7 @@ reads, bounded schema discovery, opaque references, sanitized errors, and equiva
 CLI/MCP access. The reusable [stand-in](../testing/integration/README.md) provides
 synthetic success, denied access, malformed responses and other failure modes.
 
-Later milestones include: sandboxed adapter authoring and deployment, shared-domain
+[The MVP design](../rfcs/010-remediation-adapters-and-external-policy-discovery.md)
+tracks later milestones: sandboxed adapter authoring and deployment, shared-domain
 constraint projections, fact synchronization into enforcement, upgrades, and
 forensic reconstruction. They are not implied by this discovery demonstration.

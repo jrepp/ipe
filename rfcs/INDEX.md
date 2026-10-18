@@ -35,6 +35,13 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | [005](005-control-plane.md) | Control Plane Architecture | Draft | GitOps-based policy synchronization with filesystem-to-tree mapping |
 | [006](006-data-plane.md) | Data Plane Architecture | Draft | AP storage for dynamic data, message plane distribution, high write throughput |
 | [009](009-runtime-facts-and-policy-language.md) | Runtime Facts and Policy Language | Draft | Authenticated push and pull ingestion, mandatory fact expiry, local consistency, typed policy queries, and execution prerequisites |
+| [010](010-remediation-adapters-and-external-policy-discovery.md) | Integration Architecture and End to End MVP | Draft discovery | Two workloads, design ownership, ServiceNow onboarding/discovery first, and milestone proof |
+| [011](011-agent-integration-toolkit.md) | Agent Integration Toolkit and Deployment Lifecycle | Draft discovery | Agent-neutral probing, replay tests, isolated staging, deployment plans, safe upgrades, and operational signals |
+| [012](012-integration-runtime-and-discovery.md) | Integration Runtime and Connection Discovery | Draft discovery | Credential onboarding, first-class bounded discovery, native broker and adapter execution |
+| [013](013-domain-constraints-and-projections.md) | Domain Constraints and Policy Projections | Draft discovery | Observations, externally enforced constraints, outcomes and shared descriptions |
+| [014](014-fact-publication-and-synchronization.md) | Fact Publication and Synchronization | Draft discovery | Change feed, notification/pull, expiry, ordering and receiver recovery |
+| [015](015-policy-access-and-identities.md) | Policy Access and Opaque Identities | Draft discovery | Information release, masking, opaque references and elevation |
+| [016](016-integration-signals-and-audit.md) | Integration Signals and Forensic Audit | Draft discovery | Operational health, delivery visibility, protected evidence and retention |
 
 
 ## Planned RFCs
@@ -162,4 +169,4 @@ Links to relevant documentation, papers, prior art.
 
 ---
 
-**Last updated:** 2026-10-16
+**Last updated:** 2026-10-18

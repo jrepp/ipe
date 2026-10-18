@@ -116,6 +116,8 @@ See **[rfcs/INDEX.md](../rfcs/INDEX.md)** for the complete RFC collection, inclu
 - **RFC-002:** SSE/JSON protocol specification
 - **RFC-003:** Predicate tree storage system
 - **[RFC-009](../rfcs/009-runtime-facts-and-policy-language.md):** Runtime facts, authenticated push/pull ingestion, mandatory TTL, and typed policy language (draft)
+- **[RFC-010](../rfcs/010-remediation-adapters-and-external-policy-discovery.md):** Integration architecture, ServiceNow discovery-first MVP, and roadmap across focused area RFCs (draft discovery)
+- **[RFC-011](../rfcs/011-agent-integration-toolkit.md):** Agent lifecycle; [012](../rfcs/012-integration-runtime-and-discovery.md) runtime/discovery; [013](../rfcs/013-domain-constraints-and-projections.md) domain modeling; [014](../rfcs/014-fact-publication-and-synchronization.md) synchronization; [015](../rfcs/015-policy-access-and-identities.md) access; [016](../rfcs/016-integration-signals-and-audit.md) signals/audit. Each owns its contract and milestone roadmap (draft discovery).
 
 ## Crate Documentation
 
