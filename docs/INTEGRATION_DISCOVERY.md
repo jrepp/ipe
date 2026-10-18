@@ -1,7 +1,7 @@
 # Standalone integration discovery
 
 See the [stack and crate reuse audit](INTEGRATION_STACK.md) for implemented
-dependencies and the planned migration from custom MCP dispatch to `rmcp`.
+dependencies, the completed `rmcp` migration and remaining reuse priorities.
 
 The independent Rust `ipe-integration` workload hosts a WASM metadata adapter and
 an authenticated native HTTPS broker. Rust CLI and MCP clients expose bounded

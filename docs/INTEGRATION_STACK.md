@@ -1,7 +1,8 @@
 # Integration stack and crate reuse audit
 
 Reviewed 2026-10-18; updated after the integration MCP SDK migration.
-This records the implemented stack and the next dependency choices. Rows marked implemented describe shipped branch code; remaining recommendations
+This records the implemented stack and the next dependency choices. Rows marked
+implemented describe branch code; remaining recommendations
 are not installed dependencies or completed migrations.
 
 ## Stack and ownership
