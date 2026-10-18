@@ -12,6 +12,8 @@ async fn standalone_discovery_acceptance() {
     )
     .await
     .expect("local deployment starts");
-    let report = deployment.acceptance().await.expect("black-box acceptance passes");
+    let result = deployment.acceptance().await;
+    deployment.close().await.expect("local child processes are reaped");
+    let report = result.expect("black-box acceptance passes");
     println!("{report}");
 }

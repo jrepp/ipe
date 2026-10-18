@@ -48,3 +48,9 @@ They do not establish multi-tenant authorization, production credential storage,
 OAuth onboarding, live ServiceNow ACL compatibility, durable discovery history,
 complete workflow semantics, an agent package deployment service or enforcement
 publication.
+
+The suite also checks graceful SIGTERM on Unix while discovery is active. CLI
+regressions cover help/error channel isolation, hidden environment values, required
+arguments and URL precedence. Harness cleanup uses bounded Tokio child waits and
+runs before reporting acceptance success or failure; the interactive demo uses the
+same explicit cleanup path.

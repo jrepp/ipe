@@ -1,31 +1,46 @@
 mod support;
-use std::path::PathBuf;
-#[tokio::main]
-async fn main() {
-    if run().await.is_err() {
-        eprintln!("local_integration_demo_failed");
-        std::process::exit(1);
-    }
+use clap::{CommandFactory, Parser};
+use std::{path::PathBuf, process::ExitCode};
+#[derive(Parser)]
+#[command(name = "integration-demo", about = "Deploy and test the local integration stand-in")]
+struct Arguments {
+    #[arg(long)]
+    binary: Option<PathBuf>,
+    #[arg(long)]
+    toolkit: Option<PathBuf>,
+    #[arg(long)]
+    report: Option<PathBuf>,
+    #[arg(long, conflicts_with = "acceptance")]
+    serve: bool,
+    #[arg(long)]
+    acceptance: bool,
 }
-async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let mut args = std::env::args().skip(1);
+#[tokio::main]
+async fn main() -> ExitCode {
+    let args = match Arguments::try_parse() {
+        Ok(args) => args,
+        Err(error) => {
+            if error.kind() == clap::error::ErrorKind::DisplayHelp {
+                print!("{}", Arguments::command().render_long_help());
+                return ExitCode::SUCCESS;
+            }
+            eprintln!("invalid_command_arguments");
+            return ExitCode::from(2);
+        },
+    };
+    if run(args).await.is_err() {
+        eprintln!("local_integration_demo_failed");
+        return ExitCode::FAILURE;
+    }
+    ExitCode::SUCCESS
+}
+async fn run(args: Arguments) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let directory = std::env::current_exe()?.parent().unwrap().parent().unwrap().to_path_buf();
-    let mut binary = directory.join("ipe-integration");
-    let mut toolkit = directory.join("integration-toolkit");
-    let mut serve = false;
-    let mut acceptance = false;
-    let mut report: Option<PathBuf> = None;
-    while let Some(arg) = args.next() {
-        match arg.as_str() {
-        "--binary" => binary = args.next().ok_or("missing binary")?.into(),
-        "--toolkit" => toolkit = args.next().ok_or("missing toolkit")?.into(),
-        "--report" => report = Some(args.next().ok_or("missing report")?.into()),
-        "--serve" => serve = true,
-        "--acceptance" => acceptance = true,
-        _ => return Err("usage: integration-demo [--serve] [--acceptance] [--binary PATH] [--toolkit PATH] [--report PATH]".into()),
-    }
-    }
+    let binary = args.binary.unwrap_or_else(|| directory.join("ipe-integration"));
+    let toolkit = args.toolkit.unwrap_or_else(|| directory.join("integration-toolkit"));
+    let Arguments { report, serve, acceptance, .. } = args;
     let mut deployment = support::Deployment::start(&binary, &toolkit).await?;
+    let operation: Result<(), Box<dyn std::error::Error + Send + Sync>> = async {
     let result = if acceptance {
         deployment.acceptance().await?
     } else {
@@ -44,4 +59,21 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         deployment.serve().await?;
     }
     Ok(())
+    }.await;
+    let cleanup = deployment.close().await;
+    operation?;
+    cleanup?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn acceptance_and_interactive_serve_are_mutually_exclusive() {
+        let error = Arguments::try_parse_from(["integration-demo", "--acceptance", "--serve"])
+            .err()
+            .unwrap();
+        assert_eq!(error.kind(), clap::error::ErrorKind::ArgumentConflict);
+    }
 }

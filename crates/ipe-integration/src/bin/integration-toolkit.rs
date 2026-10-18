@@ -1,8 +1,11 @@
 //! Agent CLI and MCP transport. Provider credentials belong exclusively to the workload.
+use clap::{CommandFactory, Parser, Subcommand};
+use secrecy::{ExposeSecret, SecretString};
 use serde::de::{self, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use serde_json::{json, Map, Value};
 use std::io::{self, Write};
+use std::process::ExitCode;
 use std::time::Duration;
 
 const MAX_MESSAGE: usize = 65536;
@@ -82,11 +85,11 @@ fn valid_ref(value: &str) -> bool {
 
 struct Client {
     origin: reqwest::Url,
-    token: String,
+    token: SecretString,
     http: reqwest::Client,
 }
 impl Client {
-    fn new(origin: &str, token: String) -> Result<Self> {
+    fn new(origin: &str, token: SecretString) -> Result<Self> {
         let origin = reqwest::Url::parse(origin).map_err(|_| "invalid_workload_endpoint")?;
         if !matches!(origin.scheme(), "http" | "https")
             || origin.host().is_none()
@@ -108,7 +111,9 @@ impl Client {
         {
             return Err("invalid_workload_endpoint");
         }
-        if token.is_empty() || !token.bytes().all(|b| b > 32 && b < 127) {
+        if token.expose_secret().is_empty()
+            || !token.expose_secret().bytes().all(|b| b > 32 && b < 127)
+        {
             return Err("missing_or_invalid_workload_credential");
         }
         let http = reqwest::Client::builder()
@@ -140,7 +145,7 @@ impl Client {
             self.http.get(url)
         };
         let mut response = request
-            .bearer_auth(&self.token)
+            .bearer_auth(self.token.expose_secret())
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .send()
@@ -402,63 +407,100 @@ async fn mcp(client: Client) -> i32 {
     }
     i32::from(failed.load(Ordering::Relaxed))
 }
-#[tokio::main]
-async fn main() {
-    let mut args = std::env::args().skip(1);
-    let mut url =
-        std::env::var("IPE_INTEGRATION_URL").unwrap_or_else(|_| "http://127.0.0.1:9010".into());
-    let mut token_env = "IPE_INTEGRATION_TOKEN".to_owned();
-    let mut positional = Vec::new();
-    while let Some(arg) = args.next() {
-        match arg.as_str() {
-            "--url" => {
-                let Some(value) = args.next() else {
-                    usage();
-                };
-                url = value;
-            },
-            "--token-env" => {
-                let Some(value) = args.next() else {
-                    usage();
-                };
-                token_env = value;
-            },
-            "--help" | "-h" => {
-                println!("integration-toolkit [--url ORIGIN] [--token-env VARIABLE] capabilities|check REF|discover REF|mcp");
-                return;
-            },
-            _ if arg.starts_with('-') => usage(),
-            _ => positional.push(arg),
-        }
-    }
-    let Some(command) = positional.first().map(String::as_str) else {
-        usage();
+#[derive(Parser)]
+#[command(
+    name = "integration-toolkit",
+    about = "Agent CLI and MCP access to the Integration Workload",
+    disable_help_subcommand = true
+)]
+struct Arguments {
+    /// Operator-configured workload origin. Plain HTTP requires numeric loopback.
+    #[arg(
+        long,
+        env = "IPE_INTEGRATION_URL",
+        default_value = "http://127.0.0.1:9010",
+        global = true,
+        hide_env_values = true
+    )]
+    url: String,
+    /// Environment variable containing the workload bearer credential.
+    #[arg(long, default_value = "IPE_INTEGRATION_TOKEN", global = true)]
+    token_env: String,
+    #[command(subcommand)]
+    command: Operation,
+}
+#[derive(Subcommand)]
+enum Operation {
+    /// List authorized connections and discovery capabilities.
+    Capabilities,
+    /// Check metadata access for an opaque connection reference.
+    Check { connection_ref: String },
+    /// Discover bounded metadata for an opaque connection reference.
+    Discover { connection_ref: String },
+    /// Serve MCP over standard input/output.
+    Mcp,
+}
+fn main() -> ExitCode {
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(runtime) => runtime,
+        Err(_) => {
+            eprintln!("toolkit_runtime_unavailable");
+            return ExitCode::FAILURE;
+        },
     };
-    if !matches!(
-        (command, positional.len()),
-        ("capabilities" | "mcp", 1) | ("check" | "discover", 2)
-    ) {
-        usage();
-    }
-    let result = match Client::new(&url, std::env::var(token_env).unwrap_or_default()) {
-        Ok(client) if command == "mcp" => std::process::exit(mcp(client).await),
-        Ok(client) => client.call(command, positional.get(1).map(String::as_str)).await,
+    let status = runtime.block_on(run());
+    // Tokio stdin is backed by a blocking read that cannot be canceled on all
+    // platforms. Bound runtime teardown after protocol termination. Application
+    // futures and owned credentials have already been dropped by run().
+    runtime.shutdown_timeout(Duration::from_millis(100));
+    status
+}
+async fn run() -> ExitCode {
+    let raw: Vec<_> = std::env::args_os().collect();
+    // Even parse failures/help must not write prose to an MCP protocol stream.
+    let mcp_requested = raw.iter().skip(1).any(|arg| arg == "mcp");
+    let args = match Arguments::try_parse_from(raw) {
+        Ok(args) => args,
+        Err(error) => {
+            if error.kind() == clap::error::ErrorKind::DisplayHelp {
+                let text = Arguments::command().render_long_help().to_string();
+                if mcp_requested {
+                    eprint!("{text}");
+                } else {
+                    print!("{text}");
+                }
+                return ExitCode::SUCCESS;
+            }
+            // clap diagnostics can include arbitrary user values, so expose only a fixed code.
+            eprintln!("invalid_command_arguments");
+            return ExitCode::from(2);
+        },
+    };
+    let token = SecretString::from(std::env::var(&args.token_env).unwrap_or_default());
+    let is_mcp = matches!(args.command, Operation::Mcp);
+    let result = match Client::new(&args.url, token) {
+        Ok(client) => match args.command {
+            Operation::Mcp => return ExitCode::from(mcp(client).await as u8),
+            Operation::Capabilities => client.call("capabilities", None).await,
+            Operation::Check { connection_ref } => {
+                client.call("check", Some(&connection_ref)).await
+            },
+            Operation::Discover { connection_ref } => {
+                client.call("discover", Some(&connection_ref)).await
+            },
+        },
         Err(code) => Err(code),
     };
     let (value, status) = match result {
-        Ok(data) => (data, 0),
-        Err(code) => (json!({"error":{"code":code}}), 1),
+        Ok(data) => (data, ExitCode::SUCCESS),
+        Err(code) => (json!({"error":{"code":code}}), ExitCode::FAILURE),
     };
-    if command == "mcp" {
+    if is_mcp {
         let _ = emit(&mut io::stderr(), &value);
     } else {
         let _ = emit(&mut io::stdout(), &value);
     }
-    std::process::exit(status);
-}
-fn usage() -> ! {
-    eprintln!("Usage: integration-toolkit [--url ORIGIN] [--token-env VARIABLE] capabilities|check REF|discover REF|mcp");
-    std::process::exit(2)
+    status
 }
 
 #[cfg(test)]

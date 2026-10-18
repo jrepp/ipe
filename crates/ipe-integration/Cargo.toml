@@ -7,6 +7,8 @@ default-run = "ipe-integration"
 description = "Bounded native integration discovery workload"
 
 [dependencies]
+clap = { version = "4.6.7", default-features = false, features = ["std", "derive", "env", "help", "usage"] }
+secrecy = "0.10.3"
 axum.workspace = true
 tokio.workspace = true
 serde.workspace = true
