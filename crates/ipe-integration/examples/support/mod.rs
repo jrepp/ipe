@@ -2,13 +2,17 @@
 use serde_json::{json, Value};
 use std::{
     fs,
-    io::{BufRead, BufReader, Write},
+    io::Write,
     net::TcpListener,
     path::{Path, PathBuf},
-    process::{Child, Command, Stdio},
+    process::Stdio,
     time::{Duration, Instant},
 };
 use tempfile::TempDir;
+use tokio::{
+    io::{AsyncBufReadExt, AsyncReadExt, BufReader},
+    process::{Child, Command},
+};
 
 const SECRET: &str = "provider-secret-DO-NOT-DISCLOSE";
 const TOPOLOGY: &str = "internal-remediation.corp.example";
@@ -22,16 +26,19 @@ fn require(ok: bool, message: &'static str) -> Result<()> {
     }
 }
 struct Process(Child);
-impl Drop for Process {
-    fn drop(&mut self) {
-        let _ = self.0.kill();
-        let _ = self.0.wait();
+impl Process {
+    async fn close(&mut self) -> Result<()> {
+        if self.0.try_wait()?.is_none() {
+            self.0.start_kill()?;
+        }
+        tokio::time::timeout(Duration::from_secs(5), self.0.wait()).await??;
+        Ok(())
     }
 }
 
 pub struct Deployment {
     workload: Option<Process>,
-    _fixture: Process,
+    fixture_process: Process,
     directory: TempDir,
     binary: PathBuf,
     toolkit: PathBuf,
@@ -58,18 +65,28 @@ impl Deployment {
                 .stdin(Stdio::null())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::null())
+                .kill_on_drop(true)
                 .spawn()?,
         );
         let stdout = fixture_process.0.stdout.take().ok_or("fixture output missing")?;
-        let line = tokio::time::timeout(
-            Duration::from_secs(20),
-            tokio::task::spawn_blocking(move || {
-                let mut line = String::new();
-                BufReader::new(stdout).read_line(&mut line).map(|_| line)
-            }),
-        )
-        .await???;
-        let fixture: Value = serde_json::from_str(&line)?;
+        let mut line = String::new();
+        let ready = tokio::time::timeout(Duration::from_secs(20), async {
+            BufReader::new(stdout.take(16 * 1024)).read_line(&mut line).await?;
+            require(line.ends_with('\n'), "fixture readiness missing or oversized")?;
+            serde_json::from_str::<Value>(&line).map_err(Into::into)
+        })
+        .await;
+        let fixture: Value = match ready {
+            Ok(Ok(value)) => value,
+            failure => {
+                fixture_process.close().await?;
+                return match failure {
+                    Ok(Err(error)) => Err(error),
+                    Err(error) => Err(error.into()),
+                    _ => unreachable!(),
+                };
+            },
+        };
         let port = TcpListener::bind("127.0.0.1:0")?.local_addr()?.port();
         let token = format!(
             "agent-{}-local-only-token",
@@ -82,7 +99,7 @@ impl Deployment {
         let config = json!({"listen":format!("127.0.0.1:{port}"), "api_token_env":"IPE_INTEGRATION_TOKEN", "connection_ref":"conn_acceptance", "origin":fixture["origin"], "credential_env":"SERVICENOW_TOKEN", "ca_cert_path":fixture["ca_cert_path"], "identity_key_env":"IPE_INTEGRATION_IDENTITY_KEY", "resources":[]});
         let mut deployment = Self {
             workload: None,
-            _fixture: fixture_process,
+            fixture_process,
             directory,
             binary: binary.into(),
             toolkit: toolkit.into(),
@@ -97,11 +114,16 @@ impl Deployment {
             identity_key,
             url: format!("http://127.0.0.1:{port}"),
         };
-        deployment.restart().await?;
+        if let Err(error) = deployment.restart().await {
+            deployment.close().await?;
+            return Err(error);
+        }
         Ok(deployment)
     }
     async fn restart(&mut self) -> Result<()> {
-        self.workload.take();
+        if let Some(mut workload) = self.workload.take() {
+            workload.close().await?;
+        }
         let path = self.directory.path().join("config.json");
         private_write(&path, &serde_json::to_string(&self.config)?)?;
         let log = fs::OpenOptions::new()
@@ -117,27 +139,38 @@ impl Deployment {
                 .env("IPE_INTEGRATION_IDENTITY_KEY", &self.identity_key)
                 .stdout(log.try_clone()?)
                 .stderr(log)
+                .kill_on_drop(true)
                 .spawn()?,
         ));
-        let deadline = Instant::now() + Duration::from_secs(20);
-        loop {
-            require(
-                self.workload.as_mut().unwrap().0.try_wait()?.is_none(),
-                "workload exited before readiness",
-            )?;
-            if self
-                .client
-                .get(format!("{}/v1/capabilities", self.url))
-                .bearer_auth(&self.token)
-                .send()
-                .await
-                .is_ok()
-            {
-                return Ok(());
+        tokio::time::timeout(Duration::from_secs(20), async {
+            loop {
+                require(
+                    self.workload.as_mut().unwrap().0.try_wait()?.is_none(),
+                    "workload exited before readiness",
+                )?;
+                if self
+                    .client
+                    .get(format!("{}/v1/capabilities", self.url))
+                    .bearer_auth(&self.token)
+                    .send()
+                    .await
+                    .is_ok_and(|response| response.status().is_success())
+                {
+                    return Ok(());
+                }
+                tokio::time::sleep(Duration::from_millis(30)).await;
             }
-            require(Instant::now() < deadline, "workload readiness timeout")?;
-            tokio::time::sleep(Duration::from_millis(30)).await;
-        }
+        })
+        .await?
+    }
+    pub async fn close(&mut self) -> Result<()> {
+        let workload = if let Some(mut process) = self.workload.take() {
+            process.close().await
+        } else {
+            Ok(())
+        };
+        let fixture = self.fixture_process.close().await;
+        workload.and(fixture)
     }
     fn redacted(&self, value: &str) -> Result<()> {
         for marker in [
@@ -554,6 +587,39 @@ impl Deployment {
         )?;
         self.control(json!({"mode":"success"})).await?;
         checks.push("unseeded discovery access denial");
+        #[cfg(unix)]
+        {
+            self.control(json!({"delay_seconds":0.3,"clear_requests":true})).await?;
+            let pid = self.workload.as_ref().unwrap().0.id().ok_or("workload missing")?;
+            let (discovery, termination) = tokio::join!(self.discover(), async {
+                tokio::time::timeout(Duration::from_secs(3), async {
+                    while self.requests().await?.is_empty() {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
+                    }
+                    Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+                })
+                .await??;
+                let status = Command::new("kill")
+                    .args(["-TERM", &pid.to_string()])
+                    .kill_on_drop(true)
+                    .status()
+                    .await?;
+                require(status.success(), "could not signal workload")
+            });
+            termination?;
+            let (code, result) = discovery?;
+            require(
+                code == 200 && result["resources"][0]["status"] == "observed",
+                "SIGTERM interrupted active discovery",
+            )?;
+            let status = tokio::time::timeout(
+                Duration::from_secs(14),
+                self.workload.as_mut().unwrap().0.wait(),
+            )
+            .await??;
+            require(status.success(), "SIGTERM did not shut down gracefully")?;
+            checks.push("SIGTERM drains active discovery and exits successfully");
+        }
         self.redacted(&fs::read_to_string(self.directory.path().join("workload.log"))?)?;
         checks.push("workload log redaction");
         Ok(json!({"suite":"rust-integration-discovery","passed":true,"checks":checks}))
@@ -562,22 +628,8 @@ impl Deployment {
         let handoff = self.directory.path().join("agent.env");
         private_write(&handoff, &format!("export IPE_INTEGRATION_TOKEN='{}'\n", self.token))?;
         println!("Local workload: {}\nOperator-only token file: {}\nConnection: conn_acceptance\nCtrl-C tears down the deployment.", self.url, handoff.display());
-        tokio::select! { result = tokio::signal::ctrl_c() => { result?; }, result = self.workload.as_mut().unwrap().0.wait_async() => { result?; return Err("workload exited".into()); } }
+        tokio::select! { result = tokio::signal::ctrl_c() => { result?; }, result = self.workload.as_mut().unwrap().0.wait() => { result?; return Err("workload exited".into()); } }
         Ok(())
-    }
-}
-// Keep child lifecycle synchronous and bounded; use polling for the interactive demo.
-trait WaitAsync {
-    async fn wait_async(&mut self) -> std::io::Result<()>;
-}
-impl WaitAsync for Child {
-    async fn wait_async(&mut self) -> std::io::Result<()> {
-        loop {
-            if self.try_wait()?.is_some() {
-                return Ok(());
-            }
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        }
     }
 }
 fn private_write(path: &Path, text: &str) -> Result<()> {

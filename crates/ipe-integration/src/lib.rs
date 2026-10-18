@@ -6,6 +6,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::{net::SocketAddr, sync::Arc, time::Duration};
@@ -40,10 +41,10 @@ struct Field {
 }
 struct Runtime {
     adapter: wasm::Adapter,
-    identity_key: Option<String>,
+    identity_key: Option<SecretString>,
     config: Config,
-    token: String,
-    credential: String,
+    token: SecretString,
+    credential: SecretString,
     client: reqwest::Client,
     origin: reqwest::Url,
     permit: Semaphore,
@@ -101,27 +102,36 @@ pub fn application(config: Config) -> Result<Router, &'static str> {
         }
     }
     let identity_key = match &config.identity_key_env {
-        Some(key) => Some(std::env::var(key).map_err(|_| "missing_identity_key")?),
+        Some(key) => {
+            Some(SecretString::from(std::env::var(key).map_err(|_| "missing_identity_key")?))
+        },
         None => None,
     };
-    if config.resources.is_empty() && !identity_key.as_ref().is_some_and(|k| k.len() >= 32) {
+    if config.resources.is_empty()
+        && !identity_key.as_ref().is_some_and(|k| k.expose_secret().len() >= 32)
+    {
         return Err("catalog_requires_identity_key");
     }
-    let token = std::env::var(&config.api_token_env).map_err(|_| "missing_api_token")?;
-    let credential =
-        std::env::var(&config.credential_env).map_err(|_| "missing_provider_credential")?;
-    if token.len() < 32
-        || credential.is_empty()
-        || credential.len() > 8192
-        || token.len() > 8192
-        || token == credential
+    let token =
+        SecretString::from(std::env::var(&config.api_token_env).map_err(|_| "missing_api_token")?);
+    let credential = SecretString::from(
+        std::env::var(&config.credential_env).map_err(|_| "missing_provider_credential")?,
+    );
+    if token.expose_secret().len() < 32
+        || credential.expose_secret().is_empty()
+        || credential.expose_secret().len() > 8192
+        || token.expose_secret().len() > 8192
+        || token.expose_secret() == credential.expose_secret()
         || identity_key.as_ref().is_some_and(|key| {
-            key.len() < 32 || key.len() > 8192 || key == &token || key == &credential
+            key.expose_secret().len() < 32
+                || key.expose_secret().len() > 8192
+                || key.expose_secret() == token.expose_secret()
+                || key.expose_secret() == credential.expose_secret()
         })
     {
         return Err("invalid_credentials");
     }
-    reqwest::header::HeaderValue::from_str(&format!("Bearer {credential}"))
+    reqwest::header::HeaderValue::from_str(credential.expose_secret())
         .map_err(|_| "invalid_credentials")?;
     let mut builder = reqwest::Client::builder()
         .no_proxy()
@@ -159,7 +169,7 @@ fn authorize(state: &Runtime, headers: &HeaderMap) -> Result<(), ApiError> {
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
         .unwrap_or("");
-    if !bool::from(presented.as_bytes().ct_eq(state.token.as_bytes())) {
+    if !bool::from(presented.as_bytes().ct_eq(state.token.expose_secret().as_bytes())) {
         return Err(error(StatusCode::UNAUTHORIZED, "unauthorized"));
     }
     Ok(())
@@ -285,9 +295,10 @@ async fn discover(
 }
 fn opaque(state: &Runtime, domain: &str, value: &str) -> String {
     use hmac::{Hmac, Mac};
-    let mut mac =
-        Hmac::<sha2::Sha256>::new_from_slice(state.identity_key.as_ref().unwrap().as_bytes())
-            .expect("HMAC accepts any key length");
+    let mut mac = Hmac::<sha2::Sha256>::new_from_slice(
+        state.identity_key.as_ref().unwrap().expose_secret().as_bytes(),
+    )
+    .expect("HMAC accepts any key length");
     mac.update(state.config.connection_ref.as_bytes());
     mac.update(b"\0");
     mac.update(domain.as_bytes());
@@ -396,7 +407,7 @@ async fn read(
     let mut response = state
         .client
         .get(url)
-        .bearer_auth(&state.credential)
+        .bearer_auth(state.credential.expose_secret())
         .header("Accept", "application/json")
         .send()
         .await
@@ -435,7 +446,38 @@ pub async fn serve(config: Config) -> Result<(), &'static str> {
     let address = config.listen;
     let app = application(config)?;
     let listener = tokio::net::TcpListener::bind(address).await.map_err(|_| "listen_failed")?;
-    axum::serve(listener, app).await.map_err(|_| "serve_failed")
+    let (stop_tx, stop_rx) = tokio::sync::oneshot::channel();
+    let server = axum::serve(listener, app).with_graceful_shutdown(async {
+        let _ = stop_rx.await;
+    });
+    let server = std::future::IntoFuture::into_future(server);
+    tokio::pin!(server);
+    tokio::select! {
+        result = &mut server => result.map_err(|_| "serve_failed"),
+        signal = shutdown_signal() => {
+            signal?;
+            let _ = stop_tx.send(());
+            // Requests already have a 12-second deadline. Leave one second for cleanup.
+            tokio::time::timeout(Duration::from_secs(13), &mut server)
+                .await
+                .map_err(|_| "shutdown_deadline")?
+                .map_err(|_| "serve_failed")
+        }
+    }
+}
+async fn shutdown_signal() -> Result<(), &'static str> {
+    #[cfg(unix)]
+    {
+        let mut terminate =
+            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                .map_err(|_| "signal_unavailable")?;
+        tokio::select! {
+            result = tokio::signal::ctrl_c() => result.map_err(|_| "signal_unavailable"),
+            _ = terminate.recv() => Ok(()),
+        }
+    }
+    #[cfg(not(unix))]
+    tokio::signal::ctrl_c().await.map_err(|_| "signal_unavailable")
 }
 
 #[cfg(test)]
@@ -488,8 +530,8 @@ mod tests {
             adapter: wasm::Adapter::load(None).unwrap(),
             config: test_config("https://example.com"),
             identity_key: Some("independent-test-identity-key-32-bytes".into()),
-            token: String::new(),
-            credential: String::new(),
+            token: SecretString::from(String::new()),
+            credential: SecretString::from(String::new()),
             client: reqwest::Client::new(),
             origin: reqwest::Url::parse("https://example.com").unwrap(),
             permit: Semaphore::new(1),

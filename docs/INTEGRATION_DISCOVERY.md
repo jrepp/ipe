@@ -149,3 +149,36 @@ remain separate milestones.
 
 See the [integration architecture and MVP](../rfcs/010-remediation-adapters-and-external-policy-discovery.md)
 for the roadmap and focused design contracts.
+
+## CLI, secret ownership and shutdown
+
+The workload, toolkit and deployment example use `clap` for argument parsing.
+Existing commands and flags remain available; `--help` lists them. Parse failures
+return exit code 2 and the fixed `invalid_command_arguments` diagnostic on stderr,
+without echoing supplied values. Toolkit `mcp --help` also uses stderr, keeping
+stdout reserved for protocol traffic. `--url` overrides `IPE_INTEGRATION_URL`;
+help does not display that environment value. The deployment example rejects
+combining `--acceptance` and `--serve` because acceptance shuts down the workload
+as part of its lifecycle checks.
+
+The integration workload stores its API token, provider credential and identity
+key in `secrecy::SecretString`; the toolkit uses the same wrapper for its bearer
+token. Access is explicit at native validation, authentication, HMAC and HTTP
+boundaries. Wrappers protect against accidental debug output and zeroize their
+owned storage on drop. They do not erase process environment values or copies
+made by HTTP/TLS libraries. These changes do not add a credential vault or change
+the enforcement server's credential storage.
+
+Ctrl-C, or SIGTERM on Unix, stops workload intake and lets active requests drain
+for up to 13 seconds, covering the existing 12-second request deadline plus cleanup.
+An overrun produces a sanitized `shutdown_deadline` failure. CLI entrypoints return
+normally rather than bypassing destructors with `process::exit`. The toolkit bounds
+Tokio runtime teardown after protocol completion because a platform stdin read
+may not be cancelable.
+
+The local deployment harness uses Tokio process handles, bounded async readiness,
+and explicit cleanup that kills and reaps children before returning. `kill_on_drop`
+is a fallback for interrupted paths. Acceptance verifies successful SIGTERM drain
+while discovery is in progress; the interactive demo closes its children and
+removes temporary files after Ctrl-C. This is local process lifecycle management,
+not durable integration jobs or a deployment controller.
