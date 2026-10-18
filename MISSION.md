@@ -1,10 +1,12 @@
 # Mission
 
-Build a fast, reliable authorization engine in Rust. Make authorization decisions in under 100 microseconds. Update policies without restarting services. Let teams manage authorization rules separately from application code.
+Build a fast, reliable authorization engine in Rust. Make authorization decisions without network round-trips to external systems. Update policies without restarting services. Let teams manage authorization rules separately from application code.
+
+> **Removed legacy engine.** The original embedded stack — hand-written parser, AST, bytecode compiler, stack interpreter, lock-free policy store, and Cranelift JIT with adaptive tiering — was removed after the version-2 runtime landed. This document now describes the v2 runtime: scoped policy documents, TTL-bounded runtime facts, and snapshot evaluation. The implemented workflow lives in [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md).
 
 ## Executive Summary
 
-**IPE (Idempotent Predicate Engine)** is a production-grade authorization engine written in Rust that evaluates policies in under 50 microseconds with zero-downtime updates. The core engine is complete with 248 passing tests (94% coverage), featuring a bytecode compiler, lock-free policy store, and optional RocksDB-backed stores for approvals and relationships with multi-tenant isolation. Key needs include finishing JIT compilation for sub-10μs evaluation, building a gRPC control plane for policy management, and creating language bindings for Python, Node.js, and Go. The architecture separates authorization into three layers: a control plane for policy management, a data plane using immutable snapshots for lock-free concurrent reads, and a context plane storing authorization data (approvals, relationships) separately from application data in RocksDB—enabling teams to update policies independently, scale each layer separately, and maintain consistent sub-100μs latency without garbage collection pauses.
+**IPE (Idempotent Predicate Engine)** is an authorization runtime written in Rust. The version-2 runtime service evaluates language-2 policy documents against TTL-bounded runtime facts and returns allow, deny, or indeterminate for scoped tenants and environments. Facts persist in RocksDB with atomic commits, an HTTPS pull connector, and mandatory expiry; policy documents publish as immutable revisions with atomic activation, content digests, and typed `policy.*` parameters. Every decision reads one immutable snapshot and rechecks its earliest evidence deadline before allowing. Work that remains includes production hardening (persistence and replication bounds, audit durability), a control plane for policy management, and language bindings. The architecture separates authorization into a policy layer (versioned documents and bootstrap sources), a fact layer (expiring typed observations), and an evaluation layer (budgeted snapshot evaluation) — enabling teams to update policies independently of running decisions and to keep authorization context out of application databases.
 
 ---
 
@@ -13,11 +15,11 @@ Build a fast, reliable authorization engine in Rust. Make authorization decision
 IPE evaluates authorization policies. When your application asks "can user X do action Y on resource Z?", IPE answers in microseconds.
 
 **Core capabilities:**
-- Evaluate policies in under 50μs (interpreter) or 10μs (JIT compiler)
-- Update policies without downtime or request blocking
-- Store authorization context separately from application data
-- Isolate tenant data in multi-tenant systems
-- Track temporary approvals with automatic expiration
+- Evaluate language-2 policies against schema-validated caller input and expiring typed facts
+- Publish policy documents as immutable revisions with atomic activation
+- Keep authorization context (facts, approvals, relationships) out of application data
+- Isolate tenant data in multi-tenant scopes
+- Track temporary approvals with automatic expiration (mandatory TTL)
 
 ## Why IPE Exists
 
@@ -47,11 +49,11 @@ IPE solves these problems with three key decisions:
 **1. Use Rust**
 No garbage collection means no latency spikes. Memory safety prevents security vulnerabilities. This is critical infrastructure, so reliability matters more than ease of development.
 
-**2. Lock-free updates**
-Policies are immutable snapshots. New policies swap in atomically. In-flight requests finish with old policies. New requests get new policies. No blocking, no coordination.
+**2. Immutable revisions and snapshots**
+Policy documents activate atomically, one revision at a time. Each evaluation captures the active revisions and one fact snapshot, so a concurrent update cannot change a running decision.
 
 **3. Separate storage**
-Application data stays in your database. Authorization context (approvals, relationships) lives in RocksDB. Policies compile to bytecode. Each layer scales independently.
+Application data stays in your database. Authorization context (runtime facts, approvals, relationships) lives in RocksDB. Policies are versioned documents. Each layer scales independently.
 
 ---
 
@@ -67,7 +69,7 @@ Rust prevents these problems at compile time. No garbage collector means no unpr
 
 Authorization systems do far more reads than writes (typically 1000:1 ratio). IPE optimizes for this pattern.
 
-Policies live in immutable snapshots. Multiple threads read the same snapshot with no locks. Updates happen in the background: compile new policies, create new snapshot, swap the pointer. Old readers keep using the old snapshot until they finish. New readers get the new snapshot immediately.
+Policies live in immutable revisions and snapshots. Readers — evaluations — capture one snapshot and finish against it with no locks. Updates happen out of band: publish a revision, activate it atomically, and clean expired facts on a schedule. Running evaluations keep their captured snapshot; new evaluations get the new state.
 
 This means:
 - Readers never wait
@@ -103,7 +105,7 @@ The core engine has zero external dependencies. No network calls. No database re
 
 **Optional features:**
 - RocksDB stores for approvals and relationships (compile-time flag)
-- JIT compilation for faster evaluation (compile-time flag)
+- Pull connectors for HTTPS snapshot sources (bootstrap configuration)
 - Control plane for policy management (separate service)
 
 Start simple. Add complexity only when you need it.
@@ -120,31 +122,28 @@ Each policy includes a plain English description. The policy language reads like
 
 ### What Works Today
 
-**Core engine (248 tests, 94% coverage):**
-- Parse, compile, and interpret policies
-- Update policies without downtime
-- RocksDB stores for approvals and relationships
-- Multi-tenant data isolation with automatic expiration
-- Resource-Action-Request evaluation model
+**v2 runtime (ipe-server + ipe-core):**
+- Scoped HTTP API: push fact commits, evaluation, catalog inspection, policy publication, candidate testing
+- Language-2 policies with triggers, typed fact bindings, and aggregate requirements
+- Runtime facts with mandatory TTL, atomic commits, revision-conflict and replay detection
+- HTTPS pull connectors with whole-generation snapshot replacement
+- Policy documents with immutable revisions, atomic activation, digests, and external provenance
+- RocksDB stores for approvals and relationships (embedded, separate from the runtime API)
 
-You can embed this in Rust applications now. The interpreter delivers consistent sub-50μs latency.
+Run the external acceptance suite (`python3 scripts/accept-runtime-data.py`) or `make policy-acceptance` to see the real server end to end.
 
 ### What's In Progress
 
-**Execution tracing:**
-- Low-overhead tracing (under 5% performance impact)
-- OpenTelemetry integration
-- Helps debug why policies allow or deny
+**Production hardening:**
+- Persistence and replication bounds beyond the single-node store
+- Durable audit logging
+- Performance characterization under production load
 
 ### What's Not Started
 
-**JIT compilation:**
-- Target 10μs latency for frequently-used policies
-- Infrastructure exists, needs integration
-
 **Control plane:**
-- gRPC API for managing policies
-- Version control and rollback
+- gRPC/API for managing policies across scopes
+- Staging, approval, and activation workflows
 - A/B testing and gradual rollouts
 
 **Developer tools:**
@@ -162,13 +161,17 @@ You can embed this in Rust applications now. The interpreter delivers consistent
 
 ## Repository Structure
 
-The project is organized into six crates:
+The project is organized into several crates:
 
-**ipe-core** (9,698 lines, 95% complete)
-- The authorization engine
-- Parser, compiler, interpreter
-- Policy store, approval store, relationship store
+**ipe-core**
+- Runtime facts (TTL, schemas, snapshots), policy documents (revisions, provenance), and language-2 evaluation with budgets
+- Approval and relationship stores behind the `approvals` feature
 - Location: `crates/ipe-core/`
+- Owner: Platform team
+
+**ipe-server**
+- The axum HTTP runtime service: credentials, connectors, clock, scoped routes
+- Location: `crates/ipe-server/`
 - Owner: Platform team
 
 **ipe-control** (stub)
@@ -211,15 +214,15 @@ These initiatives would suit teams taking over the project:
 Make IPE production-grade for high-scale deployments.
 
 **Tasks:**
-- Finish JIT compilation and adaptive tiering
-- Build gRPC control plane for policy management
+- Harden persistence: replication bounds, disaster recovery, audit durability
+- Build a control plane for policy management
 - Add comprehensive metrics and distributed tracing
 - Security audit and penetration testing
-- Load test at 1M+ operations/sec
+- Characterize performance under production load
 - Write SRE runbooks
 
 **Success looks like:**
-- Hot policies evaluate in under 10μs
+- Replicated deployment with a stated convergence bound
 - No security vulnerabilities found
 - 99.99% uptime in production
 - 10+ organizations using it
@@ -279,7 +282,7 @@ Add features large organizations need.
 
 ### Can you compile OPA and Cedar policies to IPE?
 
-Yes, but not perfectly. IPE's bytecode is simpler than both Rego and Cedar.
+Yes, but not perfectly. IPE's language is smaller than both Rego and Cedar.
 
 ### OPA/Rego (60-70% compatible)
 
@@ -347,10 +350,9 @@ Build transpilers for Cedar (higher priority) and Rego (common patterns only). P
 Good metrics tell you if IPE solves real problems:
 
 **Performance:**
-- Policies evaluate in under 50μs (10μs with JIT)
-- Handles 100k+ decisions per second per core
-- Binary under 5MB
-- Uses under 200 bytes per policy
+- No published latency targets; performance under production load is not yet characterized
+- Bounded evaluation via instruction and collection-visit budgets
+- Bounded storage with explicit capacity limits
 
 **Reliability:**
 - 99.99% uptime
@@ -405,7 +407,7 @@ IPE's immutable snapshots make updates atomic. Swap in new policies while old re
 
 Don't replace your entire authorization system at once.
 
-Start with the core engine embedded in one service. Add approval stores when you need approval workflows. Enable JIT when performance matters. Build migration tools when you're ready to move from OPA or Cedar.
+Start with the runtime service in front of one service. Add approval stores when you need approval workflows. Add pull connectors when facts live upstream. Build migration tools when you're ready to move from OPA or Cedar.
 
 Each piece is optional. You control complexity.
 
@@ -421,139 +423,117 @@ IPE separates concerns into three layers:
 ┌─────────────────────────────────────────────────────────────┐
 │                    CONTROL PLANE                            │
 │  Policy Management, Updates, Versioning, Rollbacks          │
-│  • gRPC API (authenticated)                                 │
-│  • Atomic policy updates                                    │
-│  • Audit logging                                            │
-│  • A/B testing and canary deployments                       │
+│  • Scoped policy-management API (authenticated)             │
+│  • Immutable revisions with atomic activation               │
+│  • Publication history and digests                          │
+│  • Staging and canary activation (planned)                  │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ Push updates
+                       │ Publish revisions
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                     DATA PLANE                              │
 │  Policy Evaluation (Read-Only, High-Throughput)             │
-│  • Lock-free reads via Arc-swap                             │
-│  • Immutable snapshots                                      │
-│  • Zero coordination between evaluations                    │
-│  • <50μs p99 latency (interpreter), <10μs (JIT)            │
+│  • One immutable snapshot per evaluation                    │
+│  • Instruction and collection-visit budgets                 │
+│  • No network requests during evaluation                    │
+│  • Deny over indeterminate over allow                       │
 └──────────────────────┬──────────────────────────────────────┘
                        │ Query during evaluation
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   CONTEXT PLANE                             │
 │  Application-Specific Data (Separate from Policy)           │
-│  • RocksDB: Approvals, relationships, attributes            │
+│  • RocksDB: TTL-bounded facts, approvals, relationships     │
 │  • Application DB: User data, resources, metadata           │
-│  • External services: IdP, attribute providers              │
+│  • External services: HTTPS snapshot sources, IdPs          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Lock-Free Policy Updates
+### Atomic Policy Activation
 
 **The Problem:**
-Traditional authorization systems lock during policy updates, causing:
-- Request queuing and timeout cascades
-- Unpredictable latency spikes
+Traditional authorization systems mutate policies in place during updates, causing:
+- Readers seeing half-applied rule sets
+- Unpredictable behavior during rollouts
 - Deployment risk (updates require maintenance windows)
 
-**IPE's Solution: Atomic Snapshot Swaps**
+**IPE's Solution: Immutable Revisions + Captured Snapshots**
 
-> Removed with the legacy policy store (#36); the v2 runtime uses per-scope snapshots
-> (`crates/ipe-core/src/runtime_facts.rs`).
-
-```rust
-// Readers get immutable snapshot (no blocking)
-let snapshot: Arc<PolicySnapshot> = store.snapshot(); // Arc::clone is <10ns
-
-// Writer prepares new snapshot in background
-let new_snapshot = compile_policies(new_source)?;
-
-// Atomic swap (single pointer update)
-store.update(new_snapshot); // <100ns, lock-free
-
-// Old readers continue with old snapshot
-// New readers get new snapshot immediately
-// Old snapshot dropped when last reader finishes
+```text
+1. Publisher posts a document revision with expected_revision.
+2. The catalog validates it, appends an immutable revision,
+   and activates it atomically. Invalid publishes change nothing.
+3. Each evaluation captures the active revisions and one fact
+   snapshot once, then finishes against that captured state.
+4. Concurrent updates affect only evaluations that start later.
 ```
 
-**Performance characteristics:**
-- **Read path:** Lock-free, zero coordination
-- **Update path:** Background compilation, atomic swap
-- **Zero-downtime:** No reader blocking ever
-- **Memory safe:** Rust ownership prevents use-after-free
+**Characteristics:**
+- **Read path:** no locks, no network, no coordination during evaluation
+- **Update path:** validated append, atomic activation, full history retained
+- **Rollback:** publish the earlier document content as a new revision
+- **Memory safe:** captured snapshots are immutable, so no use-after-free
 
 ### High Availability Through Immutability
 
 ```mermaid
 sequenceDiagram
-    participant R1 as Reader 1
-    participant R2 as Reader 2
-    participant Store as PolicyDataStore (removed, #36)
-    participant V1 as Snapshot v1
-    participant V2 as Snapshot v2
-    participant Writer as Update Worker
+    participant R1 as Evaluation 1
+    participant R2 as Evaluation 2
+    participant Store as Policy catalog
+    participant V1 as Revision v1
+    participant V2 as Revision v2
+    participant Writer as Publisher
 
-    R1->>Store: snapshot()
-    Store->>V1: Arc::clone()
-    Store-->>R1: Arc<Snapshot v1>
+    R1->>Store: capture active revisions
+    Store-->>R1: Revision v1 + fact snapshot
 
-    Writer->>Store: update(policies)
-    Store->>Store: Compile & validate
-    Store->>V2: Create new snapshot
-    Store->>Store: Atomic swap (Arc::swap)
+    Writer->>Store: publish(document)
+    Store->>Store: Validate schema and provenance
+    Store->>V2: Append immutable revision
+    Store->>Store: Activate v2 atomically
 
-    R2->>Store: snapshot()
-    Store->>V2: Arc::clone()
-    Store-->>R2: Arc<Snapshot v2>
+    R2->>Store: capture active revisions
+    Store-->>R2: Revision v2 + fact snapshot
 
-    R1->>R1: Evaluate with v1 (still valid)
-    R2->>R2: Evaluate with v2
+    R1->>R1: Finish against v1 (still consistent)
+    R2->>R2: Evaluate against v2
 
-    Note over R1,R2: Both run concurrently without blocking
+    Note over R1,R2: Both run against their captured state<br/>without blocking
 ```
 
 **Key properties:**
-1. **Consistent reads:** Each request sees a consistent policy snapshot
-2. **No torn reads:** Updates are atomic (all-or-nothing)
-3. **No blocking:** Readers never wait for writers
-4. **Gradual migration:** Old requests complete with old policies
-5. **Memory efficient:** Old snapshots freed when unused (reference counting)
+1. **Consistent reads:** Each evaluation sees one consistent set of revisions and facts
+2. **No torn reads:** Activation is atomic (all-or-nothing) per document
+3. **No blocking:** Evaluations never wait for writers
+4. **Gradual migration:** Running evaluations complete with their captured revisions
+5. **Auditable:** Revision history with digests remains available; nothing is updated in place
 
-### Predictable Latency
+### Bounded, Honest Performance
 
-**Authorization decisions must be fast and consistent.** IPE guarantees:
+**Authorization decisions must be predictable.** The v2 runtime bounds work instead of promising latency figures:
 
-| Metric | Cold Path | Warm Path | Hot Path |
-|--------|-----------|-----------|----------|
-| **Latency (p50)** | 30μs | 15μs | 8μs |
-| **Latency (p99)** | 50μs | 25μs | 12μs |
-| **Latency (p99.9)** | 75μs | 35μs | 15μs |
-| **Execution mode** | Interpreter | Baseline JIT | Optimized JIT |
-| **Optimizations** | Bytecode | Fast compile | Full optimization |
+| Mechanism | What it bounds |
+|--------|-----------|----------|
+| **Instruction budget** | Work per evaluation |
+| **Collection-visit budget** | Fact lookups per evaluation |
+| **Evidence deadline** | How long a decision may lean on one observation |
+| **Bounded store** | Keys, encoded state, and value size |
 
-**No garbage collection** means:
+No published latency or throughput targets exist for the v2 runtime; performance under production load has not been characterized. The removed legacy interpreter's microbenchmarks (sub-50μs claims) described a different engine and no longer apply.
+
+**No garbage collection** still holds:
 - No unpredictable GC pauses
 - No safepoint delays
-- No generational collection stalls
-- Latency is **deterministic**
-
-**Comparison with OPA (Go-based):**
-
-| Metric | OPA (Go) | IPE (Rust) | Improvement |
-|--------|----------|------------|-------------|
-| p50 latency | 200μs | 30μs | **6.7x faster** |
-| p99 latency | 500μs | 50μs | **10x faster** |
-| p99.9 latency | 2ms (GC) | 75μs | **26x faster** |
-| Memory/policy | 10KB | 200 bytes | **50x smaller** |
+- Rust's deterministic memory management
 
 ### Deployment Models
 
-**1. Embedded Library** (Lowest latency)
-```rust
-// In-process evaluation (0ns network overhead)
-use ipe_core::PolicyEngine;
-
-let engine = PolicyEngine::from_file("policies.ipe")?;
-let decision = engine.evaluate(&ctx)?; // <50μs total
+**1. Local Runtime Service** (Default)
+```text
+# Loopback bind; evaluate over HTTP from co-located processes
+IPE_RUNTIME_CONFIG=runtime.json ./ipe-server
+# Remote callers go through a local TLS-terminating proxy
 ```
 
 **2. Sidecar Service** (Container co-location)
@@ -564,13 +544,10 @@ let decision = engine.evaluate(&ctx)?; // <50μs total
 │  │   App    │ ◄──────┐  │
 │  │ Service  │        │  │
 │  └──────────┘        │  │
-│        │             │  │
-│        │ Unix socket │  │
-│        │ (100μs)     │  │
+│        │   loopback  │  │
 │  ┌─────▼──────┐     │  │
 │  │    IPE     │─────┘  │
-│  │  Sidecar   │        │
-│  │  (<50MB)   │        │
+│  │  Runtime   │        │
 │  └────────────┘        │
 └─────────────────────────┘
 ```
@@ -596,19 +573,20 @@ let decision = engine.evaluate(&ctx)?; // <50μs total
 
 **What happens when...?**
 
-| Failure | Impact | Recovery |
+│ Failure | Impact | Recovery |
 |---------|--------|----------|
-| **Policy compilation error** | Writer rejects update | Old policies remain active |
-| **Control plane unreachable** | Data plane continues | Policies cached locally |
-| **RocksDB corruption** | Approval queries fail | Policy evaluation continues |
+| **Invalid policy publication** | Publisher rejected with 422/409 | Previous revision stays active |
+| **Connector unreachable** | Facts age out toward expiry | Evaluation yields indeterminate when evidence goes stale |
+| **RocksDB corruption** | Storage unavailable | Server reports 503; restore from database artifacts |
+| **Clock discontinuity** | Readiness refused | Restore trusted time and restart |
 | **Memory exhaustion** | OOM killed, pod restarts | Load balancer routes around |
-| **CPU spike** | Latency increases | Rate limiting, circuit breaking |
+| **CPU spike** | Latency increases | Budgets keep evaluations bounded; rate limit callers |
 
 **IPE's resilience strategy:**
-1. **Fail closed:** Errors default to deny (secure)
-2. **Degrade gracefully:** Core engine works without external dependencies
-3. **Cache aggressively:** Policies are immutable and cached
-4. **Isolate failures:** Approval store failures don't break policy evaluation
+1. **Fail closed:** Missing evidence is indeterminate; no applicable policy denies
+2. **Degrade gracefully:** Evaluation needs no network; stale facts expire rather than lie
+3. **Immutable history:** Published revisions and digests remain inspectable
+4. **Isolate failures:** Fact store and policy catalog are separate databases with no joint transaction (documented, not hidden)
 
 ---
 
@@ -630,8 +608,8 @@ IPE maintains strict separation between:
 │  • With whose approval?                                     │
 │  • Following which relationships?                           │
 │                                                             │
-│  Data stored: Policies (bytecode), approvals,               │
-│               relationships, scoped metadata                │
+│  Data stored: Policies (revisions), runtime facts,          │
+│               approvals, relationships, scoped metadata     │
 └─────────────────────────────────────────────────────────────┘
                             ▲
                             │ Queries during evaluation
@@ -1237,28 +1215,28 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 
 ### What's Production-Ready Today
 
-**Core engine (ipe-core):**
-- Parser, compiler, interpreter: 248 tests, 93.67% coverage
-- Lock-free policy store with atomic snapshots
-- Optional RocksDB stores for approvals and relationships
-- Scope-based multi-tenant isolation with TTL
-- Zero clippy warnings, zero security vulnerabilities
+**v2 runtime (ipe-server, ipe-core):**
+- Scoped HTTP API: push fact commits, evaluation, catalog inspection, policy publication, candidate testing
+- Runtime facts with mandatory TTL, atomic commits, conflict/replay detection, bounded RocksDB storage
+- Policy documents with immutable revisions, atomic activation, digests, external provenance
+- HTTPS pull connectors with whole-generation replacement
+- Approval and relationship stores behind the `approvals` feature
 
 **Deployment options:**
-- Embedded Rust library (lowest latency)
-- Sidecar service pattern (planned)
-- Centralized service (planned)
+- Local runtime service bound to loopback, behind a TLS proxy for remote access
+- Sidecar service pattern
+- Centralized service (no replication yet — single-node storage)
 
 ### What's Not Ready
 
-**JIT compilation:**
-- Infrastructure exists, integration incomplete
-- Target: <10μs p99 for hot policies
-- Adaptive tiering logic needs validation
+**Production hardening:**
+- Replication and convergence bounds (single-node storage today)
+- Durable audit logging
+- Performance characterization under production load
 
 **Control plane:**
-- gRPC API for policy management (not started)
-- Version control and rollback (not started)
+- API for managing policies across scopes (not started)
+- Staging, approval, and activation workflows (not started)
 - Multi-environment promotion (not started)
 
 **Language bindings:**
@@ -1272,22 +1250,22 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 
 ### Recommended Adoption Path
 
-**Phase 1 (Current):** Pilot with embedded library in low-risk service. Validate performance and operational model.
+**Phase 1 (Current):** Pilot the runtime service in front of a low-risk service. Validate the operational model and TTL choices.
 
-**Phase 2:** Add approval store for dynamic workflows. Test multi-tenant isolation and TTL cleanup.
+**Phase 2:** Add approval stores for dynamic workflows. Test multi-tenant isolation and expiry behavior.
 
-**Phase 3:** Deploy as sidecar in production service. Monitor latency impact and policy update patterns.
+**Phase 3:** Deploy as a sidecar in a production service. Monitor publication and connector patterns.
 
 **Phase 4:** Expand to additional services. Build migration tools for existing authorization logic.
 
-**Phase 5:** Enable JIT compilation for high-throughput services. Measure performance gains.
+**Phase 5:** Harden persistence (replication bounds, audit durability) based on production experience.
 
 ### Technical Debt and Risks
 
 **Known gaps:**
-- JIT compilation unfinished (performance target at risk)
+- Single-node storage; no replication or convergence bound
 - No formal security audit completed
-- Limited production validation (early stage)
+- Performance under production load not characterized
 - Migration tooling incomplete
 
 **Operational concerns:**
@@ -1296,29 +1274,27 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 - Breaking changes likely before 1.0 release
 
 **Mitigation strategies:**
-- Interpreter provides acceptable baseline performance
-- Fallback to previous snapshot on policy errors
-- Comprehensive test coverage and CI/CD
+- Fail-closed evaluation: indeterminate and empty catalogs deny
+- Immutable revision history makes policy state auditable
+- Acceptance suites exercise the real server end to end
 - Active development and documentation
 
 ### Success Criteria
 
 **Technical:**
-- <50μs p99 latency sustained (10k+ req/sec)
-- Zero-downtime policy updates validated in production
+- Replicated storage with a stated convergence bound
+- Policy activation with no torn reads, validated in production
 - Scope isolation tested with multiple tenants
 - No security vulnerabilities in audit
 
 **Operational:**
-- Policy updates <5 minutes from commit to production
-- Rollback <30 seconds to previous version
+- Policy updates <5 minutes from merge to production
+- Rollback by publishing the prior document content
 - Observability integrated with existing monitoring
 - On-call runbooks documented
 
 **Adoption:**
 - 3+ production services using IPE
-- 1M+ authorization decisions per day
-- <5 authorization-related incidents per quarter
 - Team trained on policy development and debugging
 
 ---
@@ -1329,21 +1305,24 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 
 | Document | Description | Location | Lines |
 |----------|-------------|----------|-------|
-| **RFC** | Complete technical specification | `RFC.md` | 41KB |
-| **Architecture** | System architecture with diagrams | `docs/ARCHITECTURE.md` | 483 lines |
-| **Roadmap** | 42-week production roadmap | `ROADMAP.md` | 16KB |
-| **MVP Plan** | 8-10 week MVP implementation | `MVP_PLAN.md` | 13KB |
-| **Summary** | Executive summary and vision | `SUMMARY.md` | 8KB |
+| **Runtime data workflow** | Implemented v2 workflow, API, and limits | `docs/RUNTIME_DATA.md` | - |
+| **Architecture** | System architecture with diagrams | `docs/ARCHITECTURE.md` | - |
+| **Roadmap** | Production roadmap | `ROADMAP.md` | 16KB |
+| **MVP Plan** | MVP implementation plan (historical) | `MVP_PLAN.md` | 13KB |
+| **Summary** | Executive summary and vision (historical) | `SUMMARY.md` | 8KB |
 | **Requirements** | Formal requirements specification | `REQUIREMENTS.md` | - |
-| **Quick Start** | 5-minute getting started guide | `QUICKSTART.md` | - |
+| **Quick Start** | Getting started guide | `QUICKSTART.md` | - |
+| **End-to-End Example** | Legacy engine lifecycle walkthrough (historical) | `END_TO_END_EXAMPLE.md` | - |
 
 ### Technical Specifications
 
 | Document | Description | Location | Lines |
 |----------|-------------|----------|-------|
+| **AST Specification** | Legacy parser AST design (historical) | `docs/AST.md` | - |
+| **Bytecode Documentation** | Legacy bytecode instruction set (historical) | `docs/BYTECODE.md` | - |
 | **Relationship Implementation** | Entity graph design | `docs/relationship-implementation-summary.md` | - |
 | **Scope & TTL Model** | Multi-tenant isolation design | `docs/scope-ttl-implementation-summary.md` | 406 lines |
-| **Test Coverage Analysis** | Coverage report and gaps | `docs/test-coverage-analysis.md` | - |
+| **Test Coverage Analysis** | Legacy coverage report (historical) | `docs/test-coverage-analysis.md` | - |
 
 ### RFCs (Request for Comments)
 
@@ -1358,103 +1337,34 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 
 ### Test Results
 
-| Category | Tests | Status | Coverage | Location |
-|----------|-------|--------|----------|----------|
-| **Total Tests** | 248 passing | [DONE] Pass | 93.67% | - |
-| **Unit Tests** | 171 passing | [DONE] Pass | - | `crates/ipe-core/src/*/tests` |
-| **Integration Tests** | 77 passing | [DONE] Pass | - | `crates/ipe-core/tests/integration/` |
-| **Parser Tests** | - | [DONE] Pass | 100% | `crates/ipe-core/src/parser/` |
-| **Compiler Tests** | - | [DONE] Pass | 95% | `crates/ipe-core/src/compiler.rs` |
-| **Interpreter Tests** | - | [DONE] Pass | 100% | `crates/ipe-core/src/interpreter.rs` |
-| **Approval Store Tests** | 14 unit + integration | [DONE] Pass | 95% | `crates/ipe-core/src/approval.rs` |
-| **Relationship Store Tests** | 16 integration | [DONE] Pass | 95% | `crates/ipe-core/src/relationship.rs` |
-| **Scope/TTL Tests** | 20 integration | [DONE] Pass | - | `crates/ipe-core/tests/integration/scope_ttl_tests.rs` |
-| **RAR Context Tests** | - | [DONE] Pass | 100% | `crates/ipe-core/src/rar.rs` |
+Test counts and coverage percentages from the legacy engine era ("248 tests, 93.67% coverage") described code that has been removed and are no longer claimed. Run the current checks yourself:
 
-### Code Quality Metrics
+```sh
+cargo test --all-features        # unit and integration tests
+make runtime-acceptance           # external HTTP acceptance against the real server
+make policy-acceptance            # deterministic scenarios + HTTPS import workflow
+make docs-check                   # docs site build and link contract
+```
 
-| Metric | Value | Status | Tool |
-|--------|-------|--------|------|
-| **Code Coverage** | 93.67% | [DONE] Excellent | cargo-tarpaulin |
-| **Clippy Warnings** | 0 | [DONE] Clean | cargo clippy |
-| **Miri Issues** | 0 | [DONE] Clean | cargo miri |
-| **Security Vulnerabilities** | 0 | [DONE] Clean | cargo audit |
-| **Lines of Code (ipe-core)** | 9,698 | - | tokei |
-| **Documentation** | 8 major docs | [DONE] Complete | - |
+### Key Milestones
 
-### Performance Benchmarks (Planned)
-
-| Benchmark | Target | Status | Location |
-|-----------|--------|--------|----------|
-| **Bytecode Interpretation** | <50μs p99 | [DONE] Achieved | `crates/ipe-core/benches/interpreter_benchmarks.rs` |
-| **Policy Compilation** | <1ms | [WIP] Testing | - |
-| **JIT Compilation** | <10μs p99 | [PLANNED] Planned | - |
-| **Approval Lookup** | <5μs | [DONE] Achieved | `crates/ipe-core/benches/approval_benchmarks.rs` |
-| **Relationship Traversal** | <10μs | [DONE] Achieved | `crates/ipe-core/benches/relationship_benchmarks.rs` |
-| **Atomic Snapshot Swap** | <100ns | [DONE] Achieved | - |
-
-### Implementation Status
-
-| Component | Completeness | Test Coverage | Production Ready | Location |
-|-----------|--------------|---------------|------------------|----------|
-| **Parser** | 95% | 100% | [DONE] Yes | `crates/ipe-core/src/parser/` |
-| **AST/Types** | 98% | 100% | [DONE] Yes | `crates/ipe-core/src/ast/` |
-| **Compiler** | 90% | 95% | [DONE] Yes | `crates/ipe-core/src/compiler.rs` |
-| **Interpreter** | 95% | 100% | [DONE] Yes | `crates/ipe-core/src/interpreter.rs` |
-| **Policy Engine** | 95% | 100% | [DONE] Yes | `crates/ipe-core/src/engine.rs` |
-| **Approval Store** | 100% | 95% | [DONE] Yes | `crates/ipe-core/src/approval.rs` |
-| **Relationship Store** | 100% | 95% | [DONE] Yes | `crates/ipe-core/src/relationship.rs` |
-| **JIT Compiler** | 20% | N/A | [NO] No | `crates/ipe-core/src/jit.rs` (planned) |
-| **Control Plane** | 0% | N/A | [NO] No | `crates/ipe-control/` (stub) |
-| **Web UI** | 0% | N/A | [NO] No | `crates/ipe-web/` (stub) |
-| **Language Bindings** | 0% | N/A | [NO] No | `crates/ipe-ffi/` (stub) |
-
-### CI/CD Status
-
-| Workflow | Status | Description |
-|----------|--------|-------------|
-| **Build & Test** | [DONE] Passing | All tests across all features |
-| **Format Check** | [DONE] Passing | `cargo fmt --check` |
-| **Clippy Lints** | [DONE] Passing | Zero warnings |
-| **Security Audit** | [DONE] Passing | `cargo audit` |
-| **Code Coverage** | [DONE] 93.67% | Uploaded to codecov |
-| **Dependency Check** | [DONE] Passing | deps.rs badge |
-
-### Key Achievements
-
-| Achievement | Date | Description |
+| Milestone | Date | Description |
 |-------------|------|-------------|
-| **Core Engine Complete** | 2025-11 | Parser, compiler, interpreter production-ready |
-| **248 Tests Passing** | 2025-11 | 93.67% code coverage |
-| **RocksDB Integration** | 2025-11 | Approval and relationship stores complete |
-| **Scope/TTL Model** | 2025-11-03 | Multi-tenant isolation implemented |
-| **Zero Clippy Warnings** | 2025-11 | Clean code quality |
-| **Zero Security Issues** | 2025-11 | `cargo audit` clean |
-| **RFC-004 In Progress** | 2025-11-05 | Low-overhead execution tracing |
+| **Scope/TTL model** | 2025-11-03 | Multi-tenant isolation and TTL designed (RFC-0002) |
+| **Approval and relationship stores** | 2025-11 | RocksDB-backed embedded stores |
+| **v2 runtime facts + policy language** | #36 | Push/pull ingestion, mandatory TTL, language 2 |
+| **Policy documents and provenance** | #37 | Versioned documents, external import, candidate testing |
+| **Legacy engine removed** | deletion PR | Parser, AST, bytecode, interpreter, JIT, tiering, lock-free store deleted |
 
 ### Technology Stack
 
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| **Language** | Rust | 2021 edition | Core implementation |
-| **Parser** | nom + logos | 7.1 + 0.14 | Lexing and parsing |
-| **JIT (optional)** | Cranelift | 0.102 | Just-in-time compilation |
-| **Storage** | RocksDB | 0.22 | Approval/relationship store |
-| **Serialization** | serde + bincode | - | Data serialization |
-| **Async (future)** | tokio | - | Control plane |
-| **gRPC (future)** | tonic + prost | 0.11 + 0.12 | API layer |
-| **WASM (future)** | wasm-bindgen | 0.2 | Browser support |
-
-### Performance Targets vs. Actuals
-
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| **Interpreter p99** | <50μs | ~50μs | [DONE] Met |
-| **JIT p99** | <10μs | - | [PLANNED] Pending |
-| **Memory/policy** | <300 bytes | ~200 bytes | [DONE] Exceeded |
-| **Binary size** | <50MB | <5MB | [DONE] Exceeded |
-| **Code coverage** | >90% | 93.67% | [DONE] Exceeded |
-| **Test suite** | >200 tests | 248 tests | [DONE] Exceeded |
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Language** | Rust | Core implementation |
+| **Storage** | RocksDB | Fact store, policy catalog, approval/relationship stores |
+| **HTTP** | axum + tokio | Runtime API service |
+| **Serialization** | serde + strict JSON decoder | Request/response handling |
+| **Connectors** | reqwest (HTTPS-only) | Pull snapshot ingestion |
 
 ### Repository Statistics
 
@@ -1469,7 +1379,7 @@ async fn handle_request(req: HttpRequest) -> HttpResponse {
 
 ---
 
-*Last updated: 2025-11-05*
+*Last updated: with the legacy-engine removal*
 *Version: 0.1.0*
-*Status: RFC/Prototype → Production*
+*Status: v2 runtime (early stage; explicit deployment limits)*
 *License: Mozilla Public License 2.0*

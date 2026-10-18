@@ -31,45 +31,51 @@
       <header class="page-head">
         <div class="breadcrumb">Start / How it decides</div>
         <h1>Follow one deploy request through IPE</h1>
-        <p class="lede">A deploy to production arrives with one approval. The policy requires two. These five steps show what IPE should decide, and where the current build differs.</p>
+        <p class="lede">A deploy to production arrives with one approval. The policy requires two. These five steps show how the v2 runtime combines input, policy documents, and expiring runtime facts into one decision.</p>
         <div class="chips"><a class="chip chip-path" href="index.html#path-evaluate">Evaluate · 1 of 3</a><a class="chip chip-path" href="index.html#path-integrate">Integrate · 2 of 3</a><a class="chip chip-path" href="index.html#path-author">Write policies · 2 of 3</a></div>
       </header>
       <ol class="steps">
         <li class="step" id="context">
           <span class="step-number" aria-hidden="true">1</span>
-          <div class="step-text"><h2>The request becomes a context</h2><p>Your application authenticates the caller and packs the resource, the action, and the request into one Resource–Action–Request context.</p></div>
-          <div class="step-figure"><pre class="dark">resource  type: Deployment
-          environment: "production"
-          approvals: 1
-action    deploy
-request   principal.role: "senior-engineer"</pre></div>
+          <div class="step-text"><h2>The request becomes input</h2><p>The evaluating workload authenticates the caller, then attests every input field — including principal identity — in one JSON document validated against the scope’s input schema.</p></div>
+          <div class="step-figure"><pre class="dark">input {
+  operation:   "deploy"
+  environment: "production"
+  commit:      "9f3c1ab"
+  approver:    { role: "senior-engineer" }
+}</pre></div>
         </li>
         <li class="step" id="selection">
           <span class="step-number" aria-hidden="true">2</span>
-          <div class="step-text"><h2>Policies are selected by resource type</h2><p>Both <code>PolicyEngine</code> and <code>PolicyDataStore</code> pick the policies registered for the resource type. The store reads from an immutable snapshot, so a policy update during the request cannot change what this evaluation sees.</p></div>
-          <div class="step-figure"><pre>resource type   Deployment
-selected        RequireApproval</pre></div>
+          <div class="step-text"><h2>Evaluation captures one snapshot</h2><p>The scoped <code>evaluate</code> endpoint captures the caller’s input, the active policy document revisions, and the current fact values once. An update that lands after the capture cannot change what this evaluation sees.</p></div>
+          <div class="step-figure"><pre>scope        acme / production
+captured     revisions: Reviews@3
+             facts snapshot: rev 412
+input        operation: "deploy"</pre></div>
         </li>
         <li class="step" id="trigger">
           <span class="step-number" aria-hidden="true">3</span>
-          <div class="step-text"><h2>The trigger matches</h2><p>The resource is a Deployment and production is in the list, so the policy applies.</p><p class="small muted">Current build: the compiler does not evaluate trigger conditions yet.</p></div>
+          <div class="step-text"><h2>The trigger matches</h2><p>The operation is a deploy in production, so the policy applies. Fact bindings resolve only after a true trigger.</p></div>
           <div class="step-figure"><pre>triggers when
-  resource.type == "Deployment"       <span class="eval-true">true</span>
-  and resource.environment in [...]   <span class="eval-true">true</span></pre></div>
+  input.operation == "deploy"          <span class="eval-true">true</span>
+  and input.environment == "production" <span class="eval-true">true</span></pre></div>
         </li>
         <li class="step" id="requirement">
           <span class="step-number" aria-hidden="true">4</span>
-          <div class="step-text"><h2>The requirement fails</h2><p>The caller is a senior engineer, but one approval is fewer than two.</p></div>
-          <div class="step-figure"><pre>requires
-  resource.approvals &gt;= 2             <span class="eval-false">false</span>
-  where request.principal.role == ... <span class="eval-true">true</span></pre></div>
+          <div class="step-text"><h2>The requirement fails</h2><p>The requirement reads the approval fact and counts distinct senior approvers. One approval is fewer than two.</p></div>
+          <div class="step-figure"><pre>facts
+  approvals = data.approvals[input.commit]
+              fresh within 5m
+requires
+  count_distinct(a for a in approvals.value.approvers
+    where a.role == "senior") &gt;= 2      <span class="eval-false">false</span></pre></div>
         </li>
         <li class="step" id="decision">
           <span class="step-number" aria-hidden="true">5</span>
-          <div class="step-text"><h2>The decision, and a known gap</h2><p>The policy intends Deny. The current compiler ends every <code>requires</code> policy with <code>Return(true)</code>, so the interpreter can return Allow here.</p><p><a href="contract.html#limits">Read the current limits</a></p></div>
+          <div class="step-text"><h2>The decision</h2><p>The requirement is false, so the policy denies. If the approval fact had been missing or expired, evaluation would have returned <code>indeterminate</code> instead — which consumers must treat exactly like a denial.</p><p><a href="contract.html#limits">Read the current limits</a></p></div>
           <div class="step-figure"><div class="outcomes">
-            <div class="outcome outcome-intended"><span>Intended</span><strong>Deny</strong></div>
-            <div class="outcome outcome-today"><span>Current build</span><strong>Allow</strong></div>
+            <div class="outcome outcome-intended"><span>Policy intent</span><strong>Deny</strong></div>
+            <div class="outcome outcome-today"><span>Runtime result</span><strong>Deny</strong></div>
           </div></div>
         </li>
       </ol>
