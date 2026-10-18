@@ -1,5 +1,8 @@
 # Standalone integration discovery
 
+See the [stack and crate reuse audit](INTEGRATION_STACK.md) for implemented
+dependencies and the planned migration from custom MCP dispatch to `rmcp`.
+
 The independent Rust `ipe-integration` workload hosts a WASM metadata adapter and
 an authenticated native HTTPS broker. Rust CLI and MCP clients expose bounded
 ServiceNow discovery. TypeScript provides the synthetic provider facade for local

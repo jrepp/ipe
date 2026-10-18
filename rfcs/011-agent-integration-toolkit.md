@@ -15,6 +15,12 @@ at startup, not an agent deployment tool. The remaining lifecycle operations in
 this RFC are proposed, not
 advertised as available tools by that slice.
 
+**Stack direction:** adopt the official `rmcp` SDK for MCP protocol and transports,
+with typed tool schemas and `clap` for CLI parsing. The current dispatcher is still
+custom; this recommendation is not an implemented migration. The
+[stack and crate reuse audit](../docs/INTEGRATION_STACK.md) records ownership,
+compatibility constraints and regression gates across the integration boundary.
+
 Provide an agent-neutral **Integration Toolkit** for discovering capabilities,
 probing connections, authoring adapters, testing, staging, deploying, upgrading,
 and observing integrations. The toolkit runs inside the Integration Workload and
