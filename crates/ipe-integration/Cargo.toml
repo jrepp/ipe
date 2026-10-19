@@ -1,0 +1,31 @@
+[package]
+name = "ipe-integration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+default-run = "ipe-integration"
+description = "Bounded native integration discovery workload"
+
+[dependencies]
+ipe-json = { path = "../ipe-json" }
+clap = { version = "4.6.7", default-features = false, features = ["std", "derive", "env", "help", "usage"] }
+secrecy = "0.10.3"
+axum.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
+subtle = "2.6"
+hmac = "0.12"
+sha2 = "0.10"
+wasmi = { version = "2.0.0", default-features = false, features = ["stable", "std", "validate", "portable-dispatch"] }
+
+rmcp = { version = "3.5.1", default-features = false, features = ["server", "macros", "transport-io"] }
+
+[build-dependencies]
+wat = "1"
+
+[dev-dependencies]
+rmcp = { version = "3.5.1", default-features = false, features = ["client"] }
+wat = "1"
+tempfile = "3"
