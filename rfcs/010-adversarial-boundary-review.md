@@ -76,12 +76,20 @@ the run reached process tests that had previously been skipped by the early
 failure. The remaining timeouts exposed harness assumptions: child sanitizer
 settings were cleared, stderr was not drained, and observer limits competed with
 the SDK's five-second drain and sanitizer teardown. The fixtures now preserve an
-explicit sanitizer-only environment allowlist, collect at most 64 KiB stderr
+explicit OS-startup/sanitizer environment allowlist, collect at most 64 KiB stderr
 concurrently, and use a bounded 20-second observer budget. Overflow must still exit
 with failure before the 35-second HTTP request deadline. The invalid-argument test
 uses its own closed-response fixture and checks specific rejection codes. The
 CLI/MCP executor also has a fixed one-thread async/four-worker blocking budget,
 rather than allocating workers in proportion to the host CPU count.
+
+Subsequent Windows stable/beta CI exposed an unbounded fixture wait in the typed
+MCP tool test: the child returned a sanitized transport failure, but the local
+provider's `accept` never completed. The fixture now bounds that accept by the
+same observer budget, and matrix jobs have an overall timeout. Isolated child
+environments also retain Windows `SystemRoot`; provider credentials and proxy
+settings remain excluded. Local process tests pass; current-head Windows CI must
+verify the OS environment change before this platform gate is closed.
 
 ## Enforcement and synchronization
 
