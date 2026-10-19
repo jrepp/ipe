@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Commit message validation implementing .agent/core-prompt.md standards:
+#   - Conventional Commits: <type>(<scope>): <description>
+#   - NO emoji, NO co-authorship tags, NO agent/tool branding
+set -euo pipefail
+
+types='feat|fix|perf|docs|style|refactor|test|build|ci|chore|revert'
+pattern="^(${types})(\\([a-zA-Z0-9._/-]+\\))?!?: .+"
+
+fail=0
+for file in "$@"; do
+  subject=$(head -n 1 "$file")
+
+  if ! echo "$subject" | grep -Eq "$pattern"; then
+    echo "ERROR [$file]: subject does not follow Conventional Commits" >&2
+    echo "  got:      $subject" >&2
+    echo "  expected: <type>(<scope>): <description>" >&2
+    echo "  types: ${types//|/, } (append ! or add 'BREAKING CHANGE:' footer for breaking)" >&2
+    fail=1
+  fi
+
+  if perl -CSD -0777 -ne 'if (/[\x{1F000}-\x{1FAFF}\x{2190}-\x{2BFF}\x{FE0F}]/) { exit 0 } exit 1' "$file"; then
+    echo "ERROR [$file]: emoji are not allowed in commit messages" >&2
+    fail=1
+  fi
+
+  if grep -Eiq 'co-authored-by|generated (with|by)|claude|copilot|cursor|codex|gemini' "$file"; then
+    echo "ERROR [$file]: agent/tool branding or attribution is not allowed" >&2
+    grep -Ei 'co-authored-by|generated (with|by)|claude|copilot|cursor|codex|gemini' "$file" | sed 's/^/  /' >&2
+    fail=1
+  fi
+done
+
+exit $fail

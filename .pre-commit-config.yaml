@@ -1,0 +1,46 @@
+# Pre-commit hooks wired to this project's local guidance:
+#   - .agent/core-prompt.md  ("Before every commit" + Commit Message Standards)
+#   - Makefile target `pre-commit` (fmt-check lint test)
+# Install with: pre-commit install && pre-commit install --hook-type commit-msg
+repos:
+  # Fast file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  # Local guidance: format check + clippy -D warnings + full test suite
+  # Run for Rust sources and Cargo manifests/lockfiles (see .agent/core-prompt.md).
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt --all -- --check
+        entry: cargo fmt --all -- --check
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|[^/]+\.rs)$'
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy --all-features --all-targets -- -D warnings
+        entry: cargo clippy --all-features --all-targets -- -D warnings
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|[^/]+\.rs)$'
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test --all-features --workspace
+        entry: cargo test --all-features --workspace
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|[^/]+\.rs)$'
+        pass_filenames: false
+
+      - id: commit-msg-guidance
+        name: conventional commit + no branding (core-prompt.md)
+        entry: scripts/check-commit-msg
+        language: system
+        stages: [commit-msg]
