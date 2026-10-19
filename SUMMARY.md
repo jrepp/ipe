@@ -1,5 +1,11 @@
 # Idempotent Predicate Engine: Executive Summary
 
+> **Superseded.** This vision was written for the legacy engine (bytecode,
+> interpreter, adaptive JIT tiering), which was removed after the version-2
+> runtime landed. Kept for historical context. The shipping product is the
+> v2 runtime: see [README.md](README.md) and
+> [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md).
+
 ## Vision
 
 A next-generation predicate engine that combines human readability, AI integration, and extreme performance through runtime bytecode-to-native compilation.
@@ -204,25 +210,30 @@ Action required:
 
 ## Implementation Status
 
-### Completed (Prototype)
+The statuses below are historical (legacy-engine era). The legacy bytecode
+instruction set, JIT integration, adaptive tiering, and stack interpreter were
+removed with that engine. The v2 runtime (runtime facts, policy documents,
+language-2 evaluation, HTTP service) is implemented; see the README for what
+ships today.
+
+### Historical (legacy engine, removed)
 - ✅ RFC and architecture design
 - ✅ Bytecode instruction set
 - ✅ JIT compiler integration (Cranelift)
 - ✅ Adaptive tiering logic
 - ✅ RAR (Resource-Action-Request) model
 - ✅ Workspace structure
-
-### In Progress (Phase 1-2)
 - 🚧 Language parser (nom)
 - 🚧 Bytecode compiler
 - 🚧 Predicate indexing
 - 🚧 Basic interpreter
 
-### Planned (Phases 3-8)
-- 📋 gRPC control plane
-- 📋 Web application
-- 📋 Language bindings
-- 📋 AI integration
+### Current (v2 runtime)
+- ✅ Scoped HTTP runtime service (`ipe-server`)
+- ✅ Runtime facts with mandatory TTL; push and pull ingestion
+- ✅ Language-2 evaluation with budgets and evidence deadlines
+- ✅ Policy documents with immutable revisions and provenance
+- 📋 Production hardening, control plane, language bindings
 
 ## Next Steps
 
