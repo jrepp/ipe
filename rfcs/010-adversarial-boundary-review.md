@@ -46,6 +46,17 @@ reports and misleading success counts. This repairs the verification path; an
 unexplained sanitizer failure remains a landing blocker until its report has been
 investigated. Passing ordinary tests cannot waive it.
 
+The retained Linux report identified four race warnings in RocksDB native
+initialization/logging, crossing C++ allocation/publication and later intercepted
+mutex or string operations. The prior sanitizer command instrumented Rust and
+`std`, but not native dependencies. The corrected thread check also uses Clang
+with `-fsanitize=thread` for target C and C++ code through cc-rs, including RocksDB.
+[Rust's sanitizer contract](https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/sanitizer.html#threadsanitizer)
+requires visibility into synchronization and warns that partial instrumentation
+can create false positives. The verification gate therefore covers both sides of
+FFI; removing native tests, serializing them or suppressing all RocksDB reports
+would not establish that contract. Each new run retains its actual result.
+
 ## Enforcement and synchronization
 
 | ID | Failure case and grounding | Closure evidence |
