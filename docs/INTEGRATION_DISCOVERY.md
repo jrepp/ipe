@@ -133,6 +133,15 @@ source record IDs, or source error text. Inventory is limited by credentials and
 request budgets. Operators can instead configure explicit resource/table and
 field mappings to restrict access further.
 
+Catalog results retain every distinct host-generated coverage issue in
+`coverage_codes`; each resource separately reports `field_coverage_codes`. Empty
+arrays mean no issue was observed within the bounded read, not complete coverage.
+The summary `code` and `field_code` retain `record_limit` whenever truncation was
+observed; other failures remain in the arrays, including malformed/duplicate
+metadata, metadata gaps, and guest traps or invalid output. A later failure cannot
+hide an earlier limit. Clients must inspect both resource and field coverage;
+an observed resource with incomplete fields is not a complete schema.
+
 A successful connection check proves only that a metadata read succeeded. It does
 not establish remediation-record access or discover complete workflow constraints.
 Workflow semantics remain explicitly unknown.

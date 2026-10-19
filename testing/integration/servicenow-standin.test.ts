@@ -32,6 +32,18 @@ test('HTTPS facade authenticates, provides hostile metadata, injects faults, and
       const statuses: Record<string, number> = { denied: 403, unauthorized: 401, failure: 500, unsupported: 404, redirect: 302 };
       assert.equal(result.status, statuses[mode] ?? 200, mode);
       if (mode === 'truncated') assert.equal(JSON.parse(result.body).result.length, 9);
+      if (mode === 'mixed_limits') {
+        const resources = JSON.parse(result.body).result;
+        assert.equal(resources.length, 9);
+        assert.equal(resources[0].name, 'invalid^table');
+        assert.equal(resources[1].name, resources[2].name);
+        const fields = JSON.parse((await get('/api/now/table/sys_dictionary?sysparm_limit=33')).body).result;
+        assert.equal(fields.length, 33);
+        assert.equal(fields[0].element, 'invalid^field');
+        assert.equal(fields[1].element, fields[2].element);
+        assert.equal(fields[3].internal_type, 'unsupported');
+      }
+
       if (mode === 'empty') assert.deepEqual(JSON.parse(result.body).result, []);
       if (mode === 'wrong_shape') assert.equal(Array.isArray(JSON.parse(result.body).result), false);
       if (mode === 'oversize') assert.equal(result.body.length, 2 * 1024 * 1024);
