@@ -71,6 +71,18 @@ to keep that evidence current. An upstream initialization fix may replace this
 workaround only after the same concurrent storage checks pass with acceleration
 restored; a sanitizer-only suppression would leave production behavior unchanged.
 
+With native Linux instrumentation, the original RocksDB warnings disappeared and
+the run reached process tests that had previously been skipped by the early
+failure. The remaining timeouts exposed harness assumptions: child sanitizer
+settings were cleared, stderr was not drained, and observer limits competed with
+the SDK's five-second drain and sanitizer teardown. The fixtures now preserve an
+explicit sanitizer-only environment allowlist, collect at most 64 KiB stderr
+concurrently, and use a bounded 20-second observer budget. Overflow must still exit
+with failure before the 35-second HTTP request deadline. The invalid-argument test
+uses its own closed-response fixture and checks specific rejection codes. The
+CLI/MCP executor also has a fixed one-thread async/four-worker blocking budget,
+rather than allocating workers in proportion to the host CPU count.
+
 ## Enforcement and synchronization
 
 | ID | Failure case and grounding | Closure evidence |
