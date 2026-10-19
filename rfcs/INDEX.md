@@ -42,7 +42,7 @@ The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.
 | [014](014-fact-publication-and-synchronization.md) | Fact Publication and Synchronization | Draft discovery | Change feed, notification/pull, expiry, ordering and receiver recovery |
 | [015](015-policy-access-and-identities.md) | Policy Access and Opaque Identities | Draft discovery | Information release, masking, opaque references and elevation |
 | [016](016-integration-signals-and-audit.md) | Integration Signals and Forensic Audit | Draft discovery | Operational health, delivery visibility, protected evidence and retention |
-| [017](017-enforcement-mcp-surface.md) | Enforcement MCP Surface | Draft design | Official Rust MCP SDK tools for policy inspection, active evaluation, candidate testing, and captured execution traces |
+| [017](017-enforcement-mcp-surface.md) | Enforcement MCP Surface | Draft design | Rust MCP inspection, evaluation and traces with unified identity, cancellation, disclosure, retention and open deployment decisions |
 
 
 ## Planned RFCs
