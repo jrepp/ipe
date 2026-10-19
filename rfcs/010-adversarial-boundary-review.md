@@ -57,6 +57,20 @@ can create false positives. The verification gate therefore covers both sides of
 FFI; removing native tests, serializing them or suppressing all RocksDB reports
 would not establish that contract. Each new run retains its actual result.
 
+Full native instrumentation on ARM64 exposed a separate real race: RocksDB 8.10.0
+`IsFastCrc32Supported()` rewrites the global `pmull_runtime_flag` during each DB
+open, while opens and checksum operations can run concurrently. Serializing just
+Rust DB opens would leave the native background readers unprotected. Repository
+ARM64 native builds therefore disable the hardware CRC path and use the portable
+implementation, preserving the checksum format at a performance cost. The build
+constraint and custom-flag requirement are documented in the
+[discovery guide](../docs/INTEGRATION_DISCOVERY.md#native-storage-build-constraint).
+With both Rust and C++ instrumented, the native core suites reproduce this race
+before the workaround and pass afterwards. CI now includes ARM64 ThreadSanitizer
+to keep that evidence current. An upstream initialization fix may replace this
+workaround only after the same concurrent storage checks pass with acceleration
+restored; a sanitizer-only suppression would leave production behavior unchanged.
+
 ## Enforcement and synchronization
 
 | ID | Failure case and grounding | Closure evidence |
