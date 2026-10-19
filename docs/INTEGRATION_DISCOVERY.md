@@ -1,5 +1,8 @@
 # Standalone integration discovery
 
+See the [stack and crate reuse audit](INTEGRATION_STACK.md) for implemented
+dependencies, the completed `rmcp` migration and remaining reuse priorities.
+
 The independent Rust `ipe-integration` workload hosts a WASM metadata adapter and
 an authenticated native HTTPS broker. Rust CLI and MCP clients expose bounded
 ServiceNow discovery. TypeScript provides the synthetic provider facade for local
@@ -166,6 +169,9 @@ This proves configurable sandboxed interpretation, not the complete future adapt
 package lifecycle. Artifact signing, agent build/stage/deploy, hot upgrades,
 shared-domain constraint projection, synchronization and durable forensic auditing
 remain separate milestones.
+
+See the [integration architecture and MVP](../rfcs/010-remediation-adapters-and-external-policy-discovery.md)
+for the roadmap and focused design contracts.
 
 ## CLI, secret ownership and shutdown
 
