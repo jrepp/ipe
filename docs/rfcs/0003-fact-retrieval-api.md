@@ -1,124 +1,75 @@
 # RFC 0003: Fact Retrieval API Contract
 
-## Status
-- **Status**: Draft — awaiting maintainer decisions on the open questions (§10)
-- **Author**: Generated design pass (glm-5.3-flash), reviewed by session + maintainer
-- **Created**: 2026-10-18
+**Status:** Draft — open maintainer decisions in §11; merging this document
+records a proposal and does not authorize implementation.
+**Created:** 2026-10-18
 
-## Summary
+## 1. Summary and grounding
 
-A read-side contract for the v2 runtime's fact collections: one listing route with
-revision-cursor pagination, projection, conditional GET via snapshot-revision ETags,
-strict error/authorization reuse, and explicit TTL/consistency semantics. Grounded in
-the existing implementation (file:line citations throughout); no as-of time travel.
+Propose one bounded, authorized collection-read route for the v2 runtime:
 
-Status: proposal for review; no code is changed by this document. Grounded in
-the shipping v2 surface only (`runtime.rs`, `runtime_facts.rs`,
-`strict_json.rs`); legacy engine/store/parser modules are out of scope.
+```text
+GET /v1/scopes/{tenant}/{environment}/facts/{collection}
+```
 
-## 1. Goals and non-goals
+The current API inspects individual keys. A collection listing would help debug
+fact state and reconcile local caches. It would not provide historical reads,
+a durable change feed, or a consistent snapshot across multiple HTTP requests.
 
-Goals
+Implementation references (symbols, rather than shifting line numbers):
 
-- G1 Bounded, authorized reads of fact state within one scope+collection, for
-  debugging, synchronization, and mirroring (the gap: today only single-key
-  `inspect_fact`, `runtime.rs:300-324`).
-- G2 Reuse existing patterns: scoped bearer auth (`runtime.rs:179-214`),
-  `ApiError` codes (`runtime.rs:146-172`), strict JSON (`strict_json.rs:47-66`),
-  `/v1/scopes/:tenant/:environment/...` route shape (`runtime.rs:822-832`),
-  response envelopes `{"records":...}` (`runtime.rs:298`) and
-  `{"status":...,"revision":...}` (`runtime.rs:315-318`).
-- G3 Cheap re-poll for sync clients (conditional GET).
-- G4 Preserve the mandatory-TTL posture: no reader may obtain a fact value the
-  resolver would refuse (`FactSnapshot::get`, `runtime_facts.rs:753-783`).
+- [Runtime HTTP server](../../crates/ipe-server/src/runtime.rs): `inspect_fact`,
+  `authorize`, `ApiError`, `Clock::now`, and route registration.
+- [Fact storage](../../crates/ipe-core/src/runtime_facts.rs): `KeyState`,
+  `FactSnapshot`, `FactSnapshot::get`, `take_revision`, `replace_snapshot`,
+  and `cleanup_expired`.
+- [Runtime data contract](../RUNTIME_DATA.md): credential grants, TTLs,
+  connector generations, and local revision semantics.
+- [Runtime acceptance suite](../../acceptance/runtime-data/README.md).
 
-Non-goals
+The store retains the latest state per key. Each changed key gets its own revision,
+including each entry or tombstone in a pull-generation replacement. A request can
+clone an atomic `FactSnapshot`; later requests clone newer state. No old payloads
+are retained for reconstruction.
 
-- N1 Not a general query engine: no cross-collection joins, no predicate
-  pushdown beyond key prefix, no sorting beyond the defined iteration order.
-  Policies query facts; this API inspects state.
-- N2 No cross-scope reads, ever. Scope comes from the path and the credential
-  match (`runtime.rs:179-214`); snapshots are scope-keyed
-  (`runtime_facts.rs:726-736`).
-- N3 No change-feed / event log. The store keeps only current state per key
-  (`KeyState`, `runtime_facts.rs:216-225`); historical payloads are not
-  archived (docs/RUNTIME_DATA.md, policy-catalog section). A feed would require
-  new durable storage. The revision-window iterator below delivers the sync
-  use case without one.
-- N4 No historical as-of-revision reads. `FactSnapshot` clones only the current
-  `PersistedState` (`runtime_facts.rs:640-646`); state at an older revision
-  cannot be reconstructed. `max_revision` below is a paging bound, not time
-  travel (see §5).
-- N5 No writes, no TTL refresh, no `min_revision` consistency token (docs
-  already state it is not implemented; revision stays "local database
-  metadata, not a portable consistency token", docs/RUNTIME_DATA.md).
+## 2. Goals and boundaries
 
-## 2. Endpoint design
+Goals: bounded reads within one authorized scope and collection, optional field
+projection, metadata-only inspection for writers, and strict TTL enforcement.
 
-One new route, consistent with existing style:
+Excluded: cross-scope queries, joins, policy evaluation, writes or TTL renewal,
+historical reads, portable consistency tokens, and reliable incremental feed
+synchronization. That last capability requires a separate retained-history or
+snapshot-session design; see §5.
 
-    GET /v1/scopes/{tenant}/{environment}/facts/{collection}
+## 3. Query parameters
 
-Query parameters (all optional; unknown names rejected — §6):
+All parameters are optional except the cursor pairing described below. Reject
+unknown or repeated parameter names, invalid encodings, and malformed values.
 
-| Param | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `prefix` | string | — | Only keys with this byte prefix (keys ≤1024 bytes, `runtime_facts.rs:19,847-851`). |
-| `limit` | integer | 100 | Max entries per page; hard max 1000 (§8). |
-| `cursor` | integer | — | Revision cursor: return only keys whose latest change revision > `cursor`. Must be paired with `max_revision`. |
-| `max_revision` | integer | snapshot revision at page 1 | Upper bound on key change revision; pins the page set across pages. Required whenever `cursor` is present. |
-| `fields` | CSV | — | Projection: allowlist of top-level fields of `record.value`; valid only for `record`-schema collections; unknown name → error. |
-| `include_inactive` | bool | false | Also return `expired` and `deleted` entries. Values are never returned for non-live entries (§5). |
+| Parameter | Type/default | Proposed meaning |
+| --- | --- | --- |
+| `prefix` | UTF-8 string / absent | Match key byte prefixes; at most 1024 encoded bytes. |
+| `limit` | integer / 100 | Entries per page, range 1–1000. |
+| `cursor` | unsigned revision / absent | Include only keys whose current last-change revision is greater than this value; requires `max_revision`. |
+| `max_revision` | unsigned revision / first request's snapshot revision | Inclusive upper bound on current key revisions. Must be at least `cursor` and no greater than the request's snapshot revision. |
+| `fields` | CSV / absent | Allowlisted top-level fields of record-schema values. Unknown or duplicate names, empty components, and non-record schemas are errors. A valid optional field absent from a record is omitted. |
+| `include_inactive` | `true` or `false` / false | Include expired and deleted keys as metadata only. |
 
-Pagination: **revision-cursor, not offset**. Rationale:
+An absent cursor starts at revision zero. Order matching entries by
+`(revision, key)` ascending, then apply entry and encoded-response byte limits.
+Revisions are unique per changed key in the current store. If that invariant
+changes, a revision-only cursor must be replaced before shipping the change.
 
-- Every put, delete, and pull-generation change takes one strictly monotone
-  revision under the state mutex (`take_revision`, `runtime_facts.rs:946-950`;
-  delete branch `runtime_facts.rs:451-465`), and `FactSnapshot` is an atomic
-  clone (`runtime_facts.rs:640-646`). Therefore the set {keys with change
-  revision in `(cursor, max_revision]}` is disjoint across pages and stable
-  under concurrent commits: later commits land above the bound.
-- Offset pagination over the key-ordered `BTreeMap<FactAddress, KeyState>`
-  (`runtime_facts.rs:216-225`) is O(skip) per page and unstable: concurrent
-  commits shift offsets, duplicating or skipping keys between pages.
-- State is bounded (≤10,000 keys, `runtime_facts.rs:22`), so each page rescans
-  the collection's key range in memory; a secondary index is unnecessary.
+The client must keep scope, collection, prefix, projection, and inactive selection
+unchanged while traversing a window. Revision values are local database metadata;
+a cursor is invalid after database replacement/restore and must be discarded.
+The current store has no incarnation token to detect every such event; this is
+an explicit limitation and implementation decision (§11).
 
-Page semantics: entries ordered by `(revision, key)` ascending; a page returns
-up to `limit` entries from the window; `next_cursor` is the last entry's
-revision and is non-null iff more matching entries remain (deterministic — the
-scan is bounded); a key changed twice inside the window appears once, with its
-latest state. This is a key-enumeration iterator by last-change revision, not
-an event log (N3).
+## 4. Wire contracts
 
-Conditional requests: every 200 response carries `ETag: W/"<revision>"` where
-`revision` is the snapshot revision (`FactSnapshot::revision` =
-`next_revision`, `runtime_facts.rs:693-696`). `If-None-Match: "<revision>"`
-matching the current snapshot revision returns `304` with the same `ETag` and
-no body. The validator is weak because the body is also a function of `now`
-(TTL expiry is time-based and does not advance the revision — §5); clients
-must keep honoring per-record `expires_at` locally across `304`s.
-
-As-of-revision reads: rejected (N4). `max_revision` bounds which key changes
-are considered; liveness/expiry is always evaluated at read time against
-current state. Example: key put at r=5, deleted at r=9; a request with
-`max_revision=7` will not surface the r=9 tombstone, so the key appears live
-in the window even though it is deleted now. Documented, intended: the
-window is for stable iteration, not history.
-
-`include_expired` vs `include_inactive`: one flag covering both `expired` and
-`deleted`, named `include_inactive`. Justification against the mandatory-TTL
-posture: non-live entries are returned metadata-only (no `record.value`),
-matching the resolver, which refuses the value after expiry
-(`runtime_facts.rs:763-765`) and `cleanup_expired`, which nulls payloads
-within ≤30 s while keeping revision/watermarks (`runtime_facts.rs:648-666`;
-spawn loop `runtime.rs:798-806`). Metadata (revision, observed_at,
-expires_at, source_revision) lets sync clients distinguish expiry from
-deletion without resurrecting evidence.
-
-## 3. Wire contracts
-
-Success page (200):
+Proposed success page:
 
 ```json
 {
@@ -139,279 +90,202 @@ Success page (200):
       }
     }
   ],
+  "revision": 50,
+  "max_revision": 42,
+  "truncated": true,
+  "next_cursor": 7
+}
+```
+
+`revision` identifies the actual snapshot used for this request. `max_revision`
+is the enumeration bound, preserved across pages; it can be older than `revision`.
+On the first unbounded request both are equal. This separates current observation
+from the requested window.
+
+`records[].record` uses `FactRecord` serialization, with projection applied to
+`value`. It is present only for a live key and an `inspect` credential. Writers
+without `inspect` receive no `record` member even for live keys. Flat metadata
+reflects `KeyState`; deleted keys have `expires_at: null`.
+
+```json
+{
+  "records": [
+    {"key":"stale-node","status":"expired","revision":5,"observed_at":1792173500,"expires_at":1792173560,"source_revision":11},
+    {"key":"removed-node","status":"deleted","revision":9,"observed_at":1792173590,"expires_at":null,"source_revision":13}
+  ],
   "revision": 42,
+  "max_revision": 42,
   "truncated": false,
   "next_cursor": null
 }
 ```
 
-- `records[].record` is the exact `FactRecord` JSON
-  (`runtime_facts.rs:171-177`, `Serialize`), present iff `status == "live"`.
-- Flat `revision`/`observed_at`/`expires_at`/`source_revision` mirror the
-  stored `KeyState` (`runtime_facts.rs:216-225`) and are present on every
-  entry; `expires_at` is `null` for `deleted` (delete stores
-  `expires_at: None`, `runtime_facts.rs:459`).
-- `revision` (top level) is the snapshot revision = paging bound used;
-  clients echo it back as `max_revision`.
-- `truncated` is `true` iff the page stopped early (limit or byte budget,
-  §8); `next_cursor` is non-null iff more entries remain in the window.
+`truncated` is true exactly when more matching entries remain in this request's
+snapshot after the page. In that case `next_cursor` is the last emitted revision;
+otherwise it is null. An empty terminal page is valid, including when later
+mutations move all remaining keys outside the window. Never emit a nonterminal
+empty page that cannot advance the cursor.
 
-Empty page (200):
+## 5. Consistency and reconciliation
 
-```json
-{"records": [], "revision": 42, "truncated": false, "next_cursor": null}
-```
+Within a request, clone one snapshot and take one trusted clock reading. Evaluate
+liveness with the same expiry rule as `FactSnapshot::get`: equality with
+`expires_at` is expired. Never return expired values, including when payload
+cleanup has not yet run. Cleanup can erase payloads without advancing revisions.
 
-Truncated page (200):
+Across requests, `max_revision` only filters **current** key states. It does not
+pin an old version. For example, page one captures bound 7 with a key at revision
+5; before page two that key is deleted at revision 9. Page two excludes the key
+because its current revision exceeds 7. It cannot return either the old live
+value or the out-of-window tombstone. An overwrite behaves the same way.
 
-```json
-{
-  "records": [ /* up to `limit` entries, shape above */ ],
-  "revision": 42,
-  "truncated": true,
-  "next_cursor": 87
-}
-```
+Consequently the pass does not enumerate exactly the keys present on page one.
+Under concurrent changes, keys can disappear from the window before observation.
+A bounded pass does not repeat an emitted key, but it can miss a page-one key.
+If no writes occur and liveness filters remain unchanged, pagination enumerates
+the matching current state. Passive TTL expiry can still remove a matching key
+from default listings between pages.
 
-Inactive entries (only with `include_inactive=true`; no `record` member):
+A subsequent window can expose the later current revision, if retained, but this
+is not a durable feed. In particular, passive expiry takes no revision, so a
+revision-only delta cannot notify a mirror of all expirations. Clients must enforce
+cached `expires_at` locally and perform reconciliation. Absence from any partial
+or concurrent pass is not authoritative deletion evidence. Inspecting tombstones
+requires `include_inactive=true`; no historical event ordering is promised.
 
-```json
-{"key": "stale-node", "status": "expired", "revision": 5,
- "observed_at": 1792173500, "expires_at": 1792173560, "source_revision": 11}
-{"key": "removed-node", "status": "deleted", "revision": 9,
- "observed_at": 1792173590, "expires_at": null, "source_revision": 13}
-```
+Applications requiring a complete stable enumeration or durable replication must
+wait for a retained snapshot/session or feed contract, rather than treating this
+endpoint as that contract. Snapshot sessions would also need explicit memory,
+expiry, authorization, and revocation budgets.
 
-Projection (`fields=active`): `record.value` contains only allowlisted
-fields; the rest of the entry is unchanged. Unknown field name, non-record
-schema, or a schema-optional field that is absent is simply omitted (only
-unknown *requested names* error, §6).
+## 6. Conditional requests
 
-Conditional GET: request `GET .../facts/approvals` with
-`If-None-Match: "42"`; if the current snapshot revision is still `42` → `304`
-(empty body, same `ETag`). Any commit advancing the store revision → `200`
-with a new `ETag`. Note: passive expiry does NOT change the revision (§5), so
-a `304` can hide entries that expired since the cached page; clients filter
-cached entries by `expires_at` themselves.
+A revision-only ETag is insufficient: TTL expiry changes page membership without
+a revision increment. Prefix, cursor, projection, inactive selection and the
+caller's permitted view also affect the representation. A weak validator does
+not make different membership semantically equivalent.
 
-Not modified / error bodies use the existing envelope
-`{"error": code, "message": ...}` (`runtime.rs:146-150`).
+Propose a strong opaque validator computed from the complete deterministic,
+authorized response representation after liveness filtering, such as a digest of
+its encoded bytes. Reauthorize, validate query parameters, check the clock, build
+the current permitted representation and compare before returning `304`.
+Changing the response requires a different validator. This includes passive
+expiry and payload cleanup when they change visible data. A `304` has no body.
+It carries the same ETag and cache policy as the equivalent `200`.
 
-## 4. Semantic guarantees
+Use `Cache-Control: private, no-cache` so a stored representation must be
+revalidated before reuse and is not shared across credentials. Clients still
+expire locally cached values by `expires_at` between reads. A `304` saves response
+bandwidth, not the scan, authorization or representation-construction cost.
 
-- Snapshot isolation per request: each page handler captures one
-  `store.snapshot(scope)`; the clone under the mutex is atomic, so one
-  response is internally consistent (`runtime_facts.rs:640-646`). Within one
-  page, evaluation shares one `Clock::now()` reading (pattern:
-  `runtime.rs:326-360`).
-- Cross-page stability: the client pins `max_revision` to page 1's top-level
-  `revision`; entries only come from `(cursor, max_revision]`. Commits between
-  pages take revisions above the bound (`take_revision` is strictly monotone,
-  `runtime_facts.rs:946-950`) and are invisible to the pinned pass; the next
-  pass starting at `cursor = max_revision` (or last `next_cursor`) delivers
-  them. No duplicates, no misses inside a pass.
-- Replay of commits between pages: a key mutated twice in the window appears
-  once with its latest state; a key mutated after the bound appears in the
-  next pass. This is exactly the mirror-advance rule.
-- TTL/expiry visibility: liveness is evaluated at read time with the caller's
-  `now` — `now >= expires_at` → expired, equality is expiry
-  (`runtime_facts.rs:763-765`; exclusive boundary by construction
-  `runtime_facts.rs:916-943`). A key emitted as `live` on page 1 is never
-  re-emitted later in the same pass (its revision is ≤ the advanced cursor);
-  keys not yet emitted may surface as `expired` (with `include_inactive=true`)
-  or be absent (default). Clients caching pages must apply `expires_at`
-  locally; revision does NOT advance on passive expiry (`cleanup_expired`
-  nulls values without taking revisions, `runtime_facts.rs:648-666`).
-- Deletion visibility: deletes store value-less tombstones that keep their
-  revision and `source_revision` for replay ordering
-  (`runtime_facts.rs:207-215,451-465`). Default listings show deletions only
-  as absence; `include_inactive=true` surfaces `status:"deleted"` entries.
-  Absence plus a revision gap is not proof of prior existence — mirrors that
-  need deletion notices should enable `include_inactive`.
-- Clock/high-water: reads use `Clock::now()`, a monotone high-water over wall
-  time; a >5 s wall discontinuity yields 503 `clock_untrusted` and the read
-  fails closed (`runtime.rs:106-143`). Because `now` is monotone, expiry
-  decisions cannot flip backwards between pages of one pass.
+Accept standard `If-None-Match` lists and wildcard syntax with weak comparison for
+GET, including the server's own returned validator. Reject malformed syntax as
+`400 invalid_parameter`. No conditional behavior is added to single-key
+inspection in this proposal. Final cache policy remains a maintainer decision.
 
-## 5. Error contract
+## 7. Authorization and errors
 
-All errors use `ApiError` → `{"error":code,"message":...}`
-(`runtime.rs:146-150`). Reuse `From<FactError>` mappings unchanged
-(`runtime.rs:152-172`).
+Authorize before returning data or `304`, using the existing `inspect_fact` rule:
 
-| Condition | Status | Code | Source pattern |
-| --- | --- | --- | --- |
-| Missing/invalid Bearer token | 401 | `unauthenticated` | `runtime.rs:202-213` |
-| Valid token, different scope | 403 | `scope_forbidden` | `runtime.rs:202-213` |
-| No `inspect`, not writer of this collection | 403 | `operation_forbidden` | `runtime.rs:216-218`, check modeled on `runtime.rs:307` |
-| Collection not configured in scope | 404 | `unknown_collection` | `runtime_facts.rs:711-721` via `runtime.rs:158` |
-| Malformed query param, unknown param name, `cursor` without `max_revision`, `limit` out of range, `prefix` >1024 bytes, bad `fields` name, non-boolean `include_inactive`, malformed `If-None-Match` | 400 | `invalid_parameter` (NEW) | 400 is the truthful status for bad request metadata; body-level input keeps 422 `invalid_json`/`invalid_fact` (`runtime.rs:175-177,165-171`) |
-| Clock discontinuity during read | 503 | `clock_untrusted` | `runtime.rs:120-143` |
-| Storage/corrupt state | 503 | `storage_unavailable` | `runtime.rs:160-164` (reads touch the in-memory Arc only; kept for parity) |
-| Bounded-state capacity exhausted | 507 | `state_limit` | `runtime.rs:165-166` (not reachable on reads; listed for completeness) |
-| Oversized body | 413 | (axum default) | `DefaultBodyLimit`, `runtime.rs:833` — GET carries no body; do not accept bodies on GET |
+- `inspect`: values and metadata in the credential's scope.
+- Writer of the named collection without `inspect`: metadata only.
+- `evaluate` or `manage_policies` alone: no listing authority.
+- Pull collections: inspect credentials only; bootstrap already rejects writer
+  grants for connector-owned collections.
 
-Strict-JSON posture: request bodies are absent for GET; unknown **query
-parameters** are rejected with 400 `invalid_parameter`, the query-string
-analog of `deny_unknown_fields` (`runtime.rs:49,53,222-241`) and of the
-duplicate-key rejection in `strict_json.rs:47-66`.
+A credential for another scope fails with `403 scope_forbidden`; missing or
+invalid bearer credentials fail with `401 unauthenticated`. No permission
+expansion is implied by cursor or cache reuse. `fields` never grants value access.
 
-## 6. Authorization
+Use the existing `ApiError` envelope `{"error":"code","message":"..."}`:
 
-Exactly the `inspect_fact` rule, applied per collection
-(`runtime.rs:307`):
+| Condition | Status/code |
+| --- | --- |
+| No collection inspection/write grant | 403 `operation_forbidden` |
+| Unknown collection, after authorization | 404 `unknown_collection` |
+| Invalid query or malformed conditional header | 400 `invalid_parameter` (new) |
+| Untrusted clock | 503 `clock_untrusted` |
+| Unavailable/corrupt storage | 503 `storage_unavailable`, where applicable |
 
-- `inspect` grant → full entries including `record.value` (mirrors
-  `runtime.rs:315` and `catalog`, `runtime.rs:401-407`).
-- Writer of this collection without `inspect` → listing with all metadata
-  (`status`, `revision`, `observed_at`, `expires_at`, `source_revision`) but
-  no `record` member. This extends "a writer without `inspect` can read a
-  key's revision/status for conditional updates, but cannot read stored
-  values" (docs/RUNTIME_DATA.md, credentials section) from one key to many;
-  the writer only sees the collection it already writes.
-- `evaluate`-only or `manage_policies`-only credentials → 403
-  `operation_forbidden` (no new grant is introduced).
-- Pull-mode (connector-owned) collections: no push-writer credential can exist
-  for them (`runtime.rs:704,725`), so they are readable only by `inspect`
-  credentials — same posture as `inspect_fact` (no ingestion-mode check,
-  `runtime.rs:300-324`) and `connector_status` (`runtime.rs:601-616`).
-  Confirm explicitly (OQ-10).
-- Scope isolation is inherited from `authorize` (`runtime.rs:179-214`) plus
-  the scope-keyed snapshot (`runtime_facts.rs:726-736`); there is no route
-  shape that can name two scopes.
+No JSON request body is defined. Query strictness parallels the server's typed
+body and strict JSON conventions; GET parsing does not invoke JSON decoding.
+Write-only capacity and oversized-body errors are not listing response contracts.
 
-## 7. Limits and abuse
+## 8. Bounds and implementation surface
 
-- `limit` default 100, hard max 1000; the full key space is ≤10,000 keys and
-  16 MiB (`runtime_facts.rs:22-23`), so a complete mirror is at most
-  10 pages of 1000.
-- Response byte budget: stop appending entries (and set `truncated=true` with
-  `next_cursor`) at 4 MiB — 4×`MAX_BODY`, the same multiplier already accepted
-  for bootstrap configuration (`runtime.rs:32,792`). Individual values are
-  ≤1 MiB (`runtime_facts.rs:20`), so the budget bounds worst-case pages.
-- No in-process rate limiting exists for any route; the listener is loopback
-  only, and remote access is delegated to a local TLS-terminating proxy
-  (`runtime.rs:624-628`; docs/RUNTIME_DATA.md deployment note). Recommend:
-  rate limiting and request-size quotas stay a proxy concern; conditional GET
-  (`304`) is the intended cheap re-poll so sync loops do not refetch bodies.
-- Write amplification: none — no persistence or clock writes; the only
-  shared-mutex work is one state clone per request, the same cost class as
-  `evaluate`'s snapshot (`runtime.rs:340`).
+Propose 100 entries by default, at most 1000 entries and 4 MiB of encoded response
+per page, including metadata and the response envelope. Values are bounded by the
+store, but JSON escaping and wrapping also consume the response budget. If one
+entry cannot fit, return an explicit `413 response_limit` error rather than an
+empty truncated page or silently skipping the entry. Confirm this code before
+implementation (§11).
 
-## 8. Versioning
+The store currently caps retained keys and total state. Byte limits can require
+more than ten pages even with at most 10,000 keys and `limit=1000`. Do not promise
+a fixed page count. Bound serialization work and avoid constructing an unbounded
+response before applying the cap. Snapshot cloning still holds the store mutex;
+conditional GET does not remove that cost.
 
-- Routes stay under `/v1` (`runtime.rs:822-832`). Evolution rule:
-  **additive-only** within `/v1` — new optional query params, new response
-  fields, new `status` values must be tolerated by clients; this is stated as
-  a client obligation in the docs.
-- Unknown query parameters are rejected (400), mirroring
-  `deny_unknown_fields`; silently ignoring them would let clients depend on
-  typos and make later reuse a breaking change.
-- Breaking changes (removing/renaming params or fields, changing entry
-  ordering or `304` semantics) require a new route version, not header
-  negotiation. `ETag` values are opaque quoted strings; clients must not
-  parse them.
-- The contract is also pinned by the external acceptance suite
-  (acceptance/runtime-data/README.md): new scenarios in §10 join that suite
-  so wire changes fail CI before shipping.
+Add a read-only enumeration method on `FactSnapshot`, reusing collection/schema
+lookup and expiry semantics. No persistence format change is needed for the
+limited current-state listing. Measure scan, clone, sort and serialization cost
+under the maximum supported state before making latency claims. Existing
+loopback/proxy deployment rules remain applicable.
 
-## 9. Implementation surface (core gap, design note)
+## 9. Versioning
 
-`FactSnapshot` currently exposes only `revision`, `snapshot_metadata`,
-`collection_config`, `schema`, `collections`, `key_revision`, `get`
-(`runtime_facts.rs:693-783`). Listing needs one new read-only core method,
-e.g. `entries(collection, now, window: (u64,u64), include_inactive) ->
-Vec<Entry>`: a `BTreeMap` range scan over the collection's addresses with
-status derived from the same expiry logic as `get` (`runtime_facts.rs:753-783`).
-No persistence, schema, or `FactError` changes; the store's header comment
-already anticipates an indexed layout behind unchanged semantics
-(`runtime_facts.rs:3-7`).
+Keep the route under `/v1`. Additive response fields are permitted; clients must
+handle unknown status values conservatively. Unknown query names remain errors
+so typos cannot silently alter selection. Changing ordering, cursor meaning,
+authorization, or conditional semantics requires an explicit versioning decision.
+The accepted contract must be covered by executable acceptance tests before
+implementation is declared complete.
 
-## 10. Acceptance-test scenarios
+## 10. Proposed acceptance scenarios
 
-Style: black-box HTTP against the real binary using `check(name, operation)`
-with `require(...)` (scripts/accept-runtime-data.py:129-141), joined to the
-runtime-data suite (acceptance/runtime-data/README.md).
+Use real HTTP against the runtime binary in the runtime-data acceptance style:
 
-1. Multi-tenant isolation — Given the same collection name in scopes A and B,
-   when A's credential lists A, then only A's keys appear; the same token on
-   scope B is 403 `scope_forbidden`.
-2. Grant enforcement — Given a writer credential without `inspect`, when it
-   lists, then entries carry metadata but no `record`; an `evaluate`-only
-   credential gets 403 `operation_forbidden`.
-3. Unknown collection — Given an unconfigured collection name, when any
-   authorized credential lists it, then 404 `unknown_collection`.
-4. Strict parameters — Given an unknown query parameter, `limit=1001`, or
-   `cursor` without `max_revision`, then each is 400 `invalid_parameter`.
-5. Cursor stability under concurrent commits — Given 250 seeded keys and
-   `limit=100` with `max_revision` pinned from page 1, when a batch commit
-   lands between pages, then pages are disjoint, the union is exactly the
-   pinned window, new keys are absent until a follow-up pass with
-   `cursor=max_revision` returns exactly those keys.
-6. TTL expiry mid-pagination — Given a short-TTL key expiring between pages,
-   when page 2 is fetched with `include_inactive=true`, then the key appears
-   once as `status:"expired"` with no value; without the flag it is absent;
-   no response ever contains its value after expiry.
-7. Deletion visibility — Given a committed key that is then deleted, when
-   listing with `include_inactive=true`, then the entry is
-   `status:"deleted"` with retained revision, and a subsequent put naming
-   that tombstone `expected_revision` succeeds.
-8. Projection — Given a record-schema collection, when listing with
-   `fields=active`, then every `record.value` contains only `active`; an
-   unknown field name or non-record schema returns 400.
-9. Conditional GET — Given `ETag: W/"r"`, when the request repeats with
-   `If-None-Match: "r"` and no commit occurred, then 304; after any commit,
-   200 with a new `ETag`; when a listed fact expires with no commit, still
-   304 and the client drops the cached entry by its `expires_at`.
-10. Pull collection inspection — Given a connector-owned collection after a
-    failed poll, when an `inspect` credential lists it, then the previous
-    accepted generation's entries and revisions are returned unchanged, and
-    no writer credential can be granted on that collection (bootstrap
-    rejects it).
+1. Scope isolation and grant enforcement, including writer metadata redaction
+   and rejected evaluate-only requests.
+2. Authorized unknown collection and strict query errors, including repeated
+   names, invalid bounds, overflow, projection and conditional-header syntax.
+3. A quiescent multi-page scan is complete, ordered and disjoint.
+4. Concurrent overwrite/delete of an unvisited key above the bound excludes it
+   from the old window; no old value is reconstructed. New keys above the bound
+   are likewise excluded. A later window can return their retained current state.
+5. TTL expiry between pages never returns the expired value; inactive listings
+   return metadata only. Cached values expire locally without a new revision.
+6. Tombstones retain conditional-write revisions; absence from a partial pass
+   is never interpreted as a deletion receipt.
+7. Projection rejects unknown fields and non-record schemas, omits absent
+   optional fields, and never reveals values to writers without inspect.
+8. Replay the returned ETag, weak/list/wildcard forms, and check `304` only for
+   the current permitted representation. Expiry changing membership changes the
+   validator without a commit. Revoked credentials cannot obtain `304`.
+9. Entry and byte caps produce advancing cursors; an individually oversized
+   encoded entry fails explicitly. Terminal empty windows do not loop.
+10. Pull-generation replacement assigns per-key revisions and preserves the
+    previous generation after a failed poll; inspect-only access remains valid.
 
-## 11. Open questions for the maintainer
+## 11. Open maintainer decisions
 
-1. `include_inactive` as a single flag for expired+tombstone entries —
-   Recommendation: yes; two flags doubles surface for one audit need.
-2. Default `limit` 100 / hard max 1000 — Recommendation: accept; confirm
-   against expected production key counts (store caps at 10,000).
-3. Writer-without-`inspect` listings include metadata beyond status+revision
-   (observed_at/expires_at/source_revision), slightly richer than
-   `inspect_fact`'s status+revision (`runtime.rs:317-318`) — Recommendation:
-   allow (writers only see collections they already write); confirm.
-4. `304` semantics rely on client-side `expires_at` filtering rather than a
-   time-quantized validator — Recommendation: accept documented obligation;
-   a quantized ETag would still not be exact and complicates caching.
-5. Add `If-None-Match` to single-key `inspect_fact` for parity —
-   Recommendation: yes, additive, but can ship after the list endpoint.
-6. No `max_age`/freshness filter on listing (policies express `fresh within`;
-   retrieval only inspects state) — Recommendation: keep out of v1.
-7. New 400 `invalid_parameter` code vs overloading 422 `invalid_fact` for
-   query errors — Recommendation: introduce the new code; the error table
-   stays truthful.
-8. Byte budget 4 MiB per page (4×`MAX_BODY`, `runtime.rs:792`) —
-   Recommendation: accept; revisit if value sizes grow.
-9. Document `revision` as cursor-grade but still "local database metadata,
-   not a portable consistency token" (docs/RUNTIME_DATA.md) —
-   Recommendation: keep both statements; the cursor works within one store
-   lifetime, which is all this API serves.
-10. Pull collections visible to `inspect`-only credentials — Recommendation:
-    confirm explicitly in docs (current behavior already implies it,
-    `runtime.rs:300-324,601-616`).
+These are recommendations, not approvals. Resolve them before implementation:
 
-## Executive summary
-
-1. One new route: `GET /v1/scopes/{t}/{e}/facts/{collection}` for bounded, authorized fact reads.
-2. Revision-cursor pagination pinned by `max_revision`; stable and disjoint under concurrent commits.
-3. Pages are key-enumeration windows by last-change revision — not a change-feed, not history.
-4. No as-of-revision reads: the store keeps only current state; documented, not hidden.
-5. Entries mirror existing shapes: `FactRecord` JSON plus flat `KeyState` metadata and `status`.
-6. `status` is `live|expired|deleted`; values are never returned for non-live entries.
-7. Authorization reuses `inspect_fact`'s rule; writers see metadata, `inspect` sees values.
-8. Errors reuse `ApiError` codes; one new code, 400 `invalid_parameter`, for query-string faults.
-9. Conditional GET via weak `ETag` on snapshot revision; clients honor `expires_at` locally.
-10. Limits: 1000 keys/page hard max, 4 MiB page budget, loopback+TLS-proxy deployment unchanged.
-
-REPORT: /tmp/ipe-pr/fact-retrieval-api-contract.md
-ENDPOINTS: GET /v1/scopes/{tenant}/{environment}/facts/{collection}
-OPENQUESTIONS: 10
+1. Accept a limited current-state listing, or require retained snapshot sessions
+   for stable enumeration? Recommendation: ship the limited semantics only if
+   they meet the caller's reconciliation need; do not promise feed synchronization.
+2. Single `include_inactive` flag for expired and deleted entries? Recommend yes.
+3. Default/hard entry limits 100/1000? Recommend yes, subject to measured costs.
+4. Writer-visible timestamps and source revisions exceed today's minimal
+   single-key metadata. Recommend an explicit authorization review before expansion.
+5. Representation-based ETag and private revalidation, or omit conditional GET
+   initially? Recommend correct representation validation if caching is included.
+6. Single-key conditional GET parity? Recommend defer to a separate change.
+7. Omit policy-style freshness filters? Recommend yes; enforce hard TTLs only.
+8. Introduce `400 invalid_parameter` and `413 response_limit`? Recommend explicit
+   codes with acceptance coverage rather than overloading fact-validation errors.
+9. Accept 4 MiB encoded pages and local revision cursors without incarnation
+   detection, or add a database identity? Recommend requiring clients to restart
+   on database replacement and evaluating an identity token before production use.
+10. Confirm inspect-only visibility for connector-owned collections? Recommend
+    yes, following the existing inspection rule.

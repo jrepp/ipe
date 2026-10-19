@@ -209,3 +209,9 @@ ipe/
 ---
 
 **Last updated:** 2025-10-27
+
+### Proposed fact retrieval contract
+
+[RFC 0003: Fact Retrieval API Contract](rfcs/0003-fact-retrieval-api.md) proposes
+bounded current-state collection listing. It remains a draft with open decisions;
+no collection-listing route is implemented by this document.
