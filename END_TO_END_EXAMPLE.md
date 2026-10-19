@@ -1,7 +1,19 @@
 # End-to-End Example: Policy Lifecycle with JIT
 
-> **Note:** sections using `TieredPolicy`/`PolicyDataStore` illustrate the legacy engine, which is
-> being decommissioned (#36). The shipping v2 runtime evaluates via `runtime_policy` - see the repo README.
+> **⚠️ Historical document — the engine described here was removed.**
+> This walkthrough documents the **legacy embedded engine** (bytecode compiler,
+> stack interpreter, adaptive JIT tiering), which is being decommissioned
+> ([#36](https://github.com/jrepp/ipe/pull/36),
+> [#37](https://github.com/jrepp/ipe/pull/37), and the legacy-engine deletion PR).
+> The tier promotions, latency figures, and API calls below no longer describe
+> any shipped code.
+>
+> **For the current workflow, read [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md)**
+> and the external acceptance suite in
+> [acceptance/runtime-data/README.md](acceptance/runtime-data/README.md):
+> publish a versioned policy document, commit TTL-bounded runtime facts (or pull
+> them from a connector), and evaluate input through the scoped
+> `POST /v1/scopes/{tenant}/{environment}/evaluate` endpoint.
 
 This document demonstrates the complete lifecycle of a policy in IPE, from creation to JIT-optimized execution.
 
