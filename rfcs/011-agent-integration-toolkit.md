@@ -36,6 +36,9 @@ host's ambient credentials. The integration service owns durable execution, so
 runs and deployments survive an agent disconnect and another authorized agent can
 resume work from IDs and recorded state.
 
+The enforcement-facing inspection, execution, and trace tools are proposed in
+[RFC 017](017-enforcement-mcp-surface.md), using the same official Rust MCP SDK.
+
 The Enforcement Workload remains a consumer of RFC 010's sanitized publication
 feed. Authoring tools cannot activate executable policies, invoke adapter code on
 evaluation, or change enforcement access rules. Live integration means authorized

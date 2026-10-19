@@ -9,6 +9,11 @@
 Own permitted information release, opaque identities, constraint/action disclosure,
 and elevation requirements. It applies to every API, tool, report and trace. Audit
 retention and reconstruction belong to [RFC 016](016-integration-signals-and-audit.md).
+[RFC 017](017-enforcement-mcp-surface.md#7-principal-identity-request-control-and-finalization)
+defines the proposed enforcement principal/API profiles and revocation gates. Its
+[trace projection](017-enforcement-mcp-surface.md#6-trace-projection-and-diagnostic-retention)
+applies this contract to event structure, predicate results and coverage metadata;
+its hosted profile prevents transport replay from bypassing current authority.
 
 ## Access contract
 

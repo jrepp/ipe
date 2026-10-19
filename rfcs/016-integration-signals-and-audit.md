@@ -60,6 +60,13 @@ independent of integration collection jobs. A profile requiring durable audit fa
 closed when it cannot record. Lossless audit and unlimited availability during an
 unbounded audit-storage outage cannot both be promised.
 
+The proposed [enforcement MCP diagnostic cache](017-enforcement-mcp-surface.md#6-trace-projection-and-diagnostic-retention)
+is separate from this spool. It reserves capacity per principal/scope and cannot
+consume application enforcement admission. Diagnostic saturation may reject agent
+requests; it neither introduces a durable-audit requirement for ordinary evaluation
+nor bypasses one where configured. Diagnostic records do not survive restart and
+are not sufficient for exact replay.
+
 ## Area roadmap
 
 | Phase | Deliverable | Proof |
