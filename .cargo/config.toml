@@ -25,3 +25,11 @@ doc-private = "doc --all-features --document-private-items"
 # Benchmarks
 bench-all = "bench --workspace --all-features"
 bench-core = "bench --package ipe-core --all-features"
+
+[env]
+# RocksDB 8.10.0 writes pmull_runtime_flag from each ARM64 DB-open diagnostic.
+# Concurrent opens/CRC readers race on that non-atomic global. Use the portable
+# CRC implementation until the pinned native dependency fixes initialization.
+# Custom target CXXFLAGS must retain this flag; sanitizer tooling appends it too.
+CXXFLAGS_aarch64_apple_darwin = "-U__ARM_FEATURE_CRC32"
+CXXFLAGS_aarch64_unknown_linux_gnu = "-U__ARM_FEATURE_CRC32"
