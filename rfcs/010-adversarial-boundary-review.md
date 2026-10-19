@@ -5,8 +5,9 @@
 
 This record tracks failure cases and evidence required to close them. RFC 010 maps
 design ownership to the area RFCs; this review does not duplicate their contracts. All gates remain open
-for implementation and verification. The review inspected code and documentation;
-it did not run a security experiment or performance benchmark.
+for implementation and verification. The initial review inspected code and
+documentation; the follow-up below adds synthetic execution evidence. Neither
+review establishes production security or performance.
 
 ## Initial slice evidence
 
@@ -21,6 +22,29 @@ single-scope discovery boundary and metadata sandbox; they do not close the
 broader package deployment, synchronization, audit or performance gates below.
 Live ServiceNow and enforcement-load validation remain open. Repeatable commands,
 not historical test counts, define the current verification surface.
+
+## Implementation review remediation
+
+A synthetic hostile-provider probe reproduced a lost truncation diagnostic:
+33 dictionary rows plus an unsupported field type returned 32 fields with only
+`metadata_gap`, overwriting `record_limit`. Resource enumeration had the same
+failure mode. Discovery now accumulates all distinct coverage codes independently
+for resources and fields and retains truncation in its scalar summary. The
+[Rust acceptance suite](../crates/ipe-integration/examples/support/mod.rs) combines
+limits, invalid/duplicate identifiers, unsupported types, fuel exhaustion and
+invalid guest output; it also verifies that issues do not carry into the next run.
+This closes that diagnostic defect, not E4's broader snapshot/absence gate.
+
+The security check wrapper previously redirected ThreadSanitizer findings to files,
+printed them only when console output matched a sanitizer marker, and deleted them
+on exit. It could also accept abnormal exits based on functional test counts.
+The [wrapper](../.github/scripts/check-sanitizer.sh) now retains per-run logs,
+exit status and file reports, prints file reports independently, and fails on any
+abnormal command exit or detected finding. [CI](../.github/workflows/security.yml)
+uploads the reports even on failure; orchestration regressions exercise hidden
+reports and misleading success counts. This repairs the verification path; an
+unexplained sanitizer failure remains a landing blocker until its report has been
+investigated. Passing ordinary tests cannot waive it.
 
 ## Enforcement and synchronization
 

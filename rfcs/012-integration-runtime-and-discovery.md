@@ -35,6 +35,17 @@ Do not require the agent to choose a remediation record type before discovery.
 Operator resource restrictions remain valid and are reported as coverage boundaries.
 A denied metadata request means unknown visibility, not that the resource is absent.
 
+Coverage diagnostics accumulate within each declared scope. Resource enumeration
+and each resource's field enumeration keep separate, deduplicated sets of
+host-generated failure codes. Reaching a row limit, malformed/duplicate metadata,
+unsupported types and guest failures can occur together; reporting one must not
+erase another. A scalar summary may prioritize truncation, but cannot replace the
+full issue set. An observed resource does not imply its fields are complete; an
+empty issue set means only that no failure was observed within that bounded read.
+The discovery slice implements this with `coverage_codes` and per-resource
+`field_coverage_codes`, alongside the existing scalar summaries. These diagnostics
+never confer negative coverage or permission to publish a complete snapshot.
+
 Keep transport/credential validation, metadata access, record access, and constraint
 access separate. A successful schema read proves none of the others. Select the first
 business record and constraint sources from the discovery report, with authorized
