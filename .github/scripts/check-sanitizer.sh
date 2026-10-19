@@ -56,6 +56,14 @@ fi
 # Read the file reports independently of cargo's captured output.
 if [ "$SANITIZER_TYPE" = "thread" ]; then
     export TSAN_OPTIONS="log_path=$report_dir/tsan-report"
+    # RUSTFLAGS cannot instrument native dependencies. RocksDB publishes shared
+    # initialization state using C++ atomics; TSan must see those operations too.
+    # cc-rs target variables cover the native libraries without changing the
+    # ordinary production build. Rust supplies the sanitizer runtime at link time.
+    export CC_x86_64_unknown_linux_gnu=clang
+    export CXX_x86_64_unknown_linux_gnu=clang++
+    export CFLAGS_x86_64_unknown_linux_gnu="${CFLAGS_x86_64_unknown_linux_gnu:-} -fsanitize=thread -fno-omit-frame-pointer"
+    export CXXFLAGS_x86_64_unknown_linux_gnu="${CXXFLAGS_x86_64_unknown_linux_gnu:-} -fsanitize=thread -fno-omit-frame-pointer"
 fi
 output_file="$report_dir/cargo.log"
 run_status=0

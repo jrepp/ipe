@@ -58,6 +58,17 @@ echo 'WARNING: ThreadSanitizer: data race' > "$report_path.123"
 exit 0
 ''', 1, 'findings=1')
 
+    def test_native_dependencies_are_instrumented_with_rust(self):
+        self.run_sanitizer('''
+[ "$CC_x86_64_unknown_linux_gnu" = clang ]
+[ "$CXX_x86_64_unknown_linux_gnu" = clang++ ]
+[[ "$CFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
+[[ "$CXXFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
+[[ "$RUSTFLAGS" == *sanitizer=thread* ]]
+[[ "$*" == *-Z*build-std* ]]
+exit 0
+''', 0)
+
     def test_clean_run_succeeds_without_reusing_old_reports(self):
         self.run_sanitizer('''
 mkdir -p "$IPE_SANITIZER_REPORT_ROOT/thread.old"
