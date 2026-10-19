@@ -1,87 +1,61 @@
-ipe-rfc/
+ipe/
 │
 ├── 📋 Documentation (Core)
-│   ├── RFC.md                    ⭐ 150+ pages, complete technical spec
-│   ├── SUMMARY.md                📊 Executive summary for decision-makers
-│   ├── README.md                 🚀 Quick start guide
-│   ├── FILES.md                  📁 This file listing
-│   └── STRUCTURE.txt             🌲 Project tree
+│   ├── README.md                 🚀 Project overview and quick start
+│   ├── MISSION.md                🎯 Product mission (v2 runtime)
+│   ├── QUICKSTART.md             ⏱️ Getting started guide
+│   ├── RFC.md                    📜 Historical technical spec (legacy engine)
+│   ├── SUMMARY.md                📊 Executive summary (historical vision)
+│   ├── END_TO_END_EXAMPLE.md     🔄 Legacy engine lifecycle (historical)
+│   └── STRUCTURE.txt             🌲 Project tree (this file)
 │
 ├── ⚙️ Build Configuration
 │   └── Cargo.toml                📦 Workspace + dependencies
 │
-├── 🦀 Core Engine (crates/ipe-core/)
-│   ├── Cargo.toml                📦 Core dependencies + JIT feature
-│   └── src/
-│       ├── lib.rs                📚 Module exports
-│       ├── bytecode.rs           💾 Instruction set (~300 lines)
-│       ├── jit.rs                ⚡ JIT compiler - Cranelift (~400 lines) ⭐
-│       ├── tiering.rs            📈 Adaptive optimization (~350 lines) ⭐
-│       ├── rar.rs                🎯 RAR model (~150 lines)
-│       ├── engine.rs             🔧 Policy engine (~100 lines)
-│       ├── ast.rs                🌳 AST (stub)
-│       ├── compiler.rs           🔨 Compiler (stub)
-│       ├── interpreter.rs        🔍 Interpreter (stub)
-│       └── index.rs              📇 Indexing (stub)
+├── 🦀 Runtime (crates/)
+│   ├── ipe-core/src/
+│   │   ├── lib.rs                📚 Module exports
+│   │   ├── runtime_facts.rs      🗄️ TTL-bounded fact store, schemas, snapshots
+│   │   ├── runtime_policy.rs     ⚖️ Language-2 compiler/evaluator, budgets
+│   │   ├── policy_document.rs    📄 Versioned policy documents and catalog
+│   │   ├── rar.rs                🎯 Resource/Action/Request context (embedded)
+│   │   ├── approval.rs           ✅ Approval store (feature approvals)
+│   │   └── relationship.rs       🔗 Relationship store (feature approvals)
+│   └── ipe-server/src/
+│       └── runtime.rs            🌐 Axum HTTP runtime service
+│
+├── 🧪 Acceptance
+│   ├── acceptance/runtime-data/  ✅ External HTTP acceptance workflow
+│   └── acceptance/policy-data/   📄 Policy document fixtures and scenarios
 │
 └── 📚 Examples
-    └── jit_demo.rs               🎬 JIT demonstration (~200 lines)
+    └── examples/load_test.rs     📈 Load-test example
 
-Key Innovations:
-─────────────────
-⚡ Runtime JIT Compilation (jit.rs)
-   - Cranelift-based native code generation
-   - Transparent optimization
-   - 5-10x performance improvement
-
-📈 Adaptive Tiering (tiering.rs)
-   - Automatic promotion: 100 evals → JIT
-   - Profiling and statistics
-   - Zero-config optimization
-
-🎯 RAR Model (rar.rs)
-   - Resource-Action-Request context
-   - Type-safe evaluation
-   - Zero-copy when possible
+Note: the legacy in-process engine (parser, AST, bytecode compiler, stack
+interpreter, resource index, lock-free policy store, JIT, adaptive tiering)
+was removed after the version-2 runtime landed. Historical write-ups remain
+in docs/AST.md and docs/BYTECODE.md.
 
 Implementation Status:
 ───────────────────────
-✅ RFC architecture      (RFC.md)
-✅ Bytecode design       (bytecode.rs)
-✅ JIT compiler          (jit.rs)
-✅ Tiering logic         (tiering.rs)
-✅ RAR model             (rar.rs)
-✅ Example demo          (jit_demo.rs)
-🚧 Parser                (Phase 1)
-🚧 Compiler              (Phase 1-2)
-📋 Control plane         (Phase 4)
-📋 Web app               (Phase 6)
-📋 AI integration        (Phase 7)
+✅ Runtime facts (TTL, push/pull)   (runtime_facts.rs)
+✅ Language-2 evaluation            (runtime_policy.rs)
+✅ Policy documents + revisions     (policy_document.rs)
+✅ HTTP runtime service             (ipe-server/runtime.rs)
+✅ Acceptance suites                (acceptance/, make policy-acceptance)
+📋 Production hardening             (replication bounds, audit durability)
+📋 Control plane, bindings, web UI  (placeholders)
 
 Build Commands:
 ───────────────
-cargo build                              # Debug build
-cargo build --release --features jit     # Release with JIT
-cargo run --example jit_demo --features jit --release
-cargo test --all-features
-
-Performance Targets:
-────────────────────
-Interpreter:    ~50μs per policy
-Baseline JIT:   ~10μs per policy (5x faster)
-Optimized JIT:  ~5μs per policy (10x faster)
-Memory:         <4KB per policy
-Binary size:    <2MB stripped
-
-Lines of Code:
-──────────────
-Rust implementation: ~1,500 lines
-Documentation:       ~15,000 words
-Total files:         18 files
+cargo build                                  # Debug build
+cargo build --release                        # Release build
+cargo test --all-features                    # Test suite
+make runtime-acceptance                      # External HTTP acceptance
+make policy-acceptance                       # Scenario + HTTPS import suite
 
 Next Steps:
 ───────────
-1. Review RFC.md (complete spec)
-2. Run jit_demo (see JIT in action)
-3. Examine jit.rs + tiering.rs (implementation)
-4. Begin Phase 1: Parser + Compiler
+1. Read docs/RUNTIME_DATA.md (implemented workflow and limits)
+2. Run scripts/accept-runtime-data.py (real server, end to end)
+3. Publish a policy document, commit facts, evaluate

@@ -4,25 +4,31 @@
 
 ## Local Documentation Site
 
-Run `make docs-site` to export three real Rust parser trees and fresh interpreter
-microbenchmarks, then `make docs-serve` and open <http://127.0.0.1:8000/docs/>.
+Run `make docs-site` to export the generated docs data, then `make docs-serve`
+and open <http://127.0.0.1:8000/docs/>.
+
+> **Legacy data.** The site's parser trees and interpreter microbenchmarks are
+> generated from the removed legacy engine and are kept as an archive. They do
+> not measure the v2 runtime, whose performance under production load is not
+> characterized.
+
 The build requires Rust and [uv](https://docs.astral.sh/uv/). Python is pinned to
 **3.15.0** in `.python-version` (the stable release published October 9, 2026).
 Both local Make targets and CI read that file; the builder rejects other versions.
 The first build downloads Cargo dependencies. If an older uv cannot install the
 pin, update uv or use `uvx --from uv uv python install 3.15.0` once.
 
+- [AST explorer](ast.html): rendered, expandable trees with source and node details (legacy-parser output, archived).
 - [Contract summary](contract.html): inputs, decisions, application responsibilities,
-  and current implementation limits in plain language.
-- [Performance dashboard](performance.html): measured latency percentiles, throughput,
-  outliers, downloadable results, and requirement coverage.
+  and current implementation limits in plain language for the v2 runtime.
+- [Performance dashboard](performance.html): archived legacy-interpreter latency
+  percentiles, throughput, outliers, downloadable results, and requirement coverage.
 
 Generated data lives in `docs/data/site-data.json` and records the run time, platform,
 Rust version, and Git revision. Run `make docs-site` again after code changes.
-The dashboard measures hand-built bytecode through the real interpreter; it excludes
-parsing, compilation, context construction, and JIT. These are local microbenchmarks,
-not production performance validation. The existing Criterion evaluation suite has
-placeholder paths and is not the dashboard's data source.
+The dashboard measured hand-built bytecode through the legacy interpreter; it excluded
+parsing, compilation, context construction, and JIT. These are local microbenchmarks
+of the removed engine, not production performance validation.
 
 ### Checks and pull request artifacts
 
@@ -88,19 +94,23 @@ This index provides a guided path through IPE's documentation based on your need
 
 1. **[README](../README.md)** - Project overview, badges, and quick links
 2. **[QUICKSTART](../QUICKSTART.md)** - Get IPE running in 5 minutes
+3. **[END_TO_END_EXAMPLE](../END_TO_END_EXAMPLE.md)** - Legacy engine lifecycle walkthrough (historical)
 
 ## Understanding IPE
 
 **Learn the architecture and design:**
 
-- **[SUMMARY](../SUMMARY.md)** - Executive summary and vision (5 min read)
-- **[ARCHITECTURE](ARCHITECTURE.md)** - System architecture with diagrams (15 min read)
+- **[SUMMARY](../SUMMARY.md)** - Executive summary and vision (historical)
+- **[ARCHITECTURE](ARCHITECTURE.md)** - v2 runtime architecture with diagrams
 - **[ROADMAP](../ROADMAP.md)** - Development phases and milestones
 
 ## Technical Reference
 
 **Deep dives into IPE internals:**
 
+- **[RUNTIME_DATA](RUNTIME_DATA.md)** - The implemented v2 runtime: API, limits, and workflows
+- **[AST](AST.md)** - Legacy parser AST specification (historical)
+- **[BYTECODE](BYTECODE.md)** - Legacy bytecode instruction set (historical)
 - **[RFC Collection](../rfcs/INDEX.md)** - Design proposals and specifications
 
 ## RFCs (Request for Comments)
@@ -120,20 +130,20 @@ See **[rfcs/INDEX.md](../rfcs/INDEX.md)** for the complete RFC collection, inclu
 
 **Per-crate technical docs:**
 
-- **[ipe-core](../crates/ipe-core/)** - Core engine and interpreter
-- **[ipe-parser](../crates/ipe-parser/README.md)** - Predicate language parser
-- **[ipe-control](../crates/ipe-control/)** - Control plane (gRPC)
-- **[ipe-web](../crates/ipe-web/)** - Web application
-- **[ipe-wasm](../crates/ipe-wasm/)** - WebAssembly bindings
-- **[ipe-ffi](../crates/ipe-ffi/)** - C FFI and language bindings
+- **[ipe-core](../crates/ipe-core/)** - Runtime facts, policy documents, language-2 evaluation
+- **[ipe-server](../crates/ipe-server/)** - Axum HTTP runtime service
+- **[ipe-parser](../crates/ipe-parser/README.md)** - Placeholder crate
+- **[ipe-control](../crates/ipe-control/)** - Control plane placeholder (gRPC)
+- **[ipe-web](../crates/ipe-web/)** - Web application placeholder
+- **[ipe-wasm](../crates/ipe-wasm/)** - WebAssembly placeholder
+- **[ipe-ffi](../crates/ipe-ffi/)** - C FFI placeholder
 
 ## Development
 
 **Contributing and building:**
 
 - **[CONTRIBUTING](../CONTRIBUTING.md)** - Contribution guidelines
-- **[MVP_PLAN](../MVP_PLAN.md)** - MVP scope and checklist
-- **[Archive](archive/)** - Historical development docs
+- **[MVP_PLAN](../MVP_PLAN.md)** - MVP scope and checklist (historical)
 
 ## API Documentation
 
@@ -178,26 +188,26 @@ All documentation follows these principles:
 ```
 ipe/
 ├── README.md              # Project overview and entry point
-├── QUICKSTART.md          # 5-minute getting started guide
-├── SUMMARY.md             # Executive summary and vision
+├── QUICKSTART.md          # Getting started guide
+├── SUMMARY.md             # Executive summary (historical)
+├── END_TO_END_EXAMPLE.md  # Legacy engine walkthrough (historical)
 ├── ROADMAP.md             # Development roadmap
-├── MVP_PLAN.md            # MVP scope and progress
+├── MVP_PLAN.md            # MVP scope (historical)
 │
 ├── docs/                  # Technical documentation
 │   ├── INDEX.md          # This file
-│   ├── ARCHITECTURE.md   # System architecture
-│   ├── AST.md           # AST specification
-│   ├── BYTECODE.md      # Bytecode reference
-│   └── archive/         # Historical/dev docs
+│   ├── RUNTIME_DATA.md   # v2 runtime workflow and API (current)
+│   ├── ARCHITECTURE.md   # v2 architecture
+│   ├── AST.md            # Legacy AST spec (historical)
+│   └── BYTECODE.md       # Legacy bytecode reference (historical)
 │
 ├── rfcs/                 # Design proposals
 │   ├── INDEX.md         # RFC navigation
-│   ├── 000-overview.md  # RFC process
 │   ├── 001-*.md         # Individual RFCs
 │   └── ...
 │
-└── crates/              # Per-crate documentation
-    └── */README.md      # Crate-specific docs
+└── crates/              # Per-crate code
+    └── */               # ipe-core, ipe-server, placeholders
 ```
 
 ---
