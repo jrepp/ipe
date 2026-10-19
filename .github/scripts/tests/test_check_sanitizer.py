@@ -10,7 +10,7 @@ SCRIPT = ROOT / '.github/scripts/check-sanitizer.sh'
 
 
 class SanitizerChecks(unittest.TestCase):
-    def run_sanitizer(self, cargo_body, expected_status, expected_text=''):
+    def run_sanitizer(self, cargo_body, expected_status, expected_text='', target='x86_64-unknown-linux-gnu'):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary = root / 'bin'
@@ -24,7 +24,7 @@ class SanitizerChecks(unittest.TestCase):
                 path.chmod(0o755)
             environment = dict(os.environ, PATH=f'{binary}{os.pathsep}{os.environ["PATH"]}',
                                IPE_SANITIZER_REPORT_ROOT=str(root / 'reports'))
-            result = subprocess.run(['bash', str(SCRIPT), 'thread'], cwd=root,
+            result = subprocess.run(['bash', str(SCRIPT), 'thread', target], cwd=root,
                                     env=environment, capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, expected_status, result.stdout + result.stderr)
             self.assertIn(expected_text, result.stdout)
@@ -68,6 +68,18 @@ exit 0
 [[ "$*" == *-Z*build-std* ]]
 exit 0
 ''', 0)
+
+    def test_arm64_keeps_crc_workaround_and_native_instrumentation(self):
+        self.run_sanitizer('''
+[ "$CC_aarch64_apple_darwin" = clang ]
+[ "$CXX_aarch64_apple_darwin" = clang++ ]
+[[ "$CXXFLAGS_aarch64_apple_darwin" == *-fsanitize=thread* ]]
+[[ "$CXXFLAGS_aarch64_apple_darwin" == *-U__ARM_FEATURE_CRC32* ]]
+[ "$ROCKSDB_COMPILE" = true ]
+[ "$SNAPPY_COMPILE" = true ]
+[[ "$*" == *--target*aarch64-apple-darwin* ]]
+exit 0
+''', 0, target='aarch64-apple-darwin')
 
     def test_clean_run_succeeds_without_reusing_old_reports(self):
         self.run_sanitizer('''

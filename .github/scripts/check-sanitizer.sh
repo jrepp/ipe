@@ -5,6 +5,11 @@
 set -euo pipefail
 
 SANITIZER_TYPE="${1:-address}"
+sanitizer_target="${2:-x86_64-unknown-linux-gnu}"
+case "$sanitizer_target" in
+    x86_64-unknown-linux-gnu|aarch64-unknown-linux-gnu|aarch64-apple-darwin) ;;
+    *) echo "Unsupported sanitizer target: $sanitizer_target" >&2; exit 2 ;;
+esac
 case "$SANITIZER_TYPE" in
     address|leak|thread) ;;
     *) echo "Unsupported sanitizer: $SANITIZER_TYPE" >&2; exit 2 ;;
@@ -60,14 +65,25 @@ if [ "$SANITIZER_TYPE" = "thread" ]; then
     # initialization state using C++ atomics; TSan must see those operations too.
     # cc-rs target variables cover the native libraries without changing the
     # ordinary production build. Rust supplies the sanitizer runtime at link time.
-    export CC_x86_64_unknown_linux_gnu=clang
-    export CXX_x86_64_unknown_linux_gnu=clang++
-    export CFLAGS_x86_64_unknown_linux_gnu="${CFLAGS_x86_64_unknown_linux_gnu:-} -fsanitize=thread -fno-omit-frame-pointer"
-    export CXXFLAGS_x86_64_unknown_linux_gnu="${CXXFLAGS_x86_64_unknown_linux_gnu:-} -fsanitize=thread -fno-omit-frame-pointer"
+    native_target="${sanitizer_target//-/_}"
+    cflags_name="CFLAGS_$native_target"
+    cxxflags_name="CXXFLAGS_$native_target"
+    native_flags="-fsanitize=thread -fno-omit-frame-pointer"
+    if [[ "$sanitizer_target" == aarch64-* ]]; then
+        # Keep the production CRC workaround even when overriding target flags
+        # from .cargo/config.toml to add native sanitizer instrumentation.
+        native_flags="$native_flags -U__ARM_FEATURE_CRC32"
+    fi
+    export "CC_$native_target=clang" "CXX_$native_target=clang++"
+    export "$cflags_name=${!cflags_name:-} $native_flags"
+    export "$cxxflags_name=${!cxxflags_name:-} $native_flags"
+    # Never accidentally link a prebuilt, uninstrumented RocksDB via LIB_DIR.
+    export ROCKSDB_COMPILE=true
+    export SNAPPY_COMPILE=true
 fi
 output_file="$report_dir/cargo.log"
 run_status=0
-if cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features 2>&1 | tee "$output_file"; then
+if cargo +nightly test -Z build-std --target "$sanitizer_target" --all-features 2>&1 | tee "$output_file"; then
     run_status=0
 else
     run_status=$?
