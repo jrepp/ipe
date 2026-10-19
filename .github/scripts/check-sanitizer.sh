@@ -61,6 +61,11 @@ fi
 # Read the file reports independently of cargo's captured output.
 if [ "$SANITIZER_TYPE" = "thread" ]; then
     export TSAN_OPTIONS="log_path=$report_dir/tsan-report"
+    if [ -n "$symbolizer" ]; then
+        # MCP fixtures intentionally clear PATH; use a concrete tool path so
+        # their inherited sanitizer settings can still produce useful stacks.
+        export TSAN_OPTIONS="$TSAN_OPTIONS:external_symbolizer_path=$symbolizer"
+    fi
     # RUSTFLAGS cannot instrument native dependencies. RocksDB publishes shared
     # initialization state using C++ atomics; TSan must see those operations too.
     # cc-rs target variables cover the native libraries without changing the

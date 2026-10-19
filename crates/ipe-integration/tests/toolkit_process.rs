@@ -1,31 +1,56 @@
 //! Independent wire tests complement SDK-client end-to-end acceptance.
+mod sanitizer_support;
 use serde_json::{json, Value};
 use std::process::Stdio;
 use std::time::Duration;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
+
+// The SDK can drain for five seconds and sanitizer runtimes add process-exit
+// overhead. This observer budget still expires before the 35-second upstream
+// timeout, so a missed outstanding-request cap cannot pass by waiting for HTTP.
+const OBSERVER_TIMEOUT: Duration = Duration::from_secs(20);
+
+// Preserve only sanitizer runtime controls across the deliberately isolated
+// agent environment. In particular, child reports must reach the parent's
+// retained evidence directory instead of filling an unread stderr pipe.
+fn toolkit_command() -> Command {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_integration-toolkit"));
+    command.env_clear().env("IPE_INTEGRATION_TOKEN", "isolated-agent-token");
+    command.envs(sanitizer_support::environment());
+    command
+}
 
 struct Session {
     child: Child,
     input: ChildStdin,
     output: BufReader<ChildStdout>,
+    stderr: tokio::task::JoinHandle<std::io::Result<Vec<u8>>>,
 }
 impl Session {
     fn spawn() -> Self {
         Self::spawn_at("http://127.0.0.1:1")
     }
     fn spawn_at(url: &str) -> Self {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_integration-toolkit"))
+        let mut child = toolkit_command()
             .args(["--url", url, "mcp"])
-            .env_clear()
-            .env("IPE_INTEGRATION_TOKEN", "isolated-agent-token")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true)
             .spawn()
             .unwrap();
+        let stderr = child.stderr.take().unwrap();
+        let stderr = tokio::spawn(async move {
+            let mut bytes = Vec::new();
+            stderr.take(65_537).read_to_end(&mut bytes).await?;
+            if bytes.len() > 65_536 {
+                return Err(std::io::Error::other("toolkit stderr limit exceeded"));
+            }
+            Ok(bytes)
+        });
         Self {
+            stderr,
             input: child.stdin.take().unwrap(),
             output: BufReader::new(child.stdout.take().unwrap()),
             child,
@@ -36,7 +61,7 @@ impl Session {
     }
     async fn read(&mut self) -> Value {
         let mut line = String::new();
-        let bytes = tokio::time::timeout(Duration::from_secs(5), self.output.read_line(&mut line))
+        let bytes = tokio::time::timeout(OBSERVER_TIMEOUT, self.output.read_line(&mut line))
             .await
             .unwrap()
             .unwrap();
@@ -56,10 +81,12 @@ impl Session {
     async fn stop(mut self) -> std::process::Output {
         self.input.shutdown().await.unwrap();
         drop(self.input);
-        tokio::time::timeout(Duration::from_secs(5), self.child.wait_with_output())
+        let mut output = tokio::time::timeout(OBSERVER_TIMEOUT, self.child.wait_with_output())
             .await
             .unwrap()
-            .unwrap()
+            .unwrap();
+        output.stderr = self.stderr.await.unwrap().unwrap();
+        output
     }
 }
 #[tokio::test]
@@ -87,7 +114,15 @@ async fn duplicate_key_error_preserves_next_frame_after_initialization() {
 }
 #[tokio::test]
 async fn typed_tools_reject_unknown_parameters_and_sanitize_errors() {
-    let mut session = Session::spawn();
+    // An accepted connection closed without HTTP data is a deterministic
+    // transport failure; do not assume a fixed local port is unused.
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let endpoint = format!("http://{}", listener.local_addr().unwrap());
+    let upstream = tokio::spawn(async move {
+        let (stream, _) = listener.accept().await.unwrap();
+        drop(stream);
+    });
+    let mut session = Session::spawn_at(&endpoint);
     session.initialize().await;
     session.send(json!({"jsonrpc":"2.0","id":2,"method":"tools/list"})).await;
     let listed = session.read().await;
@@ -96,35 +131,50 @@ async fn typed_tools_reject_unknown_parameters_and_sanitize_errors() {
     for tool in tools {
         assert_eq!(tool["inputSchema"]["additionalProperties"], false);
     }
-    for (id, name, args) in [
+    for (id, name, args, expected) in [
         (
             3,
             "integration_discover",
             json!({"connection_ref":"conn_test","url":"https://secret.internal"}),
+            Some("invalid_tool_arguments"),
         ),
-        (4, "integration_discover", json!({"connection_ref":"https://secret.internal"})),
-        (5, "integration_capabilities", json!({"credential":"secret.internal"})),
-        (6, "secret.internal", json!({})),
+        (
+            4,
+            "integration_discover",
+            json!({"connection_ref":"https://secret.internal"}),
+            Some("invalid_connection_ref"),
+        ),
+        (
+            5,
+            "integration_capabilities",
+            json!({"credential":"secret.internal"}),
+            Some("invalid_tool_arguments"),
+        ),
+        (6, "secret.internal", json!({}), None),
     ] {
         session.send(json!({"jsonrpc":"2.0","id":id,"method":"tools/call","params":{"name":name,"arguments":args}})).await;
         let response = session.read().await;
         assert_eq!(response["id"], id);
-        assert!(response.get("error").is_some() || response["result"]["isError"] == true);
+        if let Some(expected) = expected {
+            assert_eq!(response["result"]["isError"], true);
+            assert_eq!(response["result"]["structuredContent"]["error"]["code"], expected);
+        } else {
+            assert_eq!(response["error"]["code"], -32602);
+        }
     }
     session.send(json!({"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"integration_capabilities","arguments":{}}})).await;
     let response = session.read().await;
     assert_eq!(response["result"]["isError"], true);
     assert!(response.to_string().contains("workload_unavailable"));
+    upstream.await.unwrap();
     let output = session.stop().await;
     assert!(output.status.success());
     assert!(output.stderr.is_empty());
 }
 #[tokio::test]
 async fn startup_error_does_not_contaminate_protocol_or_disclose_endpoint() {
-    let output = Command::new(env!("CARGO_BIN_EXE_integration-toolkit"))
+    let output = toolkit_command()
         .args(["--url", "https://provider-secret@internal.example", "mcp"])
-        .env_clear()
-        .env("IPE_INTEGRATION_TOKEN", "isolated-agent-token")
         .output()
         .await
         .unwrap();
@@ -160,7 +210,7 @@ async fn outstanding_requests_are_bounded() {
         input.push_str(&format!("{}\n",json!({"jsonrpc":"2.0","id":id,"method":"tools/call","params":{"name":"integration_capabilities","arguments":{}}})));
     }
     session.input.write_all(input.as_bytes()).await.unwrap();
-    let status = tokio::time::timeout(Duration::from_secs(8), session.child.wait())
+    let status = tokio::time::timeout(OBSERVER_TIMEOUT, session.child.wait())
         .await
         .unwrap()
         .unwrap();

@@ -38,6 +38,7 @@ class SanitizerChecks(unittest.TestCase):
         output, files = self.run_sanitizer('''
 echo 'test result: ok. 354 passed; 0 failed'
 report_path="${TSAN_OPTIONS#log_path=}"
+report_path="${report_path%%:*}"
 printf 'WARNING: ThreadSanitizer: data race\\n' > "$report_path.123"
 exit 66
 ''', 1, 'WARNING: ThreadSanitizer: data race')
@@ -54,6 +55,7 @@ exit 66
     def test_file_finding_fails_even_if_command_exits_zero(self):
         self.run_sanitizer('''
 report_path="${TSAN_OPTIONS#log_path=}"
+report_path="${report_path%%:*}"
 echo 'WARNING: ThreadSanitizer: data race' > "$report_path.123"
 exit 0
 ''', 1, 'findings=1')

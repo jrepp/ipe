@@ -1,9 +1,11 @@
 //! CLI argument handling must not disclose user-supplied values or contaminate MCP stdout.
+mod sanitizer_support;
 use std::process::{Command, Output};
 fn toolkit(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_integration-toolkit"))
         .args(args)
         .env_clear()
+        .envs(sanitizer_support::environment())
         .env("IPE_INTEGRATION_URL", "https://secret.internal")
         .output()
         .unwrap()
@@ -83,6 +85,7 @@ fn explicit_url_overrides_environment() {
         let output = Command::new(env!("CARGO_BIN_EXE_integration-toolkit"))
             .args(args)
             .env_clear()
+            .envs(sanitizer_support::environment())
             .env("IPE_INTEGRATION_URL", "http://192.0.2.1")
             .output()
             .unwrap();
