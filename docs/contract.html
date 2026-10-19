@@ -22,7 +22,7 @@
 <div class="layout">
   <nav class="sidebar" aria-label="Documentation">
     <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
-    <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html" aria-current="page">Contract</a><a href="status.html">Project status</a><a href="performance.html">Performance</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html" aria-current="page">Contract</a><a href="status.html">Project status</a><a href="performance.html">Performance</a><a href="ast.html">AST explorer</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Tools</span></div>
     <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
   </nav>
@@ -31,43 +31,45 @@
       <header class="page-head">
         <div class="breadcrumb">Reference / Contract</div>
         <h1>Contract</h1>
-        <p class="lede">IPE evaluates policies and returns a decision or an error. Your application enforces the decision.</p>
-        <div class="chips"><a class="chip chip-path" href="index.html#path-integrate">Integrate · 1 of 3</a><span class="chip">Scope: Rust library</span></div>
+        <p class="lede">The runtime evaluates policies against expiring runtime facts and returns allow, deny, or indeterminate. Your application enforces the decision.</p>
+        <div class="chips"><a class="chip chip-path" href="index.html#path-integrate">Integrate · 1 of 3</a><span class="chip">Scope: v2 runtime API</span></div>
       </header>
       <section class="section" id="inputs">
         <h2>Inputs and results</h2>
         <div class="split">
           <div class="panel"><div class="eyebrow">You pass</div><dl class="defs">
-            <dt>Policies</dt><dd>The rules for each resource type</dd>
-            <dt>Resource</dt><dd>The affected object, with its type and attributes</dd>
-            <dt>Action</dt><dd>The operation and its target</dd>
-            <dt>Request</dt><dd>Information about the caller and request</dd>
+            <dt>Input</dt><dd>The request JSON the evaluating workload attests, validated against the scope's input schema</dd>
+            <dt>Runtime facts</dt><dd>Typed values in scoped collections, every one carrying a finite TTL</dd>
+            <dt>Policy documents</dt><dd>Versioned language-2 rules with typed <code>policy.*</code> parameters and provenance</dd>
+            <dt>Bootstrap policies</dt><dd>Policy sources fixed in the bootstrap configuration</dd>
           </dl></div>
           <div class="panel"><div class="eyebrow">You get</div><dl class="defs">
-            <dt class="allow">Allow</dt><dd>The policy result permits the action</dd>
-            <dt class="deny">Deny</dt><dd>The policy result rejects the action</dd>
-            <dt>Error</dt><dd>Evaluation fails, for example when a required field is absent</dd>
+            <dt class="allow">Allow</dt><dd>Every applicable policy allowed and no evidence deadline passed</dd>
+            <dt class="deny">Deny</dt><dd>Some policy denied — a deny overrides everything else</dd>
+            <dt>Indeterminate</dt><dd>Evidence was missing, expired, or a budget was hit; consumers must treat it as denial</dd>
           </dl></div>
         </div>
-        <p>The Resource–Action–Request (RAR) context contains the data for one evaluation. Resource types use numeric <code>ResourceTypeId</code> values.</p>
-        <pre>Ok(Decision { kind, reason, matched_policies })
-Err(Error::EvaluationError(..))</pre>
-        <p class="small muted">The reason is optional. A Deny result can omit policy names.</p>
+        <p>Evaluation captures one immutable scope snapshot and the active policy revisions once. Concurrent writes and publications cannot change a captured execution. JSON bodies are limited to 1 MiB and duplicate keys are rejected.</p>
+        <pre>{"decision": "deny", "evaluation_status": "deny",
+ "evidence_deadline": 1792173900,
+ "policies": [{"policy": "Reviews", "status": "deny"}],
+ "policy_documents": [{"revision": 3, "result": {…}}]}</pre>
+        <p class="small muted">Decisions also carry the runtime revision and, per document, the revision number and content digest.</p>
       </section>
       <section class="section" id="rules">
         <h2>Decision rules</h2>
-        <p>Both APIs select policies by resource type. Their rules differ when policies return conflicting results.</p>
+        <p>All applicable bootstrap policies and active document sections in the scope combine into one decision.</p>
         <div class="table-scroll"><table>
-          <thead><tr><th scope="col">Policy results</th><th scope="col"><code>PolicyEngine</code></th><th scope="col"><code>PolicyDataStore</code></th></tr></thead>
+          <thead><tr><th scope="col">Applicable policies</th><th scope="col">Result</th></tr></thead>
           <tbody>
-            <tr><td>No policies for the resource type</td><td>Deny</td><td>Deny</td></tr>
-            <tr><td>All allow</td><td>Allow</td><td>Allow</td></tr>
-            <tr><td>All deny</td><td>Deny</td><td>Deny</td></tr>
-            <tr class="highlight"><td>Some allow, some deny</td><td>Deny</td><td>Allow</td></tr>
-            <tr><td>Any evaluation fails</td><td>Error</td><td>Error</td></tr>
+            <tr><td>No applicable policy, or an empty catalog</td><td>Deny</td></tr>
+            <tr><td>All allow</td><td>Allow</td></tr>
+            <tr><td>Any deny</td><td>Deny</td></tr>
+            <tr class="highlight"><td>Any indeterminate — missing, stale, or expired evidence, or an unsupported external section</td><td>Indeterminate (denies)</td></tr>
+            <tr><td>Evidence deadline passes before evaluation completes</td><td>Indeterminate (denies)</td></tr>
           </tbody>
         </table></div>
-        <p class="small muted">Source: PolicyEngine::evaluate. (PolicyDataStore was removed in #36; the legacy engine stack was deleted in the legacy-cluster disposition.)</p>
+        <p class="small muted">Consumers must grant access only for an explicit <code>decision: allow</code>. Source: <a href="../crates/ipe-core/src/runtime_policy.rs">runtime_policy.rs</a>, combined per scope by the <code>evaluate</code> endpoint in <code>crates/ipe-server/src/runtime.rs</code>.</p>
       </section>
       <section class="section" id="responsibilities">
         <h2>Application responsibilities</h2>
@@ -81,24 +83,25 @@ Err(Error::EvaluationError(..))</pre>
       <section class="section" id="limits">
         <h2>Current limits</h2>
         <div class="notice"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg><ul>
-          <li>The compiler does not evaluate trigger conditions.</li>
-          <li>The compiler ends a <code>requires</code> policy with <code>Return(true)</code>.</li>
-          <li>The interpreter returns the value in that instruction. A false condition can therefore produce Allow.</li>
+          <li>Missing, stale, or expired facts yield <code>indeterminate</code> — negation cannot turn missing evidence into an allow.</li>
+          <li>Optional fact fields can be stored but are rejected at policy compilation until explicit option matching lands.</li>
+          <li>Storage is bounded: 10,000 keys per collection, 16 MiB encoded state, 1 MiB per value, 100 policies and 100 documents per scope.</li>
+          <li>The listener binds to loopback only; remote use requires a correctly configured local TLS proxy. There is no replication or joint transaction across the fact and policy stores.</li>
         </ul></div>
-        <p class="small muted">Sources: PolicyCompiler::compile and Interpreter::evaluate (both removed with the legacy engine stack).</p>
+        <p class="small muted">Sources: <a href="../crates/ipe-core/src/runtime_facts.rs">runtime_facts.rs</a> and <a href="../crates/ipe-core/src/runtime_policy.rs">runtime_policy.rs</a>; the full list lives in <a href="doc.html?path=RUNTIME_DATA.md">RUNTIME_DATA.md</a>.</p>
       </section>
       <section class="section" id="requirements">
         <h2>Requirements</h2>
         <p>The p99 latency is the time within which 99% of measured evaluations finish.</p>
         <div class="table-scroll"><table>
-          <thead><tr><th scope="col">Requirement</th><th scope="col">Target</th></tr></thead>
+          <thead><tr><th scope="col">Requirement</th><th scope="col">Status</th></tr></thead>
           <tbody>
-            <tr><td>Interpreter p99 latency</td><td>Below 50 microseconds per evaluation</td></tr>
-            <tr><td>Interpreter throughput</td><td>At least 100,000 evaluations per second per core</td></tr>
-            <tr><td>Repeated evaluation</td><td>The same policies and inputs produce the same result without side effects</td></tr>
+            <tr><td>Determinism: the same input, snapshot, and revisions produce the same result without side effects</td><td>Met by construction — each evaluation captures one immutable snapshot</td></tr>
+            <tr><td>Evidence deadlines: an allow is rechecked against the earliest deadline before returning</td><td>Met — enforced in the evaluator and again by the endpoint</td></tr>
+            <tr><td>Latency and throughput under production load</td><td class="muted">Not characterized; no published targets</td></tr>
           </tbody>
         </table></div>
-        <p>The <a href="performance.html">performance page</a> reports measurements for three interpreter workloads. It does not measure JIT compilation or production traffic.</p>
+        <p>The <a href="performance.html">performance page</a> reports archived microbenchmarks of the removed legacy interpreter. It says nothing about this runtime.</p>
         <p class="small muted">Source: <a href="doc.html?path=../REQUIREMENTS.md">REQ-EVAL-005–006, REQ-PERF-001, and REQ-PERF-006</a>.</p>
       </section>
       <nav class="continue" aria-label="Continue">

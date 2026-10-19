@@ -22,7 +22,7 @@
 <div class="layout">
   <nav class="sidebar" aria-label="Documentation">
     <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
-    <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html">Contract</a><a href="status.html" aria-current="page">Project status</a><a href="performance.html">Performance</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html">Contract</a><a href="status.html" aria-current="page">Project status</a><a href="performance.html">Performance</a><a href="ast.html">AST explorer</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Tools</span></div>
     <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="doc.html?path=../ROADMAP.md">Roadmap</a></div>
   </nav>
@@ -35,16 +35,15 @@
         <div class="chips"><a class="chip chip-path" href="index.html#path-evaluate">Evaluate · 2 of 3</a><a class="chip chip-path" href="index.html#path-integrate">Integrate · 3 of 3</a><a class="chip chip-path" href="index.html#path-internals">Work on IPE · 1 of 4</a></div>
       </header>
       <section class="section" id="pipeline">
-        <h2>From source to decision</h2>
-        <p class="muted">Solid stages are implemented. The amber stage is partial; dashed stages are not built or not measured.</p>
+        <h2>From input to decision</h2>
+        <p class="muted">All stages below are implemented in the v2 runtime; the page calls out what is not characterized or not built.</p>
         <ol class="pipeline">
-          <li><strong>Source</strong><span>.ipe policy text</span></li>
-          <li><strong>Parser</strong><span>Lexer and parser to AST</span></li>
-          <li class="partial"><strong>Compiler</strong><span>Triggers not compiled</span></li>
-          <li><strong>Snapshot store</strong><span>Lock-free Arc snapshots</span></li>
-          <li><strong>Interpreter</strong><span>Measured, p99 ≤ 1 µs</span></li>
-          <li class="planned"><strong>JIT tiers</strong><span>Experimental, unmeasured</span></li>
-          <li><strong>Decision</strong><span>Allow · Deny · Error</span></li>
+          <li><strong>Input</strong><span>caller JSON, schema-validated</span></li>
+          <li><strong>Policies</strong><span>language 2; bootstrap sources plus versioned documents</span></li>
+          <li><strong>Runtime facts</strong><span>push commits and pull connectors, every fact TTL-bounded</span></li>
+          <li><strong>Snapshot</strong><span>one immutable scope snapshot per evaluation</span></li>
+          <li><strong>Evaluate</strong><span>instruction/visit budgets, evidence deadlines</span></li>
+          <li><strong>Decision</strong><span>Allow · Deny · Indeterminate</span></li>
         </ol>
       </section>
       <section class="section" id="components">
@@ -53,20 +52,19 @@
         <div class="table-scroll"><table>
           <thead><tr><th scope="col">Component</th><th scope="col">Where</th><th scope="col">State</th><th scope="col">What that means today</th></tr></thead>
           <tbody>
-            <tr><td><strong>Parser → AST</strong></td><td><code>ipe-core::parser</code></td><td><span class="status status-">Implemented</span></td><td>Triggers, requires, where and denies clauses. See the .</td></tr>
-            <tr><td><strong>Compiler</strong></td><td><code>ipe-core::compiler</code></td><td><span class="status status-partial">Partial</span></td><td>Trigger conditions are skipped; <code>requires</code> ends in <code>Return(true)</code>.</td></tr>
-            <tr><td><strong>Interpreter</strong></td><td><code>ipe-core::interpreter</code></td><td><span class="status status-">Implemented</span></td><td>Stack-based. <a href="performance.html">Measured</a> on hand-built bytecode.</td></tr>
-            <tr><td><strong>Policy store</strong></td><td><code>ipe-core::store</code></td><td><span class="status status-">Implemented</span></td><td>Atomic snapshot swaps with lock-free reads.</td></tr>
-            <tr><td><strong>Approvals and relationships</strong></td><td><code>feature approvals</code></td><td><span class="status status-">Implemented</span></td><td>RocksDB-backed stores. Not covered by the docs benchmarks.</td></tr>
-            <tr><td><strong>JIT and tiering</strong></td><td><code>feature jit</code></td><td><span class="status status-experimental">Experimental</span></td><td>Cranelift code generation exists. No measurements; targets are &lt;20 µs and &lt;10 µs p99.</td></tr>
-            <tr><td><strong>HTTP server</strong></td><td><code>ipe-server</code></td><td><span class="status status-experimental">Prototype</span></td><td>A minimal evaluation server.</td></tr>
-            <tr><td><strong>WASM, FFI, control plane, web</strong></td><td><code>ipe-wasm and others</code></td><td><span class="status status-stub">Stub</span></td><td>Crates exist as placeholders for later phases.</td></tr>
+            <tr><td><strong>Runtime facts</strong></td><td><code>ipe-core::runtime_facts</code></td><td><span class="status status-">Implemented</span></td><td>Scoped, typed, TTL-bounded facts; atomic push commits, HTTPS pull snapshots, bounded RocksDB state.</td></tr>
+            <tr><td><strong>Policy evaluation</strong></td><td><code>ipe-core::runtime_policy</code></td><td><span class="status status-">Implemented</span></td><td>Language-2 compiler and evaluator with budgets and evidence deadlines.</td></tr>
+            <tr><td><strong>Policy documents</strong></td><td><code>ipe-core::policy_document</code></td><td><span class="status status-">Implemented</span></td><td>Immutable revisions, atomic activation, digests, external provenance, unsupported sections.</td></tr>
+            <tr><td><strong>HTTP runtime API</strong></td><td><code>ipe-server::runtime</code></td><td><span class="status status-experimental">Experimental</span></td><td>Axum server, scoped bearer credentials, loopback bind; <a href="doc.html?path=RUNTIME_DATA.md">RUNTIME_DATA</a> lists the limits.</td></tr>
+            <tr><td><strong>Pull connectors</strong></td><td><code>ipe-server::runtime</code></td><td><span class="status status-">Implemented</span></td><td>Fixed HTTPS sources, sequential polling, whole-generation replacement.</td></tr>
+            <tr><td><strong>Approvals and relationships</strong></td><td><code>feature approvals</code></td><td><span class="status status-">Implemented</span></td><td>RocksDB-backed embedded stores, separate from the runtime API.</td></tr>
           </tbody>
         </table></div>
+        <div class="notice small" style="margin-top:12px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg><p style="margin:0"><strong>Removed legacy engine.</strong> The in-process parser → bytecode → interpreter stack, the resource index, the lock-free <code>PolicyDataStore</code>, and the Cranelift JIT with adaptive tiering were deleted after the v2 runtime landed. The performance page keeps their archived microbenchmarks for reference only.</p></div>
       </section>
       <section class="section" id="limits">
         <h2>Known limits</h2>
-        <div class="notice"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg><div><p style="margin:0 0 6px"><strong>A false <code>requires</code> condition can produce Allow.</strong></p><p style="margin:0">The contract lists the current limits with their sources. <a href="decision.html#decision">How it decides</a> shows one example.</p></div></div>
+        <div class="notice"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg><div><p style="margin:0 0 6px"><strong>Missing or expired evidence is indeterminate, never allow.</strong></p><p style="margin:0">The contract lists the current limits with their sources. <a href="decision.html#decision">How it decides</a> shows one example.</p></div></div>
         <p><a href="contract.html#limits">Contract: current limits</a></p>
       </section>
       <section class="section" id="requirements">
@@ -74,9 +72,9 @@
         <div class="table-scroll"><table>
           <thead><tr><th scope="col">Requirement</th><th scope="col">Target</th><th scope="col">Evidence</th></tr></thead>
           <tbody>
-            <tr><td>REQ-PERF-001 · Interpreter p99</td><td>&lt; 50 µs</td><td>Met on local fixtures. <a href="performance.html">Performance</a></td></tr>
-            <tr><td>REQ-PERF-006 · Interpreter throughput</td><td>≥ 100,000 evaluations/s/core</td><td>Met on local fixtures. <a href="performance.html">Performance</a></td></tr>
-            <tr><td>REQ-PERF-002, 003 · JIT p99</td><td>&lt; 20 µs, &lt; 10 µs</td><td class="muted">Not measured</td></tr>
+            <tr><td>Determinism · same input, snapshot, and revisions</td><td>Same decision, no side effects</td><td>By construction — one immutable snapshot per evaluation</td></tr>
+            <tr><td>Evidence deadlines · recheck before allow</td><td>Never allow past the deadline</td><td>Enforced in the evaluator and the endpoint</td></tr>
+            <tr><td>Latency and throughput under production load</td><td>—</td><td class="muted">Not characterized; legacy interpreter targets were removed with that engine</td></tr>
           </tbody>
         </table></div>
         <p class="small muted">Source: <a href="doc.html?path=../REQUIREMENTS.md">REQUIREMENTS.md</a> and <a href="doc.html?path=../ROADMAP.md">ROADMAP.md</a>.</p>

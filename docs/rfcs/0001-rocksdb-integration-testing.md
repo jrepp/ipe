@@ -1,5 +1,9 @@
 # RFC 0001: RocksDB Integration Testing for Approval-Based Authorization
 
+> **Superseded.** The legacy engine this RFC tested against was removed; the
+> version-2 runtime is the shipping product. See [README.md](../../README.md)
+> and [docs/RUNTIME_DATA.md](../RUNTIME_DATA.md). Kept for historical context.
+
 ## Status
 - **Status**: Draft
 - **Author**: System
@@ -19,7 +23,7 @@ The goal is efficient testing of approval-based authorization with real database
 
 ### Current State
 - IPE has in-memory policy storage (`PolicyDataStore`)
-- 118+ unit tests using `testing.rs` utilities
+- 118+ unit tests using the legacy `testing.rs` utilities (removed with the legacy engine)
 - No persistent storage layer
 - No approval/signature verification mechanism
 - No integration tests with real database operations
@@ -506,6 +510,6 @@ fn bench_set_membership(b: &mut Bencher) {
 ## References
 
 - [RocksDB Documentation](https://github.com/facebook/rocksdb/wiki)
-- [IPE Core Engine](crates/ipe-core/src/engine.rs:1)
+- `crates/ipe-core/src/engine.rs` (removed with the legacy engine)
 - [IPE Request Context](crates/ipe-core/src/rar.rs:1)
-- [IPE Testing Utilities](crates/ipe-core/src/testing.rs:1)
+- IPE Testing Utilities (`crates/ipe-core/src/testing.rs`, removed with the legacy engine)

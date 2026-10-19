@@ -5,6 +5,12 @@
 **Created:** 2025-10-26
 **Version:** 0.1.0
 
+> **Superseded.** The legacy engine described here as current (bytecode
+> compiler, interpreter, JIT tiers, lock-free policy store) was removed after
+> the version-2 runtime landed. This RFC is kept for historical context only;
+> see [README.md](README.md) and [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md)
+> for the shipping runtime.
+
 ## Abstract
 
 Idempotent Predicate Engine (IPE) is a declarative predicate language and high-performance evaluation engine for DevOps/SecOps workflows. Built in Rust with native and WebAssembly compilation targets, IPE achieves <50μs p99 latency for predicate evaluation across 10k+ predicates while maintaining human readability and AI-native semantics.

@@ -1,5 +1,10 @@
 # RFC 0002: Scope and TTL Model for Data Stores
 
+> **Superseded (as a legacy-engine design).** The scope/TTL ideas here carried
+> into the version-2 runtime (`runtime_facts`), but this RFC described them for
+> the legacy engine, which was removed. See [README.md](../../README.md) and
+> [docs/RUNTIME_DATA.md](../RUNTIME_DATA.md) for the implemented model.
+
 ## Status
 - **Status**: Draft
 - **Author**: System
