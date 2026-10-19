@@ -218,3 +218,19 @@ Toolkit and enforcement input boundaries share `ipe-json`, a small Serde visitor
 that rejects duplicate decoded keys recursively before typed deserialization.
 It retains serde_json's depth limit and returns opaque errors. Each caller still
 owns byte limits, request schemas and authorization.
+
+## Native storage build constraint
+
+The pinned RocksDB 8.10.0 dependency has an ARM64 data race in a shared CRC
+capability flag, written by DB-open diagnostics and read by checksum operations.
+Repository ARM64 builds use the portable CRC implementation via target-specific
+`CXXFLAGS` in `.cargo/config.toml`. Custom native compiler flags must retain
+`-U__ARM_FEATURE_CRC32`. This changes checksum performance, not the CRC32C format;
+existing databases remain readable. Remove this workaround only with a verified
+native fix and concurrent open/read/write sanitizer coverage. It affects native
+storage builds; the metadata WASM classifier does not use RocksDB.
+
+ThreadSanitizer CI instruments Rust, `std`, and bundled C/C++ dependencies on Linux
+and ARM64 macOS. It retains abnormal exits and native reports independently of
+functional test counts. Suppressing a report or testing uninstrumented native code
+cannot establish that this storage boundary is race-free.
