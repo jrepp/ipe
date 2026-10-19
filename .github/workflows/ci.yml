@@ -59,6 +59,7 @@ jobs:
 
   test:
     name: Test Suite
+    timeout-minutes: 40
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

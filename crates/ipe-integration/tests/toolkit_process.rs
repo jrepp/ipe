@@ -11,7 +11,7 @@ use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 // timeout, so a missed outstanding-request cap cannot pass by waiting for HTTP.
 const OBSERVER_TIMEOUT: Duration = Duration::from_secs(20);
 
-// Preserve only sanitizer runtime controls across the deliberately isolated
+// Preserve only OS startup and sanitizer controls across the isolated
 // agent environment. In particular, child reports must reach the parent's
 // retained evidence directory instead of filling an unread stderr pipe.
 fn toolkit_command() -> Command {
@@ -119,7 +119,10 @@ async fn typed_tools_reject_unknown_parameters_and_sanitize_errors() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let endpoint = format!("http://{}", listener.local_addr().unwrap());
     let upstream = tokio::spawn(async move {
-        let (stream, _) = listener.accept().await.unwrap();
+        let (stream, _) = tokio::time::timeout(OBSERVER_TIMEOUT, listener.accept())
+            .await
+            .expect("toolkit never reached the local HTTP fixture")
+            .unwrap();
         drop(stream);
     });
     let mut session = Session::spawn_at(&endpoint);
@@ -166,6 +169,8 @@ async fn typed_tools_reject_unknown_parameters_and_sanitize_errors() {
     let response = session.read().await;
     assert_eq!(response["result"]["isError"], true);
     assert!(response.to_string().contains("workload_unavailable"));
+    // The accept is bounded too: a child-side connection failure must fail,
+    // not hang the suite while waiting for a connection that will never arrive.
     upstream.await.unwrap();
     let output = session.stop().await;
     assert!(output.status.success());
