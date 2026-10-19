@@ -1,10 +1,22 @@
 #!/bin/bash
 # Wrapper script for sanitizer checks
-# Validates based on actual sanitizer findings, not file access errors
+# A sanitizer run passes only when the command and report checks succeed.
 
 set -euo pipefail
 
 SANITIZER_TYPE="${1:-address}"
+case "$SANITIZER_TYPE" in
+    address|leak|thread) ;;
+    *) echo "Unsupported sanitizer: $SANITIZER_TYPE" >&2; exit 2 ;;
+esac
+
+# Keep each invocation separate: old findings cannot contaminate a new run and
+# diagnostics survive both failures and the shell's exit for CI artifact upload.
+report_root="${IPE_SANITIZER_REPORT_ROOT:-$PWD/target/sanitizer-reports}"
+mkdir -p "$report_root"
+report_root=$(cd "$report_root" && pwd)
+report_dir=$(mktemp -d "$report_root/$SANITIZER_TYPE.XXXXXX")
+echo "Sanitizer evidence: $report_dir"
 
 echo "🧹 Running $SANITIZER_TYPE sanitizer tests..."
 
@@ -28,7 +40,9 @@ if [ -z "$symbolizer" ]; then
     symbolizer=$(find "$(rustc +nightly --print sysroot)" -name 'llvm-symbolizer*' -type f 2>/dev/null | head -n1 || true)
 fi
 if [ -z "$symbolizer" ]; then
-    symbolizer=$(ls /usr/lib/llvm-*/bin/llvm-symbolizer 2>/dev/null | tail -n1 || true)
+    for candidate in /usr/lib/llvm-*/bin/llvm-symbolizer; do
+        [ ! -f "$candidate" ] || symbolizer="$candidate"
+    done
 fi
 if [ -n "$symbolizer" ]; then
     export ASAN_SYMBOLIZER_PATH="$symbolizer"
@@ -38,96 +52,37 @@ else
     export LSAN_OPTIONS="$LSAN_SUPPRESSIONS"
     echo "⚠️  No llvm-symbolizer found; reports will not symbolicate"
 fi
-# Write ThreadSanitizer reports to files: the test harness swallows stderr,
-# so only the one-line summary would otherwise be visible.
+# The Rust test harness can swallow sanitizer stderr even when tests pass.
+# Read the file reports independently of cargo's captured output.
 if [ "$SANITIZER_TYPE" = "thread" ]; then
-    export TSAN_OPTIONS="log_path=tsan-report"
+    export TSAN_OPTIONS="log_path=$report_dir/tsan-report"
 fi
-
-# Capture output. The full cargo output can be many megabytes; piping it
-# through `echo | grep` reliably produced SIGPIPE broken-pipe errors that
-# corrupted the pass/fail extraction below. Write it to a file instead.
-output_file=$(mktemp)
-trap 'rm -f "$output_file" tsan-report.* 2>/dev/null || true' EXIT
-
+output_file="$report_dir/cargo.log"
+run_status=0
 if cargo +nightly test -Z build-std --target x86_64-unknown-linux-gnu --all-features 2>&1 | tee "$output_file"; then
-    echo "✅ Sanitizer tests passed"
-    exit 0
+    run_status=0
+else
+    run_status=$?
+fi
+printf '%s\n' "$run_status" > "$report_dir/exit-status.txt"
+
+report_found=0
+for report in "$report_dir"/tsan-report.*; do
+    [ -f "$report" ] || continue
+    echo ""
+    echo "=== $report ==="
+    cat "$report"
+done
+if grep -qE 'WARNING: ThreadSanitizer:|ERROR: (AddressSanitizer|LeakSanitizer|ThreadSanitizer):|SUMMARY: (AddressSanitizer|LeakSanitizer|ThreadSanitizer):|FATAL: ThreadSanitizer:|ThreadSanitizer: reported' "$output_file" "$report_dir"/tsan-report.* 2>/dev/null; then
+    report_found=1
 fi
 
-# Tests failed, analyze why
-echo "⚠️  Sanitizer check failed, analyzing..."
-tail -30 "$output_file"
-echo ""
-
-# Extract the lib test summary from the file (no pipes from echo).
-# The lib suite is the only one with hundreds of tests, so anchor on
-# three-digit counts to avoid matching doc-test summaries.
-summary_line=$(grep -E '[0-9]{3,} passed; [0-9]+ failed' "$output_file" | tail -n1 || true)
-passed=$(echo "$summary_line" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || true)
-failed=$(echo "$summary_line" | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+' || true)
-passed=${passed:-0}
-failed=${failed:-0}
-
-# Check if it's the suppressions file issue (known false negative)
-if grep -q "failed to read suppressions file" "$output_file"; then
-    echo "🔍 Detected suppressions file access issue (known false negative)"
-
-    # Check if tests actually passed
-    if [ "$failed" -eq 0 ] && [ "$passed" -gt 200 ]; then
-        echo ""
-        echo "Test Results:"
-        echo "  ✅ Passed: $passed"
-        echo "  ❌ Failed: $failed"
-        echo ""
-        echo "✅ PASS: All tests passed (ignoring suppressions file access error)"
-        echo ""
-        echo "Note: This is a known issue where the sanitizer can't find the"
-        echo "suppressions file, but no actual sanitizer issues were detected."
-        exit 0
-    fi
-fi
-
-# Check for thread sanitizer compilation issues (known false negative)
-if [ "$SANITIZER_TYPE" = "thread" ] && grep -qE "could not compile.*tower" "$output_file"; then
-    echo "🔍 Detected thread sanitizer compilation issue with tower crate (known issue)"
-    echo ""
-    echo "This is a known issue with thread sanitizer and some dependencies on nightly Rust."
-    echo "The issue is in tower-0.4.13 type inference, not in our code."
-    echo ""
-    echo "✅ PASS: Allowing known thread sanitizer dependency issue"
-    exit 0
-fi
-
-# Check for actual sanitizer findings
-if grep -qE "ERROR: (AddressSanitizer|LeakSanitizer|ThreadSanitizer):|ThreadSanitizer: reported" "$output_file"; then
-    echo "❌ FAIL: Actual sanitizer issues detected"
-    echo ""
-    echo "Sanitizer found real issues that need to be addressed:"
-    grep -A 10 "ERROR: " "$output_file" || true
-    # TSan detailed reports are written to tsan-report.<pid> files
-    # (see TSAN_OPTIONS above); the harness swallows stderr.
-    for report in tsan-report.*; do
-        [ -e "$report" ] || continue
-        echo ""
-        echo "=== $report ==="
-        cat "$report"
-    done
+# Functional test counts cannot override an abnormal sanitizer exit or report.
+# Compilation errors and missing suppressions are failures too: neither proves
+# that the sanitizer actually checked the intended code.
+if [ "$run_status" -ne 0 ] || [ "$report_found" -ne 0 ]; then
+    echo "FAIL: sanitizer command exited $run_status; findings=$report_found"
+    echo "Evidence retained in $report_dir"
     exit 1
 fi
-
-# Check if tests actually passed despite exit code
-if [ "$failed" -eq 0 ] && [ "$passed" -gt 200 ]; then
-    echo "✅ PASS: All tests passed ($passed passed, $failed failed)"
-    echo ""
-    echo "Note: Sanitizer exited with non-zero but no actual issues found."
-    exit 0
-fi
-
-# Unknown failure
-echo "❌ FAIL: Sanitizer check failed for unknown reasons"
-echo ""
-echo "Test Results:"
-echo "  ✅ Passed: $passed"
-echo "  ❌ Failed: $failed"
-exit 1
+echo "PASS: sanitizer command and report checks passed"

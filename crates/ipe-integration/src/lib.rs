@@ -307,26 +307,47 @@ fn opaque(state: &Runtime, domain: &str, value: &str) -> String {
     let digest = mac.finalize().into_bytes();
     format!("{}_{}", domain, digest.iter().map(|b| format!("{b:02x}")).collect::<String>())
 }
+// Coverage failures accumulate independently. A row limit must remain visible
+// even if retained metadata is malformed or the guest subsequently fails. Codes
+// are host-owned static values, deduplicated and bounded by the finite vocabulary.
+#[derive(Default)]
+struct CoverageIssues {
+    codes: Vec<&'static str>,
+}
+impl CoverageIssues {
+    fn record(&mut self, code: &'static str) {
+        if !self.codes.contains(&code) {
+            self.codes.push(code);
+        }
+    }
+    fn primary(&self) -> &'static str {
+        if self.codes.contains(&"record_limit") {
+            "record_limit"
+        } else {
+            self.codes.last().copied().unwrap_or("ok")
+        }
+    }
+}
 async fn catalog(state: &Runtime, adapter_run: &mut wasm::Run) -> Value {
     let rows = read(state, "sys_db_object", "sys_idISNOTEMPTY", "name", 9).await;
     let mut resources = Vec::new();
-    let mut code = "ok";
+    let mut issues = CoverageIssues::default();
     if let Ok(rows) = rows.as_ref() {
         if rows.len() > 8 {
-            code = "record_limit";
+            issues.record("record_limit");
         }
         if rows.is_empty() {
-            code = "not_observed";
+            issues.record("not_observed");
         }
         let mut seen = std::collections::HashSet::new();
         for row in rows.iter().take(8) {
             let Some(table) = row.get("name").and_then(Value::as_str).filter(|s| identifier(s))
             else {
-                code = "invalid_metadata";
+                issues.record("invalid_metadata");
                 continue;
             };
             if !seen.insert(table) {
-                code = "duplicate_metadata";
+                issues.record("duplicate_metadata");
                 continue;
             }
             let dictionary = read(
@@ -339,23 +360,26 @@ async fn catalog(state: &Runtime, adapter_run: &mut wasm::Run) -> Value {
             .await;
             let mut fields = Vec::new();
             let mut field_seen = std::collections::HashSet::new();
-            let mut field_code = dictionary.as_ref().err().copied().unwrap_or("ok");
+            let mut field_issues = CoverageIssues::default();
+            if let Err(code) = &dictionary {
+                field_issues.record(code);
+            }
             if let Ok(entries) = dictionary.as_ref() {
                 if entries.len() > 32 {
-                    field_code = "record_limit";
+                    field_issues.record("record_limit");
                 }
                 if entries.is_empty() {
-                    field_code = "not_observed";
+                    field_issues.record("not_observed");
                 }
                 for entry in entries.iter().take(32) {
                     let Some(name) =
                         entry.get("element").and_then(Value::as_str).filter(|s| identifier(s))
                     else {
-                        field_code = "invalid_metadata";
+                        field_issues.record("invalid_metadata");
                         continue;
                     };
                     if !field_seen.insert(name) {
-                        field_code = "duplicate_metadata";
+                        field_issues.record("duplicate_metadata");
                         continue;
                     }
                     let kind = match entry.get("internal_type").and_then(Value::as_str) {
@@ -372,22 +396,22 @@ async fn catalog(state: &Runtime, adapter_run: &mut wasm::Run) -> Value {
                         _ => None,
                     };
                     if required.is_none() || kind == "unknown" {
-                        field_code = "metadata_gap";
+                        field_issues.record("metadata_gap");
                     }
                     let role = adapter_run.classify(name, kind, required);
                     if let Err(code) = role {
-                        field_code = code;
+                        field_issues.record(code);
                     }
                     let role = role.unwrap_or("unknown");
                     fields.push(json!({"field_ref":opaque(state,"field",&format!("{table}.{name}")),"status":"observed","kind":kind,"required":required,"role":role,"role_basis":"field_identifier_hint"}));
                 }
             }
-            resources.push(json!({"resource_ref":opaque(state,"resource",table),"status":"observed","code":"ok","fields":fields,"field_coverage":"bounded","field_code":field_code}));
+            resources.push(json!({"resource_ref":opaque(state,"resource",table),"status":"observed","code":"ok","fields":fields,"field_coverage":"bounded","field_code":field_issues.primary(),"field_coverage_codes":field_issues.codes}));
         }
     } else {
-        code = rows.as_ref().err().copied().unwrap_or("unknown");
+        issues.record(rows.as_ref().err().copied().unwrap_or("unknown"));
     }
-    json!({"connection_ref":state.config.connection_ref,"coverage":"bounded","code":code,"resources":resources,"constraints":{"status":"unknown","code":"workflow_semantics_not_discovered"},"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest}})
+    json!({"connection_ref":state.config.connection_ref,"coverage":"bounded","code":issues.primary(),"coverage_codes":issues.codes,"resources":resources,"constraints":{"status":"unknown","code":"workflow_semantics_not_discovered"},"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest}})
 }
 async fn read(
     state: &Runtime,

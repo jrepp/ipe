@@ -79,3 +79,7 @@ cargo run --locked -p ipe-integration --example integration-demo -- --external-a
 CI runs this command and retains the sanitized reports. Each replay creates and
 cleans up its own deployment. The checked-in independent-agent report is historical
 evidence; CI artifacts describe each subsequent automated run.
+
+Coverage regressions combine resource/field row limits with invalid identifiers,
+duplicates, unsupported metadata and failing WASM adapters. The report must retain
+all causes, preserve the truncation summary, and reset its issue set on the next run.

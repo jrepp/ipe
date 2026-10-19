@@ -12,7 +12,7 @@ import type { AddressInfo } from 'node:net';
 export const SECRET = 'provider-secret-DO-NOT-DISCLOSE';
 export const TOPOLOGY = 'internal-remediation.corp.example';
 export const RAW_ID = '1234567890abcdef1234567890abcdef';
-export const MODES = ['success', 'empty', 'truncated', 'wrong_shape', 'denied', 'unauthorized', 'failure', 'unsupported', 'redirect', 'malformed', 'oversize'] as const;
+export const MODES = ['success', 'empty', 'truncated', 'mixed_limits', 'wrong_shape', 'denied', 'unauthorized', 'failure', 'unsupported', 'redirect', 'malformed', 'oversize'] as const;
 type Mode = typeof MODES[number];
 type RequestRecord = { path: string; headers: IncomingMessage['headers'] };
 function certificates(directory: string) {
@@ -42,7 +42,7 @@ export async function startFixture(options: { directory?: string; mode?: Mode } 
   function payload(path: string): string {
     if (mode === 'malformed') return '{"result": [';
     if (mode === 'oversize') return 'x'.repeat(2 * 1024 * 1024);
-    if (!['success', 'empty', 'truncated', 'wrong_shape'].includes(mode)) return JSON.stringify({ error: { message: SECRET, detail: TOPOLOGY } });
+    if (!['success', 'empty', 'truncated', 'mixed_limits', 'wrong_shape'].includes(mode)) return JSON.stringify({ error: { message: SECRET, detail: TOPOLOGY } });
     if (mode === 'wrong_shape') return JSON.stringify({ result: { secret: SECRET } });
     if (mode === 'empty') return '{"result":[]}';
     const parsed = new URL(path, 'https://localhost');
@@ -52,6 +52,14 @@ export async function startFixture(options: { directory?: string; mode?: Mode } 
       sys_choice: [{ sys_id: RAW_ID, name: 'sn_vul_vulnerable_item', element: 'state', value: '1', label: SECRET, inactive: 'false' }],
     };
     let rows = tables[parsed.pathname.split('/').at(-1) ?? ''] ?? [];
+    if (mode === 'mixed_limits') {
+      const table = parsed.pathname.split('/').at(-1);
+      const rows = table === 'sys_db_object'
+        ? Array.from({ length: 9 }, (_, i) => ({ name: i === 0 ? 'invalid^table' : `table_${i === 2 ? 1 : i}` }))
+        : Array.from({ length: 33 }, (_, i) => ({ element: i === 0 ? 'invalid^field' : `field_${i === 2 ? 1 : i}`, internal_type: i === 3 ? 'unsupported' : 'string', mandatory: false }));
+      return JSON.stringify({ result: rows });
+    }
+
     if (mode === 'truncated') {
       const limit = Math.min(1000, Math.max(1, Number(parsed.searchParams.get('sysparm_limit') ?? 100) || 100));
       rows = Array.from({ length: limit }, () => rows[0] ?? { sys_id: RAW_ID });

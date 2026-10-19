@@ -376,6 +376,32 @@ impl Deployment {
         self.restart().await?;
         require(self.discover().await?.1 == success, "opaque identities unstable across restart")?;
         checks.push("stable opaque identities after restart");
+        self.control(json!({"mode":"mixed_limits"})).await?;
+        let (code, result) = self.discover().await?;
+        require(
+            code == 200
+                && result["code"] == "record_limit"
+                && result["coverage_codes"]
+                    == json!(["record_limit", "invalid_metadata", "duplicate_metadata"])
+                && result["resources"].as_array().is_some_and(|resources| {
+                    resources.len() == 6
+                        && resources.iter().all(|resource| {
+                            resource["fields"].as_array().is_some_and(|fields| fields.len() == 30)
+                                && resource["field_code"] == "record_limit"
+                                && resource["field_coverage_codes"]
+                                    == json!([
+                                        "record_limit",
+                                        "invalid_metadata",
+                                        "duplicate_metadata",
+                                        "metadata_gap"
+                                    ])
+                        })
+                }),
+            "truncation lost when metadata also failed validation",
+        )?;
+        self.control(json!({"mode":"success"})).await?;
+        require(self.discover().await?.1 == success, "coverage failures leaked into next run")?;
+        checks.push("resource and field truncation retained alongside all metadata faults");
         let module_path = self.directory.path().join("replacement.wasm");
         for (body, expected, fault) in [
             ("i32.const 2", "assignee", None),
@@ -397,6 +423,32 @@ impl Deployment {
                     result["resources"][0]["field_code"] == fault,
                     "WASM failure did not remain unknown",
                 )?;
+                self.control(json!({"mode":"mixed_limits"})).await?;
+                let (code, result) = self.discover().await?;
+                require(
+                    code == 200
+                        && result["resources"][0]["field_coverage_codes"]
+                            .as_array()
+                            .is_some_and(|codes| codes.contains(&json!(fault)))
+                        && result["resources"].as_array().is_some_and(|resources| {
+                            resources.len() == 6
+                                && resources.iter().all(|resource| {
+                                    resource["field_code"] == "record_limit"
+                                        && resource["field_coverage_codes"].as_array().is_some_and(
+                                            |codes| {
+                                                codes.contains(&json!("record_limit"))
+                                                    && (codes.contains(&json!(fault))
+                                                        || codes.contains(&json!("adapter_failed")))
+                                            },
+                                        )
+                                        && resource["fields"].as_array().is_some_and(|fields| {
+                                            fields.iter().all(|field| field["role"] == "unknown")
+                                        })
+                                })
+                        }),
+                    "truncation or adapter failure lost in combined coverage report",
+                )?;
+                self.control(json!({"mode":"success"})).await?;
             }
             require(
                 result["resources"][0]["resource_ref"] == success["resources"][0]["resource_ref"],
