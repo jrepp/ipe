@@ -382,7 +382,14 @@ enum Operation {
     Mcp,
 }
 fn main() -> ExitCode {
-    let runtime = match tokio::runtime::Runtime::new() {
+    // One agent session performs bounded asynchronous I/O. A worker per host CPU
+    // multiplies threads across CLI/MCP children and adds no useful parallelism.
+    // Keep blocking capacity for stdio and DNS independent of the async executor.
+    let runtime = match tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .max_blocking_threads(4)
+        .build()
+    {
         Ok(runtime) => runtime,
         Err(_) => {
             eprintln!("toolkit_runtime_unavailable");

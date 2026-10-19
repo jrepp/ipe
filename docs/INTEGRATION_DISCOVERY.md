@@ -234,3 +234,11 @@ ThreadSanitizer CI instruments Rust, `std`, and bundled C/C++ dependencies on Li
 and ARM64 macOS. It retains abnormal exits and native reports independently of
 functional test counts. Suppressing a report or testing uninstrumented native code
 cannot establish that this storage boundary is race-free.
+
+The CLI/MCP toolkit uses one asynchronous executor thread and at most four blocking
+workers for stdio/DNS, independent of the host CPU count. Its process-test harness
+retains only sanitizer runtime controls in addition to the agent credential,
+drains bounded stderr concurrently, and uses a 20-second observer budget to cover
+the SDK's five-second drain plus instrumented process teardown. The overflow test
+still terminates before the 35-second HTTP timeout and requires the failure exit;
+waiting out an upstream request cannot satisfy it.
