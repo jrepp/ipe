@@ -130,7 +130,7 @@ async fn typed_tools_reject_unknown_parameters_and_sanitize_errors() {
     session.send(json!({"jsonrpc":"2.0","id":2,"method":"tools/list"})).await;
     let listed = session.read().await;
     let tools = listed["result"]["tools"].as_array().unwrap();
-    assert_eq!(tools.len(), 3);
+    assert_eq!(tools.len(), 4);
     for tool in tools {
         assert_eq!(tool["inputSchema"]["additionalProperties"], false);
     }

@@ -1,0 +1,8 @@
+{
+  "name": "ipe-integration-packages",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.18.0" },
+  "scripts": { "test": "node --test *.test.mjs", "cache": "node cli.mjs" },
+  "dependencies": { "pacote": "22.0.1", "cacache": "21.0.1", "ssri": "14.0.0" }
+}

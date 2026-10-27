@@ -2,6 +2,7 @@
 name = "ipe-integration"
 version.workspace = true
 edition.workspace = true
+rust-version = "1.96"
 license.workspace = true
 default-run = "ipe-integration"
 description = "Bounded native integration discovery workload"
@@ -19,6 +20,13 @@ subtle = "2.6"
 hmac = "0.12"
 sha2 = "0.10"
 wasmi = { version = "2.0.0", default-features = false, features = ["stable", "std", "validate", "portable-dispatch"] }
+rquickjs = { version = "0.14.0", default-features = false, features = ["std"] }
+oxc_allocator = "0.152.0"
+oxc_codegen = "0.152.0"
+oxc_parser = "0.152.0"
+oxc_semantic = "0.152.0"
+oxc_span = "0.152.0"
+oxc_transformer = "0.152.0"
 
 rmcp = { version = "3.5.1", default-features = false, features = ["server", "macros", "transport-io"] }
 

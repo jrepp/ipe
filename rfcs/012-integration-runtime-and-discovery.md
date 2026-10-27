@@ -111,14 +111,14 @@ inputs, and have no production credentials. Package identity proves what ran, no
 whether its interpretation was correct. Installation revocation fences old runs;
 rollback changes the package selection without rewriting evidence history.
 
-**Implemented engine and ABI:** [Wasmi](https://docs.rs/wasmi/2.0.0/wasmi/) is the
-initial interpreter hosted by [Rust](../crates/ipe-integration/src/wasm.rs).
-The implemented [metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md)
-exports memory and `classify(pointer, length, kind, required) -> role`. Inputs are
-bounded permitted field identifiers and normalized metadata; outputs are a finite
-validated semantic-role enum. Transport, provider resource selection, credentials,
-identity derivation and public output construction remain native. Guest failures
-produce explicit unknown roles and coverage codes, never workflow constraints.
+**Implemented engines and ABIs:** [Wasmi](https://docs.rs/wasmi/2.0.0/wasmi/) hosts
+the metadata interpreter in [Rust](../crates/ipe-integration/src/wasm.rs). Its
+[metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md) exports memory
+and `classify(pointer, length, kind, required) -> role`. Inputs are bounded permitted
+field identifiers and normalized metadata; outputs are a finite validated
+semantic-role enum. Transport, provider resource selection, credentials, identity
+derivation and public output construction remain native. Guest failures produce
+explicit unknown roles and coverage codes, never workflow constraints.
 
 The default ServiceNow mapping is WAT compiled to WASM at Cargo build time. An
 operator may select a binary WASM module with `adapter_path`; the workload loads
@@ -129,21 +129,50 @@ and start functions are forbidden. No WASI interfaces are linked. Fuel bounds
 synchronous execution; the native HTTP deadline does not preempt a synchronous
 WASM call. Compilation happens at operator startup rather than on the request path.
 
-This validates a useful bounded interpretation extension, not the general step
-contract or package registry. TypeScript currently implements lightweight HTTPS
-test facades and their functional tests. It is not yet a guest authoring language.
-A generated SDK and TypeScript-to-WASM build path remain future experiments;
-[Javy](https://github.com/bytecodealliance/javy) is one candidate, subject to the
-host ABI, imports and resource limits. Do not promise Node APIs, arbitrary npm
-compatibility or WASI access. Extending beyond this ABI requires separate design
-and evidence for build isolation, semantic coverage and lifecycle authority.
+The workload also implements a bounded `json-step-v1` ABI using embedded QuickJS
+with Oxc TypeScript transpilation. An operator-selected `.js` or `.ts` source defines
+a synchronous global `step(context, responses, state)`. Each call returns JSON state
+and exactly one of named operation requests or JSON outputs. The host broker
+validates operation descriptors and parameters, performs HTTPS reads, and resumes
+the guest with selected primitive response fields and a native HMAC opaque source
+receipt bound to run, request sequence, adapter digest, operation, query, and
+response. These run-local receipts are not durable audit evidence.
+Guests have no Node APIs, npm modules, WASI, ambient network, filesystem, environment,
+or secret access. Projected fields may contain operator-selected names. The source
+digest covers source language, original source, emitted JavaScript, and the embedded SDK. This step surface is
+currently configured by the operator and has no package registry, agent upload,
+staging, signing, automated activation, or publication lifecycle. It does not promise
+arbitrary JavaScript or npm compatibility.
+
+Its `script_operations` descriptors are explicit read grants, independent of the
+discovery `resources` list. Configuring a script adapter requires the protected
+identity key for receipt derivation, even when discovery resources are also set.
+
+The step contract is bounded to eight steps, sixteen total requests, eight requests
+per step, 64 KiB for each serialized step result including state, 128 KiB combined
+guest input, 16 MiB QuickJS memory, 256 KiB stack, and a 100 ms per-step deadline.
+Each step evaluates in a fresh QuickJS context, with JSON state explicitly passed
+between steps. Host I/O has independent deadlines and response bounds. JavaScript
+and typed TypeScript acceptance fixtures exercise real
+broker reads, undeclared operation and parameter rejection, execution timeout, and
+fresh-run recovery. This is an initial local execution proof, not evidence of build
+worker isolation or general package lifecycle authority.
+
+The 100 ms step deadline relies on QuickJS interrupt checks; it is not a hard OS
+process deadline. Source loading and TypeScript transpilation run in the trusted
+workload process at operator startup, not an isolated build worker. Source size is
+bounded, but startup has no separate hard process deadline.
+
+No Node APIs, arbitrary npm compatibility, or WASI access are promised. Extending
+beyond these ABIs requires separate design and evidence for build isolation,
+semantic coverage and lifecycle authority.
 
 ## Area roadmap
 
 | Phase | Deliverable | Proof |
 | --- | --- | --- |
 | M1 onboarding and discovery | Standalone workload, configured credential, opaque handle, bounded metadata discovery | CLI/MCP agent learns permitted schemas and gaps against HTTPS stand-in; no secret/topology disclosure |
-| M2 adapter iteration | Wasmi metadata host implemented; package manifest, general step ABI, immutable agent build and staging remain proposed | Sandbox resource-limit tests pass; still require agent edits/replay/stage proof without native changes |
+| M2 adapter iteration | Wasmi metadata host and operator-selected bounded `json-step-v1` JS/TS runtime implemented; package manifest, general package lifecycle, immutable agent build and staging remain proposed | Sandbox and JS/TS broker-read acceptance pass; still require agent edits/replay/stage proof without native changes |
 | M3 first live integration | Scoped ServiceNow reads for a discovery-selected record and constraint source | Actual provider responses mapped with explicit coverage and no arbitrary networking |
 | M4 operational proof | Fencing, cancellation and bounded execution under upgrades | Old runs cannot publish after cutover; workload survives malformed upstream data |
 | Later | Additional protocol/auth recipes, self-service enrollment, second provider | New provider using existing recipes requires no native code change |
