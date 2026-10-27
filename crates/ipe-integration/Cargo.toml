@@ -27,6 +27,8 @@ oxc_parser = "0.152.0"
 oxc_semantic = "0.152.0"
 oxc_span = "0.152.0"
 oxc_transformer = "0.152.0"
+# Oxc imports identifier helpers added after 1.0.0; keep minimal-versions checks buildable.
+unicode-id-start = ">=1.5.0"
 
 rmcp = { version = "3.5.1", default-features = false, features = ["server", "macros", "transport-io"] }
 

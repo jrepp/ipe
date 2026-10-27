@@ -50,7 +50,7 @@ pub(super) fn validate_configuration(config: &Config) -> Result<(), &'static str
 pub(super) fn capability(adapter: &script::ScriptAdapter, operations: &[Operation]) -> Value {
     json!({"abi":"json-step-v1", "digest":adapter.digest,
         "engine":"quickjs", "sdk_version":script::SDK_VERSION, "operations":operations.iter().map(|op| json!({"name":op.name,"parameters":op.parameters})).collect::<Vec<_>>(),
-        "limits":{"steps":MAX_STEPS,"requests":MAX_REQUESTS,"heap_bytes":16777216,"stack_bytes":262144,"step_timeout_ms":100},
+        "limits":{"steps":MAX_STEPS,"requests":MAX_REQUESTS,"heap_bytes":16777216,"stack_bytes":1048576,"step_timeout_ms":100},
         "imports":false,"publication":false})
 }
 

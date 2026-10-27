@@ -88,7 +88,7 @@ original source, emitted JavaScript, and the embedded SDK.
 Runs are limited to eight steps, sixteen total requests, and eight requests per
 step. Each serialized step result, including state and requests or outputs, is
 limited to 64 KiB; combined guest input is limited to 128 KiB. QuickJS is limited to
-16 MiB memory and 256 KiB stack; each step has a 100 ms deadline. Every step runs in
+16 MiB memory and 1 MiB stack; each step has a 100 ms deadline. Every step runs in
 a fresh QuickJS context, while explicit JSON state carries values between steps.
 The 100 ms deadline uses QuickJS interrupt checks and is not a hard OS process
 deadline. Loading and Oxc transpilation occur in the trusted workload process at

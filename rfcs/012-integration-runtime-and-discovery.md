@@ -150,7 +150,7 @@ identity key for receipt derivation, even when discovery resources are also set.
 
 The step contract is bounded to eight steps, sixteen total requests, eight requests
 per step, 64 KiB for each serialized step result including state, 128 KiB combined
-guest input, 16 MiB QuickJS memory, 256 KiB stack, and a 100 ms per-step deadline.
+guest input, 16 MiB QuickJS memory, 1 MiB stack, and a 100 ms per-step deadline.
 Each step evaluates in a fresh QuickJS context, with JSON state explicitly passed
 between steps. Host I/O has independent deadlines and response bounds. JavaScript
 and typed TypeScript acceptance fixtures exercise real

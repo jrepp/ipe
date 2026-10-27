@@ -20,7 +20,7 @@ const SOURCE_LIMIT: usize = 256 * 1024;
 const INPUT_LIMIT: usize = 128 * 1024;
 const OUTPUT_LIMIT: usize = 64 * 1024;
 const HEAP_LIMIT: usize = 16 * 1024 * 1024;
-const STACK_LIMIT: usize = 256 * 1024;
+const STACK_LIMIT: usize = 1024 * 1024;
 const STEP_DEADLINE: Duration = Duration::from_millis(100);
 const CONCURRENT_STEPS: usize = 1;
 const SDK_SOURCE: &str = include_str!("../sdk/index.js");
@@ -193,7 +193,7 @@ fn run_step(
     state: &str,
 ) -> Result<String, &'static str> {
     let deadline = Instant::now() + STEP_DEADLINE;
-    let runtime = runtime(deadline)?;
+    let runtime = runtime(deadline).map_err(|_| "script_failed")?;
     let ctx = Context::full(&runtime).map_err(|_| "script_failed")?;
     let result = ctx.with(|ctx| {
         remove_ambient_clock(&ctx).map_err(|_| "script_failed")?;

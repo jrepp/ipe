@@ -228,7 +228,7 @@ add package upload, automated activation, publication, or write operations.
 The host bounds a run to 8 guest steps and 16 total requests, with at most 8 requests
 per step. Each serialized step result, including state and requests or outputs, is
 limited to 64 KiB; combined guest input is limited to 128 KiB. QuickJS uses a 16 MiB
-memory limit and 256 KiB stack, with a 100 ms execution deadline per step. Each
+memory limit and 1 MiB stack, with a 100 ms execution deadline per step. Each
 step evaluates in a fresh QuickJS context, with explicit JSON state carrying values
 between steps. The deadline interrupts guest execution at QuickJS interrupt checks;
 it is not a hard OS process deadline. Source loading and TypeScript transpilation

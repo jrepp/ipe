@@ -3,20 +3,38 @@
   "use strict";
   const limits = Object.freeze({ requestsPerStep: 8, resultBytes: 65536, inputBytes: 131072 });
   const fail = code => { throw new Error(code); };
-  const name = value => typeof value === "string" && /^[A-Za-z0-9_]{1,64}$/.test(value);
+  const token = (value, max) => {
+    if (typeof value !== "string" || value.length < 1 || value.length > max) return false;
+    for (let index = 0; index < value.length; index++) {
+      const code = value.charCodeAt(index);
+      if (!(code >= 48 && code <= 57) && !(code >= 65 && code <= 90)
+        && !(code >= 97 && code <= 122) && code !== 95) return false;
+    }
+    return true;
+  };
+  const name = value => token(value, 64);
   function json(value) {
     const seen = new Set();
-    function check(item, depth) {
-      if (depth > 32) fail("ipe_json_depth");
-      if (item === null || typeof item === "string" || typeof item === "boolean") return;
-      if (typeof item === "number" && Number.isFinite(item)) return;
+    const pending = [{ item: value, depth: 0, exit: false }];
+    while (pending.length) {
+      const frame = pending.pop();
+      const item = frame.item;
+      if (frame.exit) {
+        seen.delete(item);
+        continue;
+      }
+      if (frame.depth > 32) fail("ipe_json_depth");
+      if (item === null || typeof item === "string" || typeof item === "boolean") continue;
+      if (typeof item === "number" && Number.isFinite(item)) continue;
       if (typeof item !== "object" || seen.has(item)) fail("ipe_json_invalid");
       if (!Array.isArray(item) && Object.getPrototypeOf(item) !== Object.prototype && Object.getPrototypeOf(item) !== null) fail("ipe_json_invalid");
       seen.add(item);
-      for (const key of Object.keys(item)) check(item[key], depth + 1);
-      seen.delete(item);
+      pending.push({ item, depth: frame.depth, exit: true });
+      const keys = Object.keys(item);
+      for (let index = keys.length - 1; index >= 0; index--) {
+        pending.push({ item: item[keys[index]], depth: frame.depth + 1, exit: false });
+      }
     }
-    check(value, 0);
     const text = JSON.stringify(value);
     // JSON escapes lone surrogates; count UTF-8 without needing host TextEncoder.
     let bytes = 0;
@@ -32,7 +50,7 @@
     const copy = json(params);
     if (!copy || Array.isArray(copy) || typeof copy !== "object" || Object.keys(copy).length > 8) fail("ipe_parameters_invalid");
     for (const [key, value] of Object.entries(copy)) {
-      if (!name(key) || typeof value !== "string" || !/^[A-Za-z0-9_]{1,128}$/.test(value)) fail("ipe_parameters_invalid");
+      if (!name(key) || !token(value, 128)) fail("ipe_parameters_invalid");
     }
     return { id, operation, params: copy };
   }
