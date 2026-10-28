@@ -3,15 +3,16 @@
 See the [stack and crate reuse audit](INTEGRATION_STACK.md) for implemented
 dependencies, the completed `rmcp` migration and remaining reuse priorities.
 
-The independent Rust `ipe-integration` workload hosts a WASM metadata adapter and
-an authenticated native HTTPS broker. Rust CLI and MCP clients expose bounded
-ServiceNow discovery. TypeScript provides the synthetic provider facade for local
-testing. This slice does not publish enforcement facts or claim to recover complete
-ServiceNow business rules.
+The independent Rust `ipe-integration` workload hosts a Wasmi metadata adapter,
+an optional QuickJS JavaScript/TypeScript step adapter, and an authenticated native
+HTTPS broker. Rust CLI and MCP clients expose bounded ServiceNow discovery and
+operator-authorized adapter runs. TypeScript also provides the synthetic provider
+facade for local testing. This slice does not publish enforcement facts or claim to
+recover complete ServiceNow business rules.
 
 ## Local deployment proof
 
-Prerequisites: Rust/Cargo, Node >=22.18, and OpenSSL. No Python, real ServiceNow
+Prerequisites: Rust/Cargo >=1.96, Node >=22.18, and OpenSSL. No Python, real ServiceNow
 credential, or enterprise installation is needed for this integration slice.
 
 ```sh
@@ -23,9 +24,11 @@ cargo run --locked -p ipe-integration --example integration-demo -- --report tar
 
 The Rust acceptance test launches both Rust binaries and the TypeScript HTTPS
 facade. It checks authenticated reads, hostile provider responses, strict input,
-masked identities, deadline cancellation, CLI, and MCP. Unit tests additionally
-exercise the WASM sandbox and client transport boundaries. Synthetic fixtures are
-not live ServiceNow validation.
+masked identities, deadline cancellation, CLI, and MCP. It also runs JavaScript and
+typed TypeScript guest fixtures through the embedded runtime against the live local
+broker, then checks operation/parameter rejection, execution timeout and recovery.
+Unit tests additionally exercise both guest sandboxes and client transport
+boundaries. Synthetic fixtures are not live ServiceNow validation.
 
 The independent external-client replay starts a fresh deployment, exercises CLI,
 HTTP and handwritten MCP requests, saves a sanitized report, and tears down the
@@ -58,6 +61,7 @@ can override the default executable paths next to the built example.
 target/debug/integration-toolkit --url http://127.0.0.1:PORT capabilities
 target/debug/integration-toolkit --url http://127.0.0.1:PORT check CONNECTION_REF
 target/debug/integration-toolkit --url http://127.0.0.1:PORT discover CONNECTION_REF
+target/debug/integration-toolkit --url http://127.0.0.1:PORT run CONNECTION_REF
 ```
 
 The client reads `IPE_INTEGRATION_TOKEN`; bearer tokens are not command arguments.
@@ -78,6 +82,7 @@ including compatibility with MCP `2025-11-25`, and exposes:
 - `integration_capabilities`
 - `integration_check_connection` with `connection_ref`
 - `integration_discover` with `connection_ref`
+- `integration_run_adapter` with `connection_ref` (available when the operator configured a script adapter)
 
 Complete `initialize`, wait for its response, then send `notifications/initialized`
 before tool calls. Keep stdin open until outstanding responses arrive. Request
@@ -129,6 +134,30 @@ binds only to loopback HTTP; remote operation requires separately configured
 authenticated TLS termination. This is not a production ingress or multi-tenant
 credential-management system.
 
+To enable the JSON step runtime, add operator-owned source and read descriptors:
+
+```json
+{
+  "script_adapter_path": "/private/path/read-step.ts",
+  "script_operations": [
+    {"name":"metadata","table":"sys_db_object","fields":["name"],"parameters":[],"limit":8}
+  ]
+}
+```
+
+The guest source is a synchronous global `step(context, responses, state)` function.
+See the [JavaScript fixture](../testing/integration/adapters/read-step.js) and
+[typed TypeScript fixture](../testing/integration/adapters/read-step.ts) for the
+request, state, and output shape. Invoke it with the `run CONNECTION_REF` CLI
+command or the `integration_run_adapter` MCP tool. The API call is
+`POST /v1/adapters/run` with `{ "connection_ref": "..." }`.
+
+`script_operations` is a separate explicit read grant. It is not restricted by the
+discovery `resources` list; configure only the tables and fields the adapter needs.
+When a script adapter is configured, `identity_key_env` must provide the protected
+stable key used to mint its opaque receipts, including when discovery resources are
+also configured.
+
 An empty resource list opts into bounded metadata inventory. The broker reads
 fixed metadata routes and returns opaque resource/field references and recognized
 type/role information. It does not expose table names, raw labels, reference links,
@@ -169,6 +198,46 @@ This proves configurable sandboxed interpretation, not the complete future adapt
 package lifecycle. Artifact signing, agent build/stage/deploy, hot upgrades,
 shared-domain constraint projection, synchronization and durable forensic auditing
 remain separate milestones.
+
+## JavaScript and TypeScript step adapters
+
+The host supplies a versioned, typed `ipe` SDK for requests, response handling,
+state and projections. See [SDK and package cache](INTEGRATION_SDK.md) for examples,
+the backend capability roadmap, and the build-side npm artifact cache.
+
+An operator may configure `script_adapter_path` and `script_operations` to enable
+the separate `POST /v1/adapters/run` surface. The configured `.js` or `.ts` source
+defines a synchronous global `step(context, responses, state)` function. TypeScript
+types are stripped with the embedded Oxc transpiler at startup; neither runtime
+loads Node, npm packages, WASI, or host-provided network/filesystem APIs. The active
+source is loaded once at startup and identified by a SHA-256 digest over the source
+language, original source, emitted JavaScript, and the embedded SDK.
+
+Each step returns a JSON `state` and exactly one of `requests` or `outputs`. Requests
+name an operator-declared operation and parameters. The native broker validates the
+operation and parameters, performs HTTPS reads against the configured origin, and
+returns only explicitly selected primitive fields with a native HMAC opaque source
+receipt bound to the run, request sequence, adapter digest, operation, query, and
+response. These run-local receipts are not durable audit evidence.
+The guest never receives provider credentials, origin, or physical routes through
+its context. An operator may explicitly select a field such as `name`, so response
+data can itself contain resource names. The guest has no ambient host access. The
+current endpoint is explicitly operator configured; it does not
+add package upload, automated activation, publication, or write operations.
+
+The host bounds a run to 8 guest steps and 16 total requests, with at most 8 requests
+per step. Each serialized step result, including state and requests or outputs, is
+limited to 64 KiB; combined guest input is limited to 128 KiB. QuickJS uses a 16 MiB
+memory limit and 1 MiB stack, with a 100 ms execution deadline per step. Each
+step evaluates in a fresh QuickJS context, with explicit JSON state carrying values
+between steps. The deadline interrupts guest execution at QuickJS interrupt checks;
+it is not a hard OS process deadline. Source loading and TypeScript transpilation
+run in the trusted workload process at startup, not an isolated build worker; they
+have a source-size bound but no separate hard process deadline. Broker I/O retains
+its independent timeout and response limits.
+Guest errors and exhausted bounds return sanitized failures. Acceptance runs both `.js` and `.ts` fixtures through a real HTTPS
+broker read and verifies denial of undeclared operations and parameters, timeout
+containment, and successful execution after a failed run.
 
 See the [integration architecture and MVP](../rfcs/010-remediation-adapters-and-external-policy-discovery.md)
 for the roadmap and focused design contracts.

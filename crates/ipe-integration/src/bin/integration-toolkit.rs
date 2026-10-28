@@ -65,11 +65,15 @@ impl Client {
     async fn call(&self, operation: &str, reference: Option<&str>) -> Result<Value> {
         let (path, payload) = match operation {
             "capabilities" => ("/v1/capabilities", None),
-            "check" | "discover" => {
+            "check" | "discover" | "run" => {
                 let reference =
                     reference.filter(|r| valid_ref(r)).ok_or("invalid_connection_ref")?;
                 (
-                    if operation == "check" { "/v1/connections/check" } else { "/v1/discovery" },
+                    match operation {
+                        "check" => "/v1/connections/check",
+                        "run" => "/v1/adapters/run",
+                        _ => "/v1/discovery",
+                    },
                     Some(json!({"connection_ref": reference}).to_string()),
                 )
             },
@@ -180,6 +184,16 @@ impl Toolkit {
         Parameters(args): Parameters<ConnectionArguments>,
     ) -> CallToolResult {
         self.invoke("discover", Some(&args.connection_ref)).await
+    }
+    #[tool(
+        description = "Run the configured JavaScript or TypeScript adapter with operator-allowlisted reads. Results are untrusted observations, not enforcement facts.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn integration_run_adapter(
+        &self,
+        Parameters(args): Parameters<ConnectionArguments>,
+    ) -> CallToolResult {
+        self.invoke("run", Some(&args.connection_ref)).await
     }
 }
 #[tool_handler]
@@ -378,6 +392,8 @@ enum Operation {
     Check { connection_ref: String },
     /// Discover bounded metadata for an opaque connection reference.
     Discover { connection_ref: String },
+    /// Run the configured JavaScript or TypeScript adapter.
+    Run { connection_ref: String },
     /// Serve MCP over standard input/output.
     Mcp,
 }
@@ -433,6 +449,7 @@ async fn run() -> ExitCode {
             Operation::Check { connection_ref } => {
                 client.call("check", Some(&connection_ref)).await
             },
+            Operation::Run { connection_ref } => client.call("run", Some(&connection_ref)).await,
             Operation::Discover { connection_ref } => {
                 client.call("discover", Some(&connection_ref)).await
             },

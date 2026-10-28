@@ -102,7 +102,7 @@ try {
   });
   await check('MCP tool listing',async()=>{
     const value=await send('tools/list',{}); const names=value.result?.tools.map((t: {name: string})=>t.name).sort();
-    require(JSON.stringify(names)===JSON.stringify(['integration_capabilities','integration_check_connection','integration_discover']),'unexpected MCP tools');return {names};
+    require(JSON.stringify(names)===JSON.stringify(['integration_capabilities','integration_check_connection','integration_discover','integration_run_adapter']),'unexpected MCP tools');return {names};
   });
   for(const [name,args] of [['integration_capabilities',{}],['integration_check_connection',{connection_ref:connectionRef}],['integration_discover',{connection_ref:connectionRef}]]) {
     await check(`MCP ${name}`,async()=>{

@@ -218,6 +218,15 @@ impl Deployment {
         )
         .await
     }
+    async fn run_adapter(&self) -> Result<(u16, Value)> {
+        self.request(
+            reqwest::Method::POST,
+            "/v1/adapters/run",
+            Some(json!({"connection_ref":"conn_acceptance"})),
+            Some(&self.token),
+        )
+        .await
+    }
     async fn control(&self, body: Value) -> Result<Value> {
         let response = self
             .client
@@ -304,10 +313,11 @@ impl Deployment {
         self.redacted(&serde_json::to_string(&listed)?)?;
         let names: Vec<_> = listed.tools.iter().map(|tool| tool.name.as_ref()).collect();
         require(
-            names.len() == 3
+            names.len() == 4
                 && names.contains(&"integration_discover")
                 && names.contains(&"integration_capabilities")
-                && names.contains(&"integration_check_connection"),
+                && names.contains(&"integration_check_connection")
+                && names.contains(&"integration_run_adapter"),
             "MCP surface changed",
         )?;
         for (name, args, key, expected) in [
@@ -342,6 +352,32 @@ impl Deployment {
         let output = child.wait_with_output().await?;
         self.redacted(&String::from_utf8_lossy(&output.stderr))?;
         require(output.status.success(), "MCP child failed at shutdown")
+    }
+    async fn sdk_run_adapter(&self) -> Result<Value> {
+        use rmcp::{model::CallToolRequestParams, ServiceExt};
+        let mut child = tokio::process::Command::new(&self.toolkit)
+            .args(["--url", &self.url, "mcp"])
+            .env_clear()
+            .env("IPE_INTEGRATION_TOKEN", &self.token)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()?;
+        let service = ().serve((child.stdout.take().unwrap(), child.stdin.take().unwrap())).await?;
+        let response = service
+            .call_tool(CallToolRequestParams::new("integration_run_adapter").with_arguments(
+                json!({"connection_ref":"conn_acceptance"}).as_object().unwrap().clone(),
+            ))
+            .await?;
+        self.redacted(&serde_json::to_string(&response)?)?;
+        let value = response.structured_content.ok_or("MCP adapter output missing")?;
+        require(response.is_error != Some(true), "MCP adapter run failed")?;
+        service.cancel().await?;
+        let output = child.wait_with_output().await?;
+        self.redacted(&String::from_utf8_lossy(&output.stderr))?;
+        require(output.status.success(), "MCP child failed at shutdown")?;
+        Ok(value)
     }
     pub async fn smoke(&self) -> Result<Value> {
         let (code, result) = self.discover().await?;
@@ -459,6 +495,97 @@ impl Deployment {
         self.restart().await?;
         require(self.discover().await?.1 == success, "default adapter restoration failed")?;
         checks.push("replacement WASM, trap and invalid output isolation, restoration");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        self.config["script_operations"] = json!([{
+            "name":"metadata",
+            "table":"sys_db_object",
+            "fields":["name"],
+            "parameters":[],
+            "limit":8
+        }]);
+        for extension in ["js", "ts"] {
+            self.config["script_adapter_path"] = json!(root
+                .join(format!("testing/integration/adapters/read-step.{extension}"))
+                .to_string_lossy()
+                .to_string());
+            self.restart().await?;
+            let (code, result) = self.run_adapter().await?;
+            require(
+                code == 200
+                    && result["connection_ref"] == "conn_acceptance"
+                    && result["adapter"]["abi"] == "json-step-v1"
+                    && result["adapter"]["digest"]
+                        .as_str()
+                        .is_some_and(|v| v.starts_with("sha256:"))
+                    && result["outputs"]["records"].as_array().is_some_and(|v| !v.is_empty())
+                    && result["outputs"]["node_api_absent"] == true
+                    && result["outputs"]["fetch_absent"] == true
+                    && result["outputs"]["origin_absent"] == true
+                    && result["outputs"]["credential_absent"] == true
+                    && result["outputs"]["prior_state"] == "requested"
+                    && result["outputs"]["source_receipt"]
+                        .as_str()
+                        .is_some_and(|v| v.starts_with("receipt_") && v.len() == 72)
+                    && result["steps"].as_u64().is_some_and(|v| v >= 2)
+                    && result["requests"].as_u64().is_some_and(|v| v >= 1)
+                    && result["publication"] == false,
+                "JavaScript/TypeScript adapter did not complete a bounded brokered read",
+            )?;
+            let cli: Value =
+                serde_json::from_str(&self.toolkit(&["run", "conn_acceptance"], None).await?)?;
+            require(
+                cli["adapter"]["abi"] == "json-step-v1"
+                    && cli["outputs"]["records"].as_array().is_some()
+                    && cli["outputs"]["source_receipt"] != result["outputs"]["source_receipt"],
+                "CLI adapter run did not return guest output",
+            )?;
+            let mcp = self.sdk_run_adapter().await?;
+            require(
+                mcp["adapter"]["abi"] == "json-step-v1"
+                    && mcp["outputs"]["records"].as_array().is_some()
+                    && mcp["outputs"]["source_receipt"] != cli["outputs"]["source_receipt"],
+                "MCP adapter run did not return guest output",
+            )?;
+            checks.push(if extension == "js" {
+                "JavaScript step adapter brokered read, CLI/MCP and sandbox isolation"
+            } else {
+                "TypeScript step adapter transpilation, brokered read, CLI/MCP and sandbox isolation"
+            });
+        }
+        for (fixture, expected) in [
+            ("forbidden-operation.js", "script_operation_forbidden"),
+            ("invalid-parameters.js", "script_parameters_invalid"),
+        ] {
+            self.config["script_adapter_path"] = json!(root
+                .join(format!("testing/integration/adapters/{fixture}"))
+                .to_string_lossy()
+                .to_string());
+            self.restart().await?;
+            let (code, result) = self.run_adapter().await?;
+            require(
+                code == 422 && result["code"] == expected,
+                "adapter broker accepted an ungranted operation or parameter",
+            )?;
+        }
+        self.config["script_adapter_path"] =
+            json!(root.join("testing/integration/adapters/loop.js").to_string_lossy().to_string());
+        self.restart().await?;
+        self.control(json!({"mode":"failure"})).await?;
+        let (code, result) = self.run_adapter().await?;
+        require(
+            code == 422 && result["code"] == "script_timeout",
+            "non-terminating guest escaped its execution budget",
+        )?;
+        self.control(json!({"mode":"success"})).await?;
+        let (code, result) = self.run_adapter().await?;
+        require(
+            code == 200 && result["outputs"]["recovered"] == true,
+            "guest timeout contaminated the next run",
+        )?;
+        self.config.as_object_mut().unwrap().remove("script_adapter_path");
+        self.config.as_object_mut().unwrap().remove("script_operations");
+        self.restart().await?;
+        checks.push("forbidden operation/parameter rejection, timeout isolation and recovery");
         let before = self.requests().await?.len();
         for token in [None, Some("wrong-token")] {
             for (method, path, body) in [

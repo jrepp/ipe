@@ -328,6 +328,20 @@ This document describes the requirements for the Idempotent Predicate Engine (IP
 
 **REQ-DEPLOY-012**: The system SHALL validate configuration at startup and fail fast on errors.
 
+### 8.4 Integration adapter runtime
+
+**REQ-ADAPTER-001**: The integration workload SHALL execute operator-selected JavaScript and TypeScript adapters through the bounded `step(context, responses, state)` interface described in RFC 012, while retaining the WASM metadata adapter.
+
+**REQ-ADAPTER-002**: Guests SHALL have no ambient filesystem, network, environment, subprocess, or credential access. Native code SHALL authorize named read operations, validate parameters, and project permitted response fields before resuming a guest.
+
+**REQ-ADAPTER-003**: Guest execution SHALL bound memory, stack, execution time, serialized input/output/state, steps, and request counts. Failures SHALL return sanitized codes and SHALL NOT publish enforcement facts.
+
+**REQ-ADAPTER-004**: Configured adapters SHALL be immutable for the lifetime of the workload, identified by source/artifact digest, and runnable through authenticated HTTP, CLI, and MCP interfaces.
+
+**REQ-ADAPTER-005**: The sandbox SDK SHALL expose typed, pure helpers for broker requests, responses and JSON state. Its implementation SHALL participate in adapter identity, and native authorization SHALL remain independent of SDK validation.
+
+**REQ-ADAPTER-006**: Build-side dependency caching SHALL require exact registry versions and approved SHA-512 integrity, support verified offline reads, and SHALL NOT execute package scripts or expose registry access to guests.
+
 ## 9. Observability Requirements
 
 ### 9.1 Metrics

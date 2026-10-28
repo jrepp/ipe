@@ -1,4 +1,6 @@
 //! Bounded native discovery with sandboxed WASM metadata interpretation.
+mod script;
+mod script_service;
 mod wasm;
 use axum::{
     extract::{DefaultBodyLimit, State},
@@ -25,6 +27,9 @@ pub struct Config {
     resources: Vec<Resource>,
     identity_key_env: Option<String>,
     adapter_path: Option<String>,
+    script_adapter_path: Option<String>,
+    #[serde(default)]
+    script_operations: Vec<script_service::Operation>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -41,6 +46,7 @@ struct Field {
 }
 struct Runtime {
     adapter: wasm::Adapter,
+    script: Option<script::ScriptAdapter>,
     identity_key: Option<SecretString>,
     config: Config,
     token: SecretString,
@@ -64,6 +70,7 @@ fn identifier(s: &str) -> bool {
 }
 
 pub fn application(config: Config) -> Result<Router, &'static str> {
+    script_service::validate_configuration(&config)?;
     if !config.listen.ip().is_loopback() {
         return Err("listen_must_be_loopback");
     }
@@ -107,10 +114,14 @@ pub fn application(config: Config) -> Result<Router, &'static str> {
         },
         None => None,
     };
-    if config.resources.is_empty()
+    if (config.resources.is_empty() || config.script_adapter_path.is_some())
         && !identity_key.as_ref().is_some_and(|k| k.expose_secret().len() >= 32)
     {
-        return Err("catalog_requires_identity_key");
+        return Err(if config.script_adapter_path.is_some() {
+            "script_requires_identity_key"
+        } else {
+            "catalog_requires_identity_key"
+        });
     }
     let token =
         SecretString::from(std::env::var(&config.api_token_env).map_err(|_| "missing_api_token")?);
@@ -145,8 +156,14 @@ pub fn application(config: Config) -> Result<Router, &'static str> {
     }
     let client = builder.build().map_err(|_| "client_configuration_failed")?;
     let adapter = wasm::Adapter::load(config.adapter_path.as_deref())?;
+    let script = config
+        .script_adapter_path
+        .as_deref()
+        .map(script::ScriptAdapter::load)
+        .transpose()?;
     let state = Arc::new(Runtime {
         adapter,
+        script,
         identity_key,
         config,
         token,
@@ -159,6 +176,7 @@ pub fn application(config: Config) -> Result<Router, &'static str> {
         .route("/v1/capabilities", get(capabilities))
         .route("/v1/connections/check", post(check))
         .route("/v1/discovery", post(discover))
+        .route("/v1/adapters/run", post(script_service::run))
         .layer(DefaultBodyLimit::max(1024))
         .with_state(state)
         .layer(axum::middleware::from_fn(deadline)))
@@ -199,9 +217,13 @@ async fn capabilities(
     headers: HeaderMap,
 ) -> Result<Json<Value>, ApiError> {
     authorize(&state, &headers)?;
-    Ok(Json(
-        json!({"version":"v1","connection_refs":[state.config.connection_ref],"operations":["connections.check","discovery.run"],"publication":false,"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest,"engine":"wasmi","fuel_per_run":1000000,"memory_bytes":65536,"imports":false},"limits":{"resources":8,"fields_per_resource":32,"response_bytes":65536,"request_timeout_seconds":5,"run_timeout_seconds":12,"concurrent_runs":1},"coverage":if state.config.resources.is_empty() {"bounded_catalog"} else {"operator_configured_candidates"}}),
-    ))
+    let mut result = json!({"version":"v1","connection_refs":[state.config.connection_ref],"operations":["connections.check","discovery.run"],"publication":false,"adapter":{"abi":"metadata-field-v1","digest":state.adapter.digest,"engine":"wasmi","fuel_per_run":1000000,"memory_bytes":65536,"imports":false},"limits":{"resources":8,"fields_per_resource":32,"response_bytes":65536,"request_timeout_seconds":5,"run_timeout_seconds":12,"concurrent_runs":1},"coverage":if state.config.resources.is_empty() {"bounded_catalog"} else {"operator_configured_candidates"}});
+    if let Some(adapter) = &state.script {
+        result["operations"] = json!(["connections.check", "discovery.run", "adapters.run"]);
+        result["script_adapter"] =
+            script_service::capability(adapter, &state.config.script_operations);
+    }
+    Ok(Json(result))
 }
 async fn check(
     State(state): State<Arc<Runtime>>,
@@ -552,6 +574,7 @@ mod tests {
     fn opaque_ids_are_stable_and_domain_and_connection_scoped() {
         let mut state = Runtime {
             adapter: wasm::Adapter::load(None).unwrap(),
+            script: None,
             config: test_config("https://example.com"),
             identity_key: Some("independent-test-identity-key-32-bytes".into()),
             token: SecretString::from(String::new()),

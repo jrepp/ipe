@@ -53,5 +53,50 @@ The initial lifecycle uses operator startup selection. Agent upload, package
 signing, staged activation, live upgrades and rollback still require the package
 lifecycle design; this host does not claim those capabilities.
 
+## `json-step-v1` JavaScript and TypeScript runtime
+
+The separate `/v1/adapters/run` endpoint runs an operator-selected `.js` or `.ts`
+source using embedded QuickJS. TypeScript types are transpiled at startup by Oxc.
+The source defines a synchronous global function:
+
+```ts
+step(context, responses, state) -> { requests, state } | { outputs, state }
+```
+
+Every result must include JSON `state` and exactly one of `requests` or `outputs`.
+Requests contain an id, a configured operation name, and parameters validated
+against that operation's descriptor. The host executes the named HTTPS read and
+resumes the guest with projected primitive response data and a native HMAC opaque
+source receipt bound to the run, sequence, adapter digest, operation, query, and
+response. These run-local receipts are not durable audit evidence.
+The host rejects unconfigured operations, malformed parameters, and reused request
+ids. The run response reports JSON outputs, step/request counts, source digest, and
+`publication: false`.
+
+The first operator configuration supports descriptors containing `name`, `table`,
+`fields`, optional `parameters`, and `limit`. The descriptors are a separate explicit
+read grant, independent of the discovery `resources` list. Operation routes and
+selected fields are fixed in trusted configuration; guest inputs cannot supply a
+URL, table, query, or credential. Configuring a script adapter requires the protected
+`identity_key_env` key for receipt derivation, including when discovery resources
+are also configured. The guest receives only `{connection_ref}` as context and the
+responses produced during that run. Projected response fields may themselves
+contain operator-selected names. It has no Node globals, npm modules, WASI, network,
+filesystem, environment, or secret access. Source digest covers the language,
+original source, emitted JavaScript, and the embedded SDK.
+
+Runs are limited to eight steps, sixteen total requests, and eight requests per
+step. Each serialized step result, including state and requests or outputs, is
+limited to 64 KiB; combined guest input is limited to 128 KiB. QuickJS is limited to
+16 MiB memory and 1 MiB stack; each step has a 100 ms deadline. Every step runs in
+a fresh QuickJS context, while explicit JSON state carries values between steps.
+The 100 ms deadline uses QuickJS interrupt checks and is not a hard OS process
+deadline. Loading and Oxc transpilation occur in the trusted workload process at
+startup, not an isolated build worker; source size is bounded, but startup does not
+have a separate hard process deadline. Host broker I/O retains separate request
+and response bounds. A failed run does not contaminate the next run. This is an operator configured sandbox, not a
+package registry, build service, staged deployment lifecycle, or general npm
+runtime.
+
 Runtime API sources: [Wasmi configuration](https://docs.rs/wasmi/2.0.0/wasmi/struct.Config.html)
 and [store limits](https://docs.rs/wasmi/2.0.0/wasmi/struct.StoreLimitsBuilder.html).

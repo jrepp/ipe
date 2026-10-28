@@ -118,18 +118,22 @@ The initial discovery implementation is [ipe-integration](../crates/ipe-integrat
 with a [Rust CLI/MCP client](../crates/ipe-integration/src/bin/integration-toolkit.rs),
 a [TypeScript HTTPS test facade](../testing/integration/servicenow-standin.ts), and
 [Rust deployment/acceptance commands](../docs/INTEGRATION_DISCOVERY.md). The Rust
-workload now hosts a [Wasmi metadata sandbox](../crates/ipe-integration/src/wasm.rs)
-with a bounded [metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md).
-Every discovery runs the bundled WASM semantic mapping; operator configuration can
-select another immutable-at-startup WASM artifact without rebuilding the host.
-Credentials, transport, opaque identities and output validation remain native.
+workload hosts a [Wasmi metadata sandbox](../crates/ipe-integration/src/wasm.rs)
+with a bounded [metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md),
+plus a bounded QuickJS step runtime with Oxc TypeScript transpilation. Operators can
+select immutable-at-startup WASM or JavaScript/TypeScript artifacts without rebuilding
+the host. The step adapter uses operator-declared read descriptors; credentials,
+transport, opaque identities and output validation remain native. Acceptance runs
+JavaScript and typed TypeScript sources through real broker reads and checks denied
+operations/parameters, execution limits and recovery.
 
-This proves bounded credential-first metadata discovery locally and the initial
-sandbox component of M2. Agent-managed package deployment, general operation
-descriptors, source finding retrieval, fact synchronization, a general identity
-vault, and durable forensic audit remain proposed. M2–M4 are not complete. No live
-ServiceNow tenant validation is claimed. TypeScript currently supplies test
-facades; a TypeScript-to-WASM authoring toolchain is not implemented.
+This proves bounded credential-first metadata discovery locally and operator-selected
+bounded metadata and step sandbox execution. Agent-managed package deployment,
+general operation descriptors, source finding retrieval, fact synchronization, a
+general identity vault, and durable forensic audit remain proposed. M2–M4 are not
+complete. No live ServiceNow tenant validation is claimed. TypeScript now serves as
+both the test facade language and an optional embedded step-adapter source language;
+a TypeScript-to-WASM authoring toolchain is not implemented.
 
 Verified against the repository on 2026-10-18. [Runtime data documentation](../docs/RUNTIME_DATA.md)
 remains the reference for enforcement behavior. Roadmap capabilities beyond the

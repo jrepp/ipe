@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Typed sandbox SDK helpers for brokered requests, response handling, JSON state and projections; build-side npm artifact caching with pinned SHA-512 integrity and offline replay.
+- Integration service JavaScript/TypeScript step adapters with bounded QuickJS execution, startup TypeScript transpilation, operator-allowlisted HTTPS reads, and CLI/MCP access.
 - Core agent prompt and workflow guides for consistent development practices
 - Requirements specification document (REQUIREMENTS.md) with 100+ requirements
 - Interactive bytecode statistics info card in live demo
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved sanitizer checks to handle multiline output correctly
 
 ### Fixed
+- Updated TLS certificate verification and root data for RUSTSEC-2026-0382 and RUSTSEC-2026-0383.
 - Dependency advisories: removed unused gRPC, LRU, and memory-map dependencies and updated affected locked versions.
 - Security checks cover all features and retain audit reports after failures.
 - Cargo deny failures due to missing license entries
