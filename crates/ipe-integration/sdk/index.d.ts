@@ -6,13 +6,25 @@ declare namespace Ipe {
     operations: { name: string; parameters: string[] }[];
     sdk_version: string;
   }
+  interface HostedContext {
+    integration_id: string;
+    run_id: number;
+    observed_at: number;
+    input: Json;
+    operations: string[];
+    sdk_version: string;
+  }
   interface Request { id: string; operation: string; params: Record<string, string> }
   type Response =
-    | { id: string; operation: string; receipt: string; data: Record<string, Json>[]; code?: never }
+    | { id: string; operation: string; receipt: string; data: Record<string, Json>[]; source_digest?: string; truncated?: boolean; code?: never }
     | { id: string; operation: string; code: string; data?: never; receipt?: never };
-  type StepResult = { requests: Request[]; state: Json } | { outputs: Json; state: Json };
+  type StepResult = { requests: Request[]; state: Json; observations?: Observation[] } | { outputs: Json; state: Json };
+  interface Observation { kind: "contract" | "fact" | "outcome"; key: string; data: Json; receipts: string[] }
   interface SDK {
-    readonly version: "0.1.0";
+    call(id: string, operation: string, params?: Record<string,string>): Request;
+    exchange(items: Request[], state?: Json, observations?: Observation[]): StepResult;
+    timestamp(value: string): number | null;
+    readonly version: "0.2.0";
     readonly limits: { readonly requestsPerStep: 8; readonly resultBytes: 65536; readonly inputBytes: 131072 };
     request(id: string, operation: string, params?: Record<string, string>): Request;
     requests(items: Request[], state?: Json): StepResult;

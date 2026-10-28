@@ -219,3 +219,5 @@ ipe/
 [RFC 0003: Fact Retrieval API Contract](rfcs/0003-fact-retrieval-api.md) proposes
 bounded current-state collection listing. It remains a draft with open decisions;
 no collection-listing route is implemented by this document.
+
+- [Hosted integration programs](INTEGRATION_HOST.md): installed JavaScript, external requirements, status facts, and performance history.

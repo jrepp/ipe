@@ -1,6 +1,26 @@
 # From a GitHub workflow to an external contract
 
-## The story we can demonstrate
+## Hosted extraction and external performance
+
+The [integration host](INTEGRATION_HOST.md) is the primary implementation of this spike.
+The endpoint hosts agent-authored JavaScript, schedules its reads, and stores requirements, expiring facts, and external outcomes.
+Shared Rust code owns connections, secrets, retries, and execution limits.
+The standalone capture below remains a diagnostic tool for source review.
+
+The narrative now has three questions: What must the agent satisfy? What evidence is current? How did previous external executions perform?
+The host serves one evidence model to an authenticated monitor and JSON clients.
+A standalone HTML snapshot shares the same captured records without an API credential.
+
+The live proof includes a manual extraction and a scheduled extraction against GitHub.
+Repeated polls identify the same workflow attempt and jobs. They do not count as new executions.
+Job and step durations come from GitHub timestamps. Collector duration describes the extraction process.
+Unknown workflow completion time remains unknown. Large bundle read failures remain extraction gaps.
+See the [proof record](../acceptance/integration-host/proof.json) for measured values and bounds.
+
+This distinction supports agent trajectory modeling: declaration constraints guide planning, current facts support evaluation, and outcomes support diagnosis.
+A failed job does not authorize bypassing an external control. An alternative trajectory must still satisfy its applicable requirements.
+
+## The source story we can demonstrate
 
 A workflow says “publish the checked site.” That statement hides several contracts.
 A job must finish first. An event and branch condition must match. The job names an environment and requests token permissions.

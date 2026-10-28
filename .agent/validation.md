@@ -22,6 +22,7 @@ Runtime acceptance requires Python 3.10 or newer and OpenSSL. Integration accept
 | Integration acceptance | `cargo build --locked -p ipe-integration --bins`, then `cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored` |
 | TypeScript provider | In `testing/integration`: `npm ci`, `npm run check`, and `npm test` |
 | Integration package cache | `npm ci --ignore-scripts --prefix tools/integration-packages`, then `npm test --prefix tools/integration-packages` |
+| Hosted integrations | `cargo test --locked -p ipe-integration host --lib`; `node --test tools/integration-host/view.test.cjs`; see [live proof](../docs/INTEGRATION_HOST.md) |
 | GitHub contract capture | `cargo test --locked -p ipe-integration github_contract --lib`; see the [live proof and view checks](../docs/GITHUB_CONTRACT_SPIKE.md#proof-and-next-questions) |
 | Runtime performance | `cargo bench --locked -p ipe-core --features approvals --bench v2_evaluation` |
 

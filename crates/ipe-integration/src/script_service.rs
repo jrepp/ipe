@@ -123,6 +123,12 @@ pub(super) async fn run(
             .step(context.clone(), responses, state)
             .await
             .map_err(|code| error(StatusCode::UNPROCESSABLE_ENTITY, code))?;
+        if !result.observations.is_empty() {
+            return Err(error(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "script_observations_not_supported",
+            ));
+        }
         state = result.state;
         if let Some(outputs) = result.outputs {
             return Ok(Json(json!({"connection_ref":runtime.config.connection_ref,

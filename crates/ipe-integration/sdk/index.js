@@ -86,7 +86,34 @@
     }
     return json(result);
   }
-  const sdk = Object.freeze({ version: "0.1.0", limits, request, requests, response, records, pick,
+  // Broader parameter strings are still subject to native operation grants.
+  function call(id, operation, params = {}) {
+    if (!name(id) || !name(operation)) fail("ipe_request_invalid");
+    const copy = json(params);
+    if (!copy || Array.isArray(copy) || typeof copy !== "object" || Object.keys(copy).length > 8) fail("ipe_parameters_invalid");
+    for (const [key, value] of Object.entries(copy)) {
+      if (!name(key) || typeof value !== "string" || value.length > 2048 || value.includes('\0')) fail("ipe_parameters_invalid");
+    }
+    return { id, operation, params: copy };
+  }
+  function exchange(items, state = null, observations = []) {
+    if (!Array.isArray(items) || items.length > 8 || !Array.isArray(observations) || observations.length > 16) fail("ipe_requests_invalid");
+    const ids = new Set();
+    const validated = items.map(item => {
+      const request = call(item.id, item.operation, item.params);
+      if (ids.has(request.id)) fail("ipe_request_duplicate");
+      ids.add(request.id); return request;
+    });
+    return json({requests: validated, state, observations});
+  }
+  // Capture only deterministic parsing. The host removes Date before guest code.
+  const parseTimestamp = Date.parse.bind(Date);
+  function timestamp(value) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
+    const result = parseTimestamp(value);
+    return Number.isFinite(result) ? result : null;
+  }
+  const sdk = Object.freeze({ version: "0.2.0", call, exchange, timestamp, limits, request, requests, response, records, pick,
     complete: (outputs, state = null) => json({ outputs, state }),
     state: (value, initial = null) => json(value === null ? initial : value),
   });

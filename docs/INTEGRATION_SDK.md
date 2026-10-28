@@ -25,6 +25,9 @@ function step(context, responses, state) {
 
 | Helper | Purpose |
 | --- | --- |
+| `call(id, operation, params = {})` | Construct a hosted operation request with bounded strings; native grants remain authoritative. |
+| `exchange(items, state, observations)` | Return requests and up to 16 typed observations with receipt references. |
+| `timestamp(value)` | Parse an explicit ISO timestamp to milliseconds; return null for invalid input. |
 | `request(id, operation, params = {})` | Construct a named broker request; reject unsupported parameter syntax. |
 | `requests(items, state = null)` | Return up to eight requests with explicit continuation state; reject duplicate IDs. |
 | `response(responses, id)` | Find exactly one response, including its host error code or receipt. |
@@ -41,6 +44,11 @@ State is per-run continuation data, not a durable checkpoint. Each step has a ne
 context; use state rather than mutable globals. Existing raw `json-step-v1`
 adapters remain supported.
 
+## Hosted programs
+
+SDK 0.2 supports [hosted integration programs](INTEGRATION_HOST.md). The endpoint installs JavaScript source and runs it manually or on a schedule.
+Programs emit requirements, expiring facts, and external outcomes into bounded local storage. Enforcement publication remains separate.
+
 ## GitHub contract spike
 
 The [GitHub contract spike](GITHUB_CONTRACT_SPIKE.md) captures a workflow and its referenced actions at resolved commits.
@@ -51,7 +59,7 @@ It writes agent JSON and a standalone human review report. This path does not ch
 
 | Capability | Ownership and next work |
 | --- | --- |
-| HTTP/JSON | Keep named operations and typed parameters. Generalize the current ServiceNow table-read recipe to operator-defined REST paths and response schemas. No arbitrary guest `fetch`. |
+| HTTP/JSON | Keep named operations and typed parameters. The local host supports operator-defined REST paths and response projections. No arbitrary guest `fetch`. |
 | Authentication | Native connection recipes for OAuth refresh, API keys and signing; expose opaque connection references only. |
 | Pagination and retries | Native bounded iteration, Retry-After handling and checkpoints. Guest code may interpret permitted cursor values but cannot follow arbitrary URLs. |
 | Validation and mapping | Bundle approved pure-JS schema and mapping libraries; retain native output validation and source receipts. |

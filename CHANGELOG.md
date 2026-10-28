@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Local integration endpoint hosts installed JavaScript with shared connections, native secret handling, schedules, retries, and durable bounded history.
+- Hosted GitHub example captures requirements, expiring status facts, and distinct external outcomes with job and step durations. Includes agent JSON and a human monitor.
 - Local GitHub workflow and action contract capture with pinned source evidence, sandboxed SDK projections, input bindings, and a standalone review report.
 - Typed sandbox SDK helpers for brokered requests, response handling, JSON state and projections; build-side npm artifact caching with pinned SHA-512 integrity and offline replay.
 - Integration service JavaScript/TypeScript step adapters with bounded QuickJS execution, startup TypeScript transpilation, operator-allowlisted HTTPS reads, and CLI/MCP access.
