@@ -46,11 +46,17 @@ Outputs in `target/integration-host-demo` include:
 - `snapshot.html`: a standalone human review view with embedded evidence.
 - `snapshot.json`: the same records and history for agents.
 - `host-config.json`: named native connection and operation configuration, without credentials.
+- `open-monitor.html`: private local launcher for the live monitor. Do not share this file.
 - `operator.env`: the private local operator credential. Do not share this file.
 - `state/`: private installation source, current records, and bounded run history.
 
 Add `--serve` to keep the endpoint active at `http://127.0.0.1:8767`.
-Use the operator token from the protected file to connect the monitor. The page keeps the token in memory only.
+Add `--open` to open the live monitor automatically. You can also open the private `open-monitor.html` file locally.
+The launcher submits the operator token in a POST body and redirects to the monitor.
+The host sets an HttpOnly, SameSite cookie. Monitor API requests require a custom header and the configured local host address.
+The monitor checks the browser session automatically. It refreshes the installed program, run history, and records every three seconds.
+Keep `open-monitor.html` private; it contains the operator credential. Share `snapshot.html` instead.
+Manual token entry remains available for API operators. The GitHub helper credential is separate from the local operator credential.
 Use Ctrl-C to stop the host. Without `--serve`, the demo stops it after capture.
 Do not combine `--serve` with the two-second proof schedule for normal use. The default schedule is 300 seconds.
 
@@ -102,6 +108,7 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 | --- | --- |
 | `GET /v1/host/capabilities` | Return named operations, parameter constraints, record kinds, and limits |
 | `PUT /v1/integrations/:id` | Validate and durably install JavaScript source, input, operation grants, schedule, TTL, and record grants |
+| `GET /v1/integrations/:id` | Return installed JavaScript, input, operation grants, schedule, and TTL |
 | `GET /v1/integrations` | List installations, schedules, latest status, and expired fact counts |
 | `POST /v1/integrations/:id/runs` | Start a manual extraction; reject overlap |
 | `GET /v1/integrations/:id/runs` | Return retained collector runs and distinct external outcomes |

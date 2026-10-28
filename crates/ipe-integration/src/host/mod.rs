@@ -8,7 +8,7 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Html,
     routing::{get, post, put},
-    Json, Router,
+    Form, Json, Router,
 };
 use broker::{Broker, Metrics};
 use secrecy::{ExposeSecret, SecretString};
@@ -254,13 +254,26 @@ impl Host {
                     Html(include_str!("../../../../tools/integration-host/index.html"))
                 }),
             )
+            .route("/session", post(session))
             .route("/v1/host/capabilities", get(capabilities))
             .route("/v1/integrations", get(list))
-            .route("/v1/integrations/:id", put(install))
+            .route("/v1/integrations/:id", put(install).get(installation))
             .route("/v1/integrations/:id/runs", post(start).get(history))
             .route("/v1/integrations/:id/records", get(records))
             .layer(DefaultBodyLimit::max(160 * 1024))
             .with_state(self.clone())
+    }
+    fn monitor_cookie(&self) -> String {
+        broker::digest(format!("ipe-monitor:{}", self.token.expose_secret()).as_bytes())
+            .trim_start_matches("sha256:")
+            .to_owned()
+    }
+    fn local_origin(&self, headers: &HeaderMap) -> bool {
+        let expected = self.config.listen.to_string();
+        headers.get("host").and_then(|v| v.to_str().ok()) == Some(expected.as_str())
+            && headers
+                .get("origin")
+                .is_none_or(|v| v.to_str().ok() == Some(format!("http://{expected}").as_str()))
     }
     fn authorize(&self, headers: &HeaderMap) -> std::result::Result<(), ApiError> {
         let provided = headers
@@ -268,7 +281,16 @@ impl Host {
             .and_then(|v| v.to_str().ok())
             .and_then(|v| v.strip_prefix("Bearer "))
             .unwrap_or("");
-        if !bool::from(provided.as_bytes().ct_eq(self.token.expose_secret().as_bytes())) {
+        let cookie = headers
+            .get("cookie")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.split(';').find_map(|part| part.trim().strip_prefix("ipe_monitor=")))
+            .unwrap_or("");
+        let monitor = headers.get("x-ipe-monitor").is_some_and(|v| v == "1")
+            && self.local_origin(headers)
+            && bool::from(cookie.as_bytes().ct_eq(self.monitor_cookie().as_bytes()));
+        if !monitor && !bool::from(provided.as_bytes().ct_eq(self.token.expose_secret().as_bytes()))
+        {
             return Err(error(StatusCode::UNAUTHORIZED, "unauthorized"));
         }
         Ok(())
@@ -612,6 +634,52 @@ impl Host {
         }
         let _ = persist(&self.config.state_dir, &store);
     }
+}
+#[derive(Deserialize)]
+struct SessionLogin {
+    token: String,
+}
+async fn session(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    Form(login): Form<SessionLogin>,
+) -> std::result::Result<(StatusCode, HeaderMap), ApiError> {
+    // A private local launcher submits the token in the body, never in a URL.
+    if headers.get("host").and_then(|v| v.to_str().ok())
+        != Some(host.config.listen.to_string().as_str())
+        || !bool::from(login.token.as_bytes().ct_eq(host.token.expose_secret().as_bytes()))
+    {
+        return Err(error(StatusCode::UNAUTHORIZED, "unauthorized"));
+    }
+    let mut response = HeaderMap::new();
+    response.insert(
+        "set-cookie",
+        format!(
+            "ipe_monitor={}; HttpOnly; SameSite=Strict; Path=/v1/; Max-Age=28800",
+            host.monitor_cookie()
+        )
+        .parse()
+        .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "session_failed"))?,
+    );
+    response.insert("location", axum::http::HeaderValue::from_static("/"));
+    response.insert("cache-control", axum::http::HeaderValue::from_static("no-store"));
+    response.insert("referrer-policy", axum::http::HeaderValue::from_static("no-referrer"));
+    Ok((StatusCode::SEE_OTHER, response))
+}
+async fn installation(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    Ok(Json(
+        json!({"id":id,"adapter_digest":installed.digest,"package":installed.package}),
+    ))
 }
 async fn capabilities(
     State(host): State<Arc<Host>>,

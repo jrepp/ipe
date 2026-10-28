@@ -244,3 +244,80 @@ fn authored_program_compiles_and_time_helpers_are_deterministic() {
     )
     .unwrap();
 }
+
+#[tokio::test]
+async fn monitor_session_requires_token_and_protects_cookie_requests() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let mut settings = config(dir.path(), &origin);
+    settings.listen = address;
+    let host = Host::new(settings).await.unwrap();
+    host.install("example", package(false)).await.unwrap();
+    let app = host.router();
+    let server = tokio::spawn(async move {
+        axum::serve(listener, app).await.unwrap();
+    });
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
+    let base = format!("http://{address}");
+    let login = |value: &str| {
+        client
+            .post(format!("{base}/session"))
+            .header("content-type", "application/x-www-form-urlencoded")
+            .body(format!("token={value}"))
+    };
+    assert_eq!(login("invalid").send().await.unwrap().status(), StatusCode::UNAUTHORIZED);
+    let response = login(host.token.expose_secret()).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::SEE_OTHER);
+    assert_eq!(response.headers()["location"], "/");
+    let cookie = response.headers()["set-cookie"].to_str().unwrap();
+    assert!(cookie.contains("HttpOnly; SameSite=Strict"));
+    assert!(!cookie.contains(host.token.expose_secret()));
+    let cookie = cookie.split(';').next().unwrap();
+    let url = format!("{base}/v1/integrations/example");
+    let read = || client.get(&url).header("cookie", cookie);
+    assert_eq!(read().send().await.unwrap().status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        read()
+            .header("x-ipe-monitor", "1")
+            .header("origin", "https://other.test")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        read()
+            .header("x-ipe-monitor", "1")
+            .header("host", "other.test")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    let response = read().header("x-ipe-monitor", "1").send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let text = response.text().await.unwrap();
+    assert!(text.contains("source"));
+    assert!(!text.contains(host.token.expose_secret()));
+    assert_eq!(
+        client
+            .post(format!("{base}/v1/integrations/example/runs"))
+            .header("cookie", cookie)
+            .header("x-ipe-monitor", "1")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::ACCEPTED
+    );
+    host.stop().await;
+    server.abort();
+    provider.abort();
+}

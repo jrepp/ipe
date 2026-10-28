@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Private local monitor launcher establishes a browser session without token copying. The monitor shows installed JavaScript, input, grants, schedule, and live records.
 - Integration host resolves bearer tokens through local Git credential helpers with bounded, noninteractive lookup. The hosted GitHub demo no longer needs a token environment variable.
 - Local integration endpoint hosts installed JavaScript with shared connections, native secret handling, schedules, retries, and durable bounded history.
 - Hosted GitHub example captures requirements, expiring status facts, and distinct external outcomes with job and step durations. Includes agent JSON and a human monitor.

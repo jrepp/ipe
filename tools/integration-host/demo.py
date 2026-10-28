@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Install agent-authored JS in the endpoint and capture its run/evidence APIs."""
 import argparse
+import html
+import webbrowser
 import json
 import os
 from pathlib import Path
@@ -36,6 +38,7 @@ def main():
     parser.add_argument('--out', type=Path, default=ROOT / 'target/integration-host-demo')
     parser.add_argument('--port', type=int, default=8767)
     parser.add_argument('--serve', action='store_true')
+    parser.add_argument('--open', action='store_true', help='Open the live monitor through a private local launcher')
     parser.add_argument('--prove-schedule', action='store_true')
     args = parser.parse_args()
     output = args.out.resolve()
@@ -51,6 +54,13 @@ def main():
     env = dict(os.environ, IPE_HOST_OPERATOR_TOKEN=token)
     process = subprocess.Popen([str(ROOT/'target/debug/ipe-integration'), str(config_path), '--host'], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     base = f'http://127.0.0.1:{args.port}'
+    launcher = output / 'open-monitor.html'
+    fd = os.open(launcher, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    os.fchmod(fd, 0o600)
+    with os.fdopen(fd, 'w') as f:
+        f.write('<!doctype html><meta name="referrer" content="no-referrer"><title>Open IPE monitor</title>'
+                '<form method="post" action="'+base+'/session"><input type="hidden" name="token" value="'+html.escape(token, quote=True)+'">'
+                '<button>Open integration monitor</button></form><script>document.querySelector("form").submit()</script>')
     def api(path, method='GET', data=None):
         request = urllib.request.Request(base+path, method=method, data=None if data is None else json.dumps(data).encode(), headers={'Authorization': 'Bearer '+token, 'Content-Type': 'application/json'})
         with urllib.request.urlopen(request, timeout=15) as response:
@@ -82,21 +92,23 @@ def main():
             time.sleep(0.5)
         else:
             raise RuntimeError('Hosted run timed out')
-        snapshot = {'installation': installation, 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records')}
+        snapshot = {'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records')}
         encoded = json.dumps(snapshot, indent=2)
         if token in encoded:
             raise RuntimeError('Credential disclosure detected')
         (output/'snapshot.json').write_text(encoded+'\n')
-        html = (ROOT/'tools/integration-host/index.html').read_text()
+        page_html = (ROOT/'tools/integration-host/index.html').read_text()
         embedded = json.dumps(snapshot).replace('&','\\u0026').replace('<','\\u003c').replace('>','\\u003e')
-        html = html.replace('<script>', '<script id="host-snapshot" type="application/json">'+embedded+'</script><script>', 1)
-        (output/'snapshot.html').write_text(html)
+        page_html = page_html.replace('<script>', '<script id="host-snapshot" type="application/json">'+embedded+'</script><script>', 1)
+        (output/'snapshot.html').write_text(page_html)
         counts = {kind:sum(r['record']['kind']==kind for r in snapshot['records']['records']) for kind in ['contract','fact']}
         counts['external_outcomes'] = len(history['external_outcomes'])
         counts['successful_runs'] = sum(r['status']=='succeeded' for r in history['runs'])
-        print(json.dumps({'endpoint':base, 'counts':counts, 'snapshot':str(output/'snapshot.html'), 'operator_environment':str(env_path)}, indent=2), flush=True)
+        print(json.dumps({'endpoint':base, 'counts':counts, 'snapshot':str(output/'snapshot.html'), 'operator_environment':str(env_path), 'monitor_launcher':str(launcher)}, indent=2), flush=True)
         if args.serve:
-            print('Host remains active. Ctrl-C stops it. The API token is in the protected operator environment file.', flush=True)
+            if args.open:
+                webbrowser.open(launcher.as_uri())
+            print('Host remains active. Open open-monitor.html to connect without copying a token. Ctrl-C stops it.', flush=True)
             process.wait()
     except KeyboardInterrupt:
         pass

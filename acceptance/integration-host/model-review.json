@@ -1,0 +1,29 @@
+{
+  "status": "Observed inventory for recommendations; not a complete policy model",
+  "as_of": 1793222789,
+  "collector_run": 16,
+  "adapter_digest": "sha256:b1983d126b10dde2f2732f2ecb6782840d9ea4d6782304fcd6e23b056832d164",
+  "counts": {
+    "definitions": 9,
+    "implementation_evidence_records": 10,
+    "requirement_entries": 76,
+    "references": 8,
+    "expressions": 26,
+    "facts": 3,
+    "distinct_outcomes": 3
+  },
+  "gap_counts": {
+    "provider_byte_limit": 9,
+    "author_source_sample": 5,
+    "source_sample_truncated": 2
+  },
+  "findings": [
+    "Contract record kind includes both definitions and lexical evidence",
+    "Requirement dependencies preserve string-or-array source syntax",
+    "Job declaration correlation is static-name-only and unresolved",
+    "Projection gap still says run results not captured",
+    "Generic JSON data has no versioned domain schema",
+    "Current record keys include source revision; no scoped deletion or reconciliation",
+    "Outcome retention depends on eight collector runs"
+  ]
+}

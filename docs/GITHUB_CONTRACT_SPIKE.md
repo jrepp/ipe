@@ -1,5 +1,7 @@
 # From a GitHub workflow to an external contract
 
+See the [model review and prioritized recommendations](INTEGRATION_MODEL_REVIEW.md) for the next implementation slice.
+
 ## Hosted extraction and external performance
 
 The [integration host](INTEGRATION_HOST.md) is the primary implementation of this spike.
@@ -163,11 +165,11 @@ Declared outputs, artifact creation, credential setup, cleanup, and deployment a
 The current extractor retains their evidence. It does not yet produce a verified effect graph.
 
 **Add outcomes through joins, not overwrites.**
-A future run observation should reference the workflow commit, run ID, attempt, job, and action invocation.
+The hosted path now captures run and job outcomes. A complete join should reference the workflow commit, run ID, attempt, job, and action invocation.
 Keep result status, conclusion, artifact identity, and deployment status distinct.
 A source capture must remain readable after a later run succeeds or fails.
 
-## Implemented path and bounds
+## Standalone diagnostic CLI path and bounds
 
 Rust owns repository authorization, GitHub requests, commit resolution, YAML parsing, and evidence collection.
 Only `api.github.com` is contacted. Redirects are rejected. Referenced repositories require an explicit allowlist entry.
@@ -218,7 +220,7 @@ node --test tools/github-contract/view.test.cjs
 The [proof summary](../acceptance/github-contract/proof.json) records the reviewed live capture.
 It excludes source bodies and credentials. The full local report contains the detailed evidence.
 
-The next modeling experiment should join this contract with one real run and its artifact/deployment records.
+The hosted path now joins a real workflow attempt and job outcomes. Artifact and deployment records remain the next collection experiment.
 Before promoting inferred effects into shared contracts, test action import graphs, source-to-bundle correspondence, and environment protection reads.
 Use these counterexamples to refine [RFC 013](../rfcs/013-domain-constraints-and-projections.md), rather than treating this GitHub projection as a universal policy language.
 
