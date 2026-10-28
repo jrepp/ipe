@@ -9,6 +9,10 @@ on:
     # Run benchmarks daily at 02:00 UTC
     - cron: '0 2 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -20,6 +24,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install Rust
+        id: toolchain
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo registry
@@ -38,10 +43,16 @@ jobs:
         uses: actions/cache@v6
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.cachekey }}-bench-all-features-${{ hashFiles('**/Cargo.toml', '.cargo/config', '.cargo/config.toml', 'rust-toolchain', 'rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.sha }}
+          restore-keys: |
+            v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.cachekey }}-bench-all-features-${{ hashFiles('**/Cargo.toml', '.cargo/config', '.cargo/config.toml', 'rust-toolchain', 'rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}-
 
       - name: Run benchmarks
+        shell: bash
         run: cargo bench --all-features 2>&1 | tee benchmark-results.txt
+
+      - name: Summarize benchmark results
+        run: echo 'Benchmark results are available in the benchmark-results artifact. No performance thresholds are enforced.' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v7
@@ -61,95 +72,6 @@ jobs:
       #     alert-threshold: '110%'
       #     comment-on-alert: true
       #     fail-on-alert: true
-
-  performance-validation:
-    name: Validate Performance Targets
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo registry
-        uses: actions/cache@v6
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build release
-        run: cargo build --release --all-features
-
-      - name: Run performance validation
-        run: |
-          # Create a performance test script
-          cat > validate_perf.sh << 'EOF'
-          #!/bin/bash
-          set -e
-
-          echo "Running performance validation..."
-
-          # Target: Single policy evaluation < 50μs p99
-          # Target: 1000 policies < 500μs p99
-          # Target: Throughput > 20k ops/sec
-
-          # Run benchmarks and extract results
-          # (--bench evaluation was deleted with the legacy engine cluster;
-          # the remaining benches require the approvals feature)
-          cargo bench --all-features 2>&1 > bench_out.txt
-
-          # Parse results (this is a placeholder - actual implementation needed)
-          echo "✅ Performance targets validated"
-          EOF
-
-          chmod +x validate_perf.sh
-          ./validate_perf.sh
-
-  load-test:
-    name: Load Testing
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo registry
-        uses: actions/cache@v6
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build release
-        run: cargo build --release --all-features
-
-      - name: Run load tests
-        run: |
-          # Create load test script
-          cat > load_test.sh << 'EOF'
-          #!/bin/bash
-          set -e
-
-          echo "Running load tests..."
-
-          # Test 1: Sustained load (1M evaluations)
-          echo "Test 1: Sustained load"
-          cargo run --release --example load_test -- --evals 1000000 --threads 1
-
-          # Test 2: Concurrent load (8 threads)
-          echo "Test 2: Concurrent load"
-          cargo run --release --example load_test -- --evals 1000000 --threads 8
-
-          # Test 3: Stress test (100k policies)
-          echo "Test 3: Stress test"
-          cargo run --release --example stress_test -- --policies 100000 --evals 10000
-
-          echo "✅ Load tests completed"
-          EOF
-
-          chmod +x load_test.sh
-          # Uncomment when examples are implemented
-          # ./load_test.sh
 
   memory-profiling:
     name: Memory Profiling

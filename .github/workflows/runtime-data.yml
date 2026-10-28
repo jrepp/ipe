@@ -6,6 +6,10 @@ on:
     branches: [main, master, develop]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -17,7 +21,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
       - name: Install native build and TLS fixture dependencies
-        run: sudo apt-get update && sudo apt-get install -y libclang-dev cmake openssl
+        run: |
+          missing=()
+          for package in libclang-dev cmake openssl; do
+            if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -qx 'install ok installed'; then
+              missing+=("$package")
+            fi
+          done
+          if (( ${#missing[@]} )); then
+            sudo apt-get update
+            sudo apt-get install -y "${missing[@]}"
+          fi
       - name: Test runtime storage and language
         run: cargo test --locked -p ipe-core --features approvals
       - name: Test server boundaries
