@@ -4,11 +4,16 @@
 
 set -euo pipefail
 
-echo "🧪 Running coverage tests..."
-
-# Run coverage generation
-cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-cargo llvm-cov --all-features --workspace --html
+if [[ ${1:-} == --reuse-coverage && $# -eq 1 ]]; then
+    echo "🧪 Using existing coverage data..."
+elif [[ $# -eq 0 ]]; then
+    echo "🧪 Running coverage tests..."
+    cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+    cargo llvm-cov --all-features --workspace --no-run --html
+else
+    echo "Usage: $0 [--reuse-coverage]" >&2
+    exit 2
+fi
 
 # Upload to codecov (don't fail on this)
 if [ -n "${CODECOV_TOKEN:-}" ]; then
@@ -17,7 +22,16 @@ if [ -n "${CODECOV_TOKEN:-}" ]; then
 fi
 
 # Extract coverage percentage
-coverage=$(cargo llvm-cov --all-features --workspace --summary-only 2>&1 | grep -oP 'TOTAL.*\K\d+\.\d+' | head -1 || echo "0.0")
+if [[ ${1:-} == --reuse-coverage ]]; then
+    # A failed report must not be mistaken for low coverage when reusing data.
+    summary=$(cargo llvm-cov --all-features --workspace --no-run 2>&1) || {
+        echo "$summary" >&2
+        exit 1
+    }
+    coverage=$(echo "$summary" | grep -oP 'TOTAL.*\K\d+\.\d+' | head -1 || echo "0.0")
+else
+    coverage=$(cargo llvm-cov --all-features --workspace --no-run 2>&1 | grep -oP 'TOTAL.*\K\d+\.\d+' | head -1 || echo "0.0")
+fi
 echo "📊 Reported coverage: $coverage%"
 
 # KNOWN ISSUE: llvm-cov reports incorrect 1.15% coverage
