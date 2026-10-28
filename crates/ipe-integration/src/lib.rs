@@ -1,4 +1,5 @@
 //! Bounded native discovery with sandboxed WASM metadata interpretation.
+pub mod github_contract;
 mod script;
 mod script_service;
 mod wasm;

@@ -7,6 +7,7 @@ Read this before changing runtime, integration, or shared boundary behavior.
 - The implemented runtime uses language-2 policies, scoped facts, immutable snapshots, and expiring evidence.
 - The integration workload supports bounded ServiceNow metadata discovery through Rust CLI and MCP clients. It does not yet publish enforcement facts.
 - Operator-configured JavaScript/TypeScript adapters use a sandbox and native broker for permitted reads. They do not publish facts or perform writes.
+- The local `github-contract` CLI captures GitHub workflow and action evidence. It does not execute actions or publish policies.
 - Read each RFC's status and the implementation limits in the current guides. A proposal is not an implemented feature.
 - The legacy parser, bytecode interpreter, and JIT were removed. Several documents still describe them.
 - [QUICKSTART.md](../QUICKSTART.md), [.agent/core-prompt.md](../.agent/core-prompt.md), and some workflow examples contain historical architecture and commands.
@@ -26,6 +27,7 @@ Read this before changing runtime, integration, or shared boundary behavior.
 | [Adapters](../crates/ipe-integration/adapters/README.md) | WASM metadata adapter contract and source |
 | [script.rs](../crates/ipe-integration/src/script.rs) and [script_service.rs](../crates/ipe-integration/src/script_service.rs) | JavaScript/TypeScript sandbox and native operation broker |
 | [SDK](../crates/ipe-integration/sdk/) and [package cache](../tools/integration-packages/) | Embedded guest SDK and build-side npm artifact cache; see the [SDK guide](../docs/INTEGRATION_SDK.md) |
+| [github_contract.rs](../crates/ipe-integration/src/github_contract.rs) | Bounded GitHub capture, sandboxed declaration projection, and local review reports |
 | [ipe-json](../crates/ipe-json/src/lib.rs) | Strict JSON decoding shared across trust boundaries |
 | [testing/integration](../testing/integration/README.md) | TypeScript provider stand-in and independent protocol client |
 | [acceptance](../acceptance/) and [scripts](../scripts/) | External acceptance fixtures, reports, and documentation tooling |

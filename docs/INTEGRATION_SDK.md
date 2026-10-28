@@ -41,6 +41,12 @@ State is per-run continuation data, not a durable checkpoint. Each step has a ne
 context; use state rather than mutable globals. Existing raw `json-step-v1`
 adapters remain supported.
 
+## GitHub contract spike
+
+The [GitHub contract spike](GITHUB_CONTRACT_SPIKE.md) captures a workflow and its referenced actions at resolved commits.
+The local `github-contract` binary keeps GitHub reads in Rust and projects parsed declarations through the existing sandbox SDK.
+It writes agent JSON and a standalone human review report. This path does not change the ServiceNow broker or publish enforcement facts.
+
 ## Backend integration capabilities to grow next
 
 | Capability | Ownership and next work |

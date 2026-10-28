@@ -1,0 +1,177 @@
+{
+  "schema": "ipe.github-contract-proof.v1",
+  "observed_at_unix": 1793211607,
+  "scope": {
+    "allowed_repositories": [
+      "actions/checkout",
+      "actions/setup-node",
+      "actions/setup-python",
+      "actions/upload-artifact",
+      "jrepp/ipe",
+      "actions/upload-pages-artifact",
+      "actions/deploy-pages",
+      "actions/configure-pages"
+    ],
+    "repository": "jrepp/ipe",
+    "requested_ref": "8346e53d0b428b701349817df6624f0ad33a1639",
+    "workflow": ".github/workflows/docs-site.yml"
+  },
+  "adapter": {
+    "digest": "sha256:83492ba8a43500df3214bb4263cbabb74786814cd6be063ad0def5993ff80771",
+    "sdk_version": "0.1.0"
+  },
+  "capture_file_sha256": "a7797cc63d5902cba670f3e7540c5ee72c81aa4f2e92a5f7c771953080e9461f",
+  "counts": {
+    "definitions": 9,
+    "workflow_jobs": 2,
+    "dependency_edges": 8,
+    "unresolved_expressions": 26,
+    "lexical_clues": 103,
+    "dependency_read_gaps": 0,
+    "implementation_gaps": 16
+  },
+  "usage": {
+    "bytes": 272003,
+    "requests": 62
+  },
+  "sources": [
+    {
+      "id": 0,
+      "kind": "workflow",
+      "source": {
+        "bytes": 2680,
+        "commit": "8346e53d0b428b701349817df6624f0ad33a1639",
+        "digest": "sha256:32b5e3b9f1ad1634d9ce3320d99d66577f17e1c26472dd73e4a67d56cd20bb44",
+        "path": ".github/workflows/docs-site.yml",
+        "repository": "jrepp/ipe",
+        "url": "https://github.com/jrepp/ipe/blob/8346e53d0b428b701349817df6624f0ad33a1639/.github/workflows/docs-site.yml"
+      },
+      "requested_ref": "8346e53d0b428b701349817df6624f0ad33a1639"
+    },
+    {
+      "id": 1,
+      "kind": "action",
+      "source": {
+        "bytes": 5144,
+        "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "digest": "sha256:d59219cb79590abdb877deaa14e3b65a00c05318bf5a6f3b989b9162b5d08c35",
+        "path": "action.yml",
+        "repository": "actions/checkout",
+        "url": "https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/action.yml"
+      },
+      "requested_ref": "3d3c42e5aac5ba805825da76410c181273ba90b1"
+    },
+    {
+      "id": 2,
+      "kind": "action",
+      "source": {
+        "bytes": 2502,
+        "commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+        "digest": "sha256:e6dc8046c02bd3c9f7bf2fea6ba2e59b4e83c7de2b26ec2149a1627f5d66f96c",
+        "path": "action.yml",
+        "repository": "actions/setup-python",
+        "url": "https://github.com/actions/setup-python/blob/5fda3b95a4ea91299a34e894583c3862153e4b97/action.yml"
+      },
+      "requested_ref": "5fda3b95a4ea91299a34e894583c3862153e4b97"
+    },
+    {
+      "id": 3,
+      "kind": "action",
+      "source": {
+        "bytes": 3002,
+        "commit": "949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "digest": "sha256:84cd55863dbadfb83ed786c0bb4336553c2f4ceb52e102fccec01848f1977387",
+        "path": "action.yml",
+        "repository": "actions/setup-node",
+        "url": "https://github.com/actions/setup-node/blob/949feb2413d6458794dcd2491c4babbbce0c15c1/action.yml"
+      },
+      "requested_ref": "949feb2413d6458794dcd2491c4babbbce0c15c1"
+    },
+    {
+      "id": 4,
+      "kind": "action",
+      "source": {
+        "bytes": 3603,
+        "commit": "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+        "digest": "sha256:c5979822866a72362e609844b6ebe77d4b7e759af68cc1c2c425dcf51481fab4",
+        "path": "action.yml",
+        "repository": "actions/upload-artifact",
+        "url": "https://github.com/actions/upload-artifact/blob/cf430e030ddbb5b0abf93d22962f4752f3646cd9/action.yml"
+      },
+      "requested_ref": "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
+    },
+    {
+      "id": 5,
+      "kind": "action",
+      "source": {
+        "bytes": 2895,
+        "commit": "fc324d3547104276b827a68afc52ff2a11cc49c9",
+        "digest": "sha256:f84e759011e0c497e696f5bce4ebb5fbe9bbdc5aea309b73795283fa139c1558",
+        "path": "action.yml",
+        "repository": "actions/upload-pages-artifact",
+        "url": "https://github.com/actions/upload-pages-artifact/blob/fc324d3547104276b827a68afc52ff2a11cc49c9/action.yml"
+      },
+      "requested_ref": "fc324d3547104276b827a68afc52ff2a11cc49c9"
+    },
+    {
+      "id": 6,
+      "kind": "action",
+      "source": {
+        "bytes": 1529,
+        "commit": "45bfe0192ca1faeb007ade9deae92b16b8254a0d",
+        "digest": "sha256:55f1486ae3901c69be182cea1c1e3313954c78be626751a85b19ddaf14ae8da6",
+        "path": "action.yml",
+        "repository": "actions/configure-pages",
+        "url": "https://github.com/actions/configure-pages/blob/45bfe0192ca1faeb007ade9deae92b16b8254a0d/action.yml"
+      },
+      "requested_ref": "45bfe0192ca1faeb007ade9deae92b16b8254a0d"
+    },
+    {
+      "id": 7,
+      "kind": "action",
+      "source": {
+        "bytes": 1244,
+        "commit": "368f82528645a54fb793d4d04e342629a3f51346",
+        "digest": "sha256:64c44539fba53559a157b5de16c01d3ab91dbc999c1b98b5c0b2fc3528d5d059",
+        "path": "action.yml",
+        "repository": "actions/deploy-pages",
+        "url": "https://github.com/actions/deploy-pages/blob/368f82528645a54fb793d4d04e342629a3f51346/action.yml"
+      },
+      "requested_ref": "368f82528645a54fb793d4d04e342629a3f51346"
+    },
+    {
+      "id": 8,
+      "kind": "action",
+      "source": {
+        "bytes": 3603,
+        "commit": "bbbca2ddaa5d8feaa63e36b76fdaad77386f024f",
+        "digest": "sha256:c5979822866a72362e609844b6ebe77d4b7e759af68cc1c2c425dcf51481fab4",
+        "path": "action.yml",
+        "repository": "actions/upload-artifact",
+        "url": "https://github.com/actions/upload-artifact/blob/bbbca2ddaa5d8feaa63e36b76fdaad77386f024f/action.yml"
+      },
+      "requested_ref": "bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
+    }
+  ],
+  "checks": {
+    "focused_rust_tests": 11,
+    "view_tests": 2,
+    "live_github_acceptance": "passed",
+    "existing_integration_acceptance": "passed",
+    "workspace_default": "passed",
+    "workspace_all_features": "passed",
+    "clippy_all_features": "passed",
+    "cargo_audit": "0 vulnerabilities, 0 warnings",
+    "license_check": "passed; existing unmatched license allowances warn",
+    "browser": "Safari source selection, input bindings, blob JSON download and desktop overflow checks passed",
+    "restricted_live_capture": "1 source request; all 7 external action reads denied before network",
+    "credential_disclosure": "live acceptance confirms token absent from JSON, stdout and stderr"
+  },
+  "limitations": [
+    "Declarations are not execution outcomes.",
+    "Environment protection, repository rules, secrets, action downloads and runtime-generated behavior are not captured.",
+    "Source clues are lexical matches, not verified effects or grants.",
+    "A local file digest is provenance, not a signed external attestation.",
+    "Capture retains source text. Treat the report with the same access controls as the source repositories."
+  ]
+}

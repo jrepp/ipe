@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Local GitHub workflow and action contract capture with pinned source evidence, sandboxed SDK projections, input bindings, and a standalone review report.
 - Typed sandbox SDK helpers for brokered requests, response handling, JSON state and projections; build-side npm artifact caching with pinned SHA-512 integrity and offline replay.
 - Integration service JavaScript/TypeScript step adapters with bounded QuickJS execution, startup TypeScript transpilation, operator-allowlisted HTTPS reads, and CLI/MCP access.
 - Core agent prompt and workflow guides for consistent development practices

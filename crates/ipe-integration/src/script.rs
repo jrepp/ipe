@@ -78,7 +78,7 @@ impl ScriptAdapter {
         Self::from_source(&source, is_ts)
     }
 
-    fn from_source(source: &str, is_ts: bool) -> Result<Self, &'static str> {
+    pub(crate) fn from_source(source: &str, is_ts: bool) -> Result<Self, &'static str> {
         if source.len() > SOURCE_LIMIT || source.is_empty() {
             return Err("script_invalid");
         }
