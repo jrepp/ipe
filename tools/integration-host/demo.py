@@ -16,8 +16,7 @@ REPOSITORIES = ['jrepp/ipe', 'actions/checkout', 'actions/setup-python', 'action
 
 def configuration(output, port):
     connection = {'id': 'github', 'origin': 'https://api.github.com/', 'headers': {'x-github-api-version': '2022-11-28'}}
-    if os.environ.get('IPE_GITHUB_TOKEN'):
-        connection['credential_env'] = 'IPE_GITHUB_TOKEN'
+    connection['git_credential_url'] = 'https://github.com'
     repo = {'kind': 'path', 'values': REPOSITORIES}
     root = {'kind': 'path', 'values': ['jrepp/ipe']}
     def op(name, path, parameters, decoder='json', fields=None, **kwargs):
@@ -85,7 +84,7 @@ def main():
             raise RuntimeError('Hosted run timed out')
         snapshot = {'installation': installation, 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records')}
         encoded = json.dumps(snapshot, indent=2)
-        if token in encoded or (os.environ.get('IPE_GITHUB_TOKEN') and os.environ['IPE_GITHUB_TOKEN'] in encoded):
+        if token in encoded:
             raise RuntimeError('Credential disclosure detected')
         (output/'snapshot.json').write_text(encoded+'\n')
         html = (ROOT/'tools/integration-host/index.html').read_text()

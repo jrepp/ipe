@@ -19,6 +19,7 @@ pub struct ConnectionConfig {
     pub id: String,
     pub origin: String,
     pub credential_env: Option<String>,
+    pub git_credential_url: Option<String>,
     #[serde(default)]
     pub headers: BTreeMap<String, String>,
 }
@@ -101,7 +102,7 @@ pub(super) fn digest(bytes: &[u8]) -> String {
     format!("sha256:{:x}", Sha256::digest(bytes))
 }
 impl Broker {
-    pub fn new(configs: Vec<ConnectionConfig>, operations: Vec<Operation>) -> Result<Self> {
+    pub async fn new(configs: Vec<ConnectionConfig>, operations: Vec<Operation>) -> Result<Self> {
         if configs.is_empty() || configs.len() > 8 || operations.is_empty() || operations.len() > 32
         {
             return Err("invalid_broker_scope");
@@ -121,18 +122,21 @@ impl Broker {
                 || origin.query().is_some()
                 || origin.fragment().is_some()
                 || !(origin.scheme() == "https"
-                    || origin.scheme() == "http" && local && config.credential_env.is_none())
+                    || origin.scheme() == "http"
+                        && local
+                        && config.credential_env.is_none()
+                        && config.git_credential_url.is_none())
             {
                 return Err("invalid_origin");
             }
-            let token = config
-                .credential_env
-                .map(|key| {
-                    std::env::var(key)
-                        .map(SecretString::from)
-                        .map_err(|_| "missing_provider_credential")
-                })
-                .transpose()?;
+            let token = match (&config.credential_env, &config.git_credential_url) {
+                (Some(_), Some(_)) => return Err("ambiguous_credential_source"),
+                (Some(key), None) => Some(SecretString::from(
+                    std::env::var(key).map_err(|_| "missing_provider_credential")?,
+                )),
+                (None, Some(url)) => Some(super::credentials::git(url).await?),
+                (None, None) => None,
+            };
             if token
                 .as_ref()
                 .is_some_and(|t| t.expose_secret().is_empty() || t.expose_secret().len() > 8192)
@@ -422,17 +426,19 @@ mod tests {
     fn operation() -> Operation {
         serde_json::from_value(json!({"name":"read","connection":"fixture","path":"/repos/{repository}/contents/{path}","parameters":{"repository":{"kind":"path","values":["owner/repo"]},"path":{"kind":"path"},"revision":{"kind":"sha"}},"query":{"ref":"{revision}"},"decoder":"json","fields":["value"]})).unwrap()
     }
-    #[test]
-    fn operation_templates_cannot_escape_origin_or_resource_scope() {
+    #[tokio::test]
+    async fn operation_templates_cannot_escape_origin_or_resource_scope() {
         let broker = Broker::new(
             vec![ConnectionConfig {
                 id: "fixture".into(),
                 origin: "http://127.0.0.1:1234/".into(),
                 credential_env: None,
+                git_credential_url: None,
                 headers: BTreeMap::new(),
             }],
             vec![operation()],
         )
+        .await
         .unwrap();
         let mut params = BTreeMap::from([
             ("repository".into(), "owner/repo".into()),
@@ -497,10 +503,12 @@ mod tests {
                     id: "fixture".into(),
                     origin: origin.clone(),
                     credential_env: None,
+                    git_credential_url: None,
                     headers: BTreeMap::new(),
                 }],
                 vec![op],
             )
+            .await
             .unwrap();
             let mut metrics = Metrics::default();
             assert_eq!(
@@ -512,17 +520,43 @@ mod tests {
         }
         server.abort();
     }
-    #[test]
-    fn echoed_native_credentials_do_not_reach_guest() {
+    #[tokio::test]
+    async fn credential_sources_are_exclusive_and_require_https() {
+        for (origin, env, expected) in [
+            ("http://127.0.0.1", None, "invalid_origin"),
+            (
+                "https://example.test",
+                Some("UNUSED_SECRET".into()),
+                "ambiguous_credential_source",
+            ),
+        ] {
+            let result = Broker::new(
+                vec![ConnectionConfig {
+                    id: "fixture".into(),
+                    origin: origin.into(),
+                    credential_env: env,
+                    git_credential_url: Some("https://github.com".into()),
+                    headers: BTreeMap::new(),
+                }],
+                vec![operation()],
+            )
+            .await;
+            assert_eq!(result.err(), Some(expected));
+        }
+    }
+    #[tokio::test]
+    async fn echoed_native_credentials_do_not_reach_guest() {
         let mut broker = Broker::new(
             vec![ConnectionConfig {
                 id: "fixture".into(),
                 origin: "https://example.test".into(),
                 credential_env: None,
+                git_credential_url: None,
                 headers: BTreeMap::new(),
             }],
             vec![operation()],
         )
+        .await
         .unwrap();
         broker.connections.get_mut("fixture").unwrap().token =
             Some(SecretString::from("private_test_credential"));

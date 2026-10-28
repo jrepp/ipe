@@ -11,7 +11,8 @@ cargo build --locked -p ipe-integration --bins
 python3 tools/integration-host/demo.py --out target/integration-host-proof-new --prove-schedule
 ```
 
-Use `IPE_GITHUB_TOKEN` through a protected environment handoff if GitHub requires authentication or anonymous rate limits prevent capture.
+Configure a local Git credential helper for `https://github.com`. The host resolves the token; the demo does not read it.
+The earlier proof used host-owned environment credentials. The Git helper proof is recorded in `git-credential-proof.json`.
 The demo installs code through HTTP, waits for both triggers, writes JSON and HTML snapshots, checks credential exclusion, and stops the host.
 The observed outcomes can change when GitHub removes historical runs. A missing outcome is not a successful outcome.
 

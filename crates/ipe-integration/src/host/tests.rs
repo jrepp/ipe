@@ -74,7 +74,7 @@ async fn completed(host: &Host, id: &str, run_id: u64) -> Run {
 async fn hosted_code_retries_retains_typed_records_and_survives_restart() {
     let (origin, attempts, provider) = fixture().await;
     let dir = tempfile::tempdir().unwrap();
-    let host = Host::new(config(dir.path(), &origin)).unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
     host.install("example", package(false)).await.unwrap();
     let first = host.start("example", "manual").await.unwrap();
     assert!(host.start("example", "manual").await.is_err());
@@ -103,7 +103,7 @@ async fn hosted_code_retries_retains_typed_records_and_survives_restart() {
     host.stop().await;
     drop(host);
     tokio::time::sleep(Duration::from_secs(2)).await;
-    let restored = Host::new(config(dir.path(), &origin)).unwrap();
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
     let store = restored.store.lock().await;
     assert_eq!(store.integrations["example"].runs.len(), 2);
     assert!(
@@ -125,7 +125,7 @@ async fn hosted_code_retries_retains_typed_records_and_survives_restart() {
 async fn scheduler_runs_hosted_code_and_manual_calls_do_not_overlap() {
     let (origin, _, provider) = fixture().await;
     let dir = tempfile::tempdir().unwrap();
-    let host = Host::new(config(dir.path(), &origin)).unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
     host.install("scheduled", package(true)).await.unwrap();
     let scheduler = tokio::spawn(host.clone().scheduler());
     let mut success = false;
@@ -150,7 +150,7 @@ async fn scheduler_runs_hosted_code_and_manual_calls_do_not_overlap() {
 async fn unauthenticated_install_is_rejected_and_forged_operations_do_no_io() {
     let (origin, attempts, provider) = fixture().await;
     let dir = tempfile::tempdir().unwrap();
-    let host = Host::new(config(dir.path(), &origin)).unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     let app = host.router();
@@ -207,8 +207,8 @@ async fn unauthenticated_install_is_rejected_and_forged_operations_do_no_io() {
 async fn durable_state_has_one_writer_and_interrupted_runs_are_not_success() {
     let (origin, _, provider) = fixture().await;
     let dir = tempfile::tempdir().unwrap();
-    let host = Host::new(config(dir.path(), &origin)).unwrap();
-    assert!(Host::new(config(dir.path(), &origin)).is_err());
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    assert!(Host::new(config(dir.path(), &origin)).await.is_err());
     host.install("test", package(false)).await.unwrap();
     {
         let mut store = host.store.lock().await;
@@ -230,7 +230,7 @@ async fn durable_state_has_one_writer_and_interrupted_runs_are_not_success() {
         persist(&dir.path().join("state"), &store).unwrap();
     }
     drop(host);
-    let restored = Host::new(config(dir.path(), &origin)).unwrap();
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
     assert_eq!(restored.store.lock().await.integrations["test"].runs[0].status, "interrupted");
     restored.stop().await;
     provider.abort();

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Integration host resolves bearer tokens through local Git credential helpers with bounded, noninteractive lookup. The hosted GitHub demo no longer needs a token environment variable.
 - Local integration endpoint hosts installed JavaScript with shared connections, native secret handling, schedules, retries, and durable bounded history.
 - Hosted GitHub example captures requirements, expiring status facts, and distinct external outcomes with job and step durations. Includes agent JSON and a human monitor.
 - Local GitHub workflow and action contract capture with pinned source evidence, sandboxed SDK projections, input bindings, and a standalone review report.

@@ -37,7 +37,7 @@ Run one manual extraction and one scheduled extraction:
 python3 tools/integration-host/demo.py --prove-schedule
 ```
 
-An optional `IPE_GITHUB_TOKEN` environment variable supplies the GitHub credential. Use a protected environment handoff.
+The host obtains the GitHub token from the local Git credential helper. The demo needs no token environment variable.
 The example pins the IPE docs workflow and limits reads to eight repositories.
 It installs [the JavaScript program](../testing/integration/hosted/github-actions.js) through the endpoint. The CLI does not perform extraction itself.
 
@@ -116,7 +116,35 @@ SDK 0.2 adds `ipe.call`, `ipe.exchange`, and `ipe.timestamp`.
 `ipe.timestamp` parses an explicit timestamp. Guest code has no ambient clock, network, filesystem, or secrets.
 Existing ServiceNow adapters retain their operation restrictions and reject hosted observation output.
 
-Native connection configuration supplies fixed origins and environment credential references.
+Native connection configuration supplies fixed origins and host-owned credential sources.
+For local GitHub access, configure:
+
+```json
+{
+  "id": "github",
+  "origin": "https://api.github.com/",
+  "git_credential_url": "https://github.com"
+}
+```
+
+The host invokes `git credential fill` with the credential URL on standard input.
+Git selects helpers from the host's Git configuration, including repository configuration in its working directory.
+The helper's password becomes the connection's bearer token. This mode requires a helper that returns an API-compatible token.
+The operator explicitly maps the credential lookup URL to the API origin. Installed programs cannot change either address.
+Paths in the lookup URL follow Git's `credential.useHttpPath` setting.
+
+The host disables terminal prompts and asks supported helpers to avoid interactive login.
+Lookup has a five-second deadline and a 16 KiB output limit. Errors contain fixed codes, without helper output or diagnostics.
+Missing credentials fail startup. The host does not fall back to anonymous access or invoke `approve` or `reject`.
+Credentials remain in native memory. They do not enter installation source, guest responses, durable records, or capabilities.
+The host rejects response content that contains a configured credential.
+
+Credentials are resolved at startup and cached until shutdown. Restart the host after a token expires or changes.
+Automatic refresh during a running host remains unimplemented.
+Existing `credential_env` configurations still work. A connection cannot specify both credential sources.
+Neither source is permitted for plain HTTP connections.
+See [Git's credential interface](https://git-scm.com/docs/git-credential) for helper selection and the credential protocol.
+
 Operation configuration supplies path templates, parameter constraints, query templates, decoders, and JSON field projections.
 The shared broker supports JSON, bounded YAML, and text. GitHub traversal and interpretation remain in the installed program.
 

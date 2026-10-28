@@ -1,6 +1,7 @@
 //! A local installation host: code, scheduling, brokered reads, typed records,
 //! durable bounded history, and authenticated monitoring share one endpoint.
 mod broker;
+mod credentials;
 use crate::script::ScriptAdapter;
 use axum::{
     extract::{DefaultBodyLimit, Path as ApiPath, State},
@@ -161,7 +162,7 @@ fn persist(dir: &Path, store: &Store) -> Result<()> {
     File::open(dir).and_then(|f| f.sync_all()).map_err(|_| "state_write_failed")
 }
 impl Host {
-    pub fn new(config: Config) -> Result<Arc<Self>> {
+    pub async fn new(config: Config) -> Result<Arc<Self>> {
         if !config.listen.ip().is_loopback() {
             return Err("listen_must_be_loopback");
         }
@@ -171,7 +172,7 @@ impl Host {
         if !(32..=8192).contains(&token.expose_secret().len()) {
             return Err("invalid_api_token");
         }
-        let broker = Broker::new(config.connections.clone(), config.operations.clone())?;
+        let broker = Broker::new(config.connections.clone(), config.operations.clone()).await?;
         if !config.state_dir.exists() {
             let mut builder = std::fs::DirBuilder::new();
             builder.recursive(true);
@@ -698,7 +699,7 @@ async fn records(
 }
 pub async fn serve(config: Config) -> Result<()> {
     let address = config.listen;
-    let host = Host::new(config)?;
+    let host = Host::new(config).await?;
     let listener = tokio::net::TcpListener::bind(address).await.map_err(|_| "listen_failed")?;
     println!(
         "integration_host_listening {}",

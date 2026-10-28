@@ -12,3 +12,5 @@ The program emits three record types:
 
 Workflow `updated_at` is not treated as a completion time. Job durations use `started_at` and `completed_at` only.
 Collector latency and retries come from the host, not this program.
+
+The local demo uses the host's Git credential helper for GitHub authentication. The installed program contains no credential lookup or token handling.
