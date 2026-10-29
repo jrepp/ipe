@@ -4,9 +4,12 @@
 The Rust host owns connections, credentials, operation grants, retries, schedules, execution budgets, fact expiry, and durable history.
 The example reads GitHub definitions and a bounded sample of workflow attempts and jobs. It does not execute GitHub Actions.
 
-The program emits three record types:
+The program emits versioned model records:
 
-- `contract`: source-backed requirements, action interfaces, and implementation clues.
+- `definition`: immutable workflow and action interfaces.
+- `evidence`: source excerpts and lexical clues.
+- `constraint`: operation requirements, actor context, applicability, and obligations.
+- `invocation`: distinct call sites, resolved definitions, and caller/default input bindings.
 - `fact`: an expiring observation of an external run or job status.
 - `outcome`: provider-reported execution results and durations, keyed by run, attempt, and job.
 

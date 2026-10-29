@@ -25,6 +25,7 @@ function step(context, responses, state) {
 
 | Helper | Purpose |
 | --- | --- |
+| `observation(model, data, receipts)` | Emit a v1 typed model with separate raw data and native receipt references. |
 | `call(id, operation, params = {})` | Construct a hosted operation request with bounded strings; native grants remain authoritative. |
 | `exchange(items, state, observations)` | Return requests and up to 16 typed observations with receipt references. |
 | `timestamp(value)` | Parse an explicit ISO timestamp to milliseconds; return null for invalid input. |
@@ -46,8 +47,9 @@ adapters remain supported.
 
 ## Hosted programs
 
-SDK 0.2 supports [hosted integration programs](INTEGRATION_HOST.md). The endpoint installs JavaScript source and runs it manually or on a schedule.
-Programs emit requirements, expiring facts, and external outcomes into bounded local storage. Enforcement publication remains separate.
+SDK 0.3 supports [hosted integration programs](INTEGRATION_HOST.md). The endpoint installs JavaScript source and runs it manually or on a schedule.
+Programs emit typed definitions, evidence, constraints, invocations, expiring facts, and external outcomes into bounded local storage.
+See [the typed observation example](../testing/integration/hosted/typed-observation.ts). The host derives logical keys and revision digests. Enforcement publication remains separate.
 
 ## GitHub contract spike
 

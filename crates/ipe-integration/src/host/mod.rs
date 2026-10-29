@@ -2,6 +2,7 @@
 //! durable bounded history, and authenticated monitoring share one endpoint.
 mod broker;
 mod credentials;
+mod model;
 mod outcomes;
 use crate::script::ScriptAdapter;
 use axum::{
@@ -58,6 +59,10 @@ struct Installation {
 }
 #[derive(Clone, Serialize, Deserialize)]
 struct Record {
+    #[serde(default)]
+    model: Option<model::Model>,
+    #[serde(default)]
+    revision_id: String,
     kind: String,
     key: String,
     data: Value,
@@ -130,7 +135,7 @@ fn validate(package: &Installation, broker: &Broker) -> Result<()> {
         || package
             .output_kinds
             .iter()
-            .any(|k| !["contract", "fact", "outcome"].contains(&k.as_str()))
+            .any(|k| !model::KINDS.contains(&k.as_str()) && k != "contract")
         || serde_json::to_vec(&package.input).map_err(|_| "invalid_input")?.len() > 8192
     {
         return Err("invalid_installation");
@@ -233,7 +238,10 @@ impl Host {
                 }
             }
             // Migrate retained legacy outcomes once without changing observation times.
-            if installed.outcomes.executions.is_empty() {
+            installed.outcomes.migrate_legacy();
+            if installed.outcomes.executions.is_empty()
+                && installed.outcomes.legacy_untyped.is_empty()
+            {
                 for run in &installed.runs {
                     if run.status == "succeeded" {
                         installed.outcomes.apply(&run.records)?;
@@ -267,6 +275,7 @@ impl Host {
             )
             .route("/session", post(session))
             .route("/v1/host/capabilities", get(capabilities))
+            .route("/v1/host/record-schema", get(record_schema))
             .route("/v1/integrations", get(list))
             .route("/v1/integrations/:id", put(install).get(installation))
             .route("/v1/integrations/:id/runs", post(start).get(history))
@@ -312,6 +321,9 @@ impl Host {
             return Err("invalid_integration_id");
         }
         validate(&package, &self.broker)?;
+        if package.output_kinds.iter().any(|kind| kind == "contract") {
+            return Err("legacy_contract_output_not_supported");
+        }
         let source = package.source.clone();
         let adapter =
             tokio::task::spawn_blocking(move || ScriptAdapter::from_source(&source, false))
@@ -443,33 +455,39 @@ impl Host {
                 #[derive(Deserialize)]
                 #[serde(deny_unknown_fields)]
                 struct Wire {
-                    kind: String,
-                    key: String,
+                    model: model::Model,
                     data: Value,
                     receipts: Vec<String>,
                 }
                 let record: Wire =
                     serde_json::from_value(observation).map_err(|_| "invalid_observation")?;
-                if !package.output_kinds.contains(&record.kind)
-                    || record.key.is_empty()
-                    || record.key.len() > 512
+                let kind = record.model.kind().to_owned();
+                if !package.output_kinds.contains(&kind)
                     || record.receipts.is_empty()
                     || record.receipts.len() > 8
                     || record.receipts.iter().any(|r| !receipts.contains(r))
                 {
                     return Err("observation_not_permitted");
                 }
+                record.model.validate()?;
+                let key = record.model.key();
+                if observations.iter().any(|r: &Record| r.kind == kind && r.key == key) {
+                    return Err("duplicate_model_identity");
+                }
                 if observations.len() >= 256 {
                     return Err("observation_limit");
                 }
-                output_bytes +=
-                    serde_json::to_vec(&record.data).map_err(|_| "invalid_observation")?.len();
+                output_bytes += serde_json::to_vec(&json!([record.model, record.data]))
+                    .map_err(|_| "invalid_observation")?
+                    .len();
                 if output_bytes > MAX_RUN_BYTES {
                     return Err("observation_byte_limit");
                 }
                 observations.push(Record {
-                    kind: record.kind.clone(),
-                    key: record.key,
+                    revision_id: record.model.revision(&adapter.digest)?,
+                    model: Some(record.model),
+                    kind: kind.clone(),
+                    key,
                     data: record.data,
                     source_evidence: evidence
                         .iter()
@@ -478,12 +496,13 @@ impl Host {
                         .collect(),
                     receipts: record.receipts,
                     observed_at: now(),
-                    expires_at: (record.kind == "fact").then(|| now() + package.fact_ttl_seconds),
+                    expires_at: (kind == "fact").then(|| now() + package.fact_ttl_seconds),
                     run_id,
                     adapter_digest: adapter.digest.clone(),
                 });
             }
             if let Some(output) = result.outputs {
+                model::validate_graph(&observations)?;
                 return Ok((output, observations, evidence));
             }
             // Validate the whole batch before any I/O; SDK checks are not grants.
@@ -701,13 +720,22 @@ async fn installation(
         json!({"id":id,"adapter_digest":installed.digest,"package":installed.package}),
     ))
 }
+async fn record_schema(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    Ok(Json(
+        json!({"schema_version":model::VERSION,"model":rmcp::schemars::schema_for!(model::Model),"validation":"Native validation also checks identity consistency, claim authority, grants, receipts, duplicate keys, and bounded work"}),
+    ))
+}
 async fn capabilities(
     State(host): State<Arc<Host>>,
     headers: HeaderMap,
 ) -> std::result::Result<Json<Value>, ApiError> {
     host.authorize(&headers)?;
     Ok(Json(
-        json!({"host":"local_installations_v1","sdk_version":crate::script::SDK_VERSION,"operations":host.broker.operations.values().map(|op|json!({"name":op.name,"parameters":op.parameters,"decoder":op.decoder})).collect::<Vec<_>>(),"output_kinds":["contract","fact","outcome"],"history_runs":HISTORY,"durable":true,"publication":false}),
+        json!({"host":"local_installations_v1","sdk_version":crate::script::SDK_VERSION,"operations":host.broker.operations.values().map(|op|json!({"name":op.name,"parameters":op.parameters,"decoder":op.decoder})).collect::<Vec<_>>(),"output_kinds":model::KINDS,"record_schema_version":model::VERSION,"history_runs":HISTORY,"durable":true,"publication":false}),
     ))
 }
 async fn install(
@@ -761,7 +789,7 @@ async fn history(
         .get(&id)
         .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
     Ok(Json(
-        json!({"integration_id":id,"runs":installed.runs,"external_outcomes":installed.outcomes.executions.values().map(|e| &e.latest).collect::<Vec<_>>(),"retention_runs":HISTORY,"outcome_retention":"independent archive; export via /outcomes","outcome_capacity":outcomes::EXECUTION_LIMIT,"deduplication":"one execution per outcome key; changed payloads retained separately"}),
+        json!({"integration_id":id,"runs":installed.runs,"external_outcomes":installed.outcomes.executions.values().map(|e| &e.latest).collect::<Vec<_>>(),"retention_runs":HISTORY,"outcome_retention":"independent archive; export via /outcomes","legacy_untyped_outcomes":installed.outcomes.legacy_untyped.len(),"outcome_capacity":outcomes::EXECUTION_LIMIT,"deduplication":"one execution per outcome key; changed payloads retained separately"}),
     ))
 }
 async fn outcome_archive(
@@ -776,7 +804,7 @@ async fn outcome_archive(
         .get(&id)
         .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
     Ok(Json(
-        json!({"schema":"ipe.integration.outcome-archive.v1","integration_id":id,"executions":installed.outcomes.executions,"capacity":outcomes::EXECUTION_LIMIT,"overflow":"reject new capture atomically; existing executions remain available for export"}),
+        json!({"schema":"ipe.integration.outcome-archive.v1","integration_id":id,"executions":installed.outcomes.executions,"legacy_untyped":installed.outcomes.legacy_untyped,"capacity":outcomes::EXECUTION_LIMIT,"overflow":"reject new capture atomically; existing executions remain available for export"}),
     ))
 }
 async fn records(
@@ -815,5 +843,7 @@ pub async fn serve(config: Config) -> Result<()> {
     result.map_err(|_| "serve_failed")
 }
 
+#[cfg(test)]
+mod model_tests;
 #[cfg(test)]
 mod tests;

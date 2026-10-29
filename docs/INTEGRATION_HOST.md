@@ -61,13 +61,32 @@ Manual token entry remains available for API operators. The GitHub helper creden
 Use Ctrl-C to stop the host. Without `--serve`, the demo stops it after capture.
 Do not combine `--serve` with the two-second proof schedule for normal use. The default schedule is 300 seconds.
 
-## Three record types
+## Versioned record types
 
 | Record | Meaning | Agent use | Human view |
 | --- | --- | --- | --- |
-| `contract` | Requirements, declared permissions, dependencies, interfaces, and source clues | Plan required operations and identify unknown prerequisites | Review requirements and exact source evidence |
-| `fact` | External status observed at a stated time, with finite expiry | Supply evidence for a later authorized evaluation | Inspect current and expired observations |
-| `outcome` | A provider-reported execution result, keyed by execution and attempt | Compare previous attempts and diagnose failures | Inspect status, duration, and step results |
+| `definition` | Versioned workflow or action interface | Resolve source revisions and declared inputs | Review declared interfaces |
+| `evidence` | Source excerpt or lexical clue | Support an inference without treating it as a rule | Inspect raw source separately |
+| `constraint` | Operation requirement with explicit applicability and obligations | Identify prerequisites and uncertainty | Review actor, permissions, dependencies, and enforcer |
+| `invocation` | A call site and its input bindings | Distinguish repeated calls and defaults | Follow calls to captured definitions |
+| `fact` | Provider-reported status with finite expiry | Supply evidence for a later authorized evaluation | Inspect current and expired observations |
+| `outcome` | Execution result with structured attempt identity | Compare actual attempts | Inspect status, duration, and step results |
+
+Each emitted observation contains `model`, `data`, and `receipts`.
+`model.schema_version` is 1. The host validates the typed entity and derives its key and revision digest.
+`data` retains raw provider material for inspection. It does not implicitly add executable constraints.
+Use authenticated `GET /v1/host/record-schema` to obtain JSON Schema generated from the Rust model types.
+Native validation also checks grants, receipt ownership, bounded values, duplicate identities, and resolved definition links.
+
+Logical control identity excludes source revision. Record identity and revision digests preserve different source versions and mapping versions.
+Invocation identity includes its parent definition and call-site pointer. Execution identity includes provider, resource, run, attempt, job, and step.
+Facts with an execution reference must use that execution's canonical subject identity.
+A display-name correlation remains a candidate. It cannot become a resolved declaration link.
+
+Stored records without a v1 model remain labeled as legacy untyped evidence.
+The outcome export keeps these under `legacy_untyped`; they do not count as new typed executions.
+Old programs must emit v1 observations before they can run successfully on the updated host.
+New installations cannot request the obsolete `contract` output kind.
 
 A declared permission is not proof of effective permission. An action input declaration is not proof of runtime validation.
 The GitHub program leaves expression evaluation, environment protection, and actor authorization unresolved.
@@ -111,6 +130,7 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 
 | Method and route | Behavior |
 | --- | --- |
+| `GET /v1/host/record-schema` | Return the versioned model JSON Schema |
 | `GET /v1/host/capabilities` | Return named operations, parameter constraints, record kinds, and limits |
 | `PUT /v1/integrations/:id` | Validate and durably install JavaScript source, input, operation grants, schedule, TTL, and record grants |
 | `GET /v1/integrations/:id` | Return installed JavaScript, input, operation grants, schedule, and TTL |
@@ -123,7 +143,7 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 The installation body contains `source`, `operations`, `input`, `interval_seconds`, `enabled`, `fact_ttl_seconds`, and `output_kinds`.
 See [demo.py](../tools/integration-host/demo.py) for complete configuration and API requests.
 
-SDK 0.2 adds `ipe.call`, `ipe.exchange`, and `ipe.timestamp`.
+SDK 0.3 adds typed `ipe.observation` output. SDK 0.2 introduced `ipe.call`, `ipe.exchange`, and `ipe.timestamp`.
 `ipe.call` names an approved operation. Native parameter constraints authorize the read.
 `ipe.exchange` returns requests, continuation state, and records with successful receipt references.
 `ipe.timestamp` parses an explicit timestamp. Guest code has no ambient clock, network, filesystem, or secrets.

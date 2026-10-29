@@ -65,7 +65,7 @@ def main():
         request = urllib.request.Request(base+path, method=method, data=None if data is None else json.dumps(data).encode(), headers={'Authorization': 'Bearer '+token, 'Content-Type': 'application/json'})
         with urllib.request.urlopen(request, timeout=15) as response:
             return json.load(response)
-    package = {'source': (ROOT/'testing/integration/hosted/github-actions.js').read_text(), 'operations': [o['name'] for o in config['operations']], 'input': {'repository': 'jrepp/ipe', 'revision': '8346e53d0b428b701349817df6624f0ad33a1639', 'workflow': '.github/workflows/docs-site.yml', 'allowed_repositories': REPOSITORIES}, 'interval_seconds': 2 if args.prove_schedule else 300, 'enabled': True, 'fact_ttl_seconds': 900, 'output_kinds': ['contract', 'fact', 'outcome']}
+    package = {'source': (ROOT/'testing/integration/hosted/github-actions.js').read_text(), 'operations': [o['name'] for o in config['operations']], 'input': {'repository': 'jrepp/ipe', 'revision': '8346e53d0b428b701349817df6624f0ad33a1639', 'workflow': '.github/workflows/docs-site.yml', 'allowed_repositories': REPOSITORIES}, 'interval_seconds': 2 if args.prove_schedule else 300, 'enabled': True, 'fact_ttl_seconds': 900, 'output_kinds': ['definition', 'evidence', 'constraint', 'invocation', 'fact', 'outcome']}
     try:
         for _ in range(100):
             if process.poll() is not None:
@@ -101,7 +101,8 @@ def main():
         embedded = json.dumps(snapshot).replace('&','\\u0026').replace('<','\\u003c').replace('>','\\u003e')
         page_html = page_html.replace('<script>', '<script id="host-snapshot" type="application/json">'+embedded+'</script><script>', 1)
         (output/'snapshot.html').write_text(page_html)
-        counts = {kind:sum(r['record']['kind']==kind for r in snapshot['records']['records']) for kind in ['contract','fact']}
+        counts = {kind:sum(r['record']['kind']==kind and bool(r['record'].get('model')) for r in snapshot['records']['records']) for kind in ['definition','evidence','constraint','invocation','fact']}
+        counts['legacy_untyped_records'] = sum(not bool(r['record'].get('model')) for r in snapshot['records']['records'])
         counts['external_outcomes'] = len(history['external_outcomes'])
         counts['successful_runs'] = sum(r['status']=='succeeded' for r in history['runs'])
         print(json.dumps({'endpoint':base, 'counts':counts, 'snapshot':str(output/'snapshot.html'), 'operator_environment':str(env_path), 'monitor_launcher':str(launcher)}, indent=2), flush=True)

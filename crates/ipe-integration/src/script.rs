@@ -24,7 +24,7 @@ const STACK_LIMIT: usize = 1024 * 1024;
 const STEP_DEADLINE: Duration = Duration::from_millis(100);
 const CONCURRENT_STEPS: usize = 1;
 const SDK_SOURCE: &str = include_str!("../sdk/index.js");
-pub(crate) const SDK_VERSION: &str = "0.2.0";
+pub(crate) const SDK_VERSION: &str = "0.3.0";
 
 #[derive(Clone)]
 pub(crate) struct ScriptAdapter {

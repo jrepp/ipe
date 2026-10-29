@@ -32,7 +32,7 @@ function projectDeclaration(context, responses, state) {
       out.steps.forEach((s,i) => ref(s.uses, pointer + '/steps/' + i + '/uses', 'action', s.with));
       return out;
     });
-    gaps.push({pointer:'',code:'repository_rules_environment_protection_and_run_results_not_captured'});
+    gaps.push({pointer:'',code:'repository_rules_and_environment_protection_not_captured'});
   } else {
     model = pick(d, ['name','description','author','inputs','outputs','branding']);
     model.runs = pick(d.runs, ['using','main','pre','pre-if','post','post-if','image','entrypoint','pre-entrypoint','post-entrypoint','args','env']);
@@ -52,20 +52,69 @@ function projectDeclaration(context, responses, state) {
   return ipe.complete({kind:source.kind, model, references, expressions, gaps, coverage:'partial'});
 }
 
+// Versioned records keep raw provider data separate from the typed model.
+function sourceModel(source, pointer='') {
+  return {definition:{namespace:'github',resource:source.repository,path:source.path},revision:source.commit,pointer};
+}
+function controlModel(repo,path,id) {
+  return {namespace:'github',resource:repo,operation:'github_actions.run_job',local_id:path+'#'+id};
+}
+function executionModel(key) {
+  const match=/^(.*)\/runs\/([^/]+)\/attempts\/(\d+)(?:\/jobs\/([^/]+))?$/.exec(key);
+  if(!match)throw new Error('invalid_execution_identity');
+  return {namespace:'github',resource:match[1],run:match[2],attempt:Number(match[3]),job:match[4]||null,step:null};
+}
+function executionKey(e) { return 'execution:'+JSON.stringify([e.namespace,e.resource,e.run,e.attempt,e.job,e.step]); }
+function observation(entity,claim,scope,data,receipt) {
+  return ipe.observation({schema_version:1,scope,claim,entity},data,[receipt]);
+}
+function capturedRecord(kind,key,data,receipt,input) {
+  if(kind==='contract') {
+    const source=sourceModel(data.source),scope='definition:'+JSON.stringify(source.definition);
+    if(data.kind==='implementation') return observation({kind:'evidence',source,method:'source_excerpt',description:'Captured source with lexical clues; runtime effects are not proven'},'inferred',scope,data,receipt);
+    const declaration=data.projection.model;
+    const inputs=Object.entries(declaration.inputs||{}).map(([name,spec])=>({name,required:typeof spec.required==='boolean'?spec.required:null,default:spec.default??null}));
+    return observation({kind:'definition',source,title:declaration.name||data.source.path,inputs,outputs:Object.keys(declaration.outputs||{})},'declared',scope,data,receipt);
+  }
+  if(kind==='fact') {
+    const execution=executionModel(data.subject);
+    return observation({kind:'fact',subject:executionKey(execution),predicate:data.predicate,value:data.value,authority:'github',execution},'provider_reported','execution:'+execution.resource,data,receipt);
+  }
+  const execution=executionModel(key);
+  const definition=sourceModel({repository:data.repository,path:input.workflow,commit:data.definition_commit||data.head_sha});
+  const status=data.status==='completed'?'completed':data.status==='in_progress'?'in_progress':['queued','waiting','pending','requested'].includes(data.status)?'queued':'unknown';
+  return observation({kind:'outcome',execution,definition,title:data.name||key,status,conclusion:status==='completed'?data.conclusion??null:null,duration_ms:data.duration_ms,started_at:data.started_at||data.run_started_at||null,completed_at:data.completed_at||null,declaration_candidates:(data.declaration_candidates||[]).map(id=>controlModel(data.repository,input.workflow,id)),correlation:data.declaration_candidates?.length?'candidate':'unknown'},'provider_reported','execution:'+execution.resource,data,receipt);
+}
+function jobConstraint(job,source,projection,receipt) {
+  const control=controlModel(source.repository,source.path,job.id);
+  const dependencies=(Array.isArray(job.needs)?job.needs:typeof job.needs==='string'?[job.needs]:[]).map(id=>controlModel(source.repository,source.path,id));
+  const next={operation:'list_jobs',reason:'Observe the exact workflow attempt before assessing prerequisites'};
+  const obligations=dependencies.map((dep,index)=>({id:'dependency_'+index,description:'Observe dependency '+dep.local_id+' under the provider condition semantics',requirement:{kind:'dependency',control:dep},next_observation:next}));
+  obligations.push({id:'permissions',description:'Requested token permissions do not prove effective permissions',requirement:{kind:'permission',requested:job.permissions??projection.model.permissions??null},next_observation:null});
+  if(job.environment)obligations.push({id:'environment',description:'Observe the referenced environment protection requirements',requirement:{kind:'environment',reference:job.environment},next_observation:null});
+  obligations.push({id:'actor',description:'Establish authorization for the intended execution actor',requirement:{kind:'opaque',reason:'The discovery principal does not establish the execution actor authorization'},next_observation:null});
+  const entity={kind:'constraint',control,source:sourceModel(source,job.pointer),title:job.name||job.id,actor_context:'intended_execution_actor_unobserved',applicability:{dialect:'github_actions_expression',expression:job.if??null,default_behavior:'provider_default_dependency_status'},obligations,dependencies,enforcer:'github_actions'};
+  return observation(entity,'declared','workflow:'+source.repository+'/'+source.path,{source,job_id:job.id},receipt);
+}
+
 function step(context, responses, state) {
   const input = context.input;
-  const s = state || {queue:[{type:'resolve',kind:'workflow',repo:input.repository,ref:input.revision,path:input.workflow,depth:0}],seen:[],sequence:0,definitions:0,gaps:[],phase:'dispatch'};
-  const record = (kind,key,data,receipt) => ({kind,key,data,receipts:[receipt]});
+  const s = state || {queue:[{type:'resolve',kind:'workflow',repo:input.repository,ref:input.revision,path:input.workflow,depth:0}],seen:[],sequence:0,definitions:0,resolved:{},edges:[],pending:[],gaps:[],phase:'dispatch'};
+  const record = (kind,key,data,receipt) => capturedRecord(kind,key,data,receipt,input);
   const gap = (task,code) => {if(s.gaps.length<40)s.gaps.push({repository:task.repo,path:task.path,code});};
   const enqueue = task => {if(s.queue.length<64 && (task.depth||0)<=4)s.queue.push(task);else gap(task,'traversal_limit');};
   const elapsed = (a,b) => {const start=ipe.timestamp(a),end=ipe.timestamp(b);return start===null||end===null||end<start?null:end-start;};
   let observations=[];
+  if(s.phase==='emit_invocations') {
+    const batch=s.edges.splice(0,8).map(edge=>{const target=s.resolved[edge.target];const supplied=edge.supplied||{};const specs=target?.inputs||{};const names=[...new Set([...Object.keys(specs),...Object.keys(supplied)])];const bindings=names.map(name=>({name,origin:Object.hasOwn(supplied,name)?'caller':Object.hasOwn(specs[name]||{},'default')?'declared_default':'absent',value:Object.hasOwn(supplied,name)?supplied[name]:specs[name]?.default??null}));return observation({kind:'invocation',parent:edge.parent,callee:target?.source||null,requested:edge.requested,resolution:target?'resolved':'unknown',bindings},'declared',edge.scope,{reference:edge.requested},edge.receipt);});
+    if(!s.edges.length)s.phase='finish';return ipe.exchange([],s,batch);
+  }
   if(s.phase==='finish') return ipe.complete({coverage:'partial',definitions:s.definitions,gaps:s.gaps,publication:false,performance_scope:'bounded sample of workflow runs and jobs; not a population success rate'});
   if(s.phase==='response') {
     const task=s.task,r=ipe.response(responses,'r'+s.sequence);
     s.phase='dispatch';
     if(r.code) {
-      if(task.type==='yaml'&&task.kind==='action'&&task.path.endsWith('action.yml')&&r.code==='provider_not_found') enqueue({...task,path:task.path.slice(0,-3)+'yaml'});
+      if(task.type==='yaml'&&task.kind==='action'&&task.path.endsWith('action.yml')&&r.code==='provider_not_found') enqueue({...task,path:task.path.slice(0,-3)+'yaml',requested_path:task.requested_path||task.path});
       else {gap(task,r.code);if(task.kind==='workflow'&&task.depth===0&&s.definitions===0)throw new Error('root_unavailable');}
     } else {
       const rows=ipe.records(responses,'r'+s.sequence);
@@ -73,24 +122,28 @@ function step(context, responses, state) {
       if(task.type==='resolve') {
         const sha=rows[0]?.sha;
         if(typeof sha!=='string'||!/^[a-fA-F0-9]{40}$/.test(sha))throw new Error('invalid_revision');
-        enqueue({...task,type:'yaml',ref:sha});
+        enqueue({...task,type:'yaml',ref:sha,requested_ref:task.ref});
       } else if(task.type==='yaml') {
         const document=rows[0]?.document;
         if(!document || (task.kind==='workflow'&&!document.jobs) || (task.kind==='action'&&!document.runs))throw new Error('invalid_definition');
         const projection=projectDeclaration({},[{id:'source',receipt:r.receipt,data:[{kind:task.kind,document}]}],{}).outputs;
         const source={repository:task.repo,commit:task.ref,path:task.path,digest:r.source_digest,url:'https://github.com/'+task.repo+'/blob/'+task.ref+'/'+task.path};
-        const requirements = task.kind==='workflow' ? projection.model.jobs.map(job=>({subject:job.id,operation:'github_actions.run_job',source_pointer:job.pointer,applicability:{dialect:'github_actions_expression',declared:job.if??null,evaluation:'unresolved'},dependencies:job.needs??[],requested_permissions:{value:job.permissions??projection.model.permissions??null,scope:job.permissions!==undefined?'job':projection.model.permissions!==undefined?'workflow':'unknown'},environment_reference:job.environment??null,unknowns:['effective_token_permissions','environment_protection','actor_authorization'],suggested_next_observation:'Read the exact workflow attempt and job outcome before assuming a prerequisite succeeded.'})) : Object.entries(projection.model.inputs||{}).map(([name,spec])=>({subject:name,operation:'github_actions.invoke_action',declared_required:spec.required??null,declared_default:spec.default??null,runtime_validation:'not_observed',source_pointer:'/inputs/'+name}));
-        observations.push(record('contract',task.repo+'@'+task.ref+'/'+task.path,{kind:task.kind,source,projection,requirements,locations:rows[0].locations,interpretation:'declaration',external_enforcer:'github_actions'},r.receipt));
+        observations.push(record('contract',task.repo+'@'+task.ref+'/'+task.path,{kind:task.kind,source,projection,locations:rows[0].locations,interpretation:'declaration',external_enforcer:'github_actions'},r.receipt));
+        if(task.kind==='workflow')for(const job of projection.model.jobs)s.pending.push(jobConstraint(job,source,projection,r.receipt));
+        s.resolved[task.repo+'@'+(task.requested_ref||task.ref)+'/'+(task.requested_path||task.path)]={source:sourceModel(source),inputs:Object.fromEntries(Object.entries(projection.model.inputs||{}).map(([name,spec])=>[name,Object.hasOwn(spec,'default')?{default:spec.default}:{}]))};
         s.definitions++;
         for(const reference of projection.references) {
           const uses=reference.uses;
-          if(uses.startsWith('./')&&reference.kind==='workflow')enqueue({type:'yaml',repo:task.repo,ref:task.ref,path:uses.slice(2),kind:'workflow',depth:task.depth+1});
+          const edge={parent:sourceModel(source,reference.pointer),requested:uses,supplied:reference.supplied,receipt:r.receipt,scope:'workflow:'+task.repo+'/'+task.path,target:null};
+          if(s.edges.length<64)s.edges.push(edge);else gap(task,'invocation_limit');
+          if(uses.startsWith('./')&&reference.kind==='workflow'){edge.target=task.repo+'@'+task.ref+'/'+uses.slice(2);enqueue({type:'yaml',repo:task.repo,ref:task.ref,path:uses.slice(2),kind:'workflow',depth:task.depth+1});}
           else {
             const match=/^([^/]+\/[^/@]+)(\/[^@]+)?@([^@]+)$/.exec(uses);
             if(!match||uses.includes('${{')){gap(task,'unresolved_reference');continue;}
             const repo=match[1],ref=match[3];
             if(!input.allowed_repositories.includes(repo)){gap({repo,path:uses},'repository_outside_installation_scope');continue;}
             const path=reference.kind==='workflow'?(match[2]||'').slice(1):(match[2]||'').slice(1)+(match[2]?'/':'')+'action.yml';
+            edge.target=repo+'@'+ref+'/'+path;
             enqueue({type:/^[a-fA-F0-9]{40}$/.test(ref)?'yaml':'resolve',kind:reference.kind,repo,ref,path,depth:task.depth+1});
           }
         }
@@ -132,6 +185,7 @@ function step(context, responses, state) {
       }
     }
   }
+  if(s.pending.length){const batch=observations.concat(s.pending.splice(0,Math.max(0,16-observations.length)));return ipe.exchange([],s,batch);}
   while(s.queue.length) {
     const task=s.queue.shift(),key=task.type+':'+task.repo+'@'+task.ref+'/'+task.path+'/'+(task.run_id||'');
     if(s.seen.includes(key))continue;
@@ -145,5 +199,5 @@ function step(context, responses, state) {
     else{operation='list_jobs';params={repository:task.repo,run_id:task.run_id,attempt:task.attempt};}
     return ipe.exchange([ipe.call('r'+s.sequence,operation,params)],s,observations);
   }
-  s.phase='finish';return ipe.exchange([],s,observations);
+  s.phase='emit_invocations';return ipe.exchange([],s,observations);
 }

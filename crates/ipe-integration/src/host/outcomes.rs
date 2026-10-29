@@ -10,6 +10,8 @@ const BYTE_LIMIT: usize = 4 * 1024 * 1024;
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub(super) struct Archive {
     pub executions: BTreeMap<String, Execution>,
+    #[serde(default)]
+    pub legacy_untyped: BTreeMap<String, Execution>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub(super) struct Execution {
@@ -21,11 +23,30 @@ pub(super) struct Execution {
     pub omitted_changes: usize,
 }
 impl Archive {
+    pub fn migrate_legacy(&mut self) {
+        let keys: Vec<_> = self
+            .executions
+            .iter()
+            .filter(|(_, e)| e.latest.model.is_none())
+            .map(|(k, _)| k.clone())
+            .collect();
+        for key in keys {
+            if let Some(entry) = self.executions.remove(&key) {
+                self.legacy_untyped.insert(key, entry);
+            }
+        }
+    }
     pub fn apply(&mut self, records: &[Record]) -> Result<()> {
         let mut candidate = self.clone();
         for record in records.iter().filter(|r| r.kind == "outcome") {
-            if let Some(execution) = candidate.executions.get_mut(&record.key) {
-                if execution.latest.data != record.data {
+            let total = candidate.executions.len() + candidate.legacy_untyped.len();
+            let collection = if record.model.is_some() {
+                &mut candidate.executions
+            } else {
+                &mut candidate.legacy_untyped
+            };
+            if let Some(execution) = collection.get_mut(&record.key) {
+                if execution.latest.data != record.data || execution.latest.model != record.model {
                     execution.changes.push(record.clone());
                     if execution.changes.len() > CHANGE_LIMIT {
                         execution.changes.remove(0);
@@ -35,10 +56,10 @@ impl Archive {
                 execution.last_observed_at = record.observed_at;
                 execution.latest = record.clone();
             } else {
-                if candidate.executions.len() >= EXECUTION_LIMIT {
+                if total >= EXECUTION_LIMIT {
                     return Err("outcome_archive_capacity");
                 }
-                candidate.executions.insert(
+                collection.insert(
                     record.key.clone(),
                     Execution {
                         first_observed_at: record.observed_at,
@@ -73,8 +94,8 @@ mod tests {
         for i in 0..20 {
             archive.apply(&[record("first", &format!("state_{i}"))]).unwrap();
         }
-        assert_eq!(archive.executions["first"].changes.len(), CHANGE_LIMIT);
-        assert_eq!(archive.executions["first"].omitted_changes, 5);
+        assert_eq!(archive.legacy_untyped["first"].changes.len(), CHANGE_LIMIT);
+        assert_eq!(archive.legacy_untyped["first"].omitted_changes, 5);
         let before = serde_json::to_value(&archive).unwrap();
         let records: Vec<_> =
             (0..EXECUTION_LIMIT).map(|i| record(&format!("extra_{i}"), "success")).collect();

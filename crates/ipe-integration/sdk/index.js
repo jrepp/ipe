@@ -113,7 +113,11 @@
     const result = parseTimestamp(value);
     return Number.isFinite(result) ? result : null;
   }
-  const sdk = Object.freeze({ version: "0.2.0", call, exchange, timestamp, limits, request, requests, response, records, pick,
+  function observation(model, data, receipts) {
+    if (!model || model.schema_version !== 1 || !Array.isArray(receipts) || receipts.length<1 || receipts.length>8 || receipts.some(r=>typeof r!=='string')) fail("ipe_observation_invalid");
+    return json({model,data,receipts});
+  }
+  const sdk = Object.freeze({ version: "0.3.0", observation, call, exchange, timestamp, limits, request, requests, response, records, pick,
     complete: (outputs, state = null) => json({ outputs, state }),
     state: (value, initial = null) => json(value === null ? initial : value),
   });

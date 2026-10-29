@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Versioned integration models separate definitions, evidence, constraints, invocations, facts, and outcomes. The host validates schemas and derives control, revision, call-site, and execution identities.
 - External execution archive retains outcomes independently of collector log eviction, with bounded change history and an authenticated export API.
 - Private local monitor launcher establishes a browser session without token copying. The monitor shows installed JavaScript, input, grants, schedule, and live records.
 - Integration host resolves bearer tokens through local Git credential helpers with bounded, noninteractive lookup. The hosted GitHub demo no longer needs a token environment variable.

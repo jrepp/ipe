@@ -9,7 +9,14 @@ function step(context,responses,state) {
   const r=ipe.response(responses,'read');
   if(r.code)throw new Error('read_failed');
   const value=ipe.records(responses,'read')[0];
-  const observations=['contract','fact','outcome'].map(kind=>({kind,key:'control_1',data:value,receipts:[r.receipt]}));
+  const source={definition:{namespace:'fixture',resource:'fixture',path:'sample'},revision:'1',pointer:''};
+  const execution={namespace:'fixture',resource:'fixture',run:'1',attempt:1,job:null,step:null};
+  const entities={
+    evidence:{kind:'evidence',source,method:'provider_document',description:'Fixture observation'},
+    fact:{kind:'fact',subject:'execution:'+JSON.stringify(['fixture','fixture','1',1,null,null]),predicate:'status',value:value.status,authority:'fixture',execution},
+    outcome:{kind:'outcome',execution,definition:source,title:'Fixture execution',status:'completed',conclusion:value.status,duration_ms:value.duration_ms,started_at:null,completed_at:null,declaration_candidates:[],correlation:'unknown'}
+  };
+  const observations=['evidence','fact','outcome'].map(kind=>({model:{schema_version:1,scope:'fixture',claim:'provider_reported',entity:entities[kind]},data:value,receipts:[r.receipt]}));
   return ipe.exchange([],{phase:'done'},observations);
 }
 "#;
@@ -21,7 +28,7 @@ fn package(enabled: bool) -> Installation {
         interval_seconds: 1,
         enabled,
         fact_ttl_seconds: 1,
-        output_kinds: vec!["contract".into(), "fact".into(), "outcome".into()],
+        output_kinds: vec!["evidence".into(), "fact".into(), "outcome".into()],
     }
 }
 async fn fixture() -> (String, Arc<AtomicUsize>, tokio::task::JoinHandle<()>) {
@@ -83,6 +90,11 @@ async fn hosted_code_retries_retains_typed_records_and_survives_restart() {
     assert_eq!(run.metrics.retries, 1);
     assert_eq!(attempts.load(Ordering::SeqCst), 2);
     assert_eq!(run.records.len(), 3);
+    assert!(run
+        .records
+        .iter()
+        .all(|r| r.model.as_ref().is_some_and(|m| m.schema_version == 1)
+            && r.revision_id.starts_with("sha256:")));
     assert_eq!(run.evidence.len(), 1);
     assert_eq!(run.records[0].source_evidence[0]["operation"], "sample");
     assert!(run.records.iter().all(|r| r.data.get("hidden").is_none()));
@@ -190,7 +202,7 @@ async fn unauthenticated_install_is_rejected_and_forged_operations_do_no_io() {
     );
     assert_eq!(attempts.load(Ordering::SeqCst), 0);
     let mut forged = package(false);
-    forged.source="function step(){return ipe.exchange([],{},[{kind:'fact',key:'x',data:true,receipts:['fake']}]);}".into();
+    forged.source = PROGRAM.replace("receipts:[r.receipt]", "receipts:['fake']");
     host.install("test", forged).await.unwrap();
     let run = host.start("test", "manual").await.unwrap();
     assert_eq!(
@@ -334,7 +346,8 @@ async fn external_outcomes_survive_polling_collector_eviction_and_restart() {
     }
     {
         let store = host.store.lock().await;
-        let execution = &store.integrations["example"].outcomes.executions["control_1"];
+        let execution = &store.integrations["example"].outcomes.executions
+            ["execution:[\"fixture\",\"fixture\",\"1\",1,null,null]"];
         assert_eq!(
             execution.changes.len(),
             1,
@@ -342,12 +355,15 @@ async fn external_outcomes_survive_polling_collector_eviction_and_restart() {
         );
     }
     let mut changed = package(false);
-    changed.source = PROGRAM.replace("data:value", "data:{...value,status:'failure'}");
+    changed.source = PROGRAM.replace(
+        "const value=ipe.records(responses,'read')[0];",
+        "const value=ipe.records(responses,'read')[0];value.status='failure';",
+    );
     host.install("example", changed).await.unwrap();
     let id = host.start("example", "manual").await.unwrap();
     assert_eq!(completed(&host, "example", id).await.status, "succeeded");
     let mut no_outcomes = package(false);
-    no_outcomes.source = PROGRAM.replace("['contract','fact','outcome']", "['contract','fact']");
+    no_outcomes.source = PROGRAM.replace("['evidence','fact','outcome']", "['evidence','fact']");
     host.install("example", no_outcomes).await.unwrap();
     for _ in 0..HISTORY + 1 {
         let id = host.start("example", "manual").await.unwrap();
@@ -362,7 +378,8 @@ async fn external_outcomes_survive_polling_collector_eviction_and_restart() {
         assert_eq!(installed.runs.len(), HISTORY);
         assert!(installed.runs.iter().all(|r| r.records.iter().all(|r| r.kind != "outcome")));
         assert_eq!(installed.outcomes.executions.len(), 1);
-        let execution = &installed.outcomes.executions["control_1"];
+        let execution =
+            &installed.outcomes.executions["execution:[\"fixture\",\"fixture\",\"1\",1,null,null]"];
         assert_eq!(execution.changes.len(), 2);
         assert_eq!(execution.latest.data["status"], "failure");
         assert_eq!(execution.changes[0].data["status"], "success");
@@ -381,8 +398,90 @@ async fn external_outcomes_survive_polling_collector_eviction_and_restart() {
         .await
         .unwrap();
     assert_eq!(export["schema"], "ipe.integration.outcome-archive.v1");
-    assert_eq!(export["executions"]["control_1"]["changes"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        export["executions"]["execution:[\"fixture\",\"fixture\",\"1\",1,null,null]"]["changes"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
     assert!(!export.to_string().contains(restored.token.expose_secret()));
+    restored.stop().await;
+    provider.abort();
+}
+
+#[tokio::test]
+async fn malformed_model_rejects_entire_capture_without_replacing_evidence() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    host.install("example", package(false)).await.unwrap();
+    let id = host.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&host, "example", id).await.status, "succeeded");
+    let before =
+        serde_json::to_value(&host.store.lock().await.integrations["example"].current).unwrap();
+    for (source, error) in [
+        (
+            PROGRAM.replace("schema_version:1", "schema_version:2"),
+            "unsupported_model_schema",
+        ),
+        (
+            PROGRAM.replace("claim:'provider_reported'", "claim:'inferred'"),
+            "invalid_model",
+        ),
+        (
+            PROGRAM.replace("predicate:'status'", "predicate:'status',unrecognized:true"),
+            "invalid_observation",
+        ),
+    ] {
+        let mut bad = package(false);
+        bad.source = source;
+        host.install("example", bad).await.unwrap();
+        let id = host.start("example", "manual").await.unwrap();
+        assert_eq!(completed(&host, "example", id).await.error.as_deref(), Some(error));
+        assert_eq!(
+            serde_json::to_value(&host.store.lock().await.integrations["example"].current).unwrap(),
+            before
+        );
+    }
+    host.stop().await;
+    provider.abort();
+}
+
+#[tokio::test]
+async fn legacy_outcomes_remain_exportable_without_inflating_typed_execution_counts() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    host.install("example", package(false)).await.unwrap();
+    let id = host.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&host, "example", id).await.status, "succeeded");
+    {
+        let mut store = host.store.lock().await;
+        let archive = &mut store.integrations.get_mut("example").unwrap().outcomes;
+        for entry in archive.executions.values_mut() {
+            entry.latest.model = None;
+            for change in &mut entry.changes {
+                change.model = None;
+            }
+        }
+        persist(&dir.path().join("state"), &store).unwrap();
+    }
+    host.stop().await;
+    drop(host);
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
+    {
+        let store = restored.store.lock().await;
+        assert_eq!(store.integrations["example"].outcomes.executions.len(), 0);
+        assert_eq!(store.integrations["example"].outcomes.legacy_untyped.len(), 1);
+    }
+    let id = restored.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&restored, "example", id).await.status, "succeeded");
+    {
+        let store = restored.store.lock().await;
+        assert_eq!(store.integrations["example"].outcomes.executions.len(), 1);
+        assert_eq!(store.integrations["example"].outcomes.legacy_untyped.len(), 1);
+    }
     restored.stop().await;
     provider.abort();
 }
