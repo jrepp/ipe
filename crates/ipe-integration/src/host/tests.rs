@@ -723,3 +723,22 @@ async fn review_accept_and_restore_persist_without_renewing_facts_or_replacing_c
     restored.stop().await;
     provider.abort();
 }
+
+#[test]
+fn state_file_creation_and_replacement_round_trip() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = Store {
+        next_run: u64::MAX,
+        integrations: BTreeMap::new(),
+    };
+    persist(dir.path(), &state).unwrap();
+    let first: Store =
+        serde_json::from_slice(&std::fs::read(dir.path().join("state.json")).unwrap()).unwrap();
+    assert_eq!(first.next_run, u64::MAX);
+    state.next_run = 1;
+    persist(dir.path(), &state).unwrap();
+    let replaced: Store =
+        serde_json::from_slice(&std::fs::read(dir.path().join("state.json")).unwrap()).unwrap();
+    assert_eq!(replaced.next_run, 1);
+    assert!(!dir.path().join("state.tmp").exists());
+}

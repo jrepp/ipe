@@ -248,6 +248,7 @@ The shared broker supports JSON, bounded YAML, and text. GitHub traversal and in
 - Retain at most 256 current records, 256 records per run, and eight runs per installation.
 - Limit the durable store to 16 MiB. Reject excess capacity without replacing current records.
 - Store source and records in a private directory with one writer and atomic file replacement.
+- Sync the state file before replacement. Unix also syncs the directory entry; Windows does not provide this directory sync through the standard file API.
 - Restore interrupted runs as interrupted. Do not replay missed schedule intervals.
 
 This host has one operator scope. It is not a multi-tenant service or a long-term metrics database.

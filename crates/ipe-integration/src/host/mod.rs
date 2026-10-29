@@ -173,8 +173,13 @@ fn persist(dir: &Path, store: &Store) -> Result<()> {
     file.write_all(&bytes)
         .and_then(|_| file.sync_all())
         .map_err(|_| "state_write_failed")?;
+    drop(file);
     std::fs::rename(tmp, dir.join("state.json")).map_err(|_| "state_write_failed")?;
-    File::open(dir).and_then(|f| f.sync_all()).map_err(|_| "state_write_failed")
+    // Unix can sync the directory entry after rename. Windows does not expose
+    // directory fsync through File::open; the file itself was synced above.
+    #[cfg(unix)]
+    File::open(dir).and_then(|f| f.sync_all()).map_err(|_| "state_write_failed")?;
+    Ok(())
 }
 impl Host {
     pub async fn new(config: Config) -> Result<Arc<Self>> {

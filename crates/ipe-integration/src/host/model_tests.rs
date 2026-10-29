@@ -3,6 +3,11 @@ use super::*;
 use model::{Entity, Model};
 
 pub(super) async fn capture(revision: &str) -> Vec<Model> {
+    // These tests verify graph content, not throughput. Instrumented CI runners
+    // can exhaust the unchanged guest deadline when all three fixtures compete.
+    // Keep concurrency and deadline coverage in the dedicated host/script tests.
+    static CAPTURE: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+    let _capture = CAPTURE.lock().await;
     let adapter = ScriptAdapter::from_source(
         include_str!("../../../../testing/integration/hosted/github-actions.js"),
         false,
