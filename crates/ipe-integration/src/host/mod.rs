@@ -1,6 +1,7 @@
 //! A local installation host: code, scheduling, brokered reads, typed records,
 //! durable bounded history, and authenticated monitoring share one endpoint.
 mod broker;
+mod coverage;
 mod credentials;
 mod model;
 mod outcomes;
@@ -90,6 +91,8 @@ struct Run {
     #[serde(default)]
     evidence: Vec<Value>,
     summary: Value,
+    #[serde(default)]
+    coverage: Vec<coverage::VerifiedScope>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 struct Installed {
@@ -281,6 +284,7 @@ impl Host {
             .route("/v1/integrations/:id/runs", post(start).get(history))
             .route("/v1/integrations/:id/records", get(records))
             .route("/v1/integrations/:id/outcomes", get(outcome_archive))
+            .route("/v1/integrations/:id/coverage", get(collection_coverage))
             .layer(DefaultBodyLimit::max(160 * 1024))
             .with_state(self.clone())
     }
@@ -399,6 +403,7 @@ impl Host {
             records: Vec::new(),
             evidence: Vec::new(),
             summary: Value::Null,
+            coverage: Vec::new(),
         });
         if let Err(code) = persist(&self.config.state_dir, &store) {
             *store = prior;
@@ -441,7 +446,7 @@ impl Host {
         let mut responses = json!([]);
         let mut observations = Vec::new();
         let mut receipts = HashSet::new();
-        let mut evidence = Vec::new();
+        let mut evidence: Vec<Value> = Vec::new();
         let mut ids = HashSet::new();
         let mut output_bytes = 0;
         for step in 1..=128 {
@@ -483,6 +488,12 @@ impl Host {
                 if output_bytes > MAX_RUN_BYTES {
                     return Err("observation_byte_limit");
                 }
+                let observed_at = evidence
+                    .iter()
+                    .filter(|e| record.receipts.iter().any(|r| e["receipt"] == *r))
+                    .filter_map(|e| e["observed_at"].as_u64())
+                    .min()
+                    .ok_or("observation_time_missing")?;
                 observations.push(Record {
                     revision_id: record.model.revision(&adapter.digest)?,
                     model: Some(record.model),
@@ -495,14 +506,15 @@ impl Host {
                         .cloned()
                         .collect(),
                     receipts: record.receipts,
-                    observed_at: now(),
-                    expires_at: (kind == "fact").then(|| now() + package.fact_ttl_seconds),
+                    observed_at,
+                    expires_at: (kind == "fact").then(|| observed_at + package.fact_ttl_seconds),
                     run_id,
                     adapter_digest: adapter.digest.clone(),
                 });
             }
             if let Some(output) = result.outputs {
                 model::validate_graph(&observations)?;
+                coverage::verify(&output, &observations, &evidence)?;
                 return Ok((output, observations, evidence));
             }
             // Validate the whole batch before any I/O; SDK checks are not grants.
@@ -516,6 +528,17 @@ impl Host {
             }
             let mut next = Vec::new();
             for request in result.requests {
+                evidence.push(json!({"operation":request.operation,"parameters":request.params,"started_at":now(),"status":"pending"}));
+                if let Some(run) = self
+                    .store
+                    .lock()
+                    .await
+                    .integrations
+                    .get_mut(id)
+                    .and_then(|i| i.runs.iter_mut().find(|r| r.id == run_id))
+                {
+                    run.evidence = evidence.clone();
+                }
                 match self.broker.read(&request.operation, &request.params, metrics).await {
                     Ok(data) => {
                         let receipt = broker::digest(
@@ -531,12 +554,28 @@ impl Host {
                             .map_err(|_| "receipt_failed")?
                             .as_bytes(),
                         );
-                        evidence.push(json!({"receipt":receipt,"operation":request.operation,"parameters":request.params,"source_digest":data["source_digest"],"observed_at":now(),"truncated":data["truncated"]}));
+                        if let Some(read) = evidence.last_mut() {
+                            read["receipt"] = json!(receipt);
+                            read["status"] = json!("observed");
+                            read["source_digest"] = data["source_digest"].clone();
+                            read["observed_at"] = json!(now());
+                            read["truncated"] = data["truncated"].clone();
+                            read["pagination"] = data["pagination"].clone();
+                            read["snapshot_source"] = data["snapshot_source"].clone();
+                        }
                         receipts.insert(receipt.clone());
                         next.push(json!({"id":request.id,"operation":request.operation,"receipt":receipt,"data":data["records"],"source_digest":data["source_digest"],"truncated":data["truncated"]}));
                     },
-                    Err(code) => next
-                        .push(json!({"id":request.id,"operation":request.operation,"code":code})),
+                    Err(code) => {
+                        if let Some(read) = evidence.last_mut() {
+                            read["status"] = json!("unavailable");
+                            read["code"] = json!(code);
+                            read["observed_at"] = json!(now());
+                        }
+                        next.push(
+                            json!({"id":request.id,"operation":request.operation,"code":code}),
+                        );
+                    },
                 }
             }
             responses = Value::Array(next);
@@ -551,6 +590,7 @@ impl Host {
                 .get_mut(id)
                 .and_then(|i| i.runs.iter_mut().find(|r| r.id == run_id))
             {
+                run.evidence = evidence.clone();
                 run.steps = step;
                 run.metrics = metrics.clone();
             }
@@ -570,15 +610,16 @@ impl Host {
         let prior = store.clone();
         if let Some(installed) = store.integrations.get_mut(id) {
             let mut terminal = result;
-            if let Ok((_, records, _)) = &terminal {
-                let keys: HashSet<_> = installed
-                    .current
-                    .iter()
-                    .chain(records.iter().filter(|r| r.kind != "outcome"))
-                    .map(|r| (&r.kind, &r.key))
-                    .collect();
-                if keys.len() > 256 {
-                    terminal = Err("current_record_limit");
+            let mut scopes = Vec::new();
+            let mut next_current = None;
+            if let Ok((summary, records, evidence)) = &terminal {
+                match coverage::verify(summary, records, evidence).and_then(|verified| {
+                    let next = coverage::reconcile(&installed.current, records, &verified)?;
+                    scopes = verified;
+                    Ok(next)
+                }) {
+                    Ok(next) => next_current = Some(next),
+                    Err(code) => terminal = Err(code),
                 }
             }
             if let Ok((_, records, _)) = &terminal {
@@ -586,10 +627,9 @@ impl Host {
                     terminal = Err(code);
                 }
             }
-            if let Ok((_, records, _)) = &terminal {
-                for record in records.iter().filter(|r| r.kind != "outcome") {
-                    installed.current.retain(|r| r.kind != record.kind || r.key != record.key);
-                    installed.current.push(record.clone());
+            if terminal.is_ok() {
+                if let Some(next) = next_current {
+                    installed.current = next;
                 }
             }
             if let Some(run) = installed.runs.iter_mut().find(|r| r.id == run_id) {
@@ -600,6 +640,7 @@ impl Host {
                 match terminal {
                     Ok((summary, records, evidence)) => {
                         run.status = "succeeded".into();
+                        run.coverage = scopes;
                         run.summary = summary;
                         run.records = records;
                         run.evidence = evidence;
@@ -806,6 +847,26 @@ async fn outcome_archive(
     Ok(Json(
         json!({"schema":"ipe.integration.outcome-archive.v1","integration_id":id,"executions":installed.outcomes.executions,"legacy_untyped":installed.outcomes.legacy_untyped,"capacity":outcomes::EXECUTION_LIMIT,"overflow":"reject new capture atomically; existing executions remain available for export"}),
     ))
+}
+async fn collection_coverage(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    let latest = installed.runs.last();
+    Ok(Json(json!({
+        "schema":"ipe.integration.collection-coverage.v1", "integration_id":id,
+        "latest_run":latest.map(|r| json!({"id":r.id,"status":r.status,"error":r.error,"reads":r.evidence,"complete_declaration_scopes":r.coverage})),
+        "retained_constraints":installed.current.iter().filter(|r|r.kind=="constraint").map(|r|json!({"key":r.key,"scope":r.model.as_ref().map(|m| &m.scope),"observed_at":r.observed_at,"run_id":r.run_id,"observed_in_latest_run":latest.is_some_and(|run|run.status=="succeeded" && run.id==r.run_id)})).collect::<Vec<_>>(),
+        "semantics":"Complete declaration scopes authorize absence removal only for that source and kind. They do not prove effective external policy coverage. Other captures are upsert-only.",
+        "publication":false
+    })))
 }
 async fn records(
     State(host): State<Arc<Host>>,

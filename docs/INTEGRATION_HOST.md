@@ -98,7 +98,20 @@ Receipts establish which reads supported a record. They do not prove that the pr
 
 The host updates current requirements and facts only after a successful extraction. A failed extraction does not remove requirements or refresh facts.
 Facts retain their original expiry after failure. Missing evidence must not become an allow decision.
-Current records are upserts by kind and key. This MVP does not infer deletion from an absent observation.
+Current records are upserts by kind and key unless the host verifies a complete declaration scope.
+A YAML read operation can define `snapshot_source` with `namespace`, `resource_parameter`, `path_parameter`, and `revision_parameter`.
+These parameter names must refer to native operation parameters. Only a full YAML document can establish this authority.
+
+The program can return `collections` in its completion output. Each claim contains `schema_version: 1`, `scope`, `kind: "constraint"`, and a native `receipt`.
+The host verifies the receipt, successful read status, source identity, and absence of truncation.
+It replaces constraints only within that source definition and scope. A verified empty collection can remove prior constraints.
+Missing claims, partial reads, and failed runs preserve prior constraints. A failed run does not publish a partial catalog.
+Complete declarations do not establish complete effective policy coverage. Permissions, environment protection, and actor authorization can remain unknown.
+
+Native read evidence reports observed, unavailable, or pending status, including a sanitized failure code.
+Link pagination, provider truncation flags, record limits, and provider counts identify incomplete collections.
+A failed mapper retains native read evidence for diagnosis. Fact expiry starts at the earliest supporting native observation time.
+The coverage API lists the latest reads, verified declaration scopes, and retained constraints that were not observed in the latest run.
 
 Outcomes are separate from collector telemetry. A durable archive retains each execution independently of the eight collector logs.
 Repeated polling updates its observation time without adding an execution or an unchanged payload to its change history.
@@ -138,6 +151,7 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 | `POST /v1/integrations/:id/runs` | Start a manual extraction; reject overlap |
 | `GET /v1/integrations/:id/runs` | Return retained collector runs and independent archived external outcomes |
 | `GET /v1/integrations/:id/outcomes` | Export execution identities, changed outcomes, first/last observation times, and evidence |
+| `GET /v1/integrations/:id/coverage` | Return native read status, verified declaration scopes, and retained constraint provenance |
 | `GET /v1/integrations/:id/records` | Return current requirements and facts, including expiry flags |
 
 The installation body contains `source`, `operations`, `input`, `interval_seconds`, `enabled`, `fact_ttl_seconds`, and `output_kinds`.

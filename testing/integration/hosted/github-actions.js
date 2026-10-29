@@ -99,7 +99,7 @@ function jobConstraint(job,source,projection,receipt) {
 
 function step(context, responses, state) {
   const input = context.input;
-  const s = state || {queue:[{type:'resolve',kind:'workflow',repo:input.repository,ref:input.revision,path:input.workflow,depth:0}],seen:[],sequence:0,definitions:0,resolved:{},edges:[],pending:[],gaps:[],phase:'dispatch'};
+  const s = state || {queue:[{type:'resolve',kind:'workflow',repo:input.repository,ref:input.revision,path:input.workflow,depth:0}],seen:[],sequence:0,definitions:0,resolved:{},edges:[],pending:[],collections:[],gaps:[],phase:'dispatch'};
   const record = (kind,key,data,receipt) => capturedRecord(kind,key,data,receipt,input);
   const gap = (task,code) => {if(s.gaps.length<40)s.gaps.push({repository:task.repo,path:task.path,code});};
   const enqueue = task => {if(s.queue.length<64 && (task.depth||0)<=4)s.queue.push(task);else gap(task,'traversal_limit');};
@@ -109,7 +109,7 @@ function step(context, responses, state) {
     const batch=s.edges.splice(0,8).map(edge=>{const target=s.resolved[edge.target];const supplied=edge.supplied||{};const specs=target?.inputs||{};const names=[...new Set([...Object.keys(specs),...Object.keys(supplied)])];const bindings=names.map(name=>({name,origin:Object.hasOwn(supplied,name)?'caller':Object.hasOwn(specs[name]||{},'default')?'declared_default':'absent',value:Object.hasOwn(supplied,name)?supplied[name]:specs[name]?.default??null}));return observation({kind:'invocation',parent:edge.parent,callee:target?.source||null,requested:edge.requested,resolution:target?'resolved':'unknown',bindings},'declared',edge.scope,{reference:edge.requested},edge.receipt);});
     if(!s.edges.length)s.phase='finish';return ipe.exchange([],s,batch);
   }
-  if(s.phase==='finish') return ipe.complete({coverage:'partial',definitions:s.definitions,gaps:s.gaps,publication:false,performance_scope:'bounded sample of workflow runs and jobs; not a population success rate'});
+  if(s.phase==='finish') return ipe.complete({collections:s.collections,coverage:'partial',definitions:s.definitions,gaps:s.gaps,publication:false,performance_scope:'bounded sample of workflow runs and jobs; not a population success rate'});
   if(s.phase==='response') {
     const task=s.task,r=ipe.response(responses,'r'+s.sequence);
     s.phase='dispatch';
@@ -129,6 +129,7 @@ function step(context, responses, state) {
         const projection=projectDeclaration({},[{id:'source',receipt:r.receipt,data:[{kind:task.kind,document}]}],{}).outputs;
         const source={repository:task.repo,commit:task.ref,path:task.path,digest:r.source_digest,url:'https://github.com/'+task.repo+'/blob/'+task.ref+'/'+task.path};
         observations.push(record('contract',task.repo+'@'+task.ref+'/'+task.path,{kind:task.kind,source,projection,locations:rows[0].locations,interpretation:'declaration',external_enforcer:'github_actions'},r.receipt));
+        if(task.kind==='workflow')s.collections.push({schema_version:1,scope:'workflow:'+task.repo+'/'+task.path,kind:'constraint',receipt:r.receipt});
         if(task.kind==='workflow')for(const job of projection.model.jobs)s.pending.push(jobConstraint(job,source,projection,r.receipt));
         s.resolved[task.repo+'@'+(task.requested_ref||task.ref)+'/'+(task.requested_path||task.path)]={source:sourceModel(source),inputs:Object.fromEntries(Object.entries(projection.model.inputs||{}).map(([name,spec])=>[name,Object.hasOwn(spec,'default')?{default:spec.default}:{}]))};
         s.definitions++;

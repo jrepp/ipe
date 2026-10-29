@@ -238,6 +238,7 @@ async fn durable_state_has_one_writer_and_interrupted_runs_are_not_success() {
             records: vec![],
             evidence: vec![],
             summary: Value::Null,
+            coverage: Vec::new(),
         });
         persist(&dir.path().join("state"), &store).unwrap();
     }
@@ -483,5 +484,142 @@ async fn legacy_outcomes_remain_exportable_without_inflating_typed_execution_cou
         assert_eq!(store.integrations["example"].outcomes.legacy_untyped.len(), 1);
     }
     restored.stop().await;
+    provider.abort();
+}
+
+#[tokio::test]
+async fn failed_script_retains_native_read_diagnostics_and_prior_records() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    host.install("example", package(false)).await.unwrap();
+    let first = host.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&host, "example", first).await.status, "succeeded");
+    let prior =
+        serde_json::to_value(&host.store.lock().await.integrations["example"].current).unwrap();
+    let mut bad = package(false);
+    bad.source = r#"function step(context,responses,state) {
+        if(state===null)return ipe.exchange([ipe.call('read','sample')],{});
+        throw new Error('private mapping failure');
+    }"#
+    .into();
+    host.install("example", bad).await.unwrap();
+    let next = host.start("example", "manual").await.unwrap();
+    let run = completed(&host, "example", next).await;
+    assert_eq!(run.status, "failed");
+    assert_eq!(run.error.as_deref(), Some("script_failed"));
+    assert_eq!(run.evidence.len(), 1);
+    assert_eq!(run.evidence[0]["status"], "observed");
+    assert_eq!(run.evidence[0]["operation"], "sample");
+    assert!(run.coverage.is_empty());
+    assert_eq!(
+        serde_json::to_value(&host.store.lock().await.integrations["example"].current).unwrap(),
+        prior
+    );
+    host.stop().await;
+    drop(host);
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
+    assert_eq!(
+        restored.store.lock().await.integrations["example"]
+            .runs
+            .last()
+            .unwrap()
+            .evidence[0]["status"],
+        "observed"
+    );
+    restored.stop().await;
+    provider.abort();
+}
+
+#[tokio::test]
+async fn complete_document_coverage_is_native_and_failed_reads_preserve_constraints() {
+    let mode = Arc::new(AtomicUsize::new(0));
+    let state = mode.clone();
+    let provider_app = Router::new().route(
+        "/document",
+        get(move || {
+            let state = state.clone();
+            async move {
+                match state.load(Ordering::SeqCst) {
+                    1 => (StatusCode::FORBIDDEN, "private denial").into_response(),
+                    2 => ([("link", "</document?page=2>; rel=\"next\"")], "jobs: {}\n")
+                        .into_response(),
+                    3 => "jobs: {}\n".into_response(),
+                    _ => "jobs:\n  build: {}\n".into_response(),
+                }
+            }
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let origin = format!("http://{}/", listener.local_addr().unwrap());
+    let provider = tokio::spawn(async move { axum::serve(listener, provider_app).await.unwrap() });
+    let dir = tempfile::tempdir().unwrap();
+    let mut cfg = config(dir.path(), &origin);
+    cfg.operations=vec![serde_json::from_value(json!({"name":"sample","connection":"test","path":"/document","decoder":"yaml",
+        "parameters":{"repository":{"kind":"path","values":["fixture/repo"]},"path":{"kind":"path","values":["workflow.yml"]},"revision":{"kind":"path","values":["v1"]}},
+        "snapshot_source":{"namespace":"fixture","resource_parameter":"repository","path_parameter":"path","revision_parameter":"revision"}
+    })).unwrap()];
+    let host = Host::new(cfg).await.unwrap();
+    let mut p = package(false);
+    p.output_kinds = vec!["constraint".into()];
+    p.source=r#"function step(context,responses,state) {
+      if(state===null)return ipe.exchange([ipe.call('read','sample',{repository:'fixture/repo',path:'workflow.yml',revision:'v1'})],{phase:'read'});
+      if(state.phase==='done')return ipe.complete({collections:[{schema_version:1,scope:'workflow',kind:'constraint',receipt:state.receipt}]});
+      const r=ipe.response(responses,'read'); if(r.code)throw new Error('read failed');
+      const observations=Object.keys(r.data[0].document.jobs).map(id=>({
+        model:{schema_version:1,scope:'workflow',claim:'declared',entity:{kind:'constraint',
+          control:{namespace:'fixture',resource:'fixture/repo',operation:'run_job',local_id:id},
+          source:{definition:{namespace:'fixture',resource:'fixture/repo',path:'workflow.yml'},revision:'v1',pointer:'/jobs/'+id},
+          title:id,actor_context:'unknown',applicability:{dialect:'fixture',expression:null,default_behavior:'unknown'},
+          obligations:[],dependencies:[],enforcer:'fixture'}},data:{},receipts:[r.receipt]}));
+      return ipe.exchange([],{phase:'done',receipt:r.receipt},observations);
+    }"#.into();
+    host.install("example", p).await.unwrap();
+    for (setting, expected, error_code, size) in [
+        (0, "succeeded", None, 1),
+        (1, "failed", Some("script_failed"), 1),
+        (2, "failed", Some("coverage_read_incomplete"), 1),
+        (3, "succeeded", None, 0),
+    ] {
+        mode.store(setting, Ordering::SeqCst);
+        let run_id = host.start("example", "manual").await.unwrap();
+        let run = completed(&host, "example", run_id).await;
+        assert_eq!(run.status, expected);
+        assert_eq!(run.error.as_deref(), error_code);
+        assert_eq!(host.store.lock().await.integrations["example"].current.len(), size);
+        if setting == 1 {
+            assert_eq!(run.evidence[0]["status"], "unavailable");
+            assert_eq!(run.evidence[0]["code"], "provider_access_denied");
+        }
+        if setting == 2 {
+            assert_eq!(run.evidence[0]["pagination"], "more_pages");
+            assert_eq!(run.evidence[0]["snapshot_source"], Value::Null);
+        }
+        if setting == 0 || setting == 3 {
+            assert_eq!(run.coverage.len(), 1);
+            assert_eq!(run.coverage[0].members.len(), size);
+        }
+    }
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}/v1/integrations/example/coverage", listener.local_addr().unwrap());
+    let app = host.router();
+    let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    let client = reqwest::Client::new();
+    assert_eq!(client.get(&url).send().await.unwrap().status(), StatusCode::UNAUTHORIZED);
+    let body = client
+        .get(&url)
+        .bearer_auth(host.token.expose_secret())
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    let body: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(body["schema"], "ipe.integration.collection-coverage.v1");
+    assert_eq!(body["latest_run"]["complete_declaration_scopes"][0]["members"], json!([]));
+    assert_eq!(body["retained_constraints"], json!([]));
+    host.stop().await;
+    server.abort();
     provider.abort();
 }

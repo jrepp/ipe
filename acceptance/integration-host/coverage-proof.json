@@ -1,0 +1,53 @@
+{
+  "schema": "ipe.integration.coverage-proof.v1",
+  "target": "GitHub jrepp/ipe docs-site workflow",
+  "tested_at": 1793252728,
+  "runs": [
+    {
+      "trigger": "manual",
+      "status": "succeeded",
+      "duration_ms": 9183,
+      "read_states": {
+        "observed": 30,
+        "unavailable": 9
+      },
+      "verified_scopes": 1
+    },
+    {
+      "trigger": "schedule",
+      "status": "succeeded",
+      "duration_ms": 9300,
+      "read_states": {
+        "observed": 30,
+        "unavailable": 9
+      },
+      "verified_scopes": 1
+    }
+  ],
+  "complete_declaration_scopes": [
+    {
+      "kind": "constraint",
+      "members": [
+        "revision:[\"control:[\\\"github\\\",\\\"jrepp/ipe\\\",\\\"github_actions.run_job\\\",\\\".github/workflows/docs-site.yml#docs-site\\\"]\",\"8346e53d0b428b701349817df6624f0ad33a1639\"]",
+        "revision:[\"control:[\\\"github\\\",\\\"jrepp/ipe\\\",\\\"github_actions.run_job\\\",\\\".github/workflows/docs-site.yml#publish\\\"]\",\"8346e53d0b428b701349817df6624f0ad33a1639\"]"
+      ],
+      "receipt": "sha256:7482a437d4f1fe0f5bcc0202d6204364514939bd8fce316ea6487225581afd8d",
+      "scope": "workflow:jrepp/ipe/.github/workflows/docs-site.yml",
+      "source": {
+        "definition": {
+          "namespace": "github",
+          "path": ".github/workflows/docs-site.yml",
+          "resource": "jrepp/ipe"
+        },
+        "pointer": "",
+        "revision": "8346e53d0b428b701349817df6624f0ad33a1639"
+      }
+    }
+  ],
+  "retained_constraints_observed_in_latest_run": 2,
+  "limitations": [
+    "Complete workflow declarations do not prove effective external policy completeness.",
+    "Denied and paginated read behavior was verified with a synthetic provider, not by modifying GitHub.",
+    "The existing monitor on port 8767 was not restarted by this proof."
+  ]
+}

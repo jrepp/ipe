@@ -25,7 +25,7 @@ def configuration(output, port):
         return dict(name=name, connection='github', path=path, parameters=parameters, decoder=decoder, fields=fields or [], **kwargs)
     operations = [
         op('resolve_revision', '/repos/{repository}/commits/{revision}', {'repository': repo, 'revision': {'kind': 'ref'}}, fields=['sha']),
-        op('read_definition', '/repos/{repository}/contents/{path}', {'repository': repo, 'revision': {'kind': 'sha'}, 'path': {'kind': 'path'}}, decoder='yaml', accept='application/vnd.github.raw+json', query={'ref': '{revision}'}),
+        op('read_definition', '/repos/{repository}/contents/{path}', {'repository': repo, 'revision': {'kind': 'sha'}, 'path': {'kind': 'path'}}, decoder='yaml', snapshot_source={'namespace':'github','resource_parameter':'repository','path_parameter':'path','revision_parameter':'revision'}, accept='application/vnd.github.raw+json', query={'ref': '{revision}'}),
         op('read_source', '/repos/{repository}/contents/{path}', {'repository': repo, 'revision': {'kind': 'sha'}, 'path': {'kind': 'path'}}, decoder='text', accept='application/vnd.github.raw+json', query={'ref': '{revision}'}),
         op('list_tree', '/repos/{repository}/git/trees/{revision}', {'repository': repo, 'revision': {'kind': 'sha'}}, fields=['path', 'type'], pointer='/tree', max_records=128, query={'recursive': '1'}),
         op('list_runs', '/repos/{repository}/actions/workflows/{workflow}/runs', {'repository': root, 'revision': {'kind': 'sha'}, 'workflow': {'kind': 'identifier', 'values': ['docs-site.yml']}}, fields=['id', 'head_sha', 'name', 'event', 'path', 'status', 'conclusion', 'run_attempt', 'created_at', 'run_started_at', 'updated_at', 'html_url'], pointer='/workflow_runs', max_records=3, query={'head_sha': '{revision}', 'per_page': '3'}),
@@ -92,7 +92,7 @@ def main():
             time.sleep(0.5)
         else:
             raise RuntimeError('Hosted run timed out')
-        snapshot = {'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records')}
+        snapshot = {'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records'), 'coverage': api('/v1/integrations/github_actions/coverage')}
         encoded = json.dumps(snapshot, indent=2)
         if token in encoded:
             raise RuntimeError('Credential disclosure detected')

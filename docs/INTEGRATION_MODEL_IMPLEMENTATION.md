@@ -5,7 +5,7 @@ This checklist tracks completion evidence. An unchecked item is not implemented 
 
 - [x] 1. Versioned schemas separate evidence, constraints, facts, and outcomes; malformed records are rejected.
 - [x] 2. Controls, revisions, invocations, and executions have separate identities and tested joins.
-- [ ] 3. Collection coverage is explicit; failed and incomplete reads cannot imply deletion.
+- [x] 3. Collection coverage is explicit; failed and incomplete reads cannot imply deletion.
 - [ ] 4. Semantic diffs distinguish requirement changes, source changes, and evidence refreshes; prior accepted revisions can be restored.
 - [ ] 5. Human and agent projections explain operation prerequisites, evidence, unknowns, outcomes, and permitted next observations.
 - [x] 6. External outcomes persist independently of collector logs; repeated observations do not inflate samples.
@@ -24,3 +24,9 @@ The native host derives keys and revision digests. It rejects malformed models, 
 Deterministic tests cover repeated action calls, caller/default bindings, matrix display names, dependencies, rerun attempts, and source revision changes.
 The live proof in `acceptance/integration-host/typed-model-proof.json` captured nine definitions, ten evidence records, two constraints, eight resolved calls, three facts, and three outcomes.
 Historical records without v1 models remain explicitly untyped. Legacy outcomes are exported separately and do not inflate typed execution counts.
+
+Item 3 implementation: native YAML snapshot authority and `host/coverage.rs` verify declaration scope claims before reconciliation.
+The authenticated `/coverage` API exposes native read status and retained constraint provenance.
+Tests cover complete and empty scopes, absent claims, denied and paginated reads, mismatched receipts and sources, and mapper failure across restart.
+The live proof in `acceptance/integration-host/coverage-proof.json` captured one complete workflow scope with two constraints in manual and scheduled runs.
+Native read gaps remain explicit. Complete declarations do not establish complete effective external policy coverage.

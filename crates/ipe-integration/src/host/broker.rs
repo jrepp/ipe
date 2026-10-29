@@ -48,6 +48,7 @@ pub struct Operation {
     #[serde(default = "record_limit")]
     pub max_records: usize,
     pub accept: Option<String>,
+    pub snapshot_source: Option<super::coverage::SnapshotSource>,
 }
 fn record_limit() -> usize {
     32
@@ -188,6 +189,16 @@ impl Broker {
                 || op.pointer.len() > 256
             {
                 return Err("invalid_operation");
+            }
+            if let Some(scope) = &op.snapshot_source {
+                if op.decoder != "yaml"
+                    || !name(&scope.namespace)
+                    || [&scope.resource_parameter, &scope.path_parameter, &scope.revision_parameter]
+                        .iter()
+                        .any(|p| !op.parameters.contains_key(*p))
+                {
+                    return Err("invalid_snapshot_source");
+                }
             }
             for (key, param) in &op.parameters {
                 if !name(key)
@@ -342,6 +353,11 @@ impl Broker {
             if response.content_length().is_some_and(|n| n > BODY_LIMIT as u64) {
                 break Err("provider_byte_limit");
             }
+            let more = response
+                .headers()
+                .get(header::LINK)
+                .and_then(|v| v.to_str().ok())
+                .is_some_and(|v| v.contains("rel=\"next\"") || v.contains("rel=next"));
             let mut bytes = Vec::new();
             let mut failure = None;
             loop {
@@ -365,7 +381,32 @@ impl Broker {
             if let Some(code) = failure {
                 break Err(code);
             }
-            break decode(op, &bytes).and_then(|value| self.protect_credentials(value));
+            break decode(op, &bytes).and_then(|mut value| {
+                if more {
+                    value["truncated"] = json!(true);
+                }
+                value["pagination"] = json!(if more {
+                    "more_pages"
+                } else if op.decoder == "yaml" {
+                    "single_document"
+                } else {
+                    "unknown"
+                });
+                if value["truncated"] == false {
+                    if let Some(scope) = &op.snapshot_source {
+                        value["snapshot_source"] = json!({
+                            "definition": {
+                                "namespace":scope.namespace,
+                                "resource":params[&scope.resource_parameter],
+                                "path":params[&scope.path_parameter]
+                            },
+                            "revision":params[&scope.revision_parameter],
+                            "pointer":""
+                        });
+                    }
+                }
+                self.protect_credentials(value)
+            });
         };
         metrics.latency_ms += start.elapsed().as_millis() as u64;
         if result.is_err() {
@@ -398,7 +439,12 @@ fn decode(op: &Operation, bytes: &[u8]) -> Result<Value> {
             } else {
                 return Err("provider_shape_mismatch");
             };
-            let truncated = rows.len() > op.max_records;
+            let truncated = rows.len() > op.max_records
+                || value.get("truncated").and_then(Value::as_bool) == Some(true)
+                || value
+                    .get("total_count")
+                    .and_then(Value::as_u64)
+                    .is_some_and(|n| n > rows.len() as u64);
             let mut records = Vec::new();
             for row in rows.into_iter().take(op.max_records) {
                 let object = row.as_object().ok_or("provider_shape_mismatch")?;
@@ -562,6 +608,26 @@ mod tests {
             Some(SecretString::from("private_test_credential"));
         assert!(broker.protect_credentials(json!({"value":"private_test_credential"})).is_err());
         assert!(broker.protect_credentials(json!({"value":"public"})).is_ok());
+    }
+    #[test]
+    fn provider_counts_and_truncation_flags_preserve_incomplete_collection_status() {
+        let mut op = operation();
+        op.pointer = "/items".into();
+        for body in [
+            r#"{"items":[{"value":1}],"total_count":2}"#,
+            r#"{"items":[{"value":1}],"truncated":true}"#,
+        ] {
+            assert_eq!(decode(&op, body.as_bytes()).unwrap()["truncated"], true);
+        }
+        assert_eq!(
+            decode(&op, br#"{"items":[{"value":1}],"total_count":1}"#).unwrap()["truncated"],
+            false
+        );
+        op.max_records = 1;
+        assert_eq!(
+            decode(&op, br#"{"items":[{"value":1},{"value":2}]}"#).unwrap()["truncated"],
+            true
+        );
     }
     #[test]
     fn response_projection_keeps_hidden_fields_out_and_rejects_duplicate_json() {
