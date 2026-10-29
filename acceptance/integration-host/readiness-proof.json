@@ -1,0 +1,23 @@
+{
+  "schema": "ipe.integration.readiness-proof.v1",
+  "collector_source_sha256": "3d522a0275b8a1fef378b033d42dc37fec8caeaee636cb1e87caa3e3cc3dbc44",
+  "guest_deadline_ms": 100,
+  "local_thread_sanitizer": "passed command and diagnostic checks",
+  "projection_equivalence_cases": 40,
+  "monitor_and_collector_node_tests": 4,
+  "completed_live_runs": [
+    {
+      "trigger": "manual",
+      "status": "succeeded",
+      "steps": 45,
+      "elapsed_ms": 15556
+    },
+    {
+      "trigger": "schedule",
+      "status": "succeeded",
+      "steps": 45,
+      "elapsed_ms": 13459
+    }
+  ],
+  "remote_validation": "See PR #55 checks for the final commit; earlier sanitizer failures are not treated as passes."
+}

@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved sanitizer checks to handle multiline output correctly
 
 ### Fixed
+- Hosted declaration projection avoids repeated internal JSON copies while keeping SDK and native validation at the input and output boundaries.
 - Updated `libz-sys` to 1.1.31 for RUSTSEC-2026-0418.
 - Sanitizer checks use optimized Rust and native builds with the existing instrumentation to preserve bounded guest execution on hosted runners.
 - Hosted GitHub extraction models job constraints in separate steps to stay within the unchanged guest deadline.

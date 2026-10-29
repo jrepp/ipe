@@ -16,7 +16,10 @@ No blocking defect was found in these four boundaries. This finding applies to t
 ## Changes from this review
 
 - Update only `libz-sys` from 1.1.22 to 1.1.31 in the lockfile. This resolves RUSTSEC-2026-0418.
-- Build sanitizer tests with Rust and native optimization level 1. Keep native and Rust instrumentation, parallel tests, report detection, and the 100 ms guest deadline. LLVM [recommends optimization level 1 or higher](https://clang.llvm.org/docs/ThreadSanitizer.html) for reasonable performance with ThreadSanitizer and gives the [same guidance for AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html#usage). The prior hosted run had guest timeouts and no sanitizer findings. The first follow-up run passed Cargo Audit but exposed the same guest timeouts in AddressSanitizer. Apply optimization to all sanitizer profiles, including native build-script settings. The next run passed Linux ThreadSanitizer and LeakSanitizer but still failed AddressSanitizer during script setup. QuickJS enables native instrumentation itself; select Clang for every sanitizer build to use LLVM instrumentation with Rust's LLVM runtime. Keep independent matrix jobs running after a failure so each platform produces evidence. The final remote run must pass before this is treated as a verified CI fix.
+- Build sanitizer tests with optimization level 1 and Clang native compilation. Keep Rust and native instrumentation, parallel tests, report detection, and the 100 ms guest deadline. LLVM recommends optimization level 1 or higher for [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html) and [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html#usage). Keep independent matrix jobs running after another job fails.
+- Remove repeated internal JSON copies from the hosted declaration projection. Retain SDK response validation, observation and exchange validation, native record validation, and malformed-object rejection. The helper uses ordinary local objects between these boundaries. Compare its declarations, references, expressions, and gaps with the standalone adapter in the Node tests.
+
+Earlier hosted runs exposed sanitizer guest timeouts. The Clang AddressSanitizer run at `858f4bd` passed all 77 integration library tests and diagnostic checks. That commit still had one macOS ThreadSanitizer timeout in workflow projection. The final remote run must pass before the projection fix is treated as verified.
 
 ## Limits and follow-up
 
@@ -33,4 +36,7 @@ No blocking defect was found in these four boundaries. This finding applies to t
 - Workspace tests with default and all features: passed.
 - Workspace Clippy with all targets and features, warnings denied: passed.
 - Rust formatting and diff checks: passed.
+- Final projection: all 77 integration library tests, full local ThreadSanitizer, workspace Clippy, and all four monitor/collector Node tests passed.
+- Live GitHub capture with the final collector: manual and scheduled captures passed with nine definitions, ten evidence records, two constraints, eight invocations, three facts, and three outcomes.
+- An additional local AddressSanitizer run passed all 77 library tests, but CLI assertions failed on macOS symbolizer warnings. Initial compiler attempts also hit local runtime/header incompatibilities. Linux CI supplies the full AddressSanitizer result.
 - GitHub validation must pass on the final commit. See the PR checks and validation note for the remote result.

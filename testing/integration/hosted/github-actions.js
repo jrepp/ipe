@@ -1,14 +1,19 @@
 // Operator-installed example. This program owns traversal and interpretation.
 // Pure declaration projection. GitHub I/O and source authorization stay in Rust.
-function projectDeclaration(context, responses, state) {
-  if (state === null) return ipe.requests([ipe.request('source', 'captured_document')], { requested: true });
-  const source = ipe.records(responses, 'source')[0];
-  const d = source.document;
+function projectDeclaration(kind, d) {
+  // Inputs already passed the SDK response boundary. Build local projections
+  // without repeated JSON validation/copying; observation/exchange validate outputs.
+  const select = (value, fields) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid_projection');
+    const result = Object.create(null);
+    for (const field of fields) if (Object.hasOwn(value, field)) result[field] = value[field];
+    return result;
+  };
   const pick = (value, fields) => {
     const source = value || {};
-    const result = ipe.pick(source, fields);
+    const result = select(source, fields);
     const residual = Object.keys(source).filter(k => !fields.includes(k) && !['jobs','steps','runs'].includes(k));
-    if (residual.length) result.unmodeled = ipe.pick(source, residual);
+    if (residual.length) result.unmodeled = select(source, residual);
     return result;
   };
   const stepFields = ['id','name','uses','run','shell','if','with','env','working-directory','continue-on-error','timeout-minutes'];
@@ -20,7 +25,7 @@ function projectDeclaration(context, responses, state) {
     else if (uses !== undefined) gaps.push({ pointer, code: 'invalid_uses' });
   };
   let model;
-  if (source.kind === 'workflow') {
+  if (kind === 'workflow') {
     model = pick(d, ['name','run-name','on','permissions','concurrency','env','defaults']);
     model.jobs = Object.entries(d.jobs || {}).map(([id, job]) => {
       const pointer = '/jobs/' + id.replace(/~/g,'~0').replace(/\//g,'~1');
@@ -49,7 +54,7 @@ function projectDeclaration(context, responses, state) {
     }
   }
   walk(d,'');
-  return ipe.complete({kind:source.kind, model, references, expressions, gaps, coverage:'partial'});
+  return {kind, model, references, expressions, gaps, coverage:'partial'};
 }
 
 // Versioned records keep raw provider data separate from the typed model.
@@ -135,7 +140,7 @@ function step(context, responses, state) {
       } else if(task.type==='yaml') {
         const document=rows[0]?.document;
         if(!document || (task.kind==='workflow'&&!document.jobs) || (task.kind==='action'&&!document.runs))throw new Error('invalid_definition');
-        const projection=projectDeclaration({},[{id:'source',receipt:r.receipt,data:[{kind:task.kind,document}]}],{}).outputs;
+        const projection=projectDeclaration(task.kind,document);
         const source={repository:task.repo,commit:task.ref,path:task.path,digest:r.source_digest,url:'https://github.com/'+task.repo+'/blob/'+task.ref+'/'+task.path};
         observations.push(record('contract',task.repo+'@'+task.ref+'/'+task.path,{kind:task.kind,source,projection,locations:rows[0].locations,interpretation:'declaration',external_enforcer:'github_actions'},r.receipt));
         if(task.kind==='workflow')s.collections.push({schema_version:1,scope:'workflow:'+task.repo+'/'+task.path,kind:'constraint',receipt:r.receipt});
