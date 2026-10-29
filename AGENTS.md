@@ -10,7 +10,7 @@ IPE is a Rust workspace for policy enforcement and external-system integration.
 - Define a verifiable outcome. Reproduce bugs and test changed behavior, including relevant failure paths.
 - Make the smallest complete change. Reuse existing code. Avoid speculative features, configuration, abstractions, and unrelated cleanup.
 - Preserve security checks and bounded work. Keep credentials out of arguments, URLs, logs, and reports.
-- Update affected documentation and [CHANGELOG.md](CHANGELOG.md) for user-visible behavior changes.
+- Update affected documentation and describe user-visible changes in the PR. GitHub generates the changelog; follow the [release guide](docs/RELEASES.md).
 - Run the applicable checks. Report results, limitations, and checks that could not run. Do not weaken checks.
 - Use ASD-STE100 for UX text, documentation, and reports. Use active voice, familiar words, and consistent terms; see [writing guidance](.agent/writing.md).
 

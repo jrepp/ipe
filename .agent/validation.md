@@ -10,6 +10,7 @@ Runtime acceptance requires Python 3.10 or newer and OpenSSL. Integration accept
 
 | Change | Commands |
 | --- | --- |
+| Release automation | `python3 -m unittest discover -s scripts/tests -p 'test_draft_release.py' -v`; `actionlint .github/workflows/release.yml` |
 | Format Rust | `cargo fmt --all -- --check` |
 | Lint Rust | `cargo clippy --locked --workspace --all-targets --all-features -- -D warnings` |
 | Test default features | `cargo test --locked --workspace` |
@@ -56,3 +57,6 @@ Use Conventional Commits, such as `fix(runtime): reject expired evidence`. Keep 
 [Commit validation](../scripts/check-commit-msg) and [pre-commit hooks](../.pre-commit-config.yaml) define the local checks. Do not weaken checks to make a change pass. Report existing failures separately.
 
 A PR description should state the problem, the resulting behavior, and the verification performed. Include compatibility changes and material limitations. Distinguish proposed designs from implemented behavior.
+
+Release notes come from merged PRs. Use clear titles, release labels, and explicit migration notes.
+Do not add manual changelog entries. Follow the [release guide](../docs/RELEASES.md).
