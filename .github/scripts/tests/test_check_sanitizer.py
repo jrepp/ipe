@@ -67,6 +67,12 @@ exit 0
 [[ "$CFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
 [[ "$CXXFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
 [[ "$RUSTFLAGS" == *sanitizer=thread* ]]
+[[ "$RUSTFLAGS" == *-C*opt-level=1* ]]
+[[ "$RUSTDOCFLAGS" == *-C*opt-level=1* ]]
+[[ "$CFLAGS_x86_64_unknown_linux_gnu" == *-O1* ]]
+[[ "$CXXFLAGS_x86_64_unknown_linux_gnu" == *-O1* ]]
+[[ "$*" != *test-threads* ]]
+[[ "$*" != *skip* ]]
 [[ "$*" == *-Z*build-std* ]]
 exit 0
 ''', 0)

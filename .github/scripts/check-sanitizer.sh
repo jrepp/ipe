@@ -60,6 +60,11 @@ fi
 # The Rust test harness can swallow sanitizer stderr even when tests pass.
 # Read the file reports independently of cargo's captured output.
 if [ "$SANITIZER_TYPE" = "thread" ]; then
+    # LLVM recommends -O1 or higher for TSan. Instrumented -O0 QuickJS steps
+    # can exceed the unchanged 100 ms deadline on hosted runners.
+    # Keep all instrumentation and parallel/concurrency tests enabled.
+    export RUSTFLAGS="$RUSTFLAGS -C opt-level=1"
+    export RUSTDOCFLAGS="$RUSTDOCFLAGS -C opt-level=1"
     export TSAN_OPTIONS="log_path=$report_dir/tsan-report"
     if [ -n "$symbolizer" ]; then
         # MCP fixtures intentionally clear PATH; use a concrete tool path so
@@ -73,7 +78,7 @@ if [ "$SANITIZER_TYPE" = "thread" ]; then
     native_target="${sanitizer_target//-/_}"
     cflags_name="CFLAGS_$native_target"
     cxxflags_name="CXXFLAGS_$native_target"
-    native_flags="-fsanitize=thread -fno-omit-frame-pointer"
+    native_flags="-fsanitize=thread -fno-omit-frame-pointer -O1"
     if [[ "$sanitizer_target" == aarch64-* ]]; then
         # Keep the production CRC workaround even when overriding target flags
         # from .cargo/config.toml to add native sanitizer instrumentation.
