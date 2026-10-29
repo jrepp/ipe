@@ -24,7 +24,7 @@ const STACK_LIMIT: usize = 1024 * 1024;
 const STEP_DEADLINE: Duration = Duration::from_millis(100);
 const CONCURRENT_STEPS: usize = 1;
 const SDK_SOURCE: &str = include_str!("../sdk/index.js");
-pub(crate) const SDK_VERSION: &str = "0.1.0";
+pub(crate) const SDK_VERSION: &str = "0.3.0";
 
 #[derive(Clone)]
 pub(crate) struct ScriptAdapter {
@@ -46,11 +46,14 @@ pub(crate) struct StepResult {
     pub(crate) requests: Vec<Request>,
     pub(crate) outputs: Option<Value>,
     pub(crate) state: Value,
+    pub(crate) observations: Vec<Value>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct WireResult {
+    #[serde(default)]
+    observations: Vec<Value>,
     requests: Option<Vec<Request>>,
     #[serde(rename = "outputs")]
     _outputs: Option<Value>,
@@ -78,7 +81,7 @@ impl ScriptAdapter {
         Self::from_source(&source, is_ts)
     }
 
-    fn from_source(source: &str, is_ts: bool) -> Result<Self, &'static str> {
+    pub(crate) fn from_source(source: &str, is_ts: bool) -> Result<Self, &'static str> {
         if source.len() > SOURCE_LIMIT || source.is_empty() {
             return Err("script_invalid");
         }
@@ -182,8 +185,8 @@ fn validate_source(source: &str) -> Result<(), &'static str> {
 }
 
 fn remove_ambient_clock(ctx: &rquickjs::Ctx<'_>) -> rquickjs::Result<()> {
-    ctx.eval::<(), _>("delete globalThis.Date; Math.random = undefined;")?;
-    ctx.eval::<(), _>(SDK_SOURCE)
+    ctx.eval::<(), _>(SDK_SOURCE)?;
+    ctx.eval::<(), _>("delete globalThis.Date; Math.random = undefined;")
 }
 
 fn run_step(
@@ -239,7 +242,7 @@ fn validate_result(raw: String) -> Result<StepResult, &'static str> {
     let wire: WireResult =
         serde_json::from_value(raw_value).map_err(|_| "script_output_invalid")?;
     let requests = wire.requests.unwrap_or_default();
-    if requests.len() > 8 {
+    if requests.len() > 8 || wire.observations.len() > 16 {
         return Err("script_output_invalid");
     }
     let mut ids = HashSet::new();
@@ -256,7 +259,12 @@ fn validate_result(raw: String) -> Result<StepResult, &'static str> {
     if bounded_json(&wire.state, OUTPUT_LIMIT).is_err() {
         return Err("script_output_invalid");
     }
-    Ok(StepResult { requests, outputs, state: wire.state })
+    Ok(StepResult {
+        requests,
+        outputs,
+        state: wire.state,
+        observations: wire.observations,
+    })
 }
 
 fn valid_name(value: &str) -> bool {

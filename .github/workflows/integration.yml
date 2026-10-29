@@ -7,6 +7,8 @@ on:
       - 'acceptance/integration-discovery/**'
       - 'testing/integration/**'
       - 'tools/integration-packages/**'
+      - 'tools/github-contract/**'
+      - 'tools/integration-host/**'
       - '.cargo/config.toml'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -19,6 +21,8 @@ on:
       - 'acceptance/integration-discovery/**'
       - 'testing/integration/**'
       - 'tools/integration-packages/**'
+      - 'tools/github-contract/**'
+      - 'tools/integration-host/**'
       - '.cargo/config.toml'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -48,7 +52,9 @@ jobs:
       - run: npm test --prefix testing/integration
       - run: npm ci --ignore-scripts --prefix tools/integration-packages
       - run: npm test --prefix tools/integration-packages
-      - run: testing/integration/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node testing/integration/adapters/read-step.ts --typeRoots testing/integration/node_modules/@types
+      - run: npm ci --ignore-scripts --prefix docs
+      - run: node --test tools/github-contract/view.test.cjs tools/integration-host/*.test.cjs
+      - run: testing/integration/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node testing/integration/adapters/read-step.ts testing/integration/hosted/typed-observation.ts --typeRoots testing/integration/node_modules/@types
       - run: cargo clippy --locked -p ipe-json -p ipe-integration --all-targets -- -D warnings
       - run: cargo test --locked -p ipe-json -p ipe-integration --all-targets
       - run: cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored
