@@ -81,6 +81,8 @@ exit 0
         for sanitizer in ['address', 'leak', 'thread']:
             with self.subTest(sanitizer=sanitizer):
                 self.run_sanitizer('''
+[ "$CC_x86_64_unknown_linux_gnu" = clang ]
+[ "$CXX_x86_64_unknown_linux_gnu" = clang++ ]
 [ "$CARGO_PROFILE_DEV_OPT_LEVEL" = 1 ]
 [ "$CARGO_PROFILE_TEST_OPT_LEVEL" = 1 ]
 [[ "$RUSTFLAGS" == *-C*opt-level=1* ]]
