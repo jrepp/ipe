@@ -16,7 +16,7 @@ No blocking defect was found in these four boundaries. This finding applies to t
 ## Changes from this review
 
 - Update only `libz-sys` from 1.1.22 to 1.1.31 in the lockfile. This resolves RUSTSEC-2026-0418.
-- Build ThreadSanitizer tests with Rust and native optimization level 1. Keep native and Rust instrumentation, parallel tests, report detection, and the 100 ms guest deadline. LLVM [recommends optimization level 1 or higher](https://clang.llvm.org/docs/ThreadSanitizer.html) for reasonable performance with ThreadSanitizer. The prior hosted run had guest timeouts and no sanitizer findings. The new run must pass before this is treated as a verified CI fix.
+- Build sanitizer tests with Rust and native optimization level 1. Keep native and Rust instrumentation, parallel tests, report detection, and the 100 ms guest deadline. LLVM [recommends optimization level 1 or higher](https://clang.llvm.org/docs/ThreadSanitizer.html) for reasonable performance with ThreadSanitizer and gives the [same guidance for AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html#usage). The prior hosted run had guest timeouts and no sanitizer findings. The first follow-up run passed Cargo Audit but exposed the same guest timeouts in AddressSanitizer. Apply optimization to all sanitizer profiles, including native build-script settings. The final remote run must pass before this is treated as a verified CI fix.
 
 ## Limits and follow-up
 
@@ -28,7 +28,7 @@ No blocking defect was found in these four boundaries. This finding applies to t
 ## Validation
 
 - `cargo audit --deny warnings`: passed with the updated lockfile.
-- Sanitizer script regression tests: all six passed.
+- Sanitizer script regression tests: all seven passed.
 - Full local ThreadSanitizer command and report checks: passed, including all 77 integration library tests. Some child-process reports warn that symbols can be missing; no sanitizer finding was reported.
 - Workspace tests with default and all features: passed.
 - Workspace Clippy with all targets and features, warnings denied: passed.

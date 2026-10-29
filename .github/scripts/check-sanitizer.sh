@@ -26,8 +26,12 @@ echo "Sanitizer evidence: $report_dir"
 echo "🧹 Running $SANITIZER_TYPE sanitizer tests..."
 
 # Run sanitizer
-export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE"
-export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE"
+# Optimize instrumented builds without changing the 100 ms guest deadline.
+# Profile settings also pass OPT_LEVEL=1 to native dependency build scripts.
+export CARGO_PROFILE_DEV_OPT_LEVEL=1
+export CARGO_PROFILE_TEST_OPT_LEVEL=1
+export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=1"
+export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=1"
 export ASAN_OPTIONS="detect_leaks=1"
 # Absolute path: newer LLVM exits non-zero when the suppressions file
 # cannot be read, which masked real results with a false failure.
@@ -60,11 +64,6 @@ fi
 # The Rust test harness can swallow sanitizer stderr even when tests pass.
 # Read the file reports independently of cargo's captured output.
 if [ "$SANITIZER_TYPE" = "thread" ]; then
-    # LLVM recommends -O1 or higher for TSan. Instrumented -O0 QuickJS steps
-    # can exceed the unchanged 100 ms deadline on hosted runners.
-    # Keep all instrumentation and parallel/concurrency tests enabled.
-    export RUSTFLAGS="$RUSTFLAGS -C opt-level=1"
-    export RUSTDOCFLAGS="$RUSTDOCFLAGS -C opt-level=1"
     export TSAN_OPTIONS="log_path=$report_dir/tsan-report"
     if [ -n "$symbolizer" ]; then
         # MCP fixtures intentionally clear PATH; use a concrete tool path so

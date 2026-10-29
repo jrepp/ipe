@@ -10,7 +10,7 @@ SCRIPT = ROOT / '.github/scripts/check-sanitizer.sh'
 
 
 class SanitizerChecks(unittest.TestCase):
-    def run_sanitizer(self, cargo_body, expected_status, expected_text='', target='x86_64-unknown-linux-gnu'):
+    def run_sanitizer(self, cargo_body, expected_status, expected_text='', target='x86_64-unknown-linux-gnu', sanitizer='thread'):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary = root / 'bin'
@@ -24,11 +24,11 @@ class SanitizerChecks(unittest.TestCase):
                 path.chmod(0o755)
             environment = dict(os.environ, PATH=f'{binary}{os.pathsep}{os.environ["PATH"]}',
                                IPE_SANITIZER_REPORT_ROOT=str(root / 'reports'))
-            result = subprocess.run(['bash', str(SCRIPT), 'thread', target], cwd=root,
+            result = subprocess.run(['bash', str(SCRIPT), sanitizer, target], cwd=root,
                                     env=environment, capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, expected_status, result.stdout + result.stderr)
             self.assertIn(expected_text, result.stdout)
-            reports = [p for p in (root / 'reports').glob('thread.*') if (p / 'cargo.log').is_file()]
+            reports = [p for p in (root / 'reports').glob(f'{sanitizer}.*') if (p / 'cargo.log').is_file()]
             self.assertEqual(len(reports), 1)
             self.assertTrue((reports[0] / 'cargo.log').is_file())
             self.assertTrue((reports[0] / 'exit-status.txt').is_file())
@@ -76,6 +76,19 @@ exit 0
 [[ "$*" == *-Z*build-std* ]]
 exit 0
 ''', 0)
+
+    def test_all_sanitizers_keep_optimization_and_parallel_tests(self):
+        for sanitizer in ['address', 'leak', 'thread']:
+            with self.subTest(sanitizer=sanitizer):
+                self.run_sanitizer('''
+[ "$CARGO_PROFILE_DEV_OPT_LEVEL" = 1 ]
+[ "$CARGO_PROFILE_TEST_OPT_LEVEL" = 1 ]
+[[ "$RUSTFLAGS" == *-C*opt-level=1* ]]
+[[ "$RUSTDOCFLAGS" == *-C*opt-level=1* ]]
+[[ "$*" != *test-threads* ]]
+[[ "$*" != *skip* ]]
+exit 0
+''', 0, sanitizer=sanitizer)
 
     def test_arm64_keeps_crc_workaround_and_native_instrumentation(self):
         self.run_sanitizer('''

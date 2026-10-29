@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Updated `libz-sys` to 1.1.31 for RUSTSEC-2026-0418.
-- Thread-sanitizer checks use optimized, fully instrumented Rust and native builds to preserve bounded guest execution on hosted runners.
+- Sanitizer checks use optimized Rust and native builds with the existing instrumentation to preserve bounded guest execution on hosted runners.
 - Hosted GitHub extraction models job constraints in separate steps to stay within the unchanged guest deadline.
 - Integration host state writes no longer attempt to open a directory as a file on Windows. State files remain synced before replacement.
 - Monitor refresh preserves open evidence panels, source inspection, and keyboard focus.
