@@ -623,3 +623,103 @@ async fn complete_document_coverage_is_native_and_failed_reads_preserve_constrai
     server.abort();
     provider.abort();
 }
+
+#[tokio::test]
+async fn review_accept_and_restore_persist_without_renewing_facts_or_replacing_collector() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    host.install("example", package(false)).await.unwrap();
+    let run = host.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&host, "example", run).await.status, "succeeded");
+    let first = host.store.lock().await.integrations["example"]
+        .revisions
+        .candidate
+        .clone()
+        .unwrap();
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "authorization",
+        format!("Bearer {}", host.token.expose_secret()).parse().unwrap(),
+    );
+    assert_eq!(
+        select_revision(host.clone(), HeaderMap::new(), "example".into(), first.clone(), false)
+            .await
+            .err()
+            .unwrap()
+            .0,
+        StatusCode::UNAUTHORIZED
+    );
+    let _ = select_revision(host.clone(), headers.clone(), "example".into(), first.clone(), false)
+        .await
+        .unwrap();
+    let mut replacement = package(false);
+    replacement.source = PROGRAM.replace("Fixture observation", "Changed observation");
+    host.install("example", replacement.clone()).await.unwrap();
+    let run = host.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&host, "example", run).await.status, "succeeded");
+    let second = host.store.lock().await.integrations["example"]
+        .revisions
+        .candidate
+        .clone()
+        .unwrap();
+    assert_ne!(first, second);
+    let _ = select_revision(host.clone(), headers.clone(), "example".into(), second, false)
+        .await
+        .unwrap();
+    // Force the current fact to be expired. Restore must preserve its exact record and deadline.
+    let facts_before = {
+        let mut store = host.store.lock().await;
+        let i = store.integrations.get_mut("example").unwrap();
+        for r in i.current.iter_mut().filter(|r| r.kind == "fact") {
+            r.expires_at = Some(1);
+        }
+        serde_json::to_value(&i.current).unwrap()
+    };
+    let _ = select_revision(host.clone(), headers.clone(), "example".into(), first.clone(), true)
+        .await
+        .unwrap();
+    let catalog = review_catalog(State(host.clone()), headers, ApiPath("example".into()))
+        .await
+        .unwrap()
+        .0;
+    assert_eq!(catalog["accepted"], first);
+    assert_eq!(catalog["facts"][0]["expired"], true);
+    {
+        let store = host.store.lock().await;
+        let i = &store.integrations["example"];
+        assert_eq!(serde_json::to_value(&i.current).unwrap(), facts_before);
+        assert_eq!(i.package.source, replacement.source);
+        assert!(i.revisions.catalog(&i.current).iter().all(|r| r.kind != "fact"));
+    }
+    let old_package = host.store.lock().await.integrations["example"]
+        .revisions
+        .get(&first)
+        .unwrap()
+        .package
+        .clone();
+    host.install("replay", old_package).await.unwrap();
+    let replay_id = host.start("replay", "manual").await.unwrap();
+    let replay = completed(&host, "replay", replay_id).await;
+    assert_eq!(replay.status, "succeeded");
+    let expected = host.store.lock().await.integrations["example"]
+        .revisions
+        .get(&first)
+        .unwrap()
+        .records[0]
+        .model
+        .clone();
+    assert_eq!(replay.records.iter().find(|r| r.kind == "evidence").unwrap().model, expected);
+    host.stop().await;
+    drop(host);
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
+    assert_eq!(
+        restored.store.lock().await.integrations["example"]
+            .revisions
+            .accepted
+            .as_deref(),
+        Some(first.as_str())
+    );
+    restored.stop().await;
+    provider.abort();
+}

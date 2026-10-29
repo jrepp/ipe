@@ -1,6 +1,6 @@
 # Integration model review and recommendations
 
-Status: recommendations, with implementation now active. See the [six-item implementation checklist](INTEGRATION_MODEL_IMPLEMENTATION.md) for verified progress.
+Status: the six initial recommendations are implemented. Additional recommendations remain follow-up proposals. See the [six-item implementation checklist](INTEGRATION_MODEL_IMPLEMENTATION.md) for verified progress.
 
 ## Recommendation
 
@@ -12,9 +12,10 @@ Keep the existing observation, constraint, and outcome separation from [RFC 013]
 Improve identity, evidence, and update rules before expanding the collector to more providers.
 Do not introduce a universal policy language or execute imported action code in this milestone.
 
-## Evidence reviewed
+## Baseline evidence before implementation
 
-The review uses the hosted program, native host, live GitHub captures, and the current local monitor.
+The baseline review used the hosted program, native host, live GitHub captures, and the local monitor.
+The findings in this section describe the earlier model. Use the implementation checklist for current behavior.
 The [live proof](../acceptance/integration-host/proof.json) and [Git helper proof](../acceptance/integration-host/git-credential-proof.json) contain reproducible summaries.
 The [review inventory](../acceptance/integration-host/model-review.json) records the counts used below.
 
@@ -37,7 +38,30 @@ These are concrete consistency issues to resolve before agents rely on a normali
 
 The current monitor exposes installed code, grants, input, schedule, history, facts, and source evidence.
 The private local launcher establishes browser access. The shareable snapshot contains evidence and installed program data, without the operator credential.
-There is no candidate approval gate, semantic diff, or automatic desired-state comparison yet.
+At baseline, the host had no candidate acceptance gate or semantic diff. The implementation now adds these local review functions.
+
+## Implemented vertical slice: publish the docs site
+
+The current slice starts with the publish operation and preserves each claim's source and limits.
+The agent-authored program reads the pinned workflow and action definitions through native, credential-managed operations.
+The host validates typed records and derives control, revision, invocation, and execution identities.
+
+For a human reviewer, the monitor shows the publish condition, dependency, requested permissions, environment reference, and unobserved execution actor.
+It also shows a candidate historical publish result: success in 11 seconds.
+This is a provider-reported outcome. It does not establish permission for a future deployment.
+The `list_jobs` operation is a permitted next observation for the dependency. Missing environment protection and actor evidence remain unknown.
+
+For an agent, `/explanations` returns the same requirements, assessments, provenance, candidate outcomes, and permitted observations as versioned JSON.
+Current fact checks distinguish fresh matching evidence, conflicting evidence, and expired evidence.
+The host does not execute imported action code or evaluate arbitrary provider expressions.
+
+Updates create review catalogs with pinned code, input, grants, SDK version, source evidence, and coverage.
+The reviewer can compare changes, accept a catalog, and restore a prior accepted catalog.
+Restore does not renew facts or replace the installed collector. This keeps historical review separate from current external state.
+Incomplete reads preserve prior requirements and remain visible as collection gaps.
+
+See the [host guide](INTEGRATION_HOST.md#review-catalogs-and-operation-explanations) for APIs, bounds, and the repeatable GitHub proof.
+Caching immutable reads, broader protection-rule coverage, and a second provider remain separate follow-up work.
 
 ## Priorities and acceptance checks
 

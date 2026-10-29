@@ -121,6 +121,43 @@ Use `GET /v1/integrations/:id/outcomes` to export the archive, including native 
 The GitHub key includes repository, workflow run, attempt, and job identity where applicable.
 This permits tracking real executions without counting each poll as another execution.
 
+## Review catalogs and operation explanations
+
+Each successful capture creates an immutable review catalog when its content or collection context changes.
+The manifest records typed declarations, native source evidence, coverage, SDK version, installed JavaScript, input, grants, and native operation digest.
+Repeated observations of the same content reuse its revision identity. Their latest timestamps remain in current observations.
+
+The host retains up to eight revisions within 4 MiB. It can evict an unaccepted revision.
+Accepted revisions remain available for restoration. If accepted revisions fill the archive, new captures fail atomically with `revision_capacity`.
+Export retained manifests before clearing or replacing the local state directory. This MVP has no revision deletion endpoint.
+
+Acceptance selects the catalog used for local review and operation explanations. It does not activate enforcement or replace collector code.
+Restoration selects a previously accepted catalog. Current facts and external outcomes stay separate, with their original timestamps and expiry.
+New captures update the candidate catalog without replacing the accepted selection.
+
+The diff uses logical identities. It distinguishes added or removed declarations, requirement changes, source changes, mapping changes, changed evidence, and evidence refreshes.
+Conditions, dependencies, input defaults, and call bindings remain part of the requirement comparison.
+A source revision change alone does not become a changed requirement. The diff also reports collection context changes.
+Opaque provider expressions remain opaque; this is not a proof of equivalent provider behavior.
+
+The monitor and `/explanations` use the same native projection. Each operation includes its condition, actor context, prerequisites, source evidence, unknowns, and candidate outcomes.
+Fact requirements compare the exact subject and predicate against fresh facts. Missing, expired, or conflicting facts produce an unknown assessment.
+Requested permissions, environment protection, and execution actor authorization remain unknown without supporting observations.
+The projection returns only follow-up operations granted to the current installation. It does not run them automatically.
+Historical outcomes match the source revision and declared control candidates. Candidate links never establish exact execution authorization.
+
+The monitor provides operation selection, readable requirement summaries, coverage details, and accept/restore controls.
+It retains raw records for inspection. Static snapshots disable actions that change the host.
+
+To repeat the live review proof:
+
+```sh
+python3 tools/integration-host/demo.py --out target/integration-review-proof --port 8768 --prove-review
+```
+
+This proof captures GitHub twice with different collector source revisions. It accepts both catalogs and restores the first.
+It verifies unchanged observed records and expiry after restoration. Deterministic tests cover changed requirements and external source revisions.
+
 ## Performance evidence
 
 The host measures collector elapsed time, HTTP attempts, retries, bytes, read failures, and operation latency.
@@ -152,6 +189,12 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 | `GET /v1/integrations/:id/runs` | Return retained collector runs and independent archived external outcomes |
 | `GET /v1/integrations/:id/outcomes` | Export execution identities, changed outcomes, first/last observation times, and evidence |
 | `GET /v1/integrations/:id/coverage` | Return native read status, verified declaration scopes, and retained constraint provenance |
+| `GET /v1/integrations/:id/revisions` | List immutable catalogs and diff current observations against the accepted catalog |
+| `GET /v1/integrations/:id/revisions/:revision` | Export a retained manifest |
+| `POST /v1/integrations/:id/revisions/:revision/accept` | Select a catalog for local review |
+| `POST /v1/integrations/:id/revisions/:revision/restore` | Select a previously accepted catalog |
+| `GET /v1/integrations/:id/catalog` | Return the selected declarations and separate current facts |
+| `GET /v1/integrations/:id/explanations` | Explain operation requirements, evidence, unknowns, outcomes, and permitted next observations |
 | `GET /v1/integrations/:id/records` | Return current requirements and facts, including expiry flags |
 
 The installation body contains `source`, `operations`, `input`, `interval_seconds`, `enabled`, `fact_ttl_seconds`, and `output_kinds`.

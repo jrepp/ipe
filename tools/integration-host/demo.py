@@ -40,6 +40,7 @@ def main():
     parser.add_argument('--serve', action='store_true')
     parser.add_argument('--open', action='store_true', help='Open the live monitor through a private local launcher')
     parser.add_argument('--prove-schedule', action='store_true')
+    parser.add_argument('--prove-review', action='store_true', help='Prove accept and restore against two live captures')
     args = parser.parse_args()
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -92,7 +93,39 @@ def main():
             time.sleep(0.5)
         else:
             raise RuntimeError('Hosted run timed out')
-        snapshot = {'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records'), 'coverage': api('/v1/integrations/github_actions/coverage')}
+        review_proof = None
+        if args.prove_review:
+            first = api('/v1/integrations/github_actions/revisions')['candidate']
+            api('/v1/integrations/github_actions/revisions/'+first+'/accept', 'POST')
+            package = dict(package, enabled=False, source=package['source']+'\n// Review proof: same mapping, new authored revision.\n')
+            api('/v1/integrations/github_actions', 'PUT', package)
+            next_run = api('/v1/integrations/github_actions/runs', 'POST')['run_id']
+            for _ in range(400):
+                history = api('/v1/integrations/github_actions/runs')
+                latest = next(r for r in history['runs'] if r['id'] == next_run)
+                if latest['status'] != 'running':
+                    break
+                time.sleep(0.5)
+            assert latest['status'] == 'succeeded', 'Review capture failed'
+            revisions = api('/v1/integrations/github_actions/revisions')
+            second = revisions['candidate']
+            assert first != second, 'Changed collector source must create a revision'
+            api('/v1/integrations/github_actions/revisions/'+second+'/accept', 'POST')
+            before = api('/v1/integrations/github_actions/records')['records']
+            api('/v1/integrations/github_actions/revisions/'+first+'/restore', 'POST')
+            catalog = api('/v1/integrations/github_actions/catalog')
+            after = api('/v1/integrations/github_actions/records')['records']
+            assert before == after, 'Restore must preserve observed records and expiry'
+            assert catalog['accepted'] == first, 'Restore must select the prior catalog'
+            explanations = api('/v1/integrations/github_actions/explanations')
+            assert len(explanations['operations']) == 2
+            assert all(o['status'] == 'unknown' for o in explanations['operations'])
+            review_proof = {'accepted_first':first, 'accepted_second':second, 'restored':catalog['accepted'],
+                'records_unchanged_by_restore':True, 'operations':len(explanations['operations']),
+                'diff_categories':sorted({c['category'] for c in revisions['diff']['changes']}),
+                'context_changed':revisions['collection_context_changed'],
+                'limitation':'The second live capture changes collector source. Requirement and external source changes use deterministic tests.'}
+        snapshot = {'review_proof': review_proof, 'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records'), 'coverage': api('/v1/integrations/github_actions/coverage'), 'explanations': api('/v1/integrations/github_actions/explanations'), 'revisions': api('/v1/integrations/github_actions/revisions')}
         encoded = json.dumps(snapshot, indent=2)
         if token in encoded:
             raise RuntimeError('Credential disclosure detected')

@@ -1,0 +1,46 @@
+{
+  "schema": "ipe.integration.review-proof.v1",
+  "tested_at": 1793253707,
+  "live_github": {
+    "accepted_first": "sha256:55bae9e7156143f3fa3892a273a39137b468a15bb75c2862051add303893c80f",
+    "accepted_second": "sha256:b591184a4a30166190d6eee096b65465c130110c67cc54803ed6bdb7c2c60fe2",
+    "restored": "sha256:55bae9e7156143f3fa3892a273a39137b468a15bb75c2862051add303893c80f",
+    "records_unchanged_by_restore": true,
+    "operations": 2,
+    "diff_categories": [
+      "mapping_changed"
+    ],
+    "context_changed": true,
+    "limitation": "The second live capture changes collector source. Requirement and external source changes use deterministic tests."
+  },
+  "catalog_counts": {
+    "definition": 9,
+    "evidence": 10,
+    "constraint": 2,
+    "invocation": 8,
+    "fact": 3
+  },
+  "outcomes": 3,
+  "browser": {
+    "url": "http://127.0.0.1:8767",
+    "operation_selection": true,
+    "accept_and_restore_controls": true,
+    "readable_publish_outcome_duration_ms": 11000,
+    "mobile_viewport_width": 390,
+    "mobile_document_width": 390,
+    "axe": {
+      "inapplicable": 64,
+      "incomplete": 0,
+      "passes": 25,
+      "violations": 0
+    },
+    "console_errors": 0
+  },
+  "limitations": [
+    "Provider expressions remain opaque. Operation assessments do not authorize execution.",
+    "Effective actor permissions and environment protection remain unknown.",
+    "Outcome links to declarations remain candidates.",
+    "Revision retention is bounded to eight catalogs and 4 MiB. Accepted catalogs are retained; capacity exhaustion rejects a new capture.",
+    "Fact publication and policy activation remain separate and are not implemented by this local host."
+  ]
+}

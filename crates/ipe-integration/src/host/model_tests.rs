@@ -2,7 +2,7 @@
 use super::*;
 use model::{Entity, Model};
 
-async fn capture(revision: &str) -> Vec<Model> {
+pub(super) async fn capture(revision: &str) -> Vec<Model> {
     let adapter = ScriptAdapter::from_source(
         include_str!("../../../../testing/integration/hosted/github-actions.js"),
         false,

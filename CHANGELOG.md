@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Immutable integration review catalogs with semantic diffs, explicit acceptance, and restoration without fact renewal.
+- Shared human and agent operation explanations with prerequisite evidence, unknowns, granted next observations, and candidate outcome links.
 - Hosted integration coverage verifies complete declaration scopes before removing absent constraints. Failed reads preserve requirements and native diagnostics.
 - Versioned integration models separate definitions, evidence, constraints, invocations, facts, and outcomes. The host validates schemas and derives control, revision, call-site, and execution identities.
 - External execution archive retains outcomes independently of collector log eviction, with bounded change history and an authenticated export API.

@@ -34,3 +34,22 @@ test('snapshot separates collector time from external duration and escapes provi
   assert.equal(d.querySelector('#records details').open,true,'freshness label changes preserve the same record panel');
  } finally {dom.window.close();}
 });
+test('operation view shows unknowns and granted observations, and snapshots disable revision actions', async()=>{
+ const html=fs.readFileSync(__dirname+'/index.html','utf8');
+ const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost/'});
+ try {
+  const d=dom.window.document;
+  const data={list:{integrations:[{id:'sample'}]},program:{},history:{runs:[],external_outcomes:[]},records:{records:[]},
+   explanations:{operations:[{logical_key:'control',title:'Publish <script>',status:'unknown',reason:'Actor is unknown',applicability:{expression:'on main'},actor_context:'unknown',enforcer:'provider',requirements:[{id:'dependency',description:'Build must succeed',assessment:{status:'unknown',reason:'No fresh fact',evidence:[]},requirement:{kind:'dependency'},next_observation:{operation:'list_jobs',reason:'Observe attempt'}}],source:{definition:{resource:'repo',path:'ci.yml'},revision:'abc'},evidence:{observed_at:1,run_id:1},outcomes:[],dependencies:[]}],coverage:{run_id:1,status:'succeeded',reads:[{status:'unavailable',code:'provider_access_denied'}],complete_declaration_scopes:[]}},
+   revisions:{accepted:'old',candidate:'new',revisions:[{id:'old',created_at:1,run_id:1,accepted_at:1}],diff:{changes:[{logical_key:'control',category:'requirement_changed'}]}}};
+  const node=d.createElement('script');node.id='host-snapshot';node.type='application/json';node.textContent=JSON.stringify(data);d.body.append(node);
+  dom.window.eval(d.querySelector('script').textContent);await new Promise(r=>setTimeout(r,0));
+  assert.match(d.querySelector('#explanations').textContent,/Actor is unknown/);
+  assert.match(d.querySelector('#explanations').textContent,/list_jobs/);
+  assert.equal(d.querySelector('#explanations script'),null);
+  assert.match(d.querySelector('#coverage').textContent,/1 unavailable reads/);
+  assert.match(d.querySelector('#review').textContent,/requirement changed/);
+  assert.equal(d.querySelectorAll('#review button:disabled').length,2);
+  assert.ok(d.querySelector('main'));
+ }finally{dom.window.close();}
+});

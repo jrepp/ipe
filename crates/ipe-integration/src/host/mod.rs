@@ -3,8 +3,10 @@
 mod broker;
 mod coverage;
 mod credentials;
+mod explanations;
 mod model;
 mod outcomes;
+mod revisions;
 use crate::script::ScriptAdapter;
 use axum::{
     extract::{DefaultBodyLimit, Path as ApiPath, State},
@@ -102,6 +104,8 @@ struct Installed {
     current: Vec<Record>,
     #[serde(default)]
     outcomes: outcomes::Archive,
+    #[serde(default)]
+    revisions: revisions::Archive,
     runs: Vec<Run>,
 }
 #[derive(Clone, Default, Serialize, Deserialize)]
@@ -285,6 +289,12 @@ impl Host {
             .route("/v1/integrations/:id/records", get(records))
             .route("/v1/integrations/:id/outcomes", get(outcome_archive))
             .route("/v1/integrations/:id/coverage", get(collection_coverage))
+            .route("/v1/integrations/:id/revisions", get(revision_list))
+            .route("/v1/integrations/:id/catalog", get(review_catalog))
+            .route("/v1/integrations/:id/explanations", get(operation_explanations))
+            .route("/v1/integrations/:id/revisions/:revision", get(revision_detail))
+            .route("/v1/integrations/:id/revisions/:revision/accept", post(revision_accept))
+            .route("/v1/integrations/:id/revisions/:revision/restore", post(revision_restore))
             .layer(DefaultBodyLimit::max(160 * 1024))
             .with_state(self.clone())
     }
@@ -357,6 +367,9 @@ impl Host {
                 outcomes: old
                     .as_ref()
                     .map_or_else(outcomes::Archive::default, |i| i.outcomes.clone()),
+                revisions: old
+                    .as_ref()
+                    .map_or_else(revisions::Archive::default, |i| i.revisions.clone()),
                 runs: old.map_or_else(Vec::new, |i| i.runs),
             },
         );
@@ -622,14 +635,36 @@ impl Host {
                     Err(code) => terminal = Err(code),
                 }
             }
-            if let Ok((_, records, _)) = &terminal {
-                if let Err(code) = installed.outcomes.apply(records) {
-                    terminal = Err(code);
-                }
-            }
-            if terminal.is_ok() {
-                if let Some(next) = next_current {
-                    installed.current = next;
+            if let (Ok((_, records, _)), Some(next)) = (&terminal, next_current) {
+                // Commit all three catalogs together; capacity errors cannot publish a partial capture.
+                let mut archive = installed.outcomes.clone();
+                let mut revisions = installed.revisions.clone();
+                let operations = installed
+                    .package
+                    .operations
+                    .iter()
+                    .filter_map(|name| self.broker.operations.get(name))
+                    .collect::<Vec<_>>();
+                let update = serde_json::to_vec(&operations)
+                    .map_err(|_| "revision_invalid")
+                    .and_then(|bytes| {
+                        revisions.capture(
+                            &installed.package,
+                            &broker::digest(&bytes),
+                            &next,
+                            &scopes,
+                            run_id,
+                            now(),
+                        )?;
+                        archive.apply(records)
+                    });
+                match update {
+                    Ok(()) => {
+                        installed.current = next;
+                        installed.outcomes = archive;
+                        installed.revisions = revisions;
+                    },
+                    Err(code) => terminal = Err(code),
                 }
             }
             if let Some(run) = installed.runs.iter_mut().find(|r| r.id == run_id) {
@@ -847,6 +882,128 @@ async fn outcome_archive(
     Ok(Json(
         json!({"schema":"ipe.integration.outcome-archive.v1","integration_id":id,"executions":installed.outcomes.executions,"legacy_untyped":installed.outcomes.legacy_untyped,"capacity":outcomes::EXECUTION_LIMIT,"overflow":"reject new capture atomically; existing executions remain available for export"}),
     ))
+}
+async fn operation_explanations(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    Ok(Json(explanations::project(installed, now())))
+}
+async fn review_catalog(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    Ok(Json(
+        json!({"schema":"ipe.integration.review-catalog.v1","accepted":installed.revisions.accepted,
+        "records":installed.revisions.catalog(&installed.current).iter().filter(|r| !["fact","outcome"].contains(&r.kind.as_str())).collect::<Vec<_>>(),
+        "facts":installed.current.iter().filter(|r|r.kind=="fact").map(|r|json!({"record":r,"expired":r.expires_at.is_none_or(|t|t<=now())})).collect::<Vec<_>>(),
+        "publication":false}),
+    ))
+}
+async fn revision_list(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    let archive = &installed.revisions;
+    let accepted = archive.accepted.as_ref().and_then(|id| archive.get(id).ok());
+    let operations = installed
+        .package
+        .operations
+        .iter()
+        .filter_map(|name| host.broker.operations.get(name))
+        .collect::<Vec<_>>();
+    let native_digest = broker::digest(
+        &serde_json::to_vec(&operations)
+            .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "revision_invalid"))?,
+    );
+    Ok(Json(
+        json!({"schema":"ipe.integration.revisions.v1","candidate":archive.candidate,"accepted":archive.accepted,
+        "revisions":archive.revisions.iter().map(|r|json!({"id":r.id,"created_at":r.created_at,"run_id":r.run_id,"records":r.records.len(),"accepted_at":archive.accepted_at.get(&r.id)})).collect::<Vec<_>>(),
+        "diff":revisions::diff(accepted.map_or(&[],|r|r.records.as_slice()),&installed.current),
+        "collection_context_changed":accepted.is_some_and(|r| serde_json::to_value(&r.package).ok()!=serde_json::to_value(&installed.package).ok() || r.sdk_version!=crate::script::SDK_VERSION || r.native_operations_digest!=native_digest),
+        "capacity":revisions::LIMIT,"publication":false,"scope":"Acceptance selects a local review catalog. It does not activate policy, change collector code, or renew facts."}),
+    ))
+}
+async fn revision_detail(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath((id, revision)): ApiPath<(String, String)>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    let revision = installed
+        .revisions
+        .get(&revision)
+        .map_err(|e| error(StatusCode::NOT_FOUND, e))?;
+    Ok(Json(
+        json!({"schema":"ipe.integration.revision.v1","revision":revision,"publication":false}),
+    ))
+}
+async fn select_revision(
+    host: Arc<Host>,
+    headers: HeaderMap,
+    id: String,
+    revision: String,
+    restore: bool,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let mut store = host.store.lock().await;
+    let prior = store.clone();
+    let installed = store
+        .integrations
+        .get_mut(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    if installed.runs.iter().any(|r| r.status == "running") {
+        return Err(error(StatusCode::CONFLICT, "integration_busy"));
+    }
+    installed
+        .revisions
+        .select(&revision, restore, now())
+        .map_err(|e| error(StatusCode::BAD_REQUEST, e))?;
+    if let Err(code) = persist(&host.config.state_dir, &store) {
+        *store = prior;
+        return Err(error(StatusCode::INTERNAL_SERVER_ERROR, code));
+    }
+    Ok(Json(json!({"accepted":revision,"restored":restore,"publication":false})))
+}
+async fn revision_accept(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath((id, revision)): ApiPath<(String, String)>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    select_revision(host, headers, id, revision, false).await
+}
+async fn revision_restore(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath((id, revision)): ApiPath<(String, String)>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    select_revision(host, headers, id, revision, true).await
 }
 async fn collection_coverage(
     State(host): State<Arc<Host>>,

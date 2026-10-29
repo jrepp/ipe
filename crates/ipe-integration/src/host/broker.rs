@@ -30,7 +30,7 @@ pub struct Parameter {
     #[serde(default)]
     pub values: Vec<String>,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Operation {
     pub name: String,

@@ -6,7 +6,7 @@ use super::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct SnapshotSource {
     pub namespace: String,
