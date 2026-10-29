@@ -21,5 +21,16 @@ test('snapshot separates collector time from external duration and escapes provi
   assert.match(d.querySelector('#program').textContent,/org\/repo/);
   assert.equal(d.querySelector('#program img'),null);
   assert.equal(d.querySelector('#login').hidden,true);
+  const details=d.querySelector('#program details');details.open=true;details.querySelector('summary').focus();
+  d.querySelector('#refresh').click();await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(d.querySelector('#program details').open,true,'refresh preserves open source');
+  const updated=JSON.parse(node.textContent);updated.program.package.source+='\n// new source';node.textContent=JSON.stringify(updated);
+  d.querySelector('#refresh').click();await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(d.querySelector('#program details').open,true,'changed source also preserves disclosure state');
+  assert.equal(d.activeElement,d.querySelector('#program summary'),'keyboard focus stays on the disclosure');
+  d.querySelector('#records details').open=true;
+  updated.records.records[0].expired=false;node.textContent=JSON.stringify(updated);
+  d.querySelector('#refresh').click();await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(d.querySelector('#records details').open,true,'freshness label changes preserve the same record panel');
  } finally {dom.window.close();}
 });

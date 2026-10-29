@@ -2,6 +2,7 @@
 //! durable bounded history, and authenticated monitoring share one endpoint.
 mod broker;
 mod credentials;
+mod outcomes;
 use crate::script::ScriptAdapter;
 use axum::{
     extract::{DefaultBodyLimit, Path as ApiPath, State},
@@ -91,6 +92,8 @@ struct Installed {
     digest: String,
     next_due: u64,
     current: Vec<Record>,
+    #[serde(default)]
+    outcomes: outcomes::Archive,
     runs: Vec<Run>,
 }
 #[derive(Clone, Default, Serialize, Deserialize)]
@@ -229,6 +232,14 @@ impl Host {
                     run.finished_at = Some(now());
                 }
             }
+            // Migrate retained legacy outcomes once without changing observation times.
+            if installed.outcomes.executions.is_empty() {
+                for run in &installed.runs {
+                    if run.status == "succeeded" {
+                        installed.outcomes.apply(&run.records)?;
+                    }
+                }
+            }
             // Restart does not replay missed intervals or refresh evidence.
             installed.next_due = now() + installed.package.interval_seconds;
             adapters.insert(id.clone(), adapter);
@@ -260,6 +271,7 @@ impl Host {
             .route("/v1/integrations/:id", put(install).get(installation))
             .route("/v1/integrations/:id/runs", post(start).get(history))
             .route("/v1/integrations/:id/records", get(records))
+            .route("/v1/integrations/:id/outcomes", get(outcome_archive))
             .layer(DefaultBodyLimit::max(160 * 1024))
             .with_state(self.clone())
     }
@@ -326,6 +338,9 @@ impl Host {
                 package,
                 digest: digest.clone(),
                 current: old.as_ref().map_or_else(Vec::new, |i| i.current.clone()),
+                outcomes: old
+                    .as_ref()
+                    .map_or_else(outcomes::Archive::default, |i| i.outcomes.clone()),
                 runs: old.map_or_else(Vec::new, |i| i.runs),
             },
         );
@@ -548,6 +563,11 @@ impl Host {
                 }
             }
             if let Ok((_, records, _)) = &terminal {
+                if let Err(code) = installed.outcomes.apply(records) {
+                    terminal = Err(code);
+                }
+            }
+            if let Ok((_, records, _)) = &terminal {
                 for record in records.iter().filter(|r| r.kind != "outcome") {
                     installed.current.retain(|r| r.kind != record.kind || r.key != record.key);
                     installed.current.push(record.clone());
@@ -740,14 +760,23 @@ async fn history(
         .integrations
         .get(&id)
         .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
-    let mut outcomes = BTreeMap::new();
-    for run in &installed.runs {
-        for record in run.records.iter().filter(|r| r.kind == "outcome") {
-            outcomes.insert(record.key.clone(), record);
-        }
-    }
     Ok(Json(
-        json!({"integration_id":id,"runs":installed.runs,"external_outcomes":outcomes.values().collect::<Vec<_>>(),"retention_runs":HISTORY,"deduplication":"latest record per adapter-defined outcome key; retained runs only"}),
+        json!({"integration_id":id,"runs":installed.runs,"external_outcomes":installed.outcomes.executions.values().map(|e| &e.latest).collect::<Vec<_>>(),"retention_runs":HISTORY,"outcome_retention":"independent archive; export via /outcomes","outcome_capacity":outcomes::EXECUTION_LIMIT,"deduplication":"one execution per outcome key; changed payloads retained separately"}),
+    ))
+}
+async fn outcome_archive(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    Ok(Json(
+        json!({"schema":"ipe.integration.outcome-archive.v1","integration_id":id,"executions":installed.outcomes.executions,"capacity":outcomes::EXECUTION_LIMIT,"overflow":"reject new capture atomically; existing executions remain available for export"}),
     ))
 }
 async fn records(

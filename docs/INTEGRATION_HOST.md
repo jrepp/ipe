@@ -54,6 +54,7 @@ Add `--serve` to keep the endpoint active at `http://127.0.0.1:8767`.
 Add `--open` to open the live monitor automatically. You can also open the private `open-monitor.html` file locally.
 The launcher submits the operator token in a POST body and redirects to the monitor.
 The host sets an HttpOnly, SameSite cookie. Monitor API requests require a custom header and the configured local host address.
+The monitor preserves open evidence panels and keyboard focus during refresh.
 The monitor checks the browser session automatically. It refreshes the installed program, run history, and records every three seconds.
 Keep `open-monitor.html` private; it contains the operator credential. Share `snapshot.html` instead.
 Manual token entry remains available for API operators. The GitHub helper credential is separate from the local operator credential.
@@ -80,7 +81,11 @@ The host updates current requirements and facts only after a successful extracti
 Facts retain their original expiry after failure. Missing evidence must not become an allow decision.
 Current records are upserts by kind and key. This MVP does not infer deletion from an absent observation.
 
-Outcomes are separate from collector telemetry. Repeated polling retains one latest outcome per key within retained history.
+Outcomes are separate from collector telemetry. A durable archive retains each execution independently of the eight collector logs.
+Repeated polling updates its observation time without adding an execution or an unchanged payload to its change history.
+The archive retains up to 256 execution identities and 16 changed payloads per identity, within 4 MiB.
+It reports omitted change counts. When identity or byte capacity is exhausted, the capture fails without replacing existing records.
+Use `GET /v1/integrations/:id/outcomes` to export the archive, including native evidence.
 The GitHub key includes repository, workflow run, attempt, and job identity where applicable.
 This permits tracking real executions without counting each poll as another execution.
 
@@ -111,7 +116,8 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 | `GET /v1/integrations/:id` | Return installed JavaScript, input, operation grants, schedule, and TTL |
 | `GET /v1/integrations` | List installations, schedules, latest status, and expired fact counts |
 | `POST /v1/integrations/:id/runs` | Start a manual extraction; reject overlap |
-| `GET /v1/integrations/:id/runs` | Return retained collector runs and distinct external outcomes |
+| `GET /v1/integrations/:id/runs` | Return retained collector runs and independent archived external outcomes |
+| `GET /v1/integrations/:id/outcomes` | Export execution identities, changed outcomes, first/last observation times, and evidence |
 | `GET /v1/integrations/:id/records` | Return current requirements and facts, including expiry flags |
 
 The installation body contains `source`, `operations`, `input`, `interval_seconds`, `enabled`, `fact_ttl_seconds`, and `output_kinds`.

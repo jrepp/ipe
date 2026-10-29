@@ -1,6 +1,6 @@
 # Integration model review and recommendations
 
-Status: recommendations, not implemented features unless stated otherwise.
+Status: recommendations, with implementation now active. See the [six-item implementation checklist](INTEGRATION_MODEL_IMPLEMENTATION.md) for verified progress.
 
 ## Recommendation
 

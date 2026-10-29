@@ -321,3 +321,68 @@ async fn monitor_session_requires_token_and_protects_cookie_requests() {
     server.abort();
     provider.abort();
 }
+
+#[tokio::test]
+async fn external_outcomes_survive_polling_collector_eviction_and_restart() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    host.install("example", package(false)).await.unwrap();
+    for _ in 0..2 {
+        let id = host.start("example", "manual").await.unwrap();
+        assert_eq!(completed(&host, "example", id).await.status, "succeeded");
+    }
+    {
+        let store = host.store.lock().await;
+        let execution = &store.integrations["example"].outcomes.executions["control_1"];
+        assert_eq!(
+            execution.changes.len(),
+            1,
+            "identical polling is not a new execution or outcome change"
+        );
+    }
+    let mut changed = package(false);
+    changed.source = PROGRAM.replace("data:value", "data:{...value,status:'failure'}");
+    host.install("example", changed).await.unwrap();
+    let id = host.start("example", "manual").await.unwrap();
+    assert_eq!(completed(&host, "example", id).await.status, "succeeded");
+    let mut no_outcomes = package(false);
+    no_outcomes.source = PROGRAM.replace("['contract','fact','outcome']", "['contract','fact']");
+    host.install("example", no_outcomes).await.unwrap();
+    for _ in 0..HISTORY + 1 {
+        let id = host.start("example", "manual").await.unwrap();
+        assert_eq!(completed(&host, "example", id).await.status, "succeeded");
+    }
+    host.stop().await;
+    drop(host);
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
+    {
+        let store = restored.store.lock().await;
+        let installed = &store.integrations["example"];
+        assert_eq!(installed.runs.len(), HISTORY);
+        assert!(installed.runs.iter().all(|r| r.records.iter().all(|r| r.kind != "outcome")));
+        assert_eq!(installed.outcomes.executions.len(), 1);
+        let execution = &installed.outcomes.executions["control_1"];
+        assert_eq!(execution.changes.len(), 2);
+        assert_eq!(execution.latest.data["status"], "failure");
+        assert_eq!(execution.changes[0].data["status"], "success");
+    }
+    assert!(
+        outcome_archive(State(restored.clone()), HeaderMap::new(), ApiPath("example".into()))
+            .await
+            .is_err()
+    );
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "authorization",
+        format!("Bearer {}", restored.token.expose_secret()).parse().unwrap(),
+    );
+    let Json(export) = outcome_archive(State(restored.clone()), headers, ApiPath("example".into()))
+        .await
+        .unwrap();
+    assert_eq!(export["schema"], "ipe.integration.outcome-archive.v1");
+    assert_eq!(export["executions"]["control_1"]["changes"].as_array().unwrap().len(), 2);
+    assert!(!export.to_string().contains(restored.token.expose_secret()));
+    restored.stop().await;
+    provider.abort();
+}
