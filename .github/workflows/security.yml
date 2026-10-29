@@ -123,6 +123,8 @@ jobs:
     # Instrumented native dependencies (including RocksDB) need a full rebuild.
     timeout-minutes: 20
     strategy:
+      # Retain each independent sanitizer result when another platform fails.
+      fail-fast: false
       matrix:
         include:
           - { sanitizer: address, os: ubuntu-latest, target: x86_64-unknown-linux-gnu }

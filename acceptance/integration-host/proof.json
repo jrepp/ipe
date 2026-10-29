@@ -1,0 +1,251 @@
+{
+  "scope": "Live GitHub read-only hosted extraction; local storage; no enforcement publication",
+  "repository": "jrepp/ipe",
+  "revision": "8346e53d0b428b701349817df6624f0ad33a1639",
+  "workflow": ".github/workflows/docs-site.yml",
+  "adapter_digest": "sha256:b1983d126b10dde2f2732f2ecb6782840d9ea4d6782304fcd6e23b056832d164",
+  "runs": [
+    {
+      "id": 1,
+      "trigger": "manual",
+      "status": "succeeded",
+      "started_at": 1793214172,
+      "elapsed_ms": 9928,
+      "metrics": {
+        "bytes": 262726,
+        "latency_ms": 9413,
+        "read_failures": 9,
+        "requests": 39,
+        "retries": 0
+      },
+      "records": 25,
+      "source_receipts": 30,
+      "summary": {
+        "coverage": "partial",
+        "definitions": 9,
+        "gaps": [
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/index.js",
+            "repository": "actions/checkout"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/checkout"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/setup/index.js",
+            "repository": "actions/setup-python"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/cache-save/index.js",
+            "repository": "actions/setup-python"
+          },
+          {
+            "code": "source_sample_truncated",
+            "path": "",
+            "repository": "actions/setup-python"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/setup/index.js",
+            "repository": "actions/setup-node"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/cache-save/index.js",
+            "repository": "actions/setup-node"
+          },
+          {
+            "code": "source_sample_truncated",
+            "path": "",
+            "repository": "actions/setup-node"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/upload/index.js",
+            "repository": "actions/upload-artifact"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/upload-artifact"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/index.js",
+            "repository": "actions/configure-pages"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/configure-pages"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/index.js",
+            "repository": "actions/deploy-pages"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/deploy-pages"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/upload/index.js",
+            "repository": "actions/upload-artifact"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/upload-artifact"
+          }
+        ],
+        "performance_scope": "bounded sample of workflow runs and jobs; not a population success rate",
+        "publication": false
+      }
+    },
+    {
+      "id": 2,
+      "trigger": "schedule",
+      "status": "succeeded",
+      "started_at": 1793214182,
+      "elapsed_ms": 9952,
+      "metrics": {
+        "bytes": 262726,
+        "latency_ms": 9476,
+        "read_failures": 9,
+        "requests": 39,
+        "retries": 0
+      },
+      "records": 25,
+      "source_receipts": 30,
+      "summary": {
+        "coverage": "partial",
+        "definitions": 9,
+        "gaps": [
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/index.js",
+            "repository": "actions/checkout"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/checkout"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/setup/index.js",
+            "repository": "actions/setup-python"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/cache-save/index.js",
+            "repository": "actions/setup-python"
+          },
+          {
+            "code": "source_sample_truncated",
+            "path": "",
+            "repository": "actions/setup-python"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/setup/index.js",
+            "repository": "actions/setup-node"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/cache-save/index.js",
+            "repository": "actions/setup-node"
+          },
+          {
+            "code": "source_sample_truncated",
+            "path": "",
+            "repository": "actions/setup-node"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/upload/index.js",
+            "repository": "actions/upload-artifact"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/upload-artifact"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/index.js",
+            "repository": "actions/configure-pages"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/configure-pages"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/index.js",
+            "repository": "actions/deploy-pages"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/deploy-pages"
+          },
+          {
+            "code": "provider_byte_limit",
+            "path": "dist/upload/index.js",
+            "repository": "actions/upload-artifact"
+          },
+          {
+            "code": "author_source_sample",
+            "path": "",
+            "repository": "actions/upload-artifact"
+          }
+        ],
+        "performance_scope": "bounded sample of workflow runs and jobs; not a population success rate",
+        "publication": false
+      }
+    }
+  ],
+  "current_record_counts": {
+    "contract": 19,
+    "fact": 3
+  },
+  "distinct_outcomes": [
+    {
+      "key": "jrepp/ipe/runs/40728454691/attempts/1",
+      "kind": "workflow_run",
+      "conclusion": "success",
+      "duration_ms": null,
+      "created_to_started_ms": 0
+    },
+    {
+      "key": "jrepp/ipe/runs/40728454691/attempts/1/jobs/122957959131",
+      "kind": "job",
+      "conclusion": "success",
+      "duration_ms": 26000,
+      "created_to_started_ms": null
+    },
+    {
+      "key": "jrepp/ipe/runs/40728454691/attempts/1/jobs/122961751721",
+      "kind": "job",
+      "conclusion": "success",
+      "duration_ms": 11000,
+      "created_to_started_ms": null
+    }
+  ],
+  "limitations": [
+    "Bounded sample; no population rate or percentile",
+    "Workflow completion time unknown",
+    "Eight collector runs retained; distinct outcomes derived from retained runs",
+    "Declarations do not establish effective permissions",
+    "Local facts only; enforcement publication is not implemented"
+  ]
+}

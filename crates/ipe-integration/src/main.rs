@@ -5,6 +5,9 @@ use std::{path::PathBuf, process::ExitCode};
 struct Arguments {
     /// Operator-owned connection and runtime configuration.
     config_path: PathBuf,
+    /// Host agent-authored installations with scheduling and durable run history.
+    #[arg(long)]
+    host: bool,
 }
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -34,6 +37,10 @@ async fn run(args: Arguments) -> Result<(), &'static str> {
         return Err("configuration_limit");
     }
     let bytes = std::fs::read(args.config_path).map_err(|_| "configuration_unavailable")?;
+    if args.host {
+        let config = ipe_json::parse(&bytes).map_err(|_| "invalid_configuration")?;
+        return ipe_integration::host::serve(config).await;
+    }
     let config = serde_json::from_slice(&bytes).map_err(|_| "invalid_configuration")?;
     ipe_integration::serve(config).await
 }

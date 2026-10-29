@@ -26,8 +26,16 @@ echo "Sanitizer evidence: $report_dir"
 echo "🧹 Running $SANITIZER_TYPE sanitizer tests..."
 
 # Run sanitizer
-export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE"
-export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE"
+# Optimize instrumented builds without changing the 100 ms guest deadline.
+# Profile settings also pass OPT_LEVEL=1 to native dependency build scripts.
+export CARGO_PROFILE_DEV_OPT_LEVEL=1
+export CARGO_PROFILE_TEST_OPT_LEVEL=1
+export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=1"
+export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=1"
+# QuickJS adds native sanitizer instrumentation from CARGO_CFG_SANITIZE.
+# Use Clang for native code with the LLVM runtime supplied by Rust.
+native_target="${sanitizer_target//-/_}"
+export "CC_$native_target=clang" "CXX_$native_target=clang++"
 export ASAN_OPTIONS="detect_leaks=1"
 # Absolute path: newer LLVM exits non-zero when the suppressions file
 # cannot be read, which masked real results with a false failure.
@@ -70,16 +78,14 @@ if [ "$SANITIZER_TYPE" = "thread" ]; then
     # initialization state using C++ atomics; TSan must see those operations too.
     # cc-rs target variables cover the native libraries without changing the
     # ordinary production build. Rust supplies the sanitizer runtime at link time.
-    native_target="${sanitizer_target//-/_}"
     cflags_name="CFLAGS_$native_target"
     cxxflags_name="CXXFLAGS_$native_target"
-    native_flags="-fsanitize=thread -fno-omit-frame-pointer"
+    native_flags="-fsanitize=thread -fno-omit-frame-pointer -O1"
     if [[ "$sanitizer_target" == aarch64-* ]]; then
         # Keep the production CRC workaround even when overriding target flags
         # from .cargo/config.toml to add native sanitizer instrumentation.
         native_flags="$native_flags -U__ARM_FEATURE_CRC32"
     fi
-    export "CC_$native_target=clang" "CXX_$native_target=clang++"
     export "$cflags_name=${!cflags_name:-} $native_flags"
     export "$cxxflags_name=${!cxxflags_name:-} $native_flags"
     # Never accidentally link a prebuilt, uninstrumented RocksDB via LIB_DIR.

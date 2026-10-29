@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "adapter_digest": "sha256:81708d307468a0a30cf22c7b61e62b48403752b8f8f3d96a1a31571f7db85d77",
+  "runs": [
+    {
+      "id": 1,
+      "trigger": "manual",
+      "status": "succeeded",
+      "observed_at": 1793251440
+    },
+    {
+      "id": 2,
+      "trigger": "schedule",
+      "status": "succeeded",
+      "observed_at": 1793251450
+    }
+  ],
+  "typed_record_counts": {
+    "definition": 9,
+    "evidence": 10,
+    "constraint": 2,
+    "invocation": 8,
+    "fact": 3
+  },
+  "distinct_outcomes": 3,
+  "resolved_invocations": 8,
+  "all_records_have_typed_model": true,
+  "all_records_have_native_revision": true,
+  "limitations": [
+    "Job-to-declaration matches remain candidates",
+    "Scope reconciliation, semantic diff, and operation explanations are still pending"
+  ],
+  "browser_review": {
+    "url": "http://127.0.0.1:8767/",
+    "tool": "agent-browser",
+    "authenticated": true,
+    "visible_labels": {
+      "definition": 9,
+      "evidence": 10,
+      "constraint": 2,
+      "invocation": 8,
+      "fact": 3,
+      "legacy_untyped": 22
+    },
+    "record_schema_entity_variants": 6,
+    "archived_typed_executions": 3,
+    "archived_legacy_executions": 3
+  }
+}
