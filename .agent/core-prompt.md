@@ -426,42 +426,12 @@ cargo geiger --all-features
 5. **Review for accuracy** - Verify against implementation
 6. **Commit with docs: prefix** - Documentation-only changes
 
-### Updating CHANGELOG.md
+### Release notes and changelog
 
-The CHANGELOG follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
+GitHub Releases is the changelog source. Do not add manual entries to `CHANGELOG.md`.
+Describe user-visible behavior, compatibility changes, and migration steps in the PR.
+Use release labels and follow [the release guide](../docs/RELEASES.md).
 
-**When to update**:
-- All user-facing changes (features, fixes, breaking changes)
-- API changes (additions, modifications, removals)
-- Performance improvements
-- Security fixes
-- Deprecations
-
-**How to update**:
-
-1. **Add to Unreleased section** at the top under appropriate category:
-   - `Added` - New features
-   - `Changed` - Changes to existing functionality
-   - `Deprecated` - Soon-to-be removed features
-   - `Removed` - Removed features
-   - `Fixed` - Bug fixes
-   - `Security` - Security fixes
-   - `Performance` - Performance improvements
-
-2. **Format**: Brief description linking to PR/issue if available
-   ```markdown
-   ### Added
-   - New bytecode instruction for pattern matching (#42)
-   - JIT compilation tier for hot predicates
-   ```
-
-3. **Commit with changelog** in the same commit as your changes
-
-**What NOT to include**:
-- Internal refactoring (unless it affects users)
-- Documentation updates (unless they document new features)
-- Test additions (unless they're examples for users)
-- CI/CD changes (unless they affect contribution process)
 
 ## CI/CD Pipeline
 
@@ -646,7 +616,7 @@ make fuzz                                            # Run fuzzing
 9. **BENCHMARK PERFORMANCE-CRITICAL CODE** - Verify no regressions
 10. **DOCUMENT PUBLIC API** - All public items need doc comments
 11. **UPDATE REQUIREMENTS.MD** - Keep requirements in sync
-12. **UPDATE CHANGELOG.MD** - Add entries to Unreleased section for all user-facing changes
+12. **RELEASE NOTES** - Describe user-facing changes in the PR; GitHub generates release notes
 13. **SECURITY AUDITS** - Run supply chain checks regularly
 14. **HUMAN-CENTRIC** - All contributions should read as if written by a human developer
 
@@ -658,8 +628,8 @@ Your work is successful when:
 2. ✅ Code coverage maintained or improved (target: 90%+)
 3. ✅ No performance regressions (benchmark results)
 4. ✅ Security audits pass (cargo-audit, cargo-deny, cargo-geiger)
-5. ✅ Documentation updated (docs/, REQUIREMENTS.md, CHANGELOG.md, code comments)
-6. ✅ CHANGELOG.md updated for user-facing changes
+5. ✅ Documentation updated (docs/, REQUIREMENTS.md, code comments)
+6. ✅ User-facing changes and migration steps described in the PR
 7. ✅ Commits follow conventional format
 8. ✅ PR includes why/what/how/testing
 9. ✅ Changes align with requirements and architecture
