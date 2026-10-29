@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved sanitizer checks to handle multiline output correctly
 
 ### Fixed
+- Hosted GitHub extraction models job constraints in separate steps to stay within the unchanged guest deadline.
 - Integration host state writes no longer attempt to open a directory as a file on Windows. State files remain synced before replacement.
 - Monitor refresh preserves open evidence panels, source inspection, and keyboard focus.
 - Updated TLS certificate verification and root data for RUSTSEC-2026-0382 and RUSTSEC-2026-0383.

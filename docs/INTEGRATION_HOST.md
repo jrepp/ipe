@@ -102,6 +102,7 @@ Current records are upserts by kind and key unless the host verifies a complete 
 A YAML read operation can define `snapshot_source` with `namespace`, `resource_parameter`, `path_parameter`, and `revision_parameter`.
 These parameter names must refer to native operation parameters. Only a full YAML document can establish this authority.
 
+The GitHub example emits one job constraint per continuation step to bound modeling work.
 The program can return `collections` in its completion output. Each claim contains `schema_version: 1`, `scope`, `kind: "constraint"`, and a native `receipt`.
 The host verifies the receipt, successful read status, source identity, and absence of truncation.
 It replaces constraints only within that source definition and scope. A verified empty collection can remove prior constraints.

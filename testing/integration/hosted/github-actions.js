@@ -105,6 +105,15 @@ function step(context, responses, state) {
   const enqueue = task => {if(s.queue.length<64 && (task.depth||0)<=4)s.queue.push(task);else gap(task,'traversal_limit');};
   const elapsed = (a,b) => {const start=ipe.timestamp(a),end=ipe.timestamp(b);return start===null||end===null||end<start?null:end-start;};
   let observations=[];
+  // Emit one job constraint per step. Large workflow projections must not spend
+  // the same guest budget on declaration traversal and every job's obligations.
+  if(s.constraint_work) {
+    const work=s.constraint_work;
+    const job=work.jobs.shift();
+    const constraint=jobConstraint(job,work.source,{model:{permissions:work.permissions}},work.receipt);
+    if(!work.jobs.length)delete s.constraint_work;
+    return ipe.exchange([],s,[constraint]);
+  }
   if(s.phase==='emit_invocations') {
     const batch=s.edges.splice(0,8).map(edge=>{const target=s.resolved[edge.target];const supplied=edge.supplied||{};const specs=target?.inputs||{};const names=[...new Set([...Object.keys(specs),...Object.keys(supplied)])];const bindings=names.map(name=>({name,origin:Object.hasOwn(supplied,name)?'caller':Object.hasOwn(specs[name]||{},'default')?'declared_default':'absent',value:Object.hasOwn(supplied,name)?supplied[name]:specs[name]?.default??null}));return observation({kind:'invocation',parent:edge.parent,callee:target?.source||null,requested:edge.requested,resolution:target?'resolved':'unknown',bindings},'declared',edge.scope,{reference:edge.requested},edge.receipt);});
     if(!s.edges.length)s.phase='finish';return ipe.exchange([],s,batch);
@@ -130,7 +139,10 @@ function step(context, responses, state) {
         const source={repository:task.repo,commit:task.ref,path:task.path,digest:r.source_digest,url:'https://github.com/'+task.repo+'/blob/'+task.ref+'/'+task.path};
         observations.push(record('contract',task.repo+'@'+task.ref+'/'+task.path,{kind:task.kind,source,projection,locations:rows[0].locations,interpretation:'declaration',external_enforcer:'github_actions'},r.receipt));
         if(task.kind==='workflow')s.collections.push({schema_version:1,scope:'workflow:'+task.repo+'/'+task.path,kind:'constraint',receipt:r.receipt});
-        if(task.kind==='workflow')for(const job of projection.model.jobs)s.pending.push(jobConstraint(job,source,projection,r.receipt));
+        if(task.kind==='workflow'&&projection.model.jobs.length) {
+          const fields=['id','pointer','name','needs','if','permissions','environment'];
+          s.constraint_work={source,receipt:r.receipt,permissions:projection.model.permissions??null,jobs:projection.model.jobs.map(job=>Object.fromEntries(Object.entries(job).filter(([key])=>fields.includes(key))))};
+        }
         s.resolved[task.repo+'@'+(task.requested_ref||task.ref)+'/'+(task.requested_path||task.path)]={source:sourceModel(source),inputs:Object.fromEntries(Object.entries(projection.model.inputs||{}).map(([name,spec])=>[name,Object.hasOwn(spec,'default')?{default:spec.default}:{}]))};
         s.definitions++;
         for(const reference of projection.references) {
@@ -186,6 +198,7 @@ function step(context, responses, state) {
       }
     }
   }
+  if(s.constraint_work)return ipe.exchange([],s,observations);
   if(s.pending.length){const batch=observations.concat(s.pending.splice(0,Math.max(0,16-observations.length)));return ipe.exchange([],s,batch);}
   while(s.queue.length) {
     const task=s.queue.shift(),key=task.type+':'+task.repo+'@'+task.ref+'/'+task.path+'/'+(task.run_id||'');

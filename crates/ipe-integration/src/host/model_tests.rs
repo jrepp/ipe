@@ -17,8 +17,21 @@ pub(super) async fn capture(revision: &str) -> Vec<Model> {
     let mut state = Value::Null;
     let mut responses = json!([]);
     let mut models = Vec::new();
-    for _ in 0..100 {
-        let result = adapter.step(context.clone(), responses, state).await.unwrap();
+    for step_index in 0..100 {
+        let phase = state.get("phase").cloned();
+        let result = adapter
+            .step(context.clone(), responses, state)
+            .await
+            .unwrap_or_else(|error| panic!("fixture step {step_index}, phase {phase:?}: {error}"));
+        assert!(
+            result
+                .observations
+                .iter()
+                .filter(|r| r["model"]["entity"]["kind"] == "constraint")
+                .count()
+                <= 1,
+            "job constraints must use separate bounded steps"
+        );
         for wire in result.observations {
             let model: Model = serde_json::from_value(wire["model"].clone()).unwrap();
             model.validate().unwrap();

@@ -1,0 +1,50 @@
+{
+  "schema": "ipe.integration.ci-followup-proof.v1",
+  "collector_source_sha256": "9680b1a37ceaaa2bae7dcf78d90ac336829bab7446a79788c2100fa953399fe7",
+  "windows_fix_commit": "eeb6093ebae5ca266e135d581313184d6d043c82",
+  "windows_jobs": {
+    "stable": "https://github.com/jrepp/ipe/actions/runs/40833786375/job/123313734567",
+    "beta": "https://github.com/jrepp/ipe/actions/runs/40833786375/job/123313734590"
+  },
+  "windows_result": "success",
+  "local_thread_sanitizer": {
+    "command": "./.github/scripts/check-sanitizer.sh thread aarch64-apple-darwin",
+    "result": "success; command and diagnostic report checks passed"
+  },
+  "guest_deadline_ms": 100,
+  "job_constraints_per_step": 1,
+  "completed_live_runs": [
+    {
+      "trigger": "manual",
+      "status": "succeeded",
+      "steps": 45,
+      "duration_ms": 10250
+    },
+    {
+      "trigger": "schedule",
+      "status": "succeeded",
+      "steps": 45,
+      "duration_ms": 9845
+    }
+  ],
+  "record_counts": {
+    "definition": 9,
+    "evidence": 10,
+    "constraint": 2,
+    "invocation": 8,
+    "fact": 3
+  },
+  "external_outcomes": 3,
+  "notes": [
+    "Fixture serialization alone did not fix the macOS CI timeout.",
+    "A local instrumented profile measured the workflow response step at about 90\u201395 ms before splitting constraints, and 56\u201358 ms afterward. This is a diagnostic sample, not a capacity benchmark.",
+    "An additional scheduled run was in progress when the snapshot was taken; it is excluded from completed-run counts.",
+    "The remote sanitizer run must be checked again for the new collector source."
+  ],
+  "local_thread_sanitizer_stress": {
+    "test_threads": 64,
+    "passed": 77,
+    "failed": 0,
+    "result": "success after splitting workflow constraints"
+  }
+}
