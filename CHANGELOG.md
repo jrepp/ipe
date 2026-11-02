@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive CI/CD pipeline with security audits
 
 ### Changed
+- Integration coverage explains a rule, its linked operations, and reported executions before showing record types. Connection evidence and missing requirement checks stay explicit.
 - Integration coverage uses a selectable policy ontology map with one detail panel and a gap filter. Candidate references, expired evidence, and unknown applicability stay explicit.
 - Governance review focuses on one requirement, presents retained configuration fields, and marks missing requirement-to-fact bindings. Saved collector settings are labeled as historical snapshots.
 - Governance review now explains source-to-ontology mappings, candidate execution links, exact fact emission steps, and missing evidence. Current collector settings remain separate from external policy configuration.

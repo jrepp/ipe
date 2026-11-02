@@ -24,6 +24,27 @@ function fixture(){
  ],evidence:[{step:1,operation:'read_governance',status:'observed',receipt:'receipt:1'}]};
 }
 function setup(){const dom=new JSDOM('<div id="view"></div>',{runScripts:'outside-only'});dom.window.eval(script);return {dom,d:dom.window.document,render:(run,installation)=>dom.window.IpeGovernanceView.render(dom.window.document.querySelector('#view'),run,installation)};}
+test('plain explanation keeps rule scope, candidate execution and exact observations distinct',()=>{
+ const {dom,d,render}=setup();try{
+  const run=fixture();render(run);
+  let story=d.querySelector('.ipe-coverage-story');
+  assert.match(story.textContent,/A reviewer must approve release/);
+  assert.match(story.textContent,/rule lists these operation identities/);
+  assert.match(story.textContent,/Provider result: success/);
+  assert.match(story.textContent,/Possible run of: Release operation/);
+  assert.match(story.textContent,/connection is not confirmed/);
+  assert.match(story.textContent,/same execution/);assert.match(story.textContent,/Expired/);
+  assert.match(story.textContent,/We cannot tell from this capture/);
+  assert.equal(story.querySelector('script,img'),null);
+  const outcome=run.records.find(r=>r.model.entity.kind==='outcome');
+  outcome.model.entity.definition={...outcome.model.entity.definition,revision:'unrelated'};render(run);
+  story=d.querySelector('.ipe-coverage-story');
+  assert.match(story.textContent,/No related execution was captured/);
+  assert.doesNotMatch(story.textContent,/Provider result: success/);
+  run.records.find(r=>r.model.entity.record?.type==='policy').model.entity.record.subjects=[];render(run);
+  assert.match(d.querySelector('.ipe-coverage-story').textContent,/No operation is linked/);
+ }finally{dom.window.close();}
+});
 test('an empty governance capture exposes denied API reads instead of implying policy absence',()=>{
  const {dom,d,render}=setup();try{
   render({id:1,status:'succeeded',records:[],summary:{gaps:[{code:'provider_access_denied',path:'list_environments'}]}});
@@ -44,8 +65,8 @@ test('reference revisions and ambiguity remain gaps and unchanged refresh preser
  render({id:2,status:'failed',records:[],trace:{emissions:[{kind:'governance'}]}});assert.match(d.querySelector('#view').textContent,/No governance descriptions/);assert.match(d.querySelector('#view').textContent,/Policy applicability at execution time: Unknown/);assert.equal(d.querySelector('.ipe-governance-select'),null);assert.doesNotMatch(d.querySelector('#view').textContent,/Release approval/);}finally{dom.window.close();}
 });
 
-test('compact default places execution and gaps before collapsed mechanism and principal details',()=>{
- const {dom,d,render}=setup();try{const run=fixture();run.records.find(r=>r.model.entity.record?.type==='control').model.entity.record.governing_rules[0].source_revision='stale-source';run.evidence=[];render(run);const body=d.querySelector('.ipe-governance-body');assert.equal(body.children[0].className,'ipe-governance-mapping');assert.equal(body.children[2].className,'ipe-governance-overlay');assert.equal(body.children[3].className,'ipe-governance-gaps');assert.equal(d.querySelector('.ipe-governance-mechanisms').open,false);assert.equal(d.querySelector('.ipe-governance-people').open,false);assert.doesNotMatch(d.querySelector('.ipe-governance-mechanisms').textContent,/Approval gate/);assert.match(d.querySelector('.ipe-governance-gaps').textContent,/Approval gate.*Target not captured/);assert.match(d.querySelector('.ipe-governance-handoff-summary').textContent,/Release requested → reviewer.*→ Resume release/);assert.match(d.querySelector('.ipe-governance-handoff-summary').textContent,/email: <img src=x/);assert.match(d.querySelector('.ipe-governance-support').textContent,/Extraction support gap/);assert.match(d.querySelector('.ipe-governance-record').textContent,/ClaimUnknown/);}finally{dom.window.close();}
+test('plain explanation precedes collapsed record connections',()=>{
+ const {dom,d,render}=setup();try{const run=fixture();run.records.find(r=>r.model.entity.record?.type==='control').model.entity.record.governing_rules[0].source_revision='stale-source';run.evidence=[];render(run);const body=d.querySelector('.ipe-governance-body');assert.equal(body.children[0].className,'ipe-coverage-story');assert.equal(body.children[1].className,'ipe-coverage-technical');assert.equal(body.children[1].open,false);assert.ok(body.children[1].contains(d.querySelector('.ipe-governance-mapping')));assert.equal(d.querySelector('.ipe-governance-mechanisms').open,false);assert.equal(d.querySelector('.ipe-governance-people').open,false);assert.doesNotMatch(d.querySelector('.ipe-governance-mechanisms').textContent,/Approval gate/);assert.match(d.querySelector('.ipe-governance-gaps').textContent,/Approval gate.*Target not captured/);assert.match(d.querySelector('.ipe-governance-handoff-summary').textContent,/Release requested → reviewer.*→ Resume release/);assert.match(d.querySelector('.ipe-governance-handoff-summary').textContent,/email: <img src=x/);assert.match(d.querySelector('.ipe-governance-support').textContent,/Extraction support gap/);assert.match(d.querySelector('.ipe-governance-record').textContent,/ClaimUnknown/);}finally{dom.window.close();}
 });
 test('shared governance fixture exposes all seven source descriptions without inventing a missing contact',()=>{
  const fixture=JSON.parse(fs.readFileSync(__dirname+'/../../testing/integration/hosted/governance-handoff.json','utf8'));

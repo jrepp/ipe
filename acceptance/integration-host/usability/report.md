@@ -1,5 +1,26 @@
 # Integration host usability review
 
+## Coverage simplification and design review: 2026-11-02
+
+The user found the record meanings and connections unclear in Integration coverage.
+The default view now explains one requirement, its linked operations, and related reported executions.
+It states why each link exists and keeps candidate execution links separate from exact execution observations.
+The result section identifies the missing requirement check. A successful external run does not establish fulfillment.
+
+The concept map, collection gaps, and full records now share one closed supporting disclosure.
+The selected requirement and open supporting details survive refresh. Source fields remain available without displaying internal source IDs by default.
+Desktop presents three sections beside each other. Mobile presents the same sections in reading order.
+
+All 65 host JavaScript tests passed. The integration binary rebuilt successfully, and documentation checks passed.
+The new test covers candidate execution links, exact observation links, expired evidence, untrusted text, and mismatched revisions.
+Browser checks found no page overflow at 390 pixels and no application script errors.
+Axe reported zero violations and zero incomplete checks in the default coverage view.
+The local host was restarted with its existing configuration and state.
+
+Evidence: [simplified desktop view](screenshots/2026-11-02-simple-coverage.png) and [mobile view](screenshots/2026-11-02-simple-mobile.png).
+The [design update](../../../docs/INTEGRATION_DOMAIN_MODEL.md#design-update-explain-relationships-before-expanding-the-model) records the article review and remaining implementation boundaries.
+The shared native explanation and governance requirement bindings are recommendations, not implemented features.
+
 ## Current pass: 2026-11-02
 
 The current monitor has two primary views: Runtime and Integration coverage.

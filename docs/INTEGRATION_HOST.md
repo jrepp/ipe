@@ -84,8 +84,8 @@ The monitor has two primary views. **Runtime** opens by default.
 - **Runtime** shows installed scope, schedule, collector version, latest capture, and capture duration.
   Use **Runs** for reads, errors, outputs, and external outcomes. Use **Program** for source, input, and grants.
   Use **Changes** to compare retained captures and review catalogs.
-- **Integration coverage** shows ontology mappings from one collector run.
-  Inspect discovered rules, mechanisms, principals, source evidence, candidate execution links, and missing mappings.
+- **Integration coverage** explains one rule from one collector run.
+  Read its requirement, linked operations, and reported execution results. Each connection states its basis and limits.
   Use **Operations** for named requirements and evidence checks. Use **Records** for record search, freshness, and collection coverage.
 
 Missing mappings do not prove that an external control is absent. Coverage counts describe retained data, not verified enforcement.
@@ -129,7 +129,14 @@ Existing snapshots without those manifests still show program, records, runs, an
 
 ### Governance extraction and execution overlay
 
-Select a policy or contract under **Integration coverage** to open its concept map.
+Select a rule under **Integration coverage → Rules and evidence**.
+The default view answers three questions: what is required, which operation is linked, and what happened.
+Select a requirement to inspect its source condition. Source identifiers and full specifications remain in a disclosure.
+Operation identities connect the rule to its stated scope. Candidate execution links remain unconfirmed.
+Observations appear under the execution with the same identity; expired observations remain marked.
+The final section explains why a successful execution does not establish requirement fulfillment and identifies the missing check.
+
+Open **Inspect record connections and source data** for the concept map and full capture details.
 The map groups governing rules, mechanisms and people, operation scope, and execution evidence.
 Select a concept to open its mapping details. Adjacent cards do not establish a relationship.
 Use **Show gaps and unknowns** to find candidate references, missing mappings, expired evidence, and unknown applicability.
