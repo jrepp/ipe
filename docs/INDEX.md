@@ -107,6 +107,7 @@ This index provides a guided path through IPE's documentation based on your need
 
 - **[SUMMARY](../SUMMARY.md)** - Executive summary and vision (historical)
 - **[ARCHITECTURE](ARCHITECTURE.md)** - v2 runtime architecture with diagrams
+- **[Admin control plane architecture review](ADMIN_ARCHITECTURE_REVIEW.md)** - Central policy resource lifecycles, publication authority, endpoint registry, push-accelerated pull, observability, protocol tradeoffs, and [design critique](ADMIN_ARCHITECTURE_CRITIQUE.md).
 - **[ROADMAP](../ROADMAP.md)** - Development phases and milestones
 
 ## Technical Reference
