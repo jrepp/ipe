@@ -108,6 +108,9 @@ This index provides a guided path through IPE's documentation based on your need
 
 **Deep dives into IPE internals:**
 
+- **[Project vocabulary](VOCABULARY.md)** - Preferred terms, domain boundaries, and open naming decisions.
+- **[Vocabulary review](VOCABULARY_REVIEW.md)** - Naming recommendations, source evidence, and the repository update plan.
+- **[Integration domain model review](INTEGRATION_DOMAIN_MODEL.md)** - Operations, requirements, controls, evidence, and proposed assessment semantics.
 - **[RUNTIME_DATA](RUNTIME_DATA.md)** - The implemented v2 runtime: API, limits, and workflows
 - **[AST](AST.md)** - Legacy parser AST specification (historical)
 - **[BYTECODE](BYTECODE.md)** - Legacy bytecode instruction set (historical)
@@ -221,5 +224,6 @@ bounded current-state collection listing. It remains a draft with open decisions
 no collection-listing route is implemented by this document.
 
 - [Hosted integration programs](INTEGRATION_HOST.md): installed JavaScript, external requirements, status facts, and performance history.
+- [Contextual evidence assessments](INTEGRATION_ASSESSMENTS.md): explicit links across collectors, execution context, trust rules, and evidence traces.
 
 - [Integration model review](INTEGRATION_MODEL_REVIEW.md): evidence-backed recommendations for collection, contract identity, reasoning, and updates.

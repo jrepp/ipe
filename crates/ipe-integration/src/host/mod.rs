@@ -1,16 +1,19 @@
 //! A local installation host: code, scheduling, brokered reads, typed records,
 //! durable bounded history, and authenticated monitoring share one endpoint.
+mod assessments;
 mod broker;
 mod coverage;
 mod credentials;
+mod domain;
 mod explanations;
+mod governance;
 mod model;
 mod outcomes;
 mod revisions;
 use crate::script::ScriptAdapter;
 use axum::{
     extract::{DefaultBodyLimit, Path as ApiPath, State},
-    http::{HeaderMap, StatusCode},
+    http::{header, HeaderMap, StatusCode},
     response::Html,
     routing::{get, post, put},
     Form, Json, Router,
@@ -48,6 +51,8 @@ pub struct Config {
     state_dir: PathBuf,
     connections: Vec<broker::ConnectionConfig>,
     operations: Vec<broker::Operation>,
+    #[serde(default)]
+    evidence_rules: Vec<assessments::Rule>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -95,6 +100,58 @@ struct Run {
     summary: Value,
     #[serde(default)]
     coverage: Vec<coverage::VerifiedScope>,
+    #[serde(default)]
+    progress: Vec<Value>,
+    /// Native-validated emissions, including staged records from failed runs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    trace: Option<RunTrace>,
+}
+const MAX_TRACE_EMISSIONS: usize = 256;
+const MAX_TRACE_BYTES: usize = 128 * 1024;
+#[derive(Clone, Serialize, Deserialize)]
+struct Emission {
+    step: usize,
+    key: String,
+    kind: String,
+    revision_id: String,
+    receipts: Vec<String>,
+}
+#[derive(Clone, Serialize, Deserialize)]
+struct RunTrace {
+    schema_version: u16,
+    emissions: Vec<Emission>,
+    omitted: usize,
+}
+impl RunTrace {
+    fn new() -> Self {
+        Self {
+            schema_version: 1,
+            emissions: Vec::new(),
+            omitted: 0,
+        }
+    }
+
+    fn record(&mut self, step: usize, record: &Record) {
+        if self.emissions.len() >= MAX_TRACE_EMISSIONS {
+            self.omitted = self.omitted.saturating_add(1);
+            return;
+        }
+        self.emissions.push(Emission {
+            step,
+            key: record.key.clone(),
+            kind: record.kind.clone(),
+            revision_id: record.revision_id.clone(),
+            receipts: record.receipts.clone(),
+        });
+        // Reserve space for every decimal digit of a later omitted count.
+        let count_reserve = usize::MAX.to_string().len();
+        if serde_json::to_vec(self)
+            .map_or(true, |bytes| bytes.len() > MAX_TRACE_BYTES - count_reserve)
+        {
+            self.emissions.pop();
+            self.omitted = self.omitted.saturating_add(1);
+        }
+    }
 }
 #[derive(Clone, Serialize, Deserialize)]
 struct Installed {
@@ -192,6 +249,7 @@ impl Host {
         if !(32..=8192).contains(&token.expose_secret().len()) {
             return Err("invalid_api_token");
         }
+        assessments::validate_rules(&config.evidence_rules)?;
         let broker = Broker::new(config.connections.clone(), config.operations.clone()).await?;
         if !config.state_dir.exists() {
             let mut builder = std::fs::DirBuilder::new();
@@ -285,7 +343,62 @@ impl Host {
                     Html(include_str!("../../../../tools/integration-host/index.html"))
                 }),
             )
+            .route(
+                "/assets/d3.v7.9.0.min.js",
+                get(|| async {
+                    (
+                        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                        include_str!("../../../../tools/integration-host/vendor/d3.v7.9.0.min.js"),
+                    )
+                }),
+            )
+            .route(
+                "/assets/trace-model.js",
+                get(|| async {
+                    (
+                        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                        include_str!("../../../../tools/integration-host/trace-model.js"),
+                    )
+                }),
+            )
+            .route(
+                "/assets/trace-view.js",
+                get(|| async {
+                    (
+                        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                        include_str!("../../../../tools/integration-host/trace-view.js"),
+                    )
+                }),
+            )
+            .route(
+                "/assets/trace-view.css",
+                get(|| async {
+                    (
+                        [(header::CONTENT_TYPE, "text/css; charset=utf-8")],
+                        include_str!("../../../../tools/integration-host/trace-view.css"),
+                    )
+                }),
+            )
+            .route(
+                "/assets/governance-view.js",
+                get(|| async {
+                    (
+                        [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                        include_str!("../../../../tools/integration-host/governance-view.js"),
+                    )
+                }),
+            )
+            .route(
+                "/assets/governance-view.css",
+                get(|| async {
+                    (
+                        [(header::CONTENT_TYPE, "text/css; charset=utf-8")],
+                        include_str!("../../../../tools/integration-host/governance-view.css"),
+                    )
+                }),
+            )
             .route("/session", post(session))
+            .route("/v1/host/session", post(refresh_session))
             .route("/v1/host/capabilities", get(capabilities))
             .route("/v1/host/record-schema", get(record_schema))
             .route("/v1/integrations", get(list))
@@ -297,6 +410,9 @@ impl Host {
             .route("/v1/integrations/:id/revisions", get(revision_list))
             .route("/v1/integrations/:id/catalog", get(review_catalog))
             .route("/v1/integrations/:id/explanations", get(operation_explanations))
+            .route("/v1/integrations/:id/assessments", post(assess_operation))
+            .route("/v2/integrations/:id/operations", get(domain_operations))
+            .route("/v2/integrations/:id/assessments", post(assess_operation_v2))
             .route("/v1/integrations/:id/revisions/:revision", get(revision_detail))
             .route("/v1/integrations/:id/revisions/:revision/accept", post(revision_accept))
             .route("/v1/integrations/:id/revisions/:revision/restore", post(revision_restore))
@@ -422,6 +538,8 @@ impl Host {
             evidence: Vec::new(),
             summary: Value::Null,
             coverage: Vec::new(),
+            progress: Vec::new(),
+            trace: Some(RunTrace::new()),
         });
         if let Err(code) = persist(&self.config.state_dir, &store) {
             *store = prior;
@@ -459,7 +577,9 @@ impl Host {
         metrics: &mut Metrics,
         count: &mut usize,
     ) -> Result<(Value, Vec<Record>, Vec<Value>)> {
-        let context = json!({"integration_id":id,"run_id":run_id,"observed_at":now(),"input":package.input,"sdk_version":crate::script::SDK_VERSION,"operations":package.operations});
+        let context = json!({"integration_id":id,"run_id":run_id,"observed_at":now(),"input":package.input,"sdk_version":crate::script::SDK_VERSION,"operations":package.operations,
+            "capabilities": self.broker.operations.values().filter(|op|package.operations.contains(&op.name)).map(|op|json!({"name":op.name,"parameters":op.parameters,"decoder":op.decoder})).collect::<Vec<_>>(),
+            "limits":{"steps":128,"observations":256,"requests_per_step":8,"observations_per_step":16}});
         let mut state = Value::Null;
         let mut responses = json!([]);
         let mut observations = Vec::new();
@@ -473,6 +593,18 @@ impl Host {
             }
             *count = step;
             let result = adapter.step(context.clone(), responses, state).await?;
+            if let Some(progress) = &result.progress {
+                if let Some(run) = self
+                    .store
+                    .lock()
+                    .await
+                    .integrations
+                    .get_mut(id)
+                    .and_then(|i| i.runs.iter_mut().find(|r| r.id == run_id))
+                {
+                    run.progress.push(json!({"step":step,"observed_at":now(),"reported":progress}));
+                }
+            }
             state = result.state;
             for observation in result.observations {
                 #[derive(Deserialize)]
@@ -512,7 +644,21 @@ impl Host {
                     .filter_map(|e| e["observed_at"].as_u64())
                     .min()
                     .ok_or("observation_time_missing")?;
-                observations.push(Record {
+                let expires_at = match &record.model.entity {
+                    model::Entity::Governance { record: governance }
+                        if governance.is_temporal() =>
+                    {
+                        let native_limit = observed_at + package.fact_ttl_seconds;
+                        Some(
+                            governance
+                                .valid_until()
+                                .map_or(native_limit, |limit| limit.min(native_limit)),
+                        )
+                    },
+                    _ => (["fact", "association"].contains(&kind.as_str()))
+                        .then(|| observed_at + package.fact_ttl_seconds),
+                };
+                let record = Record {
                     revision_id: record.model.revision(&adapter.digest)?,
                     model: Some(record.model),
                     kind: kind.clone(),
@@ -525,10 +671,24 @@ impl Host {
                         .collect(),
                     receipts: record.receipts,
                     observed_at,
-                    expires_at: (kind == "fact").then(|| observed_at + package.fact_ttl_seconds),
+                    expires_at,
                     run_id,
                     adapter_digest: adapter.digest.clone(),
-                });
+                };
+                if let Some(run) = self
+                    .store
+                    .lock()
+                    .await
+                    .integrations
+                    .get_mut(id)
+                    .and_then(|i| i.runs.iter_mut().find(|r| r.id == run_id))
+                {
+                    if let Some(trace) = &mut run.trace {
+                        trace.record(step, &record);
+                    }
+                    run.steps = step;
+                }
+                observations.push(record);
             }
             if let Some(output) = result.outputs {
                 model::validate_graph(&observations)?;
@@ -546,7 +706,7 @@ impl Host {
             }
             let mut next = Vec::new();
             for request in result.requests {
-                evidence.push(json!({"operation":request.operation,"parameters":request.params,"started_at":now(),"status":"pending"}));
+                evidence.push(json!({"step":step,"request_id":request.id,"operation":request.operation,"parameters":request.params,"started_at":now(),"status":"pending"}));
                 if let Some(run) = self
                     .store
                     .lock()
@@ -582,7 +742,7 @@ impl Host {
                             read["snapshot_source"] = data["snapshot_source"].clone();
                         }
                         receipts.insert(receipt.clone());
-                        next.push(json!({"id":request.id,"operation":request.operation,"receipt":receipt,"data":data["records"],"source_digest":data["source_digest"],"truncated":data["truncated"]}));
+                        next.push(json!({"id":request.id,"operation":request.operation,"receipt":receipt,"data":data["records"],"source_digest":data["source_digest"],"truncated":data["truncated"],"pagination":data["pagination"],"snapshot_source":data["snapshot_source"]}));
                     },
                     Err(code) => {
                         if let Some(read) = evidence.last_mut() {
@@ -771,20 +931,38 @@ async fn session(
     {
         return Err(error(StatusCode::UNAUTHORIZED, "unauthorized"));
     }
+    let mut response = session_headers(&host)?;
+    response.insert("location", axum::http::HeaderValue::from_static("/"));
+    Ok((StatusCode::SEE_OTHER, response))
+}
+fn session_headers(host: &Host) -> std::result::Result<HeaderMap, ApiError> {
     let mut response = HeaderMap::new();
     response.insert(
         "set-cookie",
         format!(
-            "ipe_monitor={}; HttpOnly; SameSite=Strict; Path=/v1/; Max-Age=28800",
+            "ipe_monitor={}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800",
             host.monitor_cookie()
         )
         .parse()
         .map_err(|_| error(StatusCode::INTERNAL_SERVER_ERROR, "session_failed"))?,
     );
-    response.insert("location", axum::http::HeaderValue::from_static("/"));
+    response.append(
+        "set-cookie",
+        axum::http::HeaderValue::from_static(
+            "ipe_monitor=; HttpOnly; SameSite=Strict; Path=/v1/; Max-Age=0",
+        ),
+    );
     response.insert("cache-control", axum::http::HeaderValue::from_static("no-store"));
     response.insert("referrer-policy", axum::http::HeaderValue::from_static("no-referrer"));
-    Ok((StatusCode::SEE_OTHER, response))
+    Ok(response)
+}
+async fn refresh_session(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+) -> std::result::Result<(HeaderMap, Json<Value>), ApiError> {
+    // The old /v1/ cookie reaches this route. Preserve all monitor origin checks.
+    host.authorize(&headers)?;
+    Ok((session_headers(&host)?, Json(json!({"connected":true}))))
 }
 async fn installation(
     State(host): State<Arc<Host>>,
@@ -807,7 +985,7 @@ async fn record_schema(
 ) -> std::result::Result<Json<Value>, ApiError> {
     host.authorize(&headers)?;
     Ok(Json(
-        json!({"schema_version":model::VERSION,"model":rmcp::schemars::schema_for!(model::Model),"validation":"Native validation also checks identity consistency, claim authority, grants, receipts, duplicate keys, and bounded work"}),
+        json!({"schema_version":model::VERSION,"supported_schema_versions":[1,2],"model":rmcp::schemars::schema_for!(model::Model),"validation":"Native validation also checks identity consistency, claim authority, grants, receipts, duplicate keys, and bounded work"}),
     ))
 }
 async fn capabilities(
@@ -816,7 +994,7 @@ async fn capabilities(
 ) -> std::result::Result<Json<Value>, ApiError> {
     host.authorize(&headers)?;
     Ok(Json(
-        json!({"host":"local_installations_v1","sdk_version":crate::script::SDK_VERSION,"operations":host.broker.operations.values().map(|op|json!({"name":op.name,"parameters":op.parameters,"decoder":op.decoder})).collect::<Vec<_>>(),"output_kinds":model::KINDS,"record_schema_version":model::VERSION,"history_runs":HISTORY,"durable":true,"publication":false}),
+        json!({"host":"local_installations_v1","sdk_version":crate::script::SDK_VERSION,"operations":host.broker.operations.values().map(|op|json!({"name":op.name,"parameters":op.parameters,"decoder":op.decoder})).collect::<Vec<_>>(),"output_kinds":model::KINDS,"record_schema_version":model::VERSION,"supported_record_schema_versions":[1,2],"history_runs":HISTORY,"durable":true,"publication":false}),
     ))
 }
 async fn install(
@@ -855,7 +1033,7 @@ async fn list(
     host.authorize(&headers)?;
     let store = host.store.lock().await;
     Ok(Json(
-        json!({"integrations":store.integrations.iter().map(|(id,i)|json!({"id":id,"adapter_digest":i.digest,"enabled":i.package.enabled,"interval_seconds":i.package.interval_seconds,"next_due":i.next_due,"current_records":i.current.len(),"expired_facts":i.current.iter().filter(|r|r.expires_at.is_some_and(|t|t<=now())).count(),"latest_run":i.runs.last().map(|r|json!({"id":r.id,"status":r.status,"elapsed_ms":r.elapsed_ms,"error":r.error,"metrics":r.metrics,"steps":r.steps}))})).collect::<Vec<_>>()}),
+        json!({"integrations":store.integrations.iter().map(|(id,i)|json!({"id":id,"adapter_digest":i.digest,"enabled":i.package.enabled,"interval_seconds":i.package.interval_seconds,"next_due":i.next_due,"current_records":i.current.len(),"expired_facts":i.current.iter().filter(|r|r.kind=="fact"&&r.expires_at.is_some_and(|t|t<=now())).count(),"expired_associations":i.current.iter().filter(|r|r.kind=="association"&&r.expires_at.is_some_and(|t|t<=now())).count(),"latest_run":i.runs.last().map(|r|json!({"id":r.id,"status":r.status,"elapsed_ms":r.elapsed_ms,"error":r.error,"metrics":r.metrics,"steps":r.steps}))})).collect::<Vec<_>>()}),
     ))
 }
 async fn history(
@@ -888,6 +1066,53 @@ async fn outcome_archive(
         json!({"schema":"ipe.integration.outcome-archive.v1","integration_id":id,"executions":installed.outcomes.executions,"legacy_untyped":installed.outcomes.legacy_untyped,"capacity":outcomes::EXECUTION_LIMIT,"overflow":"reject new capture atomically; existing executions remain available for export"}),
     ))
 }
+async fn assess_operation(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+    bytes: axum::body::Bytes,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    if bytes.len() > 16 * 1024 {
+        return Err(error(StatusCode::BAD_REQUEST, "assessment_too_large"));
+    }
+    let request: assessments::Request = ipe_json::parse(&bytes)
+        .map_err(|_| error(StatusCode::BAD_REQUEST, "invalid_assessment"))?;
+    let store = host.store.lock().await;
+    assessments::assess(&id, &request, &store, &host.config.evidence_rules, now())
+        .map(Json)
+        .map_err(|code| error(StatusCode::BAD_REQUEST, code))
+}
+async fn domain_operations(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    Ok(Json(domain::operations(installed)))
+}
+async fn assess_operation_v2(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath(id): ApiPath<String>,
+    bytes: axum::body::Bytes,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    if bytes.len() > 16 * 1024 {
+        return Err(error(StatusCode::BAD_REQUEST, "assessment_too_large"));
+    }
+    let request: assessments::RequestV2 = ipe_json::parse(&bytes)
+        .map_err(|_| error(StatusCode::BAD_REQUEST, "invalid_assessment"))?;
+    let store = host.store.lock().await;
+    assessments::assess_v2(&id, &request, &store, &host.config.evidence_rules, now())
+        .map(Json)
+        .map_err(|code| error(StatusCode::BAD_REQUEST, code))
+}
 async fn operation_explanations(
     State(host): State<Arc<Host>>,
     headers: HeaderMap,
@@ -899,7 +1124,14 @@ async fn operation_explanations(
         .integrations
         .get(&id)
         .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
-    Ok(Json(explanations::project(installed, now())))
+    let mut projection = explanations::project(installed, now());
+    projection["evidence_rules"] = json!(host
+        .config
+        .evidence_rules
+        .iter()
+        .filter(|r| r.consumer == id)
+        .collect::<Vec<_>>());
+    Ok(Json(projection))
 }
 async fn review_catalog(
     State(host): State<Arc<Host>>,
@@ -914,8 +1146,9 @@ async fn review_catalog(
         .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
     Ok(Json(
         json!({"schema":"ipe.integration.review-catalog.v1","accepted":installed.revisions.accepted,
-        "records":installed.revisions.catalog(&installed.current).iter().filter(|r| !["fact","outcome"].contains(&r.kind.as_str())).collect::<Vec<_>>(),
+        "records":installed.revisions.catalog(&installed.current).iter().filter(|r| revisions::is_review_record(r)).collect::<Vec<_>>(),
         "facts":installed.current.iter().filter(|r|r.kind=="fact").map(|r|json!({"record":r,"expired":r.expires_at.is_none_or(|t|t<=now())})).collect::<Vec<_>>(),
+        "associations":installed.current.iter().filter(|r|r.kind=="association").map(|r|json!({"record":r,"expired":r.expires_at.is_none_or(|t|t<=now())})).collect::<Vec<_>>(),
         "publication":false}),
     ))
 }
@@ -1067,6 +1300,14 @@ pub async fn serve(config: Config) -> Result<()> {
 }
 
 #[cfg(test)]
+mod domain_http_tests;
+#[cfg(test)]
+mod github_governance_tests;
+#[cfg(test)]
+mod governance_host_tests;
+#[cfg(test)]
 mod model_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod trace_tests;

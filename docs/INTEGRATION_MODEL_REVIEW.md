@@ -2,6 +2,9 @@
 
 Status: the six initial recommendations are implemented. Additional recommendations remain follow-up proposals. See the [six-item implementation checklist](INTEGRATION_MODEL_IMPLEMENTATION.md) for verified progress.
 
+For the subsequent ontology review, see [Integration domain model review](INTEGRATION_DOMAIN_MODEL.md).
+It reassesses operation identity, obligations, controls, and assessment meaning without changing this implementation history.
+
 ## Recommendation
 
 Make the next milestone a reviewable contract revision for one operation: publish the IPE docs site.

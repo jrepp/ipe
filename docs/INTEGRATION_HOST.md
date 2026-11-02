@@ -56,29 +56,154 @@ The launcher submits the operator token in a POST body and redirects to the moni
 The host sets an HttpOnly, SameSite cookie. Monitor API requests require a custom header and the configured local host address.
 The monitor preserves open evidence panels and keyboard focus during refresh.
 The monitor checks the browser session automatically. It refreshes the installed program, run history, and records every three seconds.
+On connection, the monitor upgrades older v1-only sessions to cover both API versions. Refresh the page after a host upgrade.
 Keep `open-monitor.html` private; it contains the operator credential. Share `snapshot.html` instead.
 Manual token entry remains available for API operators. The GitHub helper credential is separate from the local operator credential.
 Use Ctrl-C to stop the host. Without `--serve`, the demo stops it after capture.
 Do not combine `--serve` with the two-second proof schedule for normal use. The default schedule is 300 seconds.
 
+## Monitor views
+
+The monitor has two primary views. **Runtime** opens by default.
+
+- **Runtime** shows installed scope, schedule, collector version, latest capture, and capture duration.
+  Use **Runs** for reads, errors, outputs, and external outcomes. Use **Program** for source, input, and grants.
+  Use **Changes** to compare retained captures and review catalogs.
+- **Integration coverage** shows ontology mappings from one collector run.
+  Inspect discovered rules, mechanisms, principals, source evidence, candidate execution links, and missing mappings.
+  Use **Operations** for named requirements and evidence checks. Use **Records** for record search, freshness, and collection coverage.
+
+Missing mappings do not prove that an external control is absent. Coverage counts describe retained data, not verified enforcement.
+Before connection, the monitor shows connection instructions. Manual operator token entry is available in a disclosure.
+
+The host shows installed code. It cannot show unsaved agent drafts or local files that have not been installed.
+During extraction, the monitor shows available read activity. Final duration and output counts appear after completion.
+Runs also show bounded program progress reports: phase, task type, queued work, completed work, and gaps.
+These reports describe collector work. Native read evidence separately records host-observed activity.
+The monitor prevents duplicate start requests while a capture runs. The host enforces the same limit.
+
+### Collector execution and model view
+
+Select a run under **Runs** to open its D3 graph. The graph uses that run's records, not the current catalog.
+Choose one operation and one observed execution. The diagram shows that operation, its selected execution, and supporting facts.
+Named requirements appear beside the diagram. Requirement fulfillment remains unknown, even when a provider reports execution success.
+Exact execution identities connect provider outcomes to facts. Dashed links show candidate connections between operations and provider outcomes.
+Select a node to inspect its details. Collection reads and source records remain available in a separate evidence disclosure.
+Unmapped observations remain available when no operation link was captured. Missing links are shown explicitly; the view does not infer them from names.
+The view marks failed reads, missing receipt links, unresolved model references, and reads without emitted records.
+A read without an emitted record can be a valid traversal step. These gaps do not establish a policy violation.
+Candidate references remain uncertain. An observed fact does not establish requirement fulfillment or authorization.
+
+New runs include native request steps and emission steps. An emission means the host validated a record during collection.
+Running emissions remain staged. Failed runs retain emission traces but do not publish partial records or renew facts.
+Successful runs publish their captured records. Older runs show unavailable emission steps instead of inferred timing.
+Each trace retains at most 256 emissions and 128 KiB. The focused diagram limits facts per page and reports incomplete traces. The supporting projection retains a bounded node set.
+Fact details retain observation time and expiry; the view does not replay a historical policy evaluation.
+
+The host serves a pinned D3 build locally. Exported snapshots include the graph assets and need no CDN connection.
+
+Choose a retained capture as the source comparison baseline. The preview limits large source comparisons and identifies omitted lines.
+Full retained source remains available below the preview. The Program view shows the current installed source.
+Without an accepted catalog, current declarations are not confirmed changes to an accepted contract.
+Catalog acceptance does not install source, activate policy, or renew facts.
+
+Snapshots remain read-only. Source comparison requires retained manifests in the optional `revision_details` snapshot field.
+Existing snapshots without those manifests still show program, records, runs, and catalog review data.
+
 ## Versioned record types
+
+### Governance extraction and execution overlay
+
+Select a policy or contract under **Integration coverage** to open its concept map.
+The map groups governing rules, mechanisms and people, operation scope, and execution evidence.
+Select a concept to open its mapping details. Adjacent cards do not establish a relationship.
+Use **Show gaps and unknowns** to find candidate references, missing mappings, expired evidence, and unknown applicability.
+The detail panel states the source, relationship basis, and next check. Source receipts and emission steps remain in disclosures.
+The map preserves concept selection during refresh and resets selection when you change the governing rule or capture.
+
+Select one named requirement to inspect its retained configuration fields and source record.
+Opaque or truncated specifications remain source text. The view does not infer missing values.
+The requirement panel marks the missing binding between a governance requirement and an evidence predicate or check.
+Facts with matching execution identities do not establish this binding or requirement fulfillment.
+Capture scope, collector settings, execution summaries, and complete descriptions remain in collapsed disclosures.
+
+Source details show retained paths, revisions, native reads, and exact record emission steps when available.
+The source location identifies a retained record. It does not establish a verified field-level transformation.
+Operation subjects, candidate execution links, and facts with exact execution identities remain separate.
+
+Current collector read grants, output grants, schedule, and fact lifetime appear under collector runtime configuration.
+Saved snapshots label these settings as historical. They do not establish the current installation.
+These settings control collection. They do not establish external policy configuration or activate IPE enforcement.
+Use Changes to compare the current installation with a retained capture.
+
+
+The collector uses permitted APIs to extract external governance. The host retains native read receipts for each emitted description.
+The Integration coverage view compares those descriptions with external execution evidence from the same capture.
+Collector execution is extraction activity; an external execution is an observed attempt in the governed system.
+
+Model v2 adds `entity.kind: "governance"` with a typed `record`. Existing entity kinds continue to use model v1.
+Installations must grant the `governance` output kind. SDK 0.7 provides `ipe.governanceModel(record, {scope, claim})` and receipt-bound `ipe.observation`.
+
+| Governance record type | Captured meaning |
+| --- | --- |
+| `policy` | Governing source, declared authority, subject identities, and named requirements |
+| `contract` | Identified parties, governing subject identities, and named terms |
+| `control` | Mechanism description and references to governing policies or contracts |
+| `handoff` | Policy reference, sender and recipient, trigger, required action, completion, and continuation conditions |
+| `principal` | Authority-scoped human, service, group, or role identity |
+| `role_assignment` | Sourced membership, responsibility, approval authority, or delegation with validity bounds |
+| `contact_method` | Sourced route, owner, channel, availability, purpose, and optional validity limit |
+
+Each record includes a source revision. Resolved references require the exact typed target and source revision in the same capture.
+Candidate and unknown references can remain unresolved. Resolved identity does not verify authority or effective enforcement.
+Policy subjects can reference existing operation identities. An operation's matching provider outcome remains a candidate link.
+Facts link to outcomes by exact execution identity. A matching name or shared receipt does not establish a semantic link.
+
+Role assignments and contact methods expire at the earlier of the native fact lifetime and any source validity limit.
+They remain separate from accepted review declarations. Restoring a catalog or failing a capture does not renew them.
+Contact methods display as source-provided text; the monitor does not send messages or infer missing addresses.
+The current capture does not verify contact reachability, approval authority, handoff completion, or requirement fulfillment.
+
+The [synthetic fixture](../testing/integration/hosted/governance-handoff.json) covers an automated release gate and a human approval handoff.
+Native tests exercise API extraction, grants, receipt provenance, exact reference validation, expiry, atomic failure, and restart.
+The GitHub collector now reads environment protection and repository ruleset APIs through separately granted native operations.
+It links literal workflow environment names to operation identities; dynamic expressions and unmatched environment names remain gaps.
+Required reviewers produce account or team identities, scoped approval-role descriptions, handoffs, and source-provided profile routes.
+A GitHub `User` account does not establish a human identity, so its principal kind remains `unknown`. Bot and team types remain distinct.
+The collector does not infer email addresses, team membership, policy owners, or governing contracts from these responses.
+
+Grant `list_environments`, `list_rulesets`, and `get_ruleset`, plus the `governance` output kind, to enable these reads.
+The demo installation includes these grants and retains API version `2022-11-28`.
+The collector samples at most two environments, two reviewers per environment, six environment rules, and six ruleset details.
+Each ruleset description retains at most 32 rules. Long specifications are bounded and report a truncation gap.
+Denied reads, missing grants, unmatched literal environments, and partial samples preserve explicit gaps; they do not establish policy absence.
+Rulesets retain provider scope instead of an inferred workflow link. Neither ruleset configuration nor execution success proves effective enforcement.
+
+See GitHub's [environment API](https://docs.github.com/en/rest/deployments/environments?apiVersion=2022-11-28) and [ruleset API](https://docs.github.com/en/rest/repos/rules?apiVersion=2022-11-28).
+Native synthetic API tests execute the actual collector and validate successful capture, denied reads, missing grants, source links, and expiry.
+These tests do not establish a particular repository's live configuration or access permissions.
+Current API configuration does not establish which policy revision applied to an earlier execution; temporal applicability remains unknown.
+Complete governance removal coverage, handoff event records, escalation rules, and live directory resolution remain future work.
+
+### Existing v1 records
 
 | Record | Meaning | Agent use | Human view |
 | --- | --- | --- | --- |
 | `definition` | Versioned workflow or action interface | Resolve source revisions and declared inputs | Review declared interfaces |
 | `evidence` | Source excerpt or lexical clue | Support an inference without treating it as a rule | Inspect raw source separately |
-| `constraint` | Operation requirement with explicit applicability and obligations | Identify prerequisites and uncertainty | Review actor, permissions, dependencies, and enforcer |
+| `constraint` | Operation description with applicability and named requirements; the wire name remains v1 | Identify prerequisites and uncertainty | Review actor, requirements, dependencies, and declared enforcer |
 | `invocation` | A call site and its input bindings | Distinguish repeated calls and defaults | Follow calls to captured definitions |
 | `fact` | Provider-reported status with finite expiry | Supply evidence for a later authorized evaluation | Inspect current and expired observations |
+| `association` | Expiring link between subjects under explicit context | Connect evidence across named sources | Review exact and candidate links |
 | `outcome` | Execution result with structured attempt identity | Compare actual attempts | Inspect status, duration, and step results |
 
 Each emitted observation contains `model`, `data`, and `receipts`.
-`model.schema_version` is 1. The host validates the typed entity and derives its key and revision digest.
+Existing entity kinds use `model.schema_version: 1`; governance uses version 2. The host validates each entity and derives its key and revision digest.
 `data` retains raw provider material for inspection. It does not implicitly add executable constraints.
 Use authenticated `GET /v1/host/record-schema` to obtain JSON Schema generated from the Rust model types.
 Native validation also checks grants, receipt ownership, bounded values, duplicate identities, and resolved definition links.
 
-Logical control identity excludes source revision. Record identity and revision digests preserve different source versions and mapping versions.
+Operation identity (`ControlId` in stored v1 records) excludes source revision. Record identity and revision digests preserve different source versions and mapping versions.
 Invocation identity includes its parent definition and call-site pointer. Execution identity includes provider, resource, run, attempt, job, and step.
 Facts with an execution reference must use that execution's canonical subject identity.
 A display-name correlation remains a candidate. It cannot become a resolved declaration link.
@@ -121,6 +246,8 @@ It reports omitted change counts. When identity or byte capacity is exhausted, t
 Use `GET /v1/integrations/:id/outcomes` to export the archive, including native evidence.
 The GitHub key includes repository, workflow run, attempt, and job identity where applicable.
 This permits tracking real executions without counting each poll as another execution.
+
+See [contextual evidence assessments](INTEGRATION_ASSESSMENTS.md) for cross-source dependencies, ticket approvals, and compliance evidence.
 
 ## Review catalogs and operation explanations
 
@@ -194,11 +321,15 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 | `GET /v1/integrations/:id/revisions/:revision` | Export a retained manifest |
 | `POST /v1/integrations/:id/revisions/:revision/accept` | Select a catalog for local review |
 | `POST /v1/integrations/:id/revisions/:revision/restore` | Select a previously accepted catalog |
-| `GET /v1/integrations/:id/catalog` | Return the selected declarations and separate current facts |
+| `GET /v1/integrations/:id/catalog` | Return selected declarations, current facts, and expiring associations |
+| `POST /v1/integrations/:id/assessments` | Assess configured evidence rules against caller-selected context; no mutations or provider reads |
+| `GET /v2/integrations/:id/operations` | Read selected operation descriptions and exact mapped record revisions |
+| `POST /v2/integrations/:id/assessments` | Check pinned evidence rules; keep evidence matches separate from requirement fulfillment |
 | `GET /v1/integrations/:id/explanations` | Explain operation requirements, evidence, unknowns, outcomes, and permitted next observations |
 | `GET /v1/integrations/:id/records` | Return current requirements and facts, including expiry flags |
 
 The installation body contains `source`, `operations`, `input`, `interval_seconds`, `enabled`, `fact_ttl_seconds`, and `output_kinds`.
+See [v2 domain APIs and rule migration](INTEGRATION_ASSESSMENTS.md#versioned-domain-apis) before using the new assessment route.
 See [demo.py](../tools/integration-host/demo.py) for complete configuration and API requests.
 
 SDK 0.3 adds typed `ipe.observation` output. SDK 0.2 introduced `ipe.call`, `ipe.exchange`, and `ipe.timestamp`.

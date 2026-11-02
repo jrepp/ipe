@@ -31,7 +31,7 @@ The `approvals` feature enables the runtime modules in `ipe-core`. Default-featu
 For script adapter or SDK changes, run the shared JSON/integration tests and integration acceptance checks above. After `npm ci --prefix testing/integration`, check the typed adapter example:
 
 ```sh
-testing/integration/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node testing/integration/adapters/read-step.ts --typeRoots testing/integration/node_modules/@types
+testing/integration/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node testing/integration/adapters/read-step.ts testing/integration/hosted/typed-observation.ts testing/integration/hosted/domain-types.ts testing/integration/hosted/governance-types.ts --typeRoots testing/integration/node_modules/@types
 ```
 
 For Rust changes, run formatting, lint, and the affected tests. Before handoff, run workspace tests when shared behavior or dependencies change. Run acceptance checks when API or trust-boundary behavior changes. For documentation-only changes, check links and examples; Rust tests are not normally needed.
