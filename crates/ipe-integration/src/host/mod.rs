@@ -1336,6 +1336,8 @@ mod governance_host_tests;
 #[cfg(test)]
 mod model_tests;
 #[cfg(test)]
+mod product_ship_provenance_tests;
+#[cfg(test)]
 mod product_ship_tests;
 #[cfg(test)]
 mod tests;

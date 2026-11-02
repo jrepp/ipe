@@ -81,6 +81,29 @@ All three use the same generated data and evaluator.
 Switch scenarios to compare ready, blocked, missing evidence, expired evidence, and the wrong artifact.
 Scenario changes affect the browser simulation only.
 
+## Systems, source records, and responsible people
+
+The readiness view includes a **Systems & people** preview for each selected control.
+It links the control to required ServiceNow records, role assignments, people, and their email or Slack profiles.
+The default evidence view also summarizes the available source records and assigned owners.
+
+Record identity uses the instance, table, and `sys_id`. The record number is a display label, not a join key.
+The view compares the required state with the observed source state. It preserves source revision, read receipt, observation time, and expiry.
+The table names and state values are fixture definitions. They do not specify a universal ServiceNow schema.
+
+Assignments identify a person by an explicit source identifier. A matching display name does not resolve a person.
+Owner, reviewer, and approver are distinct roles. A listed approver does not prove that an approval occurred.
+Missing, unresolved, or expired profile data remains visible. Contact profiles do not authorize messaging or approval.
+
+The [provenance collector](../testing/integration/hosted/product-ship/provenance-collector.js) uses the SDK and the named `read_control_context` operation.
+It emits source evidence and governance descriptions for people, roles, assignments, and contact methods.
+The [headless provenance runner](../testing/integration/hosted/product-ship/provenance-runner.cjs) derives the preview data from those emissions.
+Regenerate `data.json` with the existing runner command to include this context.
+
+This preview does not connect to real ServiceNow or Slack accounts. All people and records are synthetic.
+Source record context and contact resolution remain separate from the existing qualification evaluator.
+A production binding must specify which record states and role actions a control requires before they can affect its result.
+
 ## Limits
 
 The synthetic integrations do not query accessibility tools, vulnerability scanners, legal systems, or approval systems.

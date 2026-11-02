@@ -1,0 +1,2523 @@
+{
+  "schema": "ipe.product-ship-provenance-fixture.v1",
+  "simulated": true,
+  "as_of": "2026-11-02T12:00:00Z",
+  "instance": "https://ipe-demo.service-now.example.invalid",
+  "source_revision": "synthetic-servicenow-provenance-v1",
+  "contexts": [
+    {
+      "control_id": "ship.accessibility.keyboard-navigation",
+      "records": [
+        {
+          "id": "sn-record-ship.accessibility.keyboard-navigation",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001001",
+          "number": "RCE0000001",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001001",
+          "title": "Keyboard navigation works evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001001",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.accessibility.keyboard-navigation:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.accessibility.keyboard-navigation",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.accessibility.keyboard-navigation:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.accessibility.keyboard-navigation",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.accessibility.keyboard-navigation:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.accessibility.keyboard-navigation",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": null,
+            "status": "unavailable",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001001",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.accessibility.screen-reader",
+      "records": [
+        {
+          "id": "sn-record-ship.accessibility.screen-reader",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001002",
+          "number": "RCE0000002",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001002",
+          "title": "Screen reader labels are present evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001002",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.accessibility.screen-reader:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.accessibility.screen-reader",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.accessibility.screen-reader:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer-unresolved",
+          "resolution": "unresolved",
+          "source_record_id": "sn-record-ship.accessibility.screen-reader",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.accessibility.screen-reader:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.accessibility.screen-reader",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001002",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.security.security-review",
+      "records": [
+        {
+          "id": "sn-record-ship.security.security-review",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001003",
+          "number": "RCE0000003",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001003",
+          "title": "Security review is complete evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001003",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.security.security-review:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.security.security-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.security.security-review:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.security.security-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.security.security-review:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.security.security-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001003",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.security.vulnerability-scan",
+      "records": [
+        {
+          "id": "sn-record-ship.security.vulnerability-scan",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001004",
+          "number": "RCE0000004",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001004",
+          "title": "Dependency scan has no blocking findings evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001004",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.security.vulnerability-scan:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.security.vulnerability-scan",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.security.vulnerability-scan:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.security.vulnerability-scan",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.security.vulnerability-scan:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.security.vulnerability-scan",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001004",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.open-source-legal.license-review",
+      "records": [
+        {
+          "id": "sn-record-ship.open-source-legal.license-review",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001005",
+          "number": "RCE0000005",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001005",
+          "title": "Dependency licenses are approved for this release evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001005",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.open-source-legal.license-review:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.open-source-legal.license-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.open-source-legal.license-review:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.open-source-legal.license-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.open-source-legal.license-review:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.open-source-legal.license-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001005",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.open-source-legal.third-party-notices",
+      "records": [
+        {
+          "id": "sn-record-ship.open-source-legal.third-party-notices",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001006",
+          "number": "RCE0000006",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001006",
+          "title": "Third-party notices are included evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001006",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.open-source-legal.third-party-notices:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.open-source-legal.third-party-notices",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.open-source-legal.third-party-notices:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.open-source-legal.third-party-notices",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.open-source-legal.third-party-notices:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.open-source-legal.third-party-notices",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001006",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.build-provenance.provenance",
+      "records": [
+        {
+          "id": "sn-record-ship.build-provenance.provenance",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001007",
+          "number": "RCE0000007",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001007",
+          "title": "Build provenance identifies the source revision evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001007",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.build-provenance.provenance:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.build-provenance.provenance",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.build-provenance.provenance:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.build-provenance.provenance",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.build-provenance.provenance:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.build-provenance.provenance",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001007",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.build-provenance.artifact-digest",
+      "records": [
+        {
+          "id": "sn-record-ship.build-provenance.artifact-digest",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001008",
+          "number": "RCE0000008",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001008",
+          "title": "Artifact digest matches the release candidate evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001008",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.build-provenance.artifact-digest:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.build-provenance.artifact-digest",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.build-provenance.artifact-digest:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.build-provenance.artifact-digest",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.build-provenance.artifact-digest:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.build-provenance.artifact-digest",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001008",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.test-quality.required-tests",
+      "records": [
+        {
+          "id": "sn-record-ship.test-quality.required-tests",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001009",
+          "number": "RCE0000009",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001009",
+          "title": "Required test suites pass evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001009",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.test-quality.required-tests:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.test-quality.required-tests",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.test-quality.required-tests:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.test-quality.required-tests",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.test-quality.required-tests:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.test-quality.required-tests",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001009",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.test-quality.coverage-threshold",
+      "records": [
+        {
+          "id": "sn-record-ship.test-quality.coverage-threshold",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "0000000000000000000000000000100a",
+          "number": "RCE0000010",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=0000000000000000000000000000100a",
+          "title": "Coverage meets the release threshold evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:0000000000000000000000000000100a",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.test-quality.coverage-threshold:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.test-quality.coverage-threshold",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.test-quality.coverage-threshold:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.test-quality.coverage-threshold",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.test-quality.coverage-threshold:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.test-quality.coverage-threshold",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:0000000000000000000000000000100a",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.privacy.privacy-review",
+      "records": [
+        {
+          "id": "sn-record-ship.privacy.privacy-review",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "0000000000000000000000000000100b",
+          "number": "RCE0000011",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=0000000000000000000000000000100b",
+          "title": "Privacy review is complete evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:0000000000000000000000000000100b",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.privacy.privacy-review:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.privacy.privacy-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.privacy.privacy-review:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.privacy.privacy-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.privacy.privacy-review:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.privacy.privacy-review",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:0000000000000000000000000000100b",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.privacy.data-inventory",
+      "records": [
+        {
+          "id": "sn-record-ship.privacy.data-inventory",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "0000000000000000000000000000100c",
+          "number": "RCE0000012",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=0000000000000000000000000000100c",
+          "title": "Data inventory is current evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:0000000000000000000000000000100c",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.privacy.data-inventory:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.privacy.data-inventory",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.privacy.data-inventory:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.privacy.data-inventory",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.privacy.data-inventory:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.privacy.data-inventory",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:0000000000000000000000000000100c",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.change-control.change-approval",
+      "records": [
+        {
+          "id": "sn-record-ship.change-control.change-approval",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "0000000000000000000000000000100d",
+          "number": "RCE0000013",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=0000000000000000000000000000100d",
+          "title": "Change approval is recorded evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:0000000000000000000000000000100d",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.change-control.change-approval:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.change-control.change-approval",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.change-control.change-approval:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.change-control.change-approval",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.change-control.change-approval:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.change-control.change-approval",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:0000000000000000000000000000100d",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.change-control.change-record",
+      "records": [
+        {
+          "id": "sn-record-ship.change-control.change-record",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "0000000000000000000000000000100e",
+          "number": "RCE0000014",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=0000000000000000000000000000100e",
+          "title": "Change record names this artifact evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:0000000000000000000000000000100e",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.change-control.change-record:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.change-control.change-record",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.change-control.change-record:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.change-control.change-record",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.change-control.change-record:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.change-control.change-record",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:0000000000000000000000000000100e",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.reliability.operational-readiness",
+      "records": [
+        {
+          "id": "sn-record-ship.reliability.operational-readiness",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "0000000000000000000000000000100f",
+          "number": "RCE0000015",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=0000000000000000000000000000100f",
+          "title": "Operational readiness review is complete evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:0000000000000000000000000000100f",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.reliability.operational-readiness:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.reliability.operational-readiness",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.reliability.operational-readiness:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.reliability.operational-readiness",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.reliability.operational-readiness:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.reliability.operational-readiness",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:0000000000000000000000000000100f",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.reliability.recovery-plan",
+      "records": [
+        {
+          "id": "sn-record-ship.reliability.recovery-plan",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001010",
+          "number": "RCE0000016",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001010",
+          "title": "Recovery plan is current evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001010",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.reliability.recovery-plan:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.reliability.recovery-plan",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.reliability.recovery-plan:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.reliability.recovery-plan",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.reliability.recovery-plan:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.reliability.recovery-plan",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001010",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.operations.monitoring",
+      "records": [
+        {
+          "id": "sn-record-ship.operations.monitoring",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001011",
+          "number": "RCE0000017",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001011",
+          "title": "Release monitoring is configured evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001011",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.operations.monitoring:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.operations.monitoring",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.operations.monitoring:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.operations.monitoring",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.operations.monitoring:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.operations.monitoring",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001011",
+        "gaps": []
+      }
+    },
+    {
+      "control_id": "ship.operations.support-owner",
+      "records": [
+        {
+          "id": "sn-record-ship.operations.support-owner",
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "u_release_control_evidence",
+          "sys_id": "00000000000000000000000000001012",
+          "number": "RCE0000018",
+          "url": "https://ipe-demo.service-now.example.invalid/u_release_control_evidence.do?sys_id=00000000000000000000000000001012",
+          "title": "A support owner is assigned evidence",
+          "required_state": "closed_complete",
+          "observed_state": "closed_complete",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z",
+          "source_revision": "synthetic-servicenow-provenance-v1",
+          "receipt": "fixture:servicenow:00000000000000000000000000001012",
+          "relation": "required_record",
+          "status": "available"
+        }
+      ],
+      "assignments": [
+        {
+          "id": "assignment:ship.operations.support-owner:control-owner",
+          "role": "Control owner",
+          "person_id": "person-release-owner",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.operations.support-owner",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.operations.support-owner:reviewer",
+          "role": "Reviewer",
+          "person_id": "person-control-reviewer",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.operations.support-owner",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        },
+        {
+          "id": "assignment:ship.operations.support-owner:approver",
+          "role": "Approver",
+          "person_id": "person-release-approver",
+          "resolution": "resolved",
+          "source_record_id": "sn-record-ship.operations.support-owner",
+          "observed_at": "2026-11-02T12:00:00Z",
+          "expires_at": "2026-11-02T12:30:00Z"
+        }
+      ],
+      "people": [
+        {
+          "id": "person-release-owner",
+          "name": "Morgan Lee",
+          "title": "Release governance owner",
+          "system_id": "00000000000000000000000000005001",
+          "email": {
+            "value": "morgan.lee@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1001",
+            "display_name": "Morgan Lee",
+            "url": "https://slack.example.invalid/team/UDEMO1001",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005001"
+        },
+        {
+          "id": "person-control-reviewer",
+          "name": "Riley Chen",
+          "title": "Control reviewer",
+          "system_id": "00000000000000000000000000005002",
+          "email": {
+            "value": "riley.chen@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1002",
+            "display_name": "Riley Chen",
+            "url": "https://slack.example.invalid/team/UDEMO1002",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005002"
+        },
+        {
+          "id": "person-release-approver",
+          "name": "Jordan Patel",
+          "title": "Release approver",
+          "system_id": "00000000000000000000000000005003",
+          "email": {
+            "value": "jordan.patel@example.invalid",
+            "status": "available",
+            "source": "ServiceNow sys_user.email",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "slack": {
+            "workspace": "ipe-demo",
+            "user_id": "UDEMO1003",
+            "display_name": "Jordan Patel",
+            "url": "https://slack.example.invalid/team/UDEMO1003",
+            "status": "available",
+            "source": "ServiceNow u_slack_profile",
+            "observed_at": "2026-11-02T12:00:00Z",
+            "expires_at": "2026-11-02T12:30:00Z"
+          },
+          "system": "ServiceNow",
+          "instance": "https://ipe-demo.service-now.example.invalid",
+          "table": "sys_user",
+          "sys_id": "00000000000000000000000000005003"
+        }
+      ],
+      "collection": {
+        "status": "available",
+        "observed_at": "2026-11-02T12:00:00Z",
+        "receipt": "fixture:servicenow:00000000000000000000000000001012",
+        "gaps": []
+      }
+    }
+  ],
+  "state_labels": {
+    "closed_complete": "Synthetic state label meaning the required record is complete for this fixture; it is not a universal ServiceNow state code."
+  }
+}

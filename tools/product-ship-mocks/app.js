@@ -12,11 +12,50 @@
   ];
   const initialQuery = new URLSearchParams(location.search);
   const state = { scenario: initialQuery.get('scenario') || 'ready', policyId: initialQuery.get('policy') || '', controlId: initialQuery.get('control') || '', evidenceIndex: 0 };
-  Object.assign(state, {openPolicies: new Set(), evidenceNode:'observation', evidenceLink:null, evidenceView:'map', evidenceFocus:false, openApplication:false, openRaw:false});
+  Object.assign(state, {openPolicies: new Set(), evidenceNode:'observation', evidenceLink:null, evidenceView:['map','record','systems'].includes(initialQuery.get('view'))?initialQuery.get('view'):'map', provenanceNode:'record', evidenceFocus:false, openApplication:false, openRaw:false});
   let data;
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const text = (value, fallback = 'Not provided') => value == null || value === '' ? fallback : String(value);
+  const uniqueMatch = (items, id) => {
+    const matches = (items || []).filter((item) => item?.id === id);
+    return matches.length === 1 ? matches[0] : null;
+  };
+  const provenanceFor = (controlId) => {
+    const matches=(data.provenance?.contexts || []).filter((context) => context.control_id === controlId);
+    return matches.length === 1 ? matches[0] : matches.length > 1 ? {ambiguous:true,control_id:controlId} : null;
+  };
+  const fieldText = (value) => {
+    if (value == null || value === '') return 'Not provided';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return JSON.stringify(value);
+  };
+  const safeHref = (value, kind = 'https') => {
+    if (typeof value !== 'string' || value.length > 2048 || /[\u0000-\u0020\u007f]/.test(value)) return null;
+    if (kind === 'mailto') return /^[A-Za-z0-9.!$'*+^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/.test(value) ? `mailto:${value}` : null;
+    try {
+      const url = new URL(value);
+      if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) return null;
+      return url.href;
+    } catch { return null; }
+  };
+  const contactIsCurrent = (item) => {
+    if (!item || item.status !== 'available' || !item.observed_at || !item.expires_at || !data?.as_of) return false;
+    const observed = Date.parse(item.observed_at), expires = Date.parse(item.expires_at), now = Date.parse(data.as_of);
+    return Number.isFinite(observed) && Number.isFinite(expires) && Number.isFinite(now) && observed <= now && expires > now;
+  };
+  const sourceFreshness = (item) => {
+    if (!item || item.status === 'unavailable' || item.resolution === 'unresolved') return 'Unavailable or unresolved';
+    if (item.expires_at && data?.as_of && Date.parse(item.expires_at) <= Date.parse(data.as_of)) return 'Expired';
+    if (item.observed_at && data?.as_of && Date.parse(item.observed_at) > Date.parse(data.as_of)) return 'Future observation';
+    return contactIsCurrent({...item,status:item.status || 'available'}) ? 'Current source observation' : 'Not verified as current';
+  };
+  const stateLabel = (value) => typeof value === 'string' ? value : fieldText(value);
+  const contextOwners = (context) => (context?.assignments || []).map((assignment) => {
+    const person = assignment.resolution === 'resolved' ? uniqueMatch(context.people,assignment.person_id) : null;
+    return {assignment, person};
+  });
+  const safeLink = (label, href, className = '') => href ? `<a class="${className}" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>` : `<span class="${className}">${esc(label)}</span>`;
   const rootPolicy = () => data.policy || data.root_policy || data.policies.find((p) => !p.parent_id) || { id: 'product-ship', title: 'Product ship policy', description: '' };
   const children = () => {
     const root = rootPolicy();
@@ -61,6 +100,83 @@
       <dl class="facts-grid"><div><dt>Observed</dt><dd>${esc(text(entry.observed_at))}</dd></div><div><dt>Expires</dt><dd>${esc(text(entry.expires_at))}</dd></div><div><dt>Source</dt><dd>${esc(text(entry.source))}</dd></div><div><dt>Artifact</dt><dd>${esc(text(entry.artifact))}</dd></div><div><dt>Environment</dt><dd>${esc(text(entry.environment))}</dd></div><div><dt>Release</dt><dd>${esc(text(entry.release_id))}</dd></div></dl>
       ${entry.source ? `<div class="source-link">Source record · ${esc(entry.source)}</div>` : ''}</section>`;
   };
+
+  const provenanceSummary = (context) => {
+    if (!context) return `<section class="provenance-summary" aria-label="Provenance and people"><div><strong>Systems and people</strong><p>No provenance context is available for this control.</p></div><span class="simulation-caveat">Sample data · no real ServiceNow or Slack account</span></section>`;
+    if (context.ambiguous) return `<section class="provenance-summary" aria-label="Provenance and people"><div><strong>Systems and people</strong><p>More than one provenance context uses this control ID. The UI cannot select one source safely.</p></div><span class="simulation-caveat">Sample data · source IDs are ambiguous</span></section>`;
+    const records = context.records || [];
+    const assignments = contextOwners(context);
+    const roleSummary = ['Control owner','Reviewer','Approver'].map((role) => {
+      const entries = assignments.filter(({assignment}) => assignment.role === role);
+      const names = entries.map(({assignment,person}) => {
+        const personMatches=(context.people || []).filter((item)=>item.id===assignment.person_id).length;
+        const label=person ? (person.name || person.id) : assignment.resolution !== 'resolved' ? 'Person unresolved' : personMatches>1 ? 'Person ID ambiguous' : 'Person record unavailable';
+        return `${label} · ${sourceFreshness(assignment)}`;
+      });
+      return `<div><dt>${esc(role)}${entries.length > 1 ? 's' : ''}</dt><dd>${names.length ? names.map(esc).join(', ') : 'Not assigned'}</dd></div>`;
+    }).join('');
+    const people = [...new Map(assignments.filter(({person})=>person).map(({person})=>[person.id,person])).values()];
+    const contacts = people.length ? people.map((person) => {
+      const email=person.email || {}, slack=person.slack || {};
+      const emailHref=contactIsCurrent(email)?safeHref(email.value,'mailto'):null;
+      const slackHref=contactIsCurrent(slack)?safeHref(slack.url):null;
+      const detail=(label,item,href,value)=>`${safeLink(value || label,href)} <small>${esc(sourceFreshness(item))}</small>`;
+      return `<span class="contact-summary"><b>${esc(person.name || person.id)}</b><span>${detail('Email',email,emailHref,email.value)} · ${detail('Slack profile',slack,slackHref,slack.display_name || slack.user_id)}</span></span>`;
+    }).join('') : '<span class="contact-summary">No resolved people or contact details</span>';
+    const firstRecord = records.length===1 ? records[0] : null;
+    const recordLabel = firstRecord ? `${firstRecord.system || 'External system'} · ${firstRecord.table || 'table'} · ${firstRecord.number || 'display number unavailable'} · ${sourceFreshness(firstRecord)}` : records.length>1 ? `${records.length} canonical records · inspect source IDs` : 'No linked record';
+    const recordUrl = firstRecord?.status === 'available' ? safeHref(firstRecord.url) : null;
+    const gapText=(context.collection?.gaps || []).map((gap)=>typeof gap==='string'?gap:gap?.message || gap?.code || fieldText(gap)).join('; ') || 'None reported';
+    return `<section class="provenance-summary" aria-label="Provenance and people"><div class="provenance-summary-main"><div><strong>Systems &amp; people</strong><p>${safeLink(recordLabel,recordUrl)}</p><button class="summary-explore" data-open-provenance>Inspect source records and roles</button></div><dl>${roleSummary}</dl></div><details class="summary-contacts"><summary>Contact profiles · ${people.length} people</summary><div class="summary-contact-list">${contacts}</div></details><div class="provenance-summary-foot"><span>${records.length} canonical record${records.length===1?'':'s'} · ${assignments.length} role assignment${assignments.length===1?'':'s'} · ${esc(text(context.collection?.status,'Unavailable'))}</span><span class="simulation-caveat">Simulated source data · roles do not prove approval</span>${context.collection?.gaps?.length?`<span>Gaps: ${esc(gapText)}</span>`:''}</div></section>`;
+  };
+
+  const provenanceWorkspace = (context) => {
+    if (!context) return `<section class="provenance-empty" aria-label="Systems and people"><h3>No provenance context</h3><p>This sample has no source records or people for the selected control. This does not change the evaluator result.</p></section>`;
+    if (context.ambiguous) return `<section class="provenance-empty" aria-label="Systems and people"><h3>Provenance context is ambiguous</h3><p>More than one source context uses this control ID. The UI does not choose a context by order.</p><p>This data issue does not change the evaluator result.</p></section>`;
+    const records = context.records || [], assignments = context.assignments || [], people = context.people || [];
+    const objects = [];
+    records.forEach((record,index)=>objects.push({id:`record:${record.id}:${index}`,kind:'ServiceNow record',title:record.title || record.number || record.sys_id || `Record ${index+1}`,source:record}));
+    assignments.forEach((assignment,index)=>objects.push({id:`assignment:${assignment.id}:${index}`,kind:'Role assignment',title:assignment.role || `Assignment ${index+1}`,source:assignment}));
+    people.forEach((person,index)=>{
+      objects.push({id:`person:${person.id}:${index}`,kind:'Person',title:person.name || person.id || `Person ${index+1}`,source:person});
+      objects.push({id:`contact:${person.id}:${index}`,kind:'Contact details',title:person.name || person.id || `Contact ${index+1}`,source:person});
+    });
+    if (!objects.length) return `<section class="provenance-empty" aria-label="Systems and people"><h3>No source records or role assignments</h3><p>Collection status: ${esc(text(context.collection?.status,'Unavailable'))}. ${esc((context.collection?.gaps || []).map((gap)=>typeof gap==='string'?gap:gap?.message || gap?.code || fieldText(gap)).join('; '))}</p><p>This gap does not change the evaluator result.</p></section>`;
+    const active=objects.find((item)=>item.id===state.provenanceNode) || objects[0];
+    const objectButton=(item)=>{
+      const group=item.kind==='ServiceNow record'?records:item.kind==='Role assignment'?assignments:people;
+      const duplicate=group.filter((entry)=>entry.id===item.source.id).length>1;
+      return `<button class="provenance-object ${item.id===active.id?'active':''} ${item.source.status==='unavailable'||item.source.resolution==='unresolved'||duplicate?'uncertain':''}" data-prov-node="${esc(item.id)}" aria-pressed="${item.id===active.id}"><span>${esc(item.kind)}</span><strong>${esc(item.title)}</strong>${duplicate?'<small>Duplicate source ID · references are ambiguous</small>':''}</button>`;
+    };
+    const recordFor = (assignment) => uniqueMatch(records,assignment.source_record_id);
+    const personFor = (assignment) => assignment.resolution==='resolved' ? uniqueMatch(people,assignment.person_id) : null;
+    const relations = [];
+    assignments.forEach((assignment)=>{
+      const record=recordFor(assignment), person=personFor(assignment);
+      const recordMatches=records.filter((item)=>item.id===assignment.source_record_id).length;
+      const personMatches=people.filter((item)=>item.id===assignment.person_id).length;
+      const recordLabel=record?`${record.title || record.number || record.sys_id} → `:recordMatches>1?'Ambiguous source record ID → ':'Source record reference unavailable → ';
+      const personLabel=person?(person.name || person.id):assignment.resolution!=='resolved'?'person unresolved':personMatches>1?'person ID is ambiguous':'person record unavailable';
+      relations.push(`<li>${esc(recordLabel)}${esc(assignment.role || 'Role')} → ${esc(personLabel)}. Source record ID: ${esc(text(assignment.source_record_id))}; person ID: ${esc(text(assignment.person_id))}.</li>`);
+    });
+    const values = (item) => {
+      const value=item.source, fields={};
+      if(item.kind==='ServiceNow record') Object.assign(fields,{'System':value.system,'Instance':value.instance,'Table':value.table,'Canonical sys_id':value.sys_id,'Display number':value.number,'Required state':stateLabel(value.required_state),'Observed state':stateLabel(value.observed_state),'Record relation':value.relation,'Record status':value.status,'Source revision':value.source_revision,'Broker read receipt':value.receipt,'Source receipt':value.source_receipt,'Collected at':value.observed_at,'Expires at':value.expires_at,'Record URL':safeHref(value.url) || 'Unavailable or unsafe URL'});
+      if(item.kind==='Role assignment') {const person=personFor(value), record=recordFor(value); Object.assign(fields,{'Role':value.role,'Assignment status':sourceFreshness(value),'Person resolution':person?'Resolved':value.resolution==='resolved'&&people.filter((person)=>person.id===value.person_id).length>1?'Ambiguous person ID':value.resolution,'Person ID reference':value.person_id,'Resolved person':person?.name,'Source record ID':value.source_record_id,'Record reference status':record?'Resolved':records.filter((record)=>record.id===value.source_record_id).length>1?'Ambiguous record ID':'Unavailable','Referenced record':record?.title || record?.number || record?.sys_id,'Source observed at':value.observed_at,'Source expires at':value.expires_at});}
+      if(item.kind==='Person') Object.assign(fields,{'Name':value.name,'Title':value.title,'Directory system ID':value.system_id,'Person ID':value.id});
+      if(item.kind==='Contact details') {
+        const email=value.email || {}, slack=value.slack || {};
+        const contactStatus=(contact)=>contact.status!=='available'?'Unavailable':contactIsCurrent(contact)?'Current source observation':'Not verified as current';
+        Object.assign(fields,{'Email':email.value,'Email status':contactStatus(email),'Email source':email.source,'Email observed at':email.observed_at,'Email expires at':email.expires_at,'Slack display name':slack.display_name,'Slack user ID':slack.user_id,'Slack workspace':slack.workspace,'Slack status':contactStatus(slack),'Slack source':slack.source,'Slack observed at':slack.observed_at,'Slack expires at':slack.expires_at,'Slack profile URL':safeHref(slack.url) || 'Unavailable or unsafe URL'});
+      }
+      return fields;
+    };
+    const activeFields=values(active);
+    const stateComparison=active.kind==='ServiceNow record'?`<div class="state-comparison"><div><b>Required state</b><span>${esc(stateLabel(active.source.required_state))}</span></div><div><b>Observed state</b><span>${esc(stateLabel(active.source.observed_state))}</span></div></div>`:'';
+    const email=active.kind==='Contact details'?active.source.email:null, slack=active.kind==='Contact details'?active.source.slack:null;
+    const contactLinks=active.kind==='Contact details'?`<div class="contact-links">${safeLink('Email',contactIsCurrent(email)?safeHref(email.value,'mailto'):null)} ${safeLink('Slack profile',contactIsCurrent(slack)?safeHref(slack.url):null)}</div>`:'';
+    return `<section class="provenance-workspace" aria-label="ServiceNow records and people"><div class="provenance-notice"><strong>Simulated integrations</strong><span>These sample records do not connect to real ServiceNow or Slack accounts. A role does not prove an approval action.</span></div><div class="provenance-collection"><b>Source collection</b><span>${esc(text(context.collection?.status,'Unavailable'))}</span><span>Collected ${esc(text(context.collection?.observed_at))}</span><span>Receipt ${esc(text(context.collection?.receipt))}</span><span>Gaps: ${esc((context.collection?.gaps || []).map((gap)=>typeof gap==='string'?gap:gap?.message || gap?.code || fieldText(gap)).join('; ') || 'None reported')}</span></div><div class="provenance-map"><aside class="provenance-navigation" aria-label="Source objects"><div class="provenance-objects">${objects.map(objectButton).join('')}</div><details class="provenance-relations"><summary>Source relationships</summary><ul>${relations.length?relations.join(''):'<li>No role assignment relation is available.</li>'}</ul><p>Each link uses the source IDs shown above. The view does not match people by name.</p></details></aside><section class="object-inspector detail-card provenance-inspector" aria-label="Selected provenance object"><div class="object-heading"><div><p class="eyebrow">${esc(active.kind)}</p><h3>${esc(active.title)}</h3></div></div><p>${esc(active.kind==='Role assignment'?'This role and person link come from the listed source IDs. They do not record an approval action.':active.kind==='Contact details'?'Contact details are source observations. The UI marks a contact current only when its observation time and expiry support that label.':'Values below come from the sample source record. Required and observed states remain separate.')}</p>${stateComparison}${Object.entries(activeFields).filter(([key])=>!['Required state','Observed state'].includes(key)).map(([key,value])=>`<div class="provenance-field"><b>${esc(key)}</b><span>${esc(fieldText(value))}</span></div>`).join('')}${contactLinks}</section></div></section>`;
+  };
   const setPolicy = (id) => {
     if (mode==='board' && state.policyId===id && state.openPolicies.has(id)) state.openPolicies.delete(id);
     else state.openPolicies.add(id);
@@ -73,6 +189,7 @@
     if (state.scenario !== 'ready') query.set('scenario', state.scenario);
     if (state.policyId) query.set('policy', state.policyId);
     if (state.controlId) query.set('control', state.controlId);
+    if (state.evidenceView!=='map') query.set('view',state.evidenceView);
     document.querySelectorAll('a[href]').forEach((link) => {
       const target = link.getAttribute('href').split('?')[0];
       if (!['index.html','board.html','network.html','console.html'].includes(target)) return;
@@ -99,6 +216,7 @@
   function evidenceWorkspace(policy, control, check) {
     if (!control) return '<p class="empty-state">Select a control to explore its evidence.</p>';
     const evidence = check.evidence;
+    const provenance = provenanceFor(control.id);
     const sameArtifact = evidence?.artifact === data.release.artifact;
     const nodes = [
       {id:'policy',kind:'Policy',title:policy.title,description:'The central ship policy requires this child policy. It lists this control.',fields:{'Policy ID':policy.id,'Parent policy':policy.parent_id,Owner:policy.owner,Requirement:control.description}},
@@ -123,9 +241,9 @@
     const relation = index => `<button class="evidence-relation" data-link="${index}" aria-pressed="${state.evidenceLink===index}" aria-label="Explain connection: ${esc(nodes.find(n=>n.id===links[index][0]).kind+' '+links[index][2]+' '+nodes.find(n=>n.id===links[index][1]).kind)}"><span>${esc(links[index][2])}</span><span aria-hidden="true">${index===3?'←':index===2?'↓':'→'}</span></button>`;
     const fields = values => `<dl class="object-fields">${Object.entries(values).map(([key,value])=>`<div><dt>${esc(key)}</dt><dd>${esc(text(value))}</dd></div>`).join('')}</dl>`;
     const selectedLink = state.evidenceLink===null ? null : links[state.evidenceLink];
-    return `<div class="evidence-tabs" role="group" aria-label="Evidence view"><button data-evidence-view="map" aria-pressed="${state.evidenceView==='map'}">Connections</button><button data-evidence-view="record" aria-pressed="${state.evidenceView==='record'}">Evidence record</button><span>Sample relationships · no enforcement event</span></div>
+    return `${provenanceSummary(provenance)}<div class="evidence-tabs" role="group" aria-label="Evidence view"><button data-evidence-view="map" aria-pressed="${state.evidenceView==='map'}">Connections</button><button data-evidence-view="record" aria-pressed="${state.evidenceView==='record'}">Evidence record</button><button data-evidence-view="systems" aria-pressed="${state.evidenceView==='systems'}">Systems &amp; people</button><span>Sample relationships · no enforcement event</span></div>
       ${state.evidenceView==='map' ? `<section class="evidence-canvas" aria-label="Control evidence connections"><div class="evidence-path">${nodeButton('policy')}${relation(0)}${nodeButton('control')}${relation(1)}${nodeButton('check')}</div><div class="evidence-branch"><svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M83.33 0 V20 H50 V58 M49 53 L50 58 L51 53"/></svg>${relation(2)}</div><div class="evidence-path evidence-sources">${nodeButton('source')}${relation(3)}${nodeButton('observation')}${relation(4)}${nodeButton('artifact')}</div><p class="map-help">Select an object or a connection to inspect it. Dashed borders mark missing or mismatched evidence.</p></section>
-      <section class="object-inspector detail-card" aria-label="Selected evidence object"><div class="object-heading"><div><p class="eyebrow">${selectedLink?'CONNECTION DETAILS':esc(active.kind)}</p><h3>${selectedLink?esc(nodes.find(n=>n.id===selectedLink[0]).kind+' → '+nodes.find(n=>n.id===selectedLink[1]).kind):esc(active.title)}</h3></div><div class="inspector-result">Check result ${badge(check.status)}</div></div><p>${esc(selectedLink ? selectedLink[3] : active.description)}</p>${selectedLink ? fields({From:nodes.find(n=>n.id===selectedLink[0]).title,Relationship:selectedLink[2],To:nodes.find(n=>n.id===selectedLink[1]).title}) : fields(active.fields)}</section>` : evidenceDetail(control,check)}
+      <section class="object-inspector detail-card" aria-label="Selected evidence object"><div class="object-heading"><div><p class="eyebrow">${selectedLink?'CONNECTION DETAILS':esc(active.kind)}</p><h3>${selectedLink?esc(nodes.find(n=>n.id===selectedLink[0]).kind+' → '+nodes.find(n=>n.id===selectedLink[1]).kind):esc(active.title)}</h3></div><div class="inspector-result">Check result ${badge(check.status)}</div></div><p>${esc(selectedLink ? selectedLink[3] : active.description)}</p>${selectedLink ? fields({From:nodes.find(n=>n.id===selectedLink[0]).title,Relationship:selectedLink[2],To:nodes.find(n=>n.id===selectedLink[1]).title}) : fields(active.fields)}</section>` : state.evidenceView==='record' ? evidenceDetail(control,check) : provenanceWorkspace(provenance)}
       <details class="application-details" data-disclosure="openApplication" ${state.openApplication?'open':''}><summary>How this control applies to the release</summary><p>${esc(policy.description)}</p>${fields({'Central policy':rootPolicy().title,'Child policy':policy.title,'Control':control.title,'Owner':policy.owner,'Release':data.release.id,'Environment':data.release.environment})}<p>All child policies and their required controls must pass in this simulation. These links do not record a production enforcement event.</p></details>
       <details class="application-details raw-evidence" data-disclosure="openRaw" ${state.openRaw?'open':''}><summary>Full evidence record${evidence?'':' · unavailable'}</summary>${evidence ? `<pre>${esc(JSON.stringify(evidence,null,2))}</pre>` : '<p>No evidence record is available for this control and release.</p>'}</details>`;
   }
@@ -155,6 +273,8 @@
     }));
     document.querySelector('[data-focus-evidence]').addEventListener('click',()=>{state.evidenceFocus=!state.evidenceFocus;rerender('[data-focus-evidence]');});
     document.querySelectorAll('[data-evidence-view]').forEach(button=>button.addEventListener('click',()=>{state.evidenceView=button.dataset.evidenceView;rerender(`[data-evidence-view="${state.evidenceView}"]`);}));
+    document.querySelectorAll('[data-open-provenance]').forEach(button=>button.addEventListener('click',()=>{state.evidenceView='systems';rerender('[data-evidence-view="systems"]');}));
+    document.querySelectorAll('[data-prov-node]').forEach(button=>button.addEventListener('click',()=>{state.provenanceNode=button.dataset.provNode;render();[...document.querySelectorAll('[data-prov-node]')].find(item=>item.dataset.provNode===state.provenanceNode)?.focus();}));
     document.querySelectorAll('[data-object]').forEach(button=>button.addEventListener('click',()=>{state.evidenceNode=button.dataset.object;state.evidenceLink=null;rerender(`[data-object="${state.evidenceNode}"]`);}));
     document.querySelectorAll('[data-link]').forEach(button=>button.addEventListener('click',()=>{state.evidenceLink=Number(button.dataset.link);rerender(`[data-link="${state.evidenceLink}"]`);}));
   }

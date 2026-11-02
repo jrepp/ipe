@@ -8,6 +8,7 @@ const fixture = JSON.parse(fs.readFileSync(path.join(here, 'product-ship.json'),
 const sdk = fs.readFileSync(path.resolve(here, '../../../../crates/ipe-integration/sdk/index.js'), 'utf8');
 const collectorPath = path.join(here, 'collector.js');
 const collector = fs.readFileSync(collectorPath, 'utf8');
+const provenanceRunner = require('./provenance-runner.cjs');
 require('./product-ship.js');
 const productShip = globalThis.IpeProductShip;
 const scenarioNames = ['ready', 'blocked', 'missing', 'expired', 'wrong-artifact'];
@@ -87,6 +88,7 @@ function run() {
   const scenarios = scenarioNames.map(scenario => ({scenario,assessment:productShip.evaluate(model,scenario)}));
   return {
     ...model,
+    provenance: provenanceRunner.collectProvenance(),
     integrations,
     scenarios,
     assessments:Object.fromEntries(scenarios.map(item=>[item.scenario,item.assessment])),

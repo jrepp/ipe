@@ -67,3 +67,26 @@ The focused suite passed 15 tests: eight model/collector tests and seven UI test
 New checks cover checklist expansion, selection and focus, full-width evidence, relationship inspection, missing records, and open details.
 Browser checks found zero Axe violations on desktop and mobile, no script errors, and no overflow at 390 pixels.
 This pass changes mock UI and documentation only. Native behavior remains unchanged; Rust tests were not rerun.
+
+
+## System provenance and responsible people
+
+The preview now links each of the 18 controls to synthetic ServiceNow record context and responsible roles.
+Canonical identity includes the instance, table, and `sys_id`. The view shows required and observed record states separately.
+Owner, reviewer, and approver assignments refer to people by explicit source IDs. Names do not resolve missing or duplicate identities.
+Email and Slack profiles retain source, observation time, and expiry. Unavailable or stale contacts remain visible without active contact links.
+The compact summary opens a larger source-object inspector through **Systems & people**.
+Evidence: [Source record](screenshots/system-provenance.png) and [role contact profiles](screenshots/roles-and-profiles.png).
+
+The SDK program performs a named broker read and emits evidence plus typed governance descriptions.
+The generated preview uses those emitted observations. It keeps broker receipts separate from source-provided receipt strings.
+The native host test verifies output grants, receipt chains, temporal bounds, unresolved references, and denied reads without publication.
+Node tests also cover truncated reads, duplicate people, modified source receipts, and preserved canonical profile IDs.
+
+Integration crate tests passed: 139 tests, with two opt-in acceptance tests ignored.
+All 97 JavaScript tests passed. These include 12 UI tests and five provenance extraction tests.
+Integration crate all-feature Clippy, formatting, documentation, and whitespace checks passed.
+Desktop and mobile browser checks found zero Axe violations, no script errors, and no page overflow at 390 pixels.
+
+All records and people are synthetic. No ServiceNow or Slack account was connected and no message was sent.
+Record context and role assignments do not change the qualification evaluator or establish that an approval occurred.

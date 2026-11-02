@@ -146,3 +146,103 @@ test('expanded policy application and raw evidence stay open during object explo
     assert.match(doc.querySelector('.raw-evidence').textContent,/receipt/);
   } finally {dom.window.close();}
 });
+
+test('systems view traces canonical source records to roles and contact profiles',async()=>{
+  const dom=await page('board');
+  try {
+    const doc=dom.window.document;
+    const context=data.provenance.contexts[0],record=context.records[0];
+    assert.match(doc.querySelector('.provenance-summary').textContent,/ServiceNow/);
+    assert.match(doc.querySelector('.provenance-summary').textContent,/Control owner/);
+    doc.querySelector('[data-evidence-view="systems"]').click();
+    const inspector=doc.querySelector('.provenance-inspector');
+    for(const field of [record.instance,record.table,record.sys_id,record.required_state,record.observed_state,record.receipt]) assert.ok(inspector.textContent.includes(field));
+    const assignment=context.assignments.find(item=>item.role==='Reviewer');
+    [...doc.querySelectorAll('[data-prov-node]')].find(button=>button.dataset.provNode.startsWith('assignment:'+assignment.id+':')).click();
+    assert.ok(doc.querySelector('.provenance-inspector').textContent.includes(assignment.person_id));
+    [...doc.querySelectorAll('[data-prov-node]')].find(button=>button.dataset.provNode.startsWith('contact:'+assignment.person_id+':')).click();
+    const person=context.people.find(item=>item.id===assignment.person_id);
+    assert.ok(doc.querySelector('.provenance-inspector').textContent.includes(person.email.value));
+    assert.ok(doc.querySelector('.provenance-inspector').textContent.includes(person.slack.user_id));
+    assert.match(doc.querySelector('.provenance-workspace').textContent,/role does not prove an approval/i);
+    assert.equal(doc.querySelector('.decision-pill').textContent,'ALLOW');
+  } finally {dom.window.close();}
+});
+
+test('unsafe contact and source URLs stay inert and source text is escaped',async()=>{
+  const fixture=structuredClone(data),context=fixture.provenance.contexts[0];
+  context.records[0].url='javascript:alert(1)';
+  for(const person of context.people){
+    person.name='<img src=x onerror=alert(1)>';
+    person.email={...person.email,status:'available',value:'user@example.invalid?bcc=other@example.invalid'};
+    person.slack={...person.slack,status:'available',url:'javascript:alert(1)'};
+  }
+  const dom=await page('board','',fixture);
+  try {
+    const doc=dom.window.document;
+    doc.querySelector('[data-evidence-view="systems"]').click();
+    assert.equal(doc.querySelector('.provenance-summary img'),null);
+    for(const node of doc.querySelectorAll('a')) {
+      assert.ok(!node.href.startsWith('javascript:'));
+      assert.ok(!node.href.startsWith('mailto:'));
+    }
+    const person=context.people[0];
+    [...doc.querySelectorAll('[data-prov-node]')].find(button=>button.dataset.provNode.startsWith('contact:'+person.id+':')).click();
+    assert.equal(doc.querySelector('.contact-links a'),null);
+    assert.equal(doc.querySelector('.provenance-inspector img'),null);
+  } finally {dom.window.close();}
+});
+
+test('denied context stays explicit without hiding or changing the qualification result',async()=>{
+  const fixture=structuredClone(data);
+  fixture.provenance.contexts[0]={control_id:fixture.policies[0].controls[0].id,records:[],people:[],assignments:[],collection:{status:'unavailable',observed_at:fixture.as_of,receipt:null,gaps:[{code:'provider_read_failed'}]}};
+  const dom=await page('board','',fixture);
+  try {
+    const doc=dom.window.document;
+    doc.querySelector('[data-evidence-view="systems"]').click();
+    assert.match(doc.querySelector('.provenance-empty').textContent,/provider_read_failed/);
+    assert.doesNotMatch(doc.body.textContent,/\[object Object\]/);
+    assert.equal(doc.querySelectorAll('[data-prov-node]').length,0);
+    assert.equal(doc.querySelector('.decision-pill').textContent,'ALLOW');
+  } finally {dom.window.close();}
+});
+
+test('stale roles and contact profiles remain labeled and cannot become current links',async()=>{
+  const fixture=structuredClone(data),context=fixture.provenance.contexts[0];
+  context.assignments[0].expires_at='2026-11-02T11:00:00Z';
+  for(const person of context.people) {
+    person.email.expires_at='2026-11-02T11:00:00Z';
+    person.slack.observed_at='2026-11-03T00:00:00Z';
+  }
+  const dom=await page('board','?view=systems',fixture);
+  try {
+    const doc=dom.window.document;
+    assert.match(doc.querySelector('.provenance-summary').textContent,/Expired/);
+    assert.match(doc.querySelector('.provenance-summary').textContent,/Future observation/);
+    assert.equal(doc.querySelector('.summary-contacts a'),null);
+    [...doc.querySelectorAll('[data-prov-node]')].find(button=>button.dataset.provNode.startsWith('contact:')).click();
+    assert.equal(doc.querySelector('.contact-links a'),null);
+    assert.match(doc.querySelector('.provenance-inspector').textContent,/Not verified as current/);
+  } finally {dom.window.close();}
+});
+
+test('duplicate identities and unresolved references do not choose a person by name or array order',async()=>{
+  const fixture=structuredClone(data),context=fixture.provenance.contexts[0];
+  context.people.push({...context.people[0],name:'Another matching identifier'});
+  context.assignments[1].person_id='missing-person';
+  context.assignments[1].resolution='unresolved';
+  const dom=await page('board','?view=systems',fixture);
+  try {
+    const doc=dom.window.document;
+    assert.match(doc.querySelector('.provenance-summary').textContent,/Person ID ambiguous/);
+    assert.match(doc.querySelector('.provenance-summary').textContent,/Person unresolved/);
+    assert.match(doc.querySelector('.provenance-relations').textContent,/person ID is ambiguous/);
+    assert.match(doc.querySelector('.provenance-relations').textContent,/person unresolved/);
+  } finally {dom.window.close();}
+  fixture.provenance.contexts.push(structuredClone(context));
+  const duplicate=await page('board','?view=systems',fixture);
+  try {
+    assert.match(duplicate.window.document.querySelector('.provenance-empty').textContent,/ambiguous/);
+    assert.equal(duplicate.window.document.querySelectorAll('[data-prov-node]').length,0);
+  } finally {duplicate.window.close();}
+});

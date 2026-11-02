@@ -21,7 +21,8 @@ It is not an uncommitted source change or a configured submodule. Do not add an 
 The usability branch also contains a synthetic product ship policy network with nine child policies.
 SDK programs collect sample controls and evidence. Three interactive studies compare readiness, network navigation, and simulated enforcement.
 See [the demo guide](../docs/PRODUCT_SHIP_DEMO.md) for authoring and launch steps.
-The study does not activate policies or enforce a real release gate. The selected direction combines a policy/control checklist with a larger evidence workspace. Review it before integration into the monitor.
+The study does not activate policies or enforce a real release gate. The selected direction combines a policy/control checklist with a larger evidence workspace.
+A synthetic provenance pass adds ServiceNow source records, assigned roles, and email or Slack profile context. Review it before integration into the monitor.
 
 ## Integration host scope
 
