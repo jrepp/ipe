@@ -4,7 +4,7 @@ import math
 from html.parser import HTMLParser
 from pathlib import Path
 import unittest
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 SITE = ROOT / "target/docs-site"
@@ -77,6 +77,9 @@ class DocsContract(unittest.TestCase):
                     continue
                 with self.subTest(page=page.name, target=target):
                     self.assertTrue((page.parent / unquote(url.path)).exists())
+                    if url.path == "doc.html":
+                        document = parse_qs(url.query).get("path", ["INDEX.md"])[0]
+                        self.assertTrue((page.parent / document).is_file(), document)
 
     def test_packaged_data_matches_local_data(self):
         self.assertEqual(self.data, json.loads((ROOT / "docs/data/site-data.json").read_text()))
