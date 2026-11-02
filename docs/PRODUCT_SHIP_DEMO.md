@@ -65,9 +65,17 @@ It does not expose repository files or the integration host's private credential
 
 | Study | Main question | Navigation |
 | --- | --- | --- |
-| Release readiness | What prevents this release from shipping? | Open a policy card, then inspect its controls and evidence. |
+| Release readiness | What prevents this release from shipping? | Expand the combined policy checklist, select a control, and explore its evidence. |
 | Policy network | How do the central policy and child policies connect? | Select a connected policy and follow its requirements. |
 | Evaluation console | Why would the release gate allow, deny, or wait? | Run a simulated check and inspect its decision trace. |
+
+The readiness view now combines policies and controls in one checklist.
+The evidence workspace uses most of the screen width. Select **Expand evidence** to hide the checklist temporarily.
+Use **Connections** to inspect the policy, control, check, observation, source, and release context.
+Select an object or connection to read its fields and matching reason.
+Dashed object borders mark missing evidence or an artifact mismatch.
+Use **Evidence record** for source fields. Expand the application details or full record for further review.
+The map describes fixture relationships and a simulated check. It does not claim a recorded production enforcement event.
 
 All three use the same generated data and evaluator.
 Switch scenarios to compare ready, blocked, missing evidence, expired evidence, and the wrong artifact.

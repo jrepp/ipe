@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Product ship readiness combines policy and control navigation in one checklist. A larger evidence workspace supports object and connection inspection, source records, and full-width review.
 - Product ship qualification example adds nine linked policies, SDK collector simulations, and three interactive views for readiness, policy navigation, and simulated enforcement.
 - Native coverage explanations expose the same run-specific record links to agents and the integration monitor. Candidate links, stale facts, and incomplete collection remain explicit.
 - Integration monitor groups inspection into Runtime and Integration coverage. Detail navigation follows the selected journey; disconnected sessions show connection instructions.

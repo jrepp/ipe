@@ -53,3 +53,17 @@ The browser evaluator is a simulation; native recursive policy enforcement is no
 The Node replay uses the embedded SDK for deterministic checks. It is not a security sandbox.
 The existing integration monitor and its private state remain separate from these mockups.
 See [the authoring guide](../../../docs/PRODUCT_SHIP_DEMO.md) for model files and launch commands.
+
+
+## Combined checklist and evidence workspace
+
+The readiness view now uses one compact frame for the policy chain and its controls.
+The main workspace shows the selected control's evidence map and an object or connection inspector.
+Users can expand the evidence area, switch to source fields, and open policy application details or the full record.
+Expected and reported artifact identities remain separate. Missing evidence does not create a source record.
+Evidence: [Checklist and evidence workspace](screenshots/checklist-evidence.png).
+
+The focused suite passed 15 tests: eight model/collector tests and seven UI tests.
+New checks cover checklist expansion, selection and focus, full-width evidence, relationship inspection, missing records, and open details.
+Browser checks found zero Axe violations on desktop and mobile, no script errors, and no overflow at 390 pixels.
+This pass changes mock UI and documentation only. Native behavior remains unchanged; Rust tests were not rerun.

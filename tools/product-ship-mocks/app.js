@@ -12,6 +12,7 @@
   ];
   const initialQuery = new URLSearchParams(location.search);
   const state = { scenario: initialQuery.get('scenario') || 'ready', policyId: initialQuery.get('policy') || '', controlId: initialQuery.get('control') || '', evidenceIndex: 0 };
+  Object.assign(state, {openPolicies: new Set(), evidenceNode:'observation', evidenceLink:null, evidenceView:'map', evidenceFocus:false, openApplication:false, openRaw:false});
   let data;
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -60,7 +61,12 @@
       <dl class="facts-grid"><div><dt>Observed</dt><dd>${esc(text(entry.observed_at))}</dd></div><div><dt>Expires</dt><dd>${esc(text(entry.expires_at))}</dd></div><div><dt>Source</dt><dd>${esc(text(entry.source))}</dd></div><div><dt>Artifact</dt><dd>${esc(text(entry.artifact))}</dd></div><div><dt>Environment</dt><dd>${esc(text(entry.environment))}</dd></div><div><dt>Release</dt><dd>${esc(text(entry.release_id))}</dd></div></dl>
       ${entry.source ? `<div class="source-link">Source record · ${esc(entry.source)}</div>` : ''}</section>`;
   };
-  const setPolicy = (id) => { state.policyId = id; state.controlId = ''; state.evidenceIndex = 0; render(); };
+  const setPolicy = (id) => {
+    if (mode==='board' && state.policyId===id && state.openPolicies.has(id)) state.openPolicies.delete(id);
+    else state.openPolicies.add(id);
+    state.policyId = id; state.controlId = ''; state.evidenceIndex = 0; state.evidenceLink=null; render();
+    if (mode==='board') [...document.querySelectorAll('.chain-policy')].find(button=>button.dataset.policy===id)?.focus();
+  };
   const bind = () => {
     document.querySelectorAll('.central-icon,.central-arrow,.row-mark,.control-symbol,.trace-number,.map-node span').forEach((element) => element.setAttribute('aria-hidden', 'true'));
     const query = new URLSearchParams();
@@ -72,9 +78,9 @@
       if (!['index.html','board.html','network.html','console.html'].includes(target)) return;
       link.href = query.size ? `${target}?${query.toString()}` : target;
     });
-    document.querySelector('#scenario')?.addEventListener('change', (event) => { state.scenario = event.target.value; render(); });
+    document.querySelector('#scenario')?.addEventListener('change', (event) => { state.scenario = event.target.value; render(); document.querySelector('#scenario')?.focus(); });
     document.querySelectorAll('[data-policy]:not([data-control])').forEach((button) => button.addEventListener('click', () => setPolicy(button.dataset.policy)));
-    document.querySelectorAll('[data-control]').forEach((button) => button.addEventListener('click', () => { state.policyId = button.dataset.policy || state.policyId; state.controlId = button.dataset.control; state.evidenceIndex = 0; render(); }));
+    document.querySelectorAll('[data-control]').forEach((button) => button.addEventListener('click', () => { state.policyId = button.dataset.policy || state.policyId; state.controlId = button.dataset.control; state.evidenceIndex = 0; state.evidenceLink=null; render(); if(mode==='board') [...document.querySelectorAll('[data-control]')].find(item=>item.dataset.control===state.controlId)?.focus(); }));
     document.querySelectorAll('[data-evidence-index]').forEach((button) => button.addEventListener('click', () => { state.evidenceIndex = Number(button.dataset.evidenceIndex); render(); }));
   };
 
@@ -83,34 +89,74 @@
     const counts = children().reduce((sum, p) => { const s = controlsStatus(p, result); sum.total += s.total; sum.met += s.met; sum.unknown += s.unknown; sum.notMet += s.notMet; return sum; }, {total:0, met:0,unknown:0,notMet:0});
     app.innerHTML = `<section class="home-hero"><div class="hero-copy"><p class="eyebrow">PRODUCT SHIP QUALIFICATION</p><h1>One release.<br><span>Every policy in view.</span></h1><p>Review the central ship policy and its linked controls for accessibility, security, open-source legal, and enterprise requirements.</p><div class="hero-actions"><a class="primary-link" href="board.html">Review release readiness <span aria-hidden="true">→</span></a><span class="simulation-note">SIMULATED ENFORCEMENT · FAIL CLOSED</span></div></div><div class="hero-stamp"><span>SHIP</span><b>POLICY</b><small>RELEASE GATE</small><div class="stamp-lines">${Array.from({length:5},() => '<i></i>').join('')}</div></div></section>
       ${releaseBlock()}<section class="overview-grid"><div class="overview-intro"><p class="eyebrow">CHOOSE A VIEW</p><h2>Explore the release gate</h2><p>Each view uses the same release data and simulated evaluator. Select a policy to inspect its controls and evidence.</p></div>
-       <a class="view-card card-board" href="board.html"><span class="card-number">01 / READINESS</span><div class="card-visual"><div class="mini-gate"><i></i><i></i><i></i><b>${counts.met}/${counts.total}</b></div></div><h3>Release gate board <span>→</span></h3><p>See blockers, missing evidence, and control status at a glance.</p></a>
+       <a class="view-card card-board" href="board.html"><span class="card-number">01 / READINESS</span><div class="card-visual"><div class="mini-gate"><i></i><i></i><i></i><b>${counts.met}/${counts.total}</b></div></div><h3>Release gate board <span>→</span></h3><p>Explore a compact policy checklist and a larger evidence workspace.</p></a>
        <a class="view-card card-network" href="network.html"><span class="card-number">02 / RELATIONSHIPS</span><div class="card-visual network-mini"><b>${esc(rootPolicy().title)}</b><i></i><i></i><i></i><small>${children().length} linked policies</small></div><h3>Policy network <span>→</span></h3><p>Move from the central policy into each child policy and control.</p></a>
        <a class="view-card card-console" href="console.html"><span class="card-number">03 / DECISION TRACE</span><div class="card-visual console-mini"><span>evaluate()</span><b>${decisionName(result.decision)}</b><i></i><i></i></div><h3>Enforcement console <span>→</span></h3><p>Change a scenario and inspect the shared evaluation trace.</p></a>
       </section><section class="home-summary"><div><small>SIMULATED RESULT</small>${decisionBadge(result.decision)}</div><p>${counts.met} met <span>·</span> ${counts.notMet} not met <span>·</span> ${counts.unknown} unknown</p>${selectScenario()}</section>`;
     bind();
   }
 
+  function evidenceWorkspace(policy, control, check) {
+    if (!control) return '<p class="empty-state">Select a control to explore its evidence.</p>';
+    const evidence = check.evidence;
+    const sameArtifact = evidence?.artifact === data.release.artifact;
+    const nodes = [
+      {id:'policy',kind:'Policy',title:policy.title,description:'The central ship policy requires this child policy. It lists this control.',fields:{'Policy ID':policy.id,'Parent policy':policy.parent_id,Owner:policy.owner,Requirement:control.description}},
+      {id:'control',kind:'Control',title:control.title,description:'This authored control names the expected evidence source. This is a simulated application of that requirement.',fields:{'Control ID':control.id,'Expected source':control.source,'Required for release':control.required ? 'Yes' : 'No'}},
+      {id:'check',kind:'Evidence check',title:statusName(check.status),description:check.reason,fields:{Result:statusName(check.status),'Evaluation time':data.as_of,'Expected release':data.release.id,'Expected artifact':data.release.artifact,'Expected environment':data.release.environment}},
+      {id:'observation',kind:'Observation',title:evidence ? 'Reported control result' : 'No evidence record',description:evidence ? evidence.reason : 'No matching record is available. This gap cannot establish that the control passed.',fields:evidence ? {'Reported status':evidence.status,'Control ID':evidence.control_id,'Observed at':evidence.observed_at,'Expires at':evidence.expires_at,'Reported artifact':evidence.artifact,'Reported environment':evidence.environment,'Receipt':evidence.receipt} : {Status:'Missing evidence','Required control':control.id}},
+      {id:'source',kind:'Source',title:evidence?.source || 'Source unavailable',description:evidence ? 'The synthetic collector retained this source label and read receipt. A receipt does not establish control effectiveness.' : 'No source record was retained for this check.',fields:evidence ? {Source:evidence.source,Receipt:evidence.receipt,'Expected source':control.source} : {'Expected source':control.source}},
+      {id:'artifact',kind:'Release context',title:evidence ? (sameArtifact ? 'Artifact matches' : 'Artifact differs') : 'Context unverified',description:'The check compares the evidence release, artifact, and environment with the requested release context.',fields:{'Expected release':data.release.id,'Reported release':evidence?.release_id,'Expected artifact':data.release.artifact,'Reported artifact':evidence?.artifact,'Expected environment':data.release.environment,'Reported environment':evidence?.environment}}
+    ];
+    const links = [
+      ['policy','control','requires','The policy lists this control by its explicit identifier.'],
+      ['control','check','checked by','The demo evaluator checks this required control for the selected release.'],
+      ['check','observation',evidence ? 'examines' : 'needs evidence',evidence ? 'The check reads the evidence record for this control and release. The result remains separate from the reported status.' : 'No evidence record connects to this check.'],
+      ['observation','source',evidence ? 'collected from' : 'source missing',evidence ? 'The observation retains the source label and synthetic read receipt shown here.' : 'The missing observation provides no source or receipt.'],
+      ['observation','artifact',evidence ? (sameArtifact ? 'names artifact' : 'names another artifact') : 'context missing','The source record names its own release context. A mismatch is retained, not replaced by the expected artifact.']
+    ];
+    const active = nodes.find(node=>node.id===state.evidenceNode) || nodes[3];
+    const nodeButton = id => {
+      const node=nodes.find(item=>item.id===id);
+      return `<button class="evidence-object ${node.id===active.id?'active':''} ${(!evidence && ['observation','source','artifact'].includes(id)) || (id==='artifact'&&!sameArtifact) ? 'uncertain':''}" data-object="${id}" aria-pressed="${id===active.id}"><span>${esc(node.kind)}</span><strong>${esc(node.title)}</strong><small>${id==='check'?esc(check.reason):id==='observation'?(evidence?'Select to inspect the source record':'Missing · select to inspect'): 'Select to explore'}</small></button>`;
+    };
+    const relation = index => `<button class="evidence-relation" data-link="${index}" aria-pressed="${state.evidenceLink===index}" aria-label="Explain connection: ${esc(nodes.find(n=>n.id===links[index][0]).kind+' '+links[index][2]+' '+nodes.find(n=>n.id===links[index][1]).kind)}"><span>${esc(links[index][2])}</span><span aria-hidden="true">${index===3?'←':index===2?'↓':'→'}</span></button>`;
+    const fields = values => `<dl class="object-fields">${Object.entries(values).map(([key,value])=>`<div><dt>${esc(key)}</dt><dd>${esc(text(value))}</dd></div>`).join('')}</dl>`;
+    const selectedLink = state.evidenceLink===null ? null : links[state.evidenceLink];
+    return `<div class="evidence-tabs" role="group" aria-label="Evidence view"><button data-evidence-view="map" aria-pressed="${state.evidenceView==='map'}">Connections</button><button data-evidence-view="record" aria-pressed="${state.evidenceView==='record'}">Evidence record</button><span>Sample relationships · no enforcement event</span></div>
+      ${state.evidenceView==='map' ? `<section class="evidence-canvas" aria-label="Control evidence connections"><div class="evidence-path">${nodeButton('policy')}${relation(0)}${nodeButton('control')}${relation(1)}${nodeButton('check')}</div><div class="evidence-branch"><svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M83.33 0 V20 H50 V58 M49 53 L50 58 L51 53"/></svg>${relation(2)}</div><div class="evidence-path evidence-sources">${nodeButton('source')}${relation(3)}${nodeButton('observation')}${relation(4)}${nodeButton('artifact')}</div><p class="map-help">Select an object or a connection to inspect it. Dashed borders mark missing or mismatched evidence.</p></section>
+      <section class="object-inspector detail-card" aria-label="Selected evidence object"><div class="object-heading"><div><p class="eyebrow">${selectedLink?'CONNECTION DETAILS':esc(active.kind)}</p><h3>${selectedLink?esc(nodes.find(n=>n.id===selectedLink[0]).kind+' → '+nodes.find(n=>n.id===selectedLink[1]).kind):esc(active.title)}</h3></div><div class="inspector-result">Check result ${badge(check.status)}</div></div><p>${esc(selectedLink ? selectedLink[3] : active.description)}</p>${selectedLink ? fields({From:nodes.find(n=>n.id===selectedLink[0]).title,Relationship:selectedLink[2],To:nodes.find(n=>n.id===selectedLink[1]).title}) : fields(active.fields)}</section>` : evidenceDetail(control,check)}
+      <details class="application-details" data-disclosure="openApplication" ${state.openApplication?'open':''}><summary>How this control applies to the release</summary><p>${esc(policy.description)}</p>${fields({'Central policy':rootPolicy().title,'Child policy':policy.title,'Control':control.title,'Owner':policy.owner,'Release':data.release.id,'Environment':data.release.environment})}<p>All child policies and their required controls must pass in this simulation. These links do not record a production enforcement event.</p></details>
+      <details class="application-details raw-evidence" data-disclosure="openRaw" ${state.openRaw?'open':''}><summary>Full evidence record${evidence?'':' · unavailable'}</summary>${evidence ? `<pre>${esc(JSON.stringify(evidence,null,2))}</pre>` : '<p>No evidence record is available for this control and release.</p>'}</details>`;
+  }
+
   function board() {
-    const result = evaluate();
-    const selected = selectedPolicy();
-    const control = selectedControl();
-    const check = control ? checkFor(control.id, result) : {};
-    const status = children().reduce((sum, policy) => {
-      const current = controlsStatus(policy, result);
-      sum.met += current.met;
-      sum.total += current.total;
-      sum.unknown += current.unknown;
-      sum.notMet += current.notMet;
-      return sum;
-    }, { met: 0, total: 0, unknown: 0, notMet: 0 });
-    const blockers = (result.checks || []).filter((c) => c.status !== 'met');
-    app.innerHTML = `<div class="page-shell board-page"><div class="page-heading"><div><p class="eyebrow">01 / RELEASE GATE BOARD</p><h1>Readiness at a glance</h1><p class="lede">A clear view of what can ship, what blocks release, and what needs evidence.</p></div>${selectScenario()}</div>${releaseBlock()}
-      <section class="readiness-strip"><div class="readiness-result"><small>SIMULATED RELEASE DECISION</small>${decisionBadge(result.decision)}<p>${esc(resultReason(result) || 'All required controls have matching evidence.')}</p></div><div class="readiness-metric"><strong>${status.met}<small>/${status.total}</small></strong><span>Controls met</span></div><div class="readiness-metric warn"><strong>${blockers.length}</strong><span>Items needing action</span></div><div class="readiness-progress"><div class="progress-meta"><span>Evidence coverage</span><b>${status.total ? Math.round(100 * status.met / status.total) : 0}%</b></div><div class="progress-track" role="progressbar" aria-label="Required controls met" aria-valuemin="0" aria-valuemax="${status.total}" aria-valuenow="${status.met}"><i style="width:${status.total ? 100 * status.met / status.total : 0}%"></i></div><small>${status.met} of ${status.total} required controls met</small></div></section>
-      <div class="board-layout"><section class="policy-rail"><div class="section-heading"><div><p class="eyebrow">POLICY CHAIN</p><h2>Ship requirements</h2></div><span class="count-label">${children().length} POLICIES</span></div><a class="central-policy" href="index.html"><span class="central-icon">◆</span><span><b>${esc(rootPolicy().title)}</b><small>Central release policy · overview</small></span><span class="central-arrow">→</span></a><div class="policy-rows">${children().map((p) => { const s=controlsStatus(p,result); return `<button class="policy-row ${p.id === selected?.id ? 'selected' : ''}" data-policy="${esc(p.id)}"><span class="row-mark">${p.id === selected?.id ? '●' : '○'}</span><span class="row-copy"><b>${esc(p.title)}</b><small>${esc(text(p.owner,'Policy owner'))}</small></span><span class="row-count">${s.met}/${s.total}</span><span class="row-arrow">›</span></button>`; }).join('')}</div></section>
-      <section class="control-panel"><div class="section-heading"><div><p class="eyebrow">${esc(selected?.title || 'Policy')}</p><h2>${esc(text(selected?.owner,'Policy owner'))}</h2></div><a class="text-link" href="network.html">View policy map ↗</a></div><p class="panel-description">${esc(text(selected?.description))}</p><div class="control-list">${controls(selected).map((c) => { const ck=checkFor(c.id,result); return `<button class="control-row ${c.id === control?.id ? 'chosen' : ''}" data-control="${esc(c.id)}" data-policy="${esc(selected.id)}"><span class="control-symbol">${ck.status === 'met' ? '✓' : ck.status === 'not_met' ? '!' : '?'}</span><span><b>${esc(c.title)}</b><small>${esc(c.description)}</small></span>${badge(ck.status)}</button>`; }).join('') || '<p class="empty-state">No controls are listed for this policy.</p>'}</div></section>
-      <aside class="evidence-panel">${crumb(selected, control)}${control ? `<div class="selected-control"><p class="eyebrow">SELECTED CONTROL</p><h2>${esc(control.title)}</h2><p>${esc(text(control.description))}</p></div>${evidenceDetail(control,check)}` : '<p class="empty-state">Select a control to inspect its evidence.</p>'}</aside></div>
-      <div class="view-next"><span>Continue to another view</span><a href="network.html">Map policy links →</a><a href="console.html">Inspect decision trace →</a></div></div>`;
+    const result=evaluate(), selected=selectedPolicy(), control=selectedControl();
+    const check=control ? checkFor(control.id,result) : {};
+    const met=result.checks.filter(item=>item.status==='met').length;
+    const total=result.checks.length;
+    app.innerHTML=`<div class="page-shell board-page chain-page ${state.evidenceFocus?'evidence-focused':''}"><div class="chain-heading"><div><p class="eyebrow">PRODUCT SHIP QUALIFICATION</p><h1>Release qualification</h1><p>${esc(data.release.name)} <strong>${esc(data.release.version)}</strong> <span>· ${esc(data.release.environment)}</span></p></div>${selectScenario()}</div>
+      <section class="readiness-strip compact-readiness" aria-label="Release summary"><div><small>SIMULATED DECISION</small>${decisionBadge(result.decision)}</div><strong>${met}/${total} <span>controls met</span></strong><span class="release-summary-reason">${esc(resultReason(result)||'All required controls have matching evidence.')}</span><span class="evaluation-clock">Evaluated at <time datetime="${esc(data.as_of)}">${esc(data.as_of)}</time></span></section>
+      <div class="chain-workspace"><aside class="chain-checklist" aria-label="Policy and control checklist"><div class="checklist-heading"><h2>Policy chain</h2><span>${children().length} policies · ${total} controls</span></div><a class="chain-root" href="index.html">${esc(rootPolicy().title)} <span>All required</span></a><div class="checklist-actions"><button data-chain-action="expand">Expand all</button><button data-chain-action="collapse">Collapse all</button></div>
+      <div class="chain-groups">${children().map(policy=>{
+        const summary=controlsStatus(policy,result),open=state.openPolicies.has(policy.id);
+        return `<section class="chain-group"><button class="chain-policy ${selected?.id===policy.id?'selected':''}" data-policy="${esc(policy.id)}" aria-expanded="${open}" aria-controls="group-${esc(policy.id)}"><span aria-hidden="true">${open?'▾':'▸'}</span><strong>${esc(policy.title)}</strong><span>${summary.met}/${summary.total}</span></button><div id="group-${esc(policy.id)}" ${open?'':'hidden'}>${controls(policy).map(item=>{
+          const itemCheck=checkFor(item.id,result);
+          return `<button class="chain-control ${control?.id===item.id?'chosen':''}" data-policy="${esc(policy.id)}" data-control="${esc(item.id)}" ${control?.id===item.id?'aria-current="true"':''}><span class="check-mark ${statusClass(itemCheck.status)}" aria-label="${statusName(itemCheck.status)}">${itemCheck.status==='met'?'✓':itemCheck.status==='not_met'?'!':'?'}</span><span>${esc(item.title)}</span></button>`;
+        }).join('')}</div></section>`;
+      }).join('')}</div><p class="checklist-note">Status comes from evidence. Selecting a control does not mark it complete.</p></aside>
+      <section class="evidence-workbench" aria-label="Evidence workspace"><div class="evidence-heading"><div class="selected-control"><p class="eyebrow">${esc(selected?.title || 'Policy')} / CONTROL EVIDENCE</p><h2>${esc(control?.title || 'Select a control')}</h2><p>${esc(check.reason || 'Select a control to explore its evidence.')}</p></div><button class="evidence-focus" data-focus-evidence aria-pressed="${state.evidenceFocus}">${state.evidenceFocus?'Show checklist':'Expand evidence'}</button></div>${evidenceWorkspace(selected,control,check)}</section></div></div>`;
     bind();
+    document.querySelectorAll('[data-disclosure]').forEach(details=>details.addEventListener('toggle',()=>{if(details.isConnected) state[details.dataset.disclosure]=details.open;}));
+    const rerender = selector => {render(); document.querySelector(selector)?.focus();};
+    document.querySelectorAll('[data-chain-action]').forEach(button=>button.addEventListener('click',()=>{
+      state.openPolicies=button.dataset.chainAction==='expand'?new Set(children().map(p=>p.id)):new Set();
+      rerender(`[data-chain-action="${button.dataset.chainAction}"]`);
+    }));
+    document.querySelector('[data-focus-evidence]').addEventListener('click',()=>{state.evidenceFocus=!state.evidenceFocus;rerender('[data-focus-evidence]');});
+    document.querySelectorAll('[data-evidence-view]').forEach(button=>button.addEventListener('click',()=>{state.evidenceView=button.dataset.evidenceView;rerender(`[data-evidence-view="${state.evidenceView}"]`);}));
+    document.querySelectorAll('[data-object]').forEach(button=>button.addEventListener('click',()=>{state.evidenceNode=button.dataset.object;state.evidenceLink=null;rerender(`[data-object="${state.evidenceNode}"]`);}));
+    document.querySelectorAll('[data-link]').forEach(button=>button.addEventListener('click',()=>{state.evidenceLink=Number(button.dataset.link);rerender(`[data-link="${state.evidenceLink}"]`);}));
   }
 
   function network() {
@@ -168,6 +214,7 @@
     if (!scenarios.some(([value]) => value === state.scenario)) state.scenario = 'ready';
     state.policyId = children().some((p) => p.id === state.policyId) ? state.policyId : (children()[0]?.id || '');
     state.controlId = controls(children().find((p) => p.id === state.policyId)).some((c) => c.id === state.controlId) ? state.controlId : '';
+    state.openPolicies.add(state.policyId);
     render();
   }).catch((error) => { app.innerHTML = `<section class="load-error"><p class="eyebrow">SAMPLE DATA UNAVAILABLE</p><h1>Could not load the product ship demo</h1><p>${esc(error.message)} Start the local server with <code>python3 tools/product-ship-mocks/serve.py</code> and make sure the sample runner created <code>tools/product-ship-mocks/data.json</code>.</p></section>`; });
 })();

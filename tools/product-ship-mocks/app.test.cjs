@@ -83,3 +83,66 @@ test('invalid data shows an error instead of a ready release',async()=>{
     assert.equal(dom.window.document.querySelector('.decision-pill'),null);
   } finally {dom.window.close();}
 });
+
+test('combined checklist expands policies and retains selection when evidence fills the workspace',async()=>{
+  const dom=await page('board');
+  try {
+    const doc=dom.window.document;
+    assert.equal(doc.querySelectorAll('.chain-checklist').length,1);
+    assert.equal(doc.querySelector('#group-ship-security').hidden,true);
+    doc.querySelector('[data-chain-action="expand"]').click();
+    assert.equal(doc.querySelectorAll('.chain-group [hidden]').length,0);
+    doc.querySelector('[data-control="ship.security.vulnerability-scan"]').click();
+    assert.equal(doc.activeElement.dataset.control,'ship.security.vulnerability-scan');
+    doc.querySelector('[data-focus-evidence]').click();
+    assert.ok(doc.querySelector('.chain-page').classList.contains('evidence-focused'));
+    assert.match(doc.querySelector('.selected-control').textContent,/Dependency scan/);
+    assert.equal(doc.activeElement.hasAttribute('data-focus-evidence'),true);
+    doc.querySelector('[data-focus-evidence]').click();
+    assert.ok(!doc.querySelector('.chain-page').classList.contains('evidence-focused'));
+    assert.equal(doc.querySelector('.chain-control.chosen').dataset.control,'ship.security.vulnerability-scan');
+    doc.querySelector('[data-chain-action="collapse"]').click();
+    assert.equal(doc.querySelectorAll('.chain-group [hidden]').length,9);
+  } finally {dom.window.close();}
+});
+
+test('evidence objects and connections expose mismatch details without rewriting source values',async()=>{
+  const dom=await page('board','?scenario=wrong-artifact');
+  try {
+    const doc=dom.window.document;
+    assert.equal(doc.querySelectorAll('[data-object]').length,6);
+    doc.querySelector('[data-object="artifact"]').click();
+    assert.match(doc.querySelector('.object-inspector').textContent,/Artifact differs/);
+    assert.ok(doc.querySelector('.object-inspector').textContent.includes(data.release.artifact));
+    assert.ok(doc.querySelector('.object-inspector').textContent.includes('sha256:'+'0'.repeat(64)));
+    assert.equal(doc.activeElement.dataset.object,'artifact');
+    doc.querySelector('[data-link="4"]').click();
+    assert.match(doc.querySelector('.object-inspector').textContent,/names another artifact/);
+    assert.equal(doc.querySelector('[data-link="4"]').getAttribute('aria-pressed'),'true');
+    doc.querySelector('[data-evidence-view="record"]').click();
+    assert.equal(doc.querySelector('.evidence-canvas'),null);
+    assert.ok(doc.querySelector('.detail-card').textContent.includes('sha256:'+'0'.repeat(64)));
+    scenario(dom,'missing');
+    assert.match(doc.querySelector('.detail-card').textContent,/No evidence record/);
+    doc.querySelector('[data-evidence-view="map"]').click();
+    assert.match(doc.querySelector('[data-object="source"]').textContent,/Source unavailable/);
+    assert.match(doc.querySelector('[data-link="2"]').textContent,/needs evidence/);
+    assert.equal(doc.querySelector('.raw-evidence pre'),null);
+  } finally {dom.window.close();}
+});
+
+test('expanded policy application and raw evidence stay open during object exploration',async()=>{
+  const dom=await page('board');
+  try {
+    const doc=dom.window.document;
+    for(const details of doc.querySelectorAll('[data-disclosure]')) {
+      details.open=true;
+      details.dispatchEvent(new dom.window.Event('toggle'));
+    }
+    doc.querySelector('[data-object="policy"]').click();
+    assert.equal(doc.querySelector('[data-disclosure="openApplication"]').open,true);
+    assert.equal(doc.querySelector('[data-disclosure="openRaw"]').open,true);
+    assert.match(doc.querySelector('.object-inspector').textContent,/Product accessibility lead/);
+    assert.match(doc.querySelector('.raw-evidence').textContent,/receipt/);
+  } finally {dom.window.close();}
+});
