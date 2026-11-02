@@ -145,6 +145,7 @@ See **[rfcs/INDEX.md](../rfcs/INDEX.md)** for the complete RFC collection, inclu
 
 **Contributing and building:**
 
+- **[Workstream register](../.agent/workstreams.md)** - Current work, committed checkpoints, merged branches, and next actions.
 - **[CONTRIBUTING](../CONTRIBUTING.md)** - Contribution guidelines
 - **[MVP_PLAN](../MVP_PLAN.md)** - MVP scope and checklist (historical)
 
