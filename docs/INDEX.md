@@ -228,3 +228,5 @@ no collection-listing route is implemented by this document.
 - [Contextual evidence assessments](INTEGRATION_ASSESSMENTS.md): explicit links across collectors, execution context, trust rules, and evidence traces.
 
 - [Integration model review](INTEGRATION_MODEL_REVIEW.md): evidence-backed recommendations for collection, contract identity, reasoning, and updates.
+
+- [Product ship qualification simulation](PRODUCT_SHIP_DEMO.md): linked policy model, headless SDK collectors, and three UX studies.

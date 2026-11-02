@@ -1,0 +1,4129 @@
+{
+  "schema": "ipe.product-ship-demo.v1",
+  "as_of": "2026-11-02T12:00:00Z",
+  "release": {
+    "id": "release-2026.11.02-rc1",
+    "name": "Payments API",
+    "version": "4.8.0-rc1",
+    "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environment": "production"
+  },
+  "policy": {
+    "id": "product-ship",
+    "title": "Product ship qualification",
+    "description": "Qualify a specific release candidate before a proposed production ship decision. This model is a simulation and does not enforce a release gate.",
+    "children": [
+      "ship-accessibility",
+      "ship-security",
+      "ship-open-source-legal",
+      "ship-build-provenance",
+      "ship-test-quality",
+      "ship-privacy",
+      "ship-change-control",
+      "ship-reliability",
+      "ship-operations"
+    ]
+  },
+  "policies": [
+    {
+      "id": "ship-accessibility",
+      "parent_id": "product-ship",
+      "title": "Accessibility",
+      "owner": "Product accessibility lead",
+      "description": "Check accessible user journeys and assistive technology support.",
+      "controls": [
+        {
+          "id": "ship.accessibility.keyboard-navigation",
+          "title": "Keyboard navigation works",
+          "description": "Keyboard navigation works. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.accessibility.screen-reader",
+          "title": "Screen reader labels are present",
+          "description": "Screen reader labels are present. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-security",
+      "parent_id": "product-ship",
+      "title": "Security",
+      "owner": "Product security team",
+      "description": "Check security review and dependency risk.",
+      "controls": [
+        {
+          "id": "ship.security.security-review",
+          "title": "Security review is complete",
+          "description": "Security review is complete. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.security.vulnerability-scan",
+          "title": "Dependency scan has no blocking findings",
+          "description": "Dependency scan has no blocking findings. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-open-source-legal",
+      "parent_id": "product-ship",
+      "title": "Open-source legal",
+      "owner": "Open-source review group",
+      "description": "Check license review and third-party notices.",
+      "controls": [
+        {
+          "id": "ship.open-source-legal.license-review",
+          "title": "Dependency licenses are approved for this release",
+          "description": "Dependency licenses are approved for this release. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.open-source-legal.third-party-notices",
+          "title": "Third-party notices are included",
+          "description": "Third-party notices are included. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-build-provenance",
+      "parent_id": "product-ship",
+      "title": "Build provenance",
+      "owner": "Release engineering",
+      "description": "Check build origin and artifact identity.",
+      "controls": [
+        {
+          "id": "ship.build-provenance.provenance",
+          "title": "Build provenance identifies the source revision",
+          "description": "Build provenance identifies the source revision. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.build-provenance.artifact-digest",
+          "title": "Artifact digest matches the release candidate",
+          "description": "Artifact digest matches the release candidate. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-test-quality",
+      "parent_id": "product-ship",
+      "title": "Test quality",
+      "owner": "Quality engineering",
+      "description": "Check required tests and release coverage.",
+      "controls": [
+        {
+          "id": "ship.test-quality.required-tests",
+          "title": "Required test suites pass",
+          "description": "Required test suites pass. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.test-quality.coverage-threshold",
+          "title": "Coverage meets the release threshold",
+          "description": "Coverage meets the release threshold. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-privacy",
+      "parent_id": "product-ship",
+      "title": "Privacy",
+      "owner": "Privacy review group",
+      "description": "Check data handling and privacy review.",
+      "controls": [
+        {
+          "id": "ship.privacy.privacy-review",
+          "title": "Privacy review is complete",
+          "description": "Privacy review is complete. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.privacy.data-inventory",
+          "title": "Data inventory is current",
+          "description": "Data inventory is current. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-change-control",
+      "parent_id": "product-ship",
+      "title": "Change control",
+      "owner": "Change management",
+      "description": "Check release approval and change traceability.",
+      "controls": [
+        {
+          "id": "ship.change-control.change-approval",
+          "title": "Change approval is recorded",
+          "description": "Change approval is recorded. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.change-control.change-record",
+          "title": "Change record names this artifact",
+          "description": "Change record names this artifact. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-reliability",
+      "parent_id": "product-ship",
+      "title": "Reliability",
+      "owner": "Site reliability engineering",
+      "description": "Check operational readiness and recovery.",
+      "controls": [
+        {
+          "id": "ship.reliability.operational-readiness",
+          "title": "Operational readiness review is complete",
+          "description": "Operational readiness review is complete. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.reliability.recovery-plan",
+          "title": "Recovery plan is current",
+          "description": "Recovery plan is current. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-operations",
+      "parent_id": "product-ship",
+      "title": "Operations",
+      "owner": "Service owner",
+      "description": "Check monitoring and support readiness.",
+      "controls": [
+        {
+          "id": "ship.operations.monitoring",
+          "title": "Release monitoring is configured",
+          "description": "Release monitoring is configured. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.operations.support-owner",
+          "title": "A support owner is assigned",
+          "description": "A support owner is assigned. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "control_id": "ship.accessibility.keyboard-navigation",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.accessibility.screen-reader",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.security.security-review",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.security.vulnerability-scan",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.open-source-legal.license-review",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.open-source-legal.third-party-notices",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.build-provenance.provenance",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.build-provenance.artifact-digest",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.test-quality.required-tests",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.test-quality.coverage-threshold",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.privacy.privacy-review",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.privacy.data-inventory",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.change-control.change-approval",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.change-control.change-record",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.reliability.operational-readiness",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.reliability.recovery-plan",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.operations.monitoring",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    },
+    {
+      "control_id": "ship.operations.support-owner",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "reason": "Synthetic provider reported this check as met.",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "source": "qualification-snapshot-v1",
+      "receipt": "fixture:qualification:release-2026.11.02-rc1"
+    }
+  ],
+  "source": "Synthetic broker fixture; no external systems queried. Controls are proposed examples and do not assert legal or compliance certification.",
+  "integrations": [
+    {
+      "id": "product-ship-ship-accessibility",
+      "policy_id": "ship-accessibility",
+      "config": {
+        "id": "product-ship-ship-accessibility",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-accessibility"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.accessibility.keyboard-navigation",
+        "ship.accessibility.screen-reader"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-security",
+      "policy_id": "ship-security",
+      "config": {
+        "id": "product-ship-ship-security",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-security"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.security.security-review",
+        "ship.security.vulnerability-scan"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-open-source-legal",
+      "policy_id": "ship-open-source-legal",
+      "config": {
+        "id": "product-ship-ship-open-source-legal",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-open-source-legal"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.open-source-legal.license-review",
+        "ship.open-source-legal.third-party-notices"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-build-provenance",
+      "policy_id": "ship-build-provenance",
+      "config": {
+        "id": "product-ship-ship-build-provenance",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-build-provenance"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.build-provenance.provenance",
+        "ship.build-provenance.artifact-digest"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-test-quality",
+      "policy_id": "ship-test-quality",
+      "config": {
+        "id": "product-ship-ship-test-quality",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-test-quality"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.test-quality.required-tests",
+        "ship.test-quality.coverage-threshold"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-privacy",
+      "policy_id": "ship-privacy",
+      "config": {
+        "id": "product-ship-ship-privacy",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-privacy"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.privacy.privacy-review",
+        "ship.privacy.data-inventory"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-change-control",
+      "policy_id": "ship-change-control",
+      "config": {
+        "id": "product-ship-ship-change-control",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-change-control"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.change-control.change-approval",
+        "ship.change-control.change-record"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-reliability",
+      "policy_id": "ship-reliability",
+      "config": {
+        "id": "product-ship-ship-reliability",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-reliability"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.reliability.operational-readiness",
+        "ship.reliability.recovery-plan"
+      ],
+      "evidence_count": 2
+    },
+    {
+      "id": "product-ship-ship-operations",
+      "policy_id": "ship-operations",
+      "config": {
+        "id": "product-ship-ship-operations",
+        "program": "testing/integration/hosted/product-ship/collector.js",
+        "input": {
+          "release": {
+            "id": "release-2026.11.02-rc1",
+            "name": "Payments API",
+            "version": "4.8.0-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "policy_id": "ship-operations"
+        },
+        "operations": [
+          "read_release_qualification"
+        ]
+      },
+      "summary": {
+        "status": "succeeded",
+        "release_id": "release-2026.11.02-rc1",
+        "controls_observed": 2,
+        "publication": false,
+        "gaps": []
+      },
+      "request_count": 1,
+      "observation_count": 7,
+      "control_ids": [
+        "ship.operations.monitoring",
+        "ship.operations.support-owner"
+      ],
+      "evidence_count": 2
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": "ready",
+      "assessment": {
+        "decision": "allow",
+        "reasons": [],
+        "checks": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.accessibility.keyboard-navigation",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.screen-reader",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.accessibility.screen-reader",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.security-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.security-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.vulnerability-scan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.vulnerability-scan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.license-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.license-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.third-party-notices",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.provenance",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.provenance",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.artifact-digest",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.artifact-digest",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.required-tests",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.required-tests",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.coverage-threshold",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.coverage-threshold",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.privacy-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.privacy-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.data-inventory",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.data-inventory",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-approval",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-approval",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-record",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-record",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.operational-readiness",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.operational-readiness",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.recovery-plan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.recovery-plan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.monitoring",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.monitoring",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.support-owner",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.support-owner",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "blocked",
+      "assessment": {
+        "decision": "deny",
+        "reasons": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "code": "required_control_not_met",
+            "message": "Synthetic scenario: required check is not met."
+          }
+        ],
+        "checks": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "status": "not_met",
+            "reason": "Synthetic scenario: required check is not met.",
+            "evidence": {
+              "control_id": "ship.accessibility.keyboard-navigation",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "not_met",
+              "reason": "Synthetic scenario: required check is not met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.screen-reader",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.accessibility.screen-reader",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.security-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.security-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.vulnerability-scan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.vulnerability-scan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.license-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.license-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.third-party-notices",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.provenance",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.provenance",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.artifact-digest",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.artifact-digest",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.required-tests",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.required-tests",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.coverage-threshold",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.coverage-threshold",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.privacy-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.privacy-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.data-inventory",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.data-inventory",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-approval",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-approval",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-record",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-record",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.operational-readiness",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.operational-readiness",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.recovery-plan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.recovery-plan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.monitoring",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.monitoring",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.support-owner",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.support-owner",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "missing",
+      "assessment": {
+        "decision": "indeterminate",
+        "reasons": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "code": "required_evidence_unknown",
+            "message": "No evidence exists for this release and control."
+          }
+        ],
+        "checks": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "status": "unknown",
+            "reason": "No evidence exists for this release and control."
+          },
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.screen-reader",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.accessibility.screen-reader",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.security-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.security-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.vulnerability-scan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.vulnerability-scan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.license-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.license-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.third-party-notices",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.provenance",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.provenance",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.artifact-digest",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.artifact-digest",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.required-tests",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.required-tests",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.coverage-threshold",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.coverage-threshold",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.privacy-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.privacy-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.data-inventory",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.data-inventory",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-approval",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-approval",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-record",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-record",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.operational-readiness",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.operational-readiness",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.recovery-plan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.recovery-plan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.monitoring",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.monitoring",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.support-owner",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.support-owner",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "expired",
+      "assessment": {
+        "decision": "indeterminate",
+        "reasons": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "code": "required_evidence_unknown",
+            "message": "Evidence has expired or has an invalid expiry time."
+          }
+        ],
+        "checks": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "status": "unknown",
+            "reason": "Evidence has expired or has an invalid expiry time.",
+            "evidence": {
+              "control_id": "ship.accessibility.keyboard-navigation",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T11:59:59.000Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.screen-reader",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.accessibility.screen-reader",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.security-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.security-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.vulnerability-scan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.vulnerability-scan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.license-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.license-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.third-party-notices",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.provenance",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.provenance",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.artifact-digest",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.artifact-digest",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.required-tests",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.required-tests",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.coverage-threshold",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.coverage-threshold",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.privacy-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.privacy-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.data-inventory",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.data-inventory",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-approval",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-approval",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-record",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-record",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.operational-readiness",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.operational-readiness",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.recovery-plan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.recovery-plan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.monitoring",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.monitoring",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.support-owner",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.support-owner",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "wrong-artifact",
+      "assessment": {
+        "decision": "indeterminate",
+        "reasons": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "code": "required_evidence_unknown",
+            "message": "Evidence artifact does not match the release artifact."
+          }
+        ],
+        "checks": [
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "status": "unknown",
+            "reason": "Evidence artifact does not match the release artifact.",
+            "evidence": {
+              "control_id": "ship.accessibility.keyboard-navigation",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-accessibility",
+            "control_id": "ship.accessibility.screen-reader",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.accessibility.screen-reader",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.security-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.security-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-security",
+            "control_id": "ship.security.vulnerability-scan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.security.vulnerability-scan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.license-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.license-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-open-source-legal",
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.open-source-legal.third-party-notices",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.provenance",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.provenance",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-build-provenance",
+            "control_id": "ship.build-provenance.artifact-digest",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.build-provenance.artifact-digest",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.required-tests",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.required-tests",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-test-quality",
+            "control_id": "ship.test-quality.coverage-threshold",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.test-quality.coverage-threshold",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.privacy-review",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.privacy-review",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-privacy",
+            "control_id": "ship.privacy.data-inventory",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.privacy.data-inventory",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-approval",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-approval",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-change-control",
+            "control_id": "ship.change-control.change-record",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.change-control.change-record",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.operational-readiness",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.operational-readiness",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-reliability",
+            "control_id": "ship.reliability.recovery-plan",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.reliability.recovery-plan",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.monitoring",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.monitoring",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          },
+          {
+            "policy_id": "ship-operations",
+            "control_id": "ship.operations.support-owner",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "evidence": {
+              "control_id": "ship.operations.support-owner",
+              "release_id": "release-2026.11.02-rc1",
+              "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "environment": "production",
+              "status": "met",
+              "reason": "Synthetic provider reported this check as met.",
+              "observed_at": "2026-11-02T11:50:00Z",
+              "expires_at": "2026-11-02T12:30:00Z",
+              "source": "qualification-snapshot-v1",
+              "receipt": "fixture:qualification:release-2026.11.02-rc1"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "assessments": {
+    "ready": {
+      "decision": "allow",
+      "reasons": [],
+      "checks": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.screen-reader",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.accessibility.screen-reader",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.security-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.security-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.vulnerability-scan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.vulnerability-scan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.license-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.license-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.third-party-notices",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.provenance",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.provenance",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.artifact-digest",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.artifact-digest",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.required-tests",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.required-tests",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.coverage-threshold",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.coverage-threshold",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.privacy-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.privacy-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.data-inventory",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.data-inventory",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-approval",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-approval",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-record",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-record",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.operational-readiness",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.operational-readiness",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.recovery-plan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.recovery-plan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.monitoring",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.monitoring",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.support-owner",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.support-owner",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        }
+      ]
+    },
+    "blocked": {
+      "decision": "deny",
+      "reasons": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "code": "required_control_not_met",
+          "message": "Synthetic scenario: required check is not met."
+        }
+      ],
+      "checks": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "status": "not_met",
+          "reason": "Synthetic scenario: required check is not met.",
+          "evidence": {
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "not_met",
+            "reason": "Synthetic scenario: required check is not met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.screen-reader",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.accessibility.screen-reader",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.security-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.security-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.vulnerability-scan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.vulnerability-scan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.license-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.license-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.third-party-notices",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.provenance",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.provenance",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.artifact-digest",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.artifact-digest",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.required-tests",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.required-tests",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.coverage-threshold",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.coverage-threshold",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.privacy-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.privacy-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.data-inventory",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.data-inventory",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-approval",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-approval",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-record",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-record",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.operational-readiness",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.operational-readiness",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.recovery-plan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.recovery-plan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.monitoring",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.monitoring",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.support-owner",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.support-owner",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        }
+      ]
+    },
+    "missing": {
+      "decision": "indeterminate",
+      "reasons": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "code": "required_evidence_unknown",
+          "message": "No evidence exists for this release and control."
+        }
+      ],
+      "checks": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "status": "unknown",
+          "reason": "No evidence exists for this release and control."
+        },
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.screen-reader",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.accessibility.screen-reader",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.security-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.security-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.vulnerability-scan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.vulnerability-scan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.license-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.license-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.third-party-notices",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.provenance",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.provenance",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.artifact-digest",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.artifact-digest",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.required-tests",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.required-tests",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.coverage-threshold",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.coverage-threshold",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.privacy-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.privacy-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.data-inventory",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.data-inventory",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-approval",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-approval",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-record",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-record",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.operational-readiness",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.operational-readiness",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.recovery-plan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.recovery-plan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.monitoring",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.monitoring",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.support-owner",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.support-owner",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        }
+      ]
+    },
+    "expired": {
+      "decision": "indeterminate",
+      "reasons": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "code": "required_evidence_unknown",
+          "message": "Evidence has expired or has an invalid expiry time."
+        }
+      ],
+      "checks": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "status": "unknown",
+          "reason": "Evidence has expired or has an invalid expiry time.",
+          "evidence": {
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T11:59:59.000Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.screen-reader",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.accessibility.screen-reader",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.security-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.security-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.vulnerability-scan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.vulnerability-scan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.license-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.license-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.third-party-notices",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.provenance",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.provenance",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.artifact-digest",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.artifact-digest",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.required-tests",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.required-tests",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.coverage-threshold",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.coverage-threshold",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.privacy-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.privacy-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.data-inventory",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.data-inventory",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-approval",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-approval",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-record",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-record",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.operational-readiness",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.operational-readiness",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.recovery-plan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.recovery-plan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.monitoring",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.monitoring",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.support-owner",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.support-owner",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        }
+      ]
+    },
+    "wrong-artifact": {
+      "decision": "indeterminate",
+      "reasons": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "code": "required_evidence_unknown",
+          "message": "Evidence artifact does not match the release artifact."
+        }
+      ],
+      "checks": [
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.keyboard-navigation",
+          "status": "unknown",
+          "reason": "Evidence artifact does not match the release artifact.",
+          "evidence": {
+            "control_id": "ship.accessibility.keyboard-navigation",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-accessibility",
+          "control_id": "ship.accessibility.screen-reader",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.accessibility.screen-reader",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.security-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.security-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-security",
+          "control_id": "ship.security.vulnerability-scan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.security.vulnerability-scan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.license-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.license-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-open-source-legal",
+          "control_id": "ship.open-source-legal.third-party-notices",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.open-source-legal.third-party-notices",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.provenance",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.provenance",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-build-provenance",
+          "control_id": "ship.build-provenance.artifact-digest",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.build-provenance.artifact-digest",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.required-tests",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.required-tests",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-test-quality",
+          "control_id": "ship.test-quality.coverage-threshold",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.test-quality.coverage-threshold",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.privacy-review",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.privacy-review",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-privacy",
+          "control_id": "ship.privacy.data-inventory",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.privacy.data-inventory",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-approval",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-approval",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-change-control",
+          "control_id": "ship.change-control.change-record",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.change-control.change-record",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.operational-readiness",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.operational-readiness",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-reliability",
+          "control_id": "ship.reliability.recovery-plan",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.reliability.recovery-plan",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.monitoring",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.monitoring",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        },
+        {
+          "policy_id": "ship-operations",
+          "control_id": "ship.operations.support-owner",
+          "status": "met",
+          "reason": "Synthetic provider reported this check as met.",
+          "evidence": {
+            "control_id": "ship.operations.support-owner",
+            "release_id": "release-2026.11.02-rc1",
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production",
+            "status": "met",
+            "reason": "Synthetic provider reported this check as met.",
+            "observed_at": "2026-11-02T11:50:00Z",
+            "expires_at": "2026-11-02T12:30:00Z",
+            "source": "qualification-snapshot-v1",
+            "receipt": "fixture:qualification:release-2026.11.02-rc1"
+          }
+        }
+      ]
+    }
+  },
+  "notes": [
+    "Synthetic broker replay; no external system was queried.",
+    "The policy tree is descriptive input for this demonstration; native hierarchy enforcement is not claimed.",
+    "Controls are proposed examples and do not assert legal or compliance certification.",
+    "The nine integration entries are logical source-domain instances of one hosted collector program."
+  ]
+}

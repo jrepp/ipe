@@ -16,6 +16,13 @@ Update the status and next action when a workstream changes.
 The nested prototype is already committed in its own repository. The parent worktree shows `design/` as untracked.
 It is not an uncommitted source change or a configured submodule. Do not add an unusable Git link without a source repository.
 
+## Product ship qualification study
+
+The usability branch also contains a synthetic product ship policy network with nine child policies.
+SDK programs collect sample controls and evidence. Three interactive studies compare readiness, network navigation, and simulated enforcement.
+See [the demo guide](../docs/PRODUCT_SHIP_DEMO.md) for authoring and launch steps.
+The study does not activate policies or enforce a real release gate. Select a UX direction before integrating it into the monitor.
+
 ## Integration host scope
 
 The usability branch contains these related changes:

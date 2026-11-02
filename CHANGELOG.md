@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Product ship qualification example adds nine linked policies, SDK collector simulations, and three interactive views for readiness, policy navigation, and simulated enforcement.
 - Native coverage explanations expose the same run-specific record links to agents and the integration monitor. Candidate links, stale facts, and incomplete collection remain explicit.
 - Integration monitor groups inspection into Runtime and Integration coverage. Detail navigation follows the selected journey; disconnected sessions show connection instructions.
 - GitHub collector extracts bounded environment protections and repository rulesets through granted API reads, including reviewer principals, approval handoffs, and provider profile contacts. Missing grants, denied reads, unresolved environments, and truncated samples remain explicit gaps.
