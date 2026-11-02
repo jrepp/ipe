@@ -3,6 +3,7 @@
 mod assessments;
 mod broker;
 mod coverage;
+mod coverage_explanations;
 mod credentials;
 mod domain;
 mod explanations;
@@ -412,6 +413,10 @@ impl Host {
             .route("/v1/integrations/:id/explanations", get(operation_explanations))
             .route("/v1/integrations/:id/assessments", post(assess_operation))
             .route("/v2/integrations/:id/operations", get(domain_operations))
+            .route(
+                "/v2/integrations/:id/runs/:run_id/coverage-explanation",
+                get(coverage_explanation),
+            )
             .route("/v2/integrations/:id/assessments", post(assess_operation_v2))
             .route("/v1/integrations/:id/revisions/:revision", get(revision_detail))
             .route("/v1/integrations/:id/revisions/:revision/accept", post(revision_accept))
@@ -1095,6 +1100,29 @@ async fn domain_operations(
         .get(&id)
         .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
     Ok(Json(domain::operations(installed)))
+}
+async fn coverage_explanation(
+    State(host): State<Arc<Host>>,
+    headers: HeaderMap,
+    ApiPath((id, run_id)): ApiPath<(String, String)>,
+) -> std::result::Result<Json<Value>, ApiError> {
+    host.authorize(&headers)?;
+    let run_id = run_id
+        .parse::<u64>()
+        .ok()
+        .filter(|id| *id > 0)
+        .ok_or_else(|| error(StatusCode::BAD_REQUEST, "invalid_run_id"))?;
+    let store = host.store.lock().await;
+    let installed = store
+        .integrations
+        .get(&id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "integration_unavailable"))?;
+    let run = installed
+        .runs
+        .iter()
+        .find(|run| run.id == run_id)
+        .ok_or_else(|| error(StatusCode::NOT_FOUND, "run_unavailable"))?;
+    Ok(Json(coverage_explanations::project(run, now())))
 }
 async fn assess_operation_v2(
     State(host): State<Arc<Host>>,

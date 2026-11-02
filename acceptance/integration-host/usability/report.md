@@ -192,3 +192,31 @@ The local host remains running with the migrated collector and one explicit GitH
 Private state and host-configuration backups remain under the local target directory.
 The local host still supports four installations. Thousands-of-collector deployment capacity is not claimed.
 See [platform contract and limits](../../../docs/INTEGRATION_ASSESSMENTS.md) and the linked synthetic fixture for the reusable design.
+
+
+## Shared coverage explanations: 2026-11-02
+
+The monitor and API clients now use one native explanation for each retained collector run.
+The view shows one requirement, its linked operation, possible executions, and observations from the same execution.
+Each link includes its matching reason. Supporting record maps remain available under a disclosure.
+A successful execution does not establish requirement fulfillment. An explicit requirement-to-check binding remains proposed.
+
+The authenticated endpoint preserves source revisions, execution identity, receipts, expiry, and collection gaps.
+It rejects invalid run identifiers and excludes staged records from failed or running captures.
+Duplicate record identities suppress links. Node, link, rule, gap, and response limits bound the output.
+Record expiry limits a longer governance validity window.
+
+The live host was rebuilt and restarted with existing configuration and state.
+Run 646 showed an exact rule-to-operation link, a possible execution link, and observations from the same execution.
+Requirement fulfillment remained unknown. The capture retained collection gaps.
+An offline snapshot included native explanations for all eight retained runs and rendered without script errors.
+Evidence: [Native coverage view](screenshots/2026-11-02-native-coverage.png).
+
+Workspace tests passed with default and all features: 355 tests each, with two opt-in tests ignored.
+After review fixes, all 12 focused native projection tests and all 72 JavaScript tests passed.
+Tests cover missing or unsupported snapshots, stale responses, run mismatches, refresh state, authentication, and missing runs.
+Workspace all-feature Clippy passed. The final native changes passed targeted all-feature Clippy.
+Discovery acceptance, documentation checks, Rust formatting, and whitespace checks passed.
+The final live view had zero Axe violations, no script errors, and no page overflow at 390 pixels.
+
+The local host remains available for review. No deployment or policy activation was performed.

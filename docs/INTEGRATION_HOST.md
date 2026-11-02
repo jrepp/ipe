@@ -136,6 +136,27 @@ Operation identities connect the rule to its stated scope. Candidate execution l
 Observations appear under the execution with the same identity; expired observations remain marked.
 The final section explains why a successful execution does not establish requirement fulfillment and identifies the missing check.
 
+The live view requests the host's relationship explanation for the selected retained run.
+Agent clients can request the same response through `GET /v2/integrations/:id/runs/:run_id/coverage-explanation`.
+The response uses schema `ipe.integration.coverage-explanation.v1` and includes its run ID and explanation time.
+It describes that capture, not the accepted review catalog or a new provider observation.
+
+Nodes reference a record key and mapped revision. Links identify both endpoints and explain their relationship.
+Rule subjects link to operation identities. Operation-to-execution links remain candidates even when the source revision matches.
+Execution-to-fact links require the same execution identity, including attempt and any job or step.
+Exact links do not establish that a rule applied or that a requirement was met.
+Expired or unusable facts, ambiguous references, collection gaps, and display omissions remain explicit.
+
+The monitor does not substitute browser-derived links when the native explanation is unavailable.
+It shows the missing explanation and keeps retained records available in supporting details.
+Snapshots store native responses in `coverage_explanations`, indexed by run ID.
+Older snapshots without these responses retain their source records but cannot show the shared coverage explanation.
+
+The projection limits nodes to 256, links to 512, rules to 128, and gaps to 256.
+It reports omitted items. If the response exceeds 1 MiB, it returns an empty graph with a response-limit gap and omission counts.
+Failed or running captures do not expose staged records as completed observations.
+Unknown installation or run IDs return 404. Invalid numeric run IDs return 400. All requests require the existing operator authorization.
+
 Open **Inspect record connections and source data** for the concept map and full capture details.
 The map groups governing rules, mechanisms and people, operation scope, and execution evidence.
 Select a concept to open its mapping details. Adjacent cards do not establish a relationship.
@@ -346,6 +367,7 @@ The endpoint binds only to a loopback address. API routes require a bearer opera
 | `GET /v1/integrations/:id/catalog` | Return selected declarations, current facts, and expiring associations |
 | `POST /v1/integrations/:id/assessments` | Assess configured evidence rules against caller-selected context; no mutations or provider reads |
 | `GET /v2/integrations/:id/operations` | Read selected operation descriptions and exact mapped record revisions |
+| `GET /v2/integrations/:id/runs/:run_id/coverage-explanation` | Explain one retained capture with record revisions, relationship certainty, freshness, and collection gaps |
 | `POST /v2/integrations/:id/assessments` | Check pinned evidence rules; keep evidence matches separate from requirement fulfillment |
 | `GET /v1/integrations/:id/explanations` | Explain operation requirements, evidence, unknowns, outcomes, and permitted next observations |
 | `GET /v1/integrations/:id/records` | Return current requirements and facts, including expiry flags |

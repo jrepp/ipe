@@ -12,6 +12,7 @@ function fixture(){
 async function snapshot(data){
  const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost/'}),d=dom.window.document;
  const node=d.createElement('script');node.id='host-snapshot';node.type='application/json';node.textContent=JSON.stringify(data);d.body.append(node);
+ dom.window.eval(fs.readFileSync(__dirname+'/governance-view.js','utf8'));
  dom.window.eval(d.querySelector('#monitor-app').textContent);await tick();await tick();return dom;
 }
 test('navigation, record filters, search, and capture evidence work together',async()=>{
@@ -29,6 +30,11 @@ test('comparison separates source and input edits and escapes provider text',asy
 });
 test('missing snapshot manifests show a clear comparison limit',async()=>{
  const data=fixture();delete data.revision_details;const dom=await snapshot(data);try{assert.match(dom.window.document.querySelector('#program-changes').textContent,/snapshot has catalog summaries only/);}finally{dom.window.close();}
+});
+test('snapshot coverage uses its selected run projection and names missing explanations',async()=>{
+ const data=fixture(),record={key:'rule:snapshot',revision_id:'mapped:1'};data.coverage_explanations={'2':{schema:'ipe.integration.coverage-explanation.v1',run_id:2,as_of:10,run_status:'succeeded',nodes:[{record,kind:'governance',title:'Snapshot native rule'}],links:[],rules:[{record,kind:'policy',requirements:[],unmatched_subjects:[]}],gaps:[],omissions:{nodes:0,links:0,rules:0,gaps:0},interpretation:'Same run projection.'}};
+ const dom=await snapshot(data);try{assert.match(dom.window.document.querySelector('#governance').textContent,/Snapshot native rule/);assert.doesNotMatch(dom.window.document.querySelector('#governance').textContent,/does not include this explanation/);}finally{dom.window.close();}
+ delete data.coverage_explanations;const missing=await snapshot(data);try{assert.match(missing.window.document.querySelector('#governance').textContent,/does not include this explanation/);assert.match(missing.window.document.querySelector('#governance').textContent,/browser will not infer/);}finally{missing.window.close();}
 });
 test('live startup upgrades a v1 session before requesting v2 operations',async()=>{
  const data=fixture(),calls=[];let migrated=false;
@@ -76,6 +82,29 @@ test('slow refreshes do not overlap or replace a newly selected installation',as
  d.querySelector('#refresh').click();assert.equal(firstRequests,1,'same-installation polling stays bounded');
  d.querySelector('#integration').value='second';d.querySelector('#integration').dispatchEvent(new dom.window.Event('change'));await tick();await tick();assert.match(d.querySelector('#overview').textContent,/second/);
  release();await tick();assert.match(d.querySelector('#overview').textContent,/second/,'late response cannot replace the selected integration');
+ }finally{dom.window.close();}
+});
+test('late run explanation cannot replace the selected installation explanation',async()=>{
+ const data=fixture();data.list.integrations.push({id:'second'});
+ const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost/'}),d=dom.window.document;let releaseFirst,firstStarted=false;
+ const explanation=title=>{const record={key:'rule:'+title,revision_id:'mapped:1'};return {schema:'ipe.integration.coverage-explanation.v1',run_id:2,as_of:10,run_status:'succeeded',nodes:[{record,kind:'governance',title}],links:[],rules:[{record,kind:'policy',requirements:[],unmatched_subjects:[]}],gaps:[],omissions:{nodes:0,links:0,rules:0,gaps:0}};};
+ dom.window.fetch=async(path,options={})=>{
+  if(path==='/v1/host/session')return {ok:true,json:async()=>({connected:true})};
+  if(path.endsWith('/coverage-explanation')&&path.includes('/sample/')){firstStarted=true;await new Promise(resolve=>{releaseFirst=resolve});return {ok:true,json:async()=>explanation('First integration explanation')};}
+  if(path.endsWith('/coverage-explanation'))return {ok:true,json:async()=>explanation('Second integration explanation')};
+  if(path.startsWith('/v2/'))return {ok:true,json:async()=>({operations:[]})};
+  const body=path.includes('/revisions/')?data.revision_details.capture:path.endsWith('/revisions')?data.revisions:path.endsWith('/explanations')?null:path.endsWith('/records')?data.records:path.endsWith('/runs')?data.history:path==='/v1/integrations'?data.list:{...data.program,id:path.endsWith('/second')?'second':'sample'};
+  return {ok:true,json:async()=>body};
+ };
+ try{
+  dom.window.eval(d.querySelector('script[src="/assets/governance-view.js"]')?.textContent||fs.readFileSync(__dirname+'/governance-view.js','utf8'));
+  dom.window.eval(d.querySelector('#monitor-app').textContent);await tick();await tick();
+  assert.equal(firstStarted,true);
+  d.querySelector('#integration').value='second';d.querySelector('#integration').dispatchEvent(new dom.window.Event('change'));await tick();await tick();
+  assert.match(d.querySelector('#governance').textContent,/Second integration explanation/);
+  releaseFirst();await tick();await tick();
+  assert.match(d.querySelector('#governance').textContent,/Second integration explanation/);
+  assert.doesNotMatch(d.querySelector('#governance').textContent,/First integration explanation/);
  }finally{dom.window.close();}
 });
 

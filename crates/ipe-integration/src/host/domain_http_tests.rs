@@ -75,6 +75,24 @@ async fn versioned_domain_reads_preserve_state_and_enforce_request_boundaries() 
     .unwrap();
     let host = Host::new(config).await.unwrap();
     *host.store.lock().await = store;
+    host.store.lock().await.integrations.get_mut("ci").unwrap().runs.push(Run {
+        id: 7,
+        trigger: "manual".into(),
+        status: "succeeded".into(),
+        started_at: time,
+        finished_at: Some(time),
+        elapsed_ms: 0,
+        adapter_digest: "fixture".into(),
+        steps: 0,
+        metrics: Metrics::default(),
+        error: None,
+        records: vec![],
+        evidence: vec![],
+        summary: json!({}),
+        coverage: vec![],
+        progress: vec![],
+        trace: None,
+    });
     let before = serde_json::to_value(&*host.store.lock().await).unwrap();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -95,14 +113,53 @@ async fn versioned_domain_reads_preserve_state_and_enforce_request_boundaries() 
         assert!(!response.bytes().await.unwrap().is_empty());
     }
     let operations = format!("http://{addr}/v2/integrations/ci/operations");
+    let explanation = format!("http://{addr}/v2/integrations/ci/runs/7/coverage-explanation");
     let assessments = format!("http://{addr}/v2/integrations/ci/assessments");
     assert_eq!(client.get(&operations).send().await.unwrap().status(), 401);
+    assert_eq!(client.get(&explanation).send().await.unwrap().status(), 401);
     assert_eq!(client.post(&assessments).body("{}").send().await.unwrap().status(), 401);
     let response = client.get(&operations).bearer_auth(token).send().await.unwrap();
     assert_eq!(response.status(), 200);
     let value: Value = serde_json::from_slice(&response.bytes().await.unwrap()).unwrap();
     assert_eq!(value, selected);
     assert_eq!(value["schema"], "ipe.integration.operations.v2");
+    let response = client.get(&explanation).bearer_auth(token).send().await.unwrap();
+    assert_eq!(response.status(), 200);
+    let explanation_value: Value =
+        serde_json::from_slice(&response.bytes().await.unwrap()).unwrap();
+    assert_eq!(explanation_value["schema"], "ipe.integration.coverage-explanation.v1");
+    assert_eq!(explanation_value["run_id"], 7);
+    assert_eq!(explanation_value["nodes"], json!([]));
+    assert_eq!(
+        client
+            .get(format!("http://{addr}/v2/integrations/ci/runs/not-a-run/coverage-explanation"))
+            .bearer_auth(token)
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        400
+    );
+    assert_eq!(
+        client
+            .get(format!("http://{addr}/v2/integrations/ci/runs/8/coverage-explanation"))
+            .bearer_auth(token)
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        404
+    );
+    assert_eq!(
+        client
+            .get(format!("http://{addr}/v2/integrations/missing/runs/7/coverage-explanation"))
+            .bearer_auth(token)
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        404
+    );
     assert_eq!(
         client
             .get(format!("http://{addr}/v2/integrations/missing/operations"))

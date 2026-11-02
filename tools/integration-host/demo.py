@@ -145,6 +145,11 @@ def main():
                 'context_changed':revisions['collection_context_changed'],
                 'limitation':'The second live capture changes collector source. Requirement and external source changes use deterministic tests.'}
         snapshot = {'review_proof': review_proof, 'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records'), 'coverage': api('/v1/integrations/github_actions/coverage'), 'explanations': api('/v1/integrations/github_actions/explanations'), 'operations': api('/v2/integrations/github_actions/operations'), 'revisions': api('/v1/integrations/github_actions/revisions')}
+        # Preserve the native relationships for each retained capture in offline review.
+        snapshot['coverage_explanations'] = {
+            str(capture['id']): api('/v2/integrations/github_actions/runs/'+str(capture['id'])+'/coverage-explanation')
+            for capture in history['runs']
+        }
         encoded = json.dumps(snapshot, indent=2)
         if token in encoded:
             raise RuntimeError('Credential disclosure detected')

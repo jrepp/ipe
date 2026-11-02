@@ -23,26 +23,94 @@ function fixture(){
   {kind:'fact',expires_at:1,model:{entity:{kind:'fact',subject:'release',predicate:'approved',value:'<script>bad()</script>',execution}}}
  ],evidence:[{step:1,operation:'read_governance',status:'observed',receipt:'receipt:1'}]};
 }
-function setup(){const dom=new JSDOM('<div id="view"></div>',{runScripts:'outside-only'});dom.window.eval(script);return {dom,d:dom.window.document,render:(run,installation)=>dom.window.IpeGovernanceView.render(dom.window.document.querySelector('#view'),run,installation)};}
-test('plain explanation keeps rule scope, candidate execution and exact observations distinct',()=>{
+function setup(){const dom=new JSDOM('<div id="view"></div>',{runScripts:'outside-only'});dom.window.eval(script);return {dom,d:dom.window.document,render:(run,installation,explanation={status:'missing'})=>dom.window.IpeGovernanceView.render(dom.window.document.querySelector('#view'),run,installation,explanation)};}
+function nativeProjection(runId=1){
+ const rule={key:'rule:release',revision_id:'mapped:rule'},operation={key:'operation:release',revision_id:'mapped:operation'},execution={key:'outcome:42',revision_id:'mapped:outcome'},fact={key:'fact:approval',revision_id:'mapped:fact'};
+ return {schema:'ipe.integration.coverage-explanation.v1',run_id:runId,as_of:10,run_status:'succeeded',interpretation:'Links describe retained records only.',nodes:[{record:rule,kind:'governance',title:'Release policy',source:{revision:'source-1'},observed_at:1},{record:operation,kind:'constraint',title:'Release operation',observed_at:2},{record:execution,kind:'outcome',title:'Publish execution',observed_at:3},{record:fact,kind:'fact',title:'approved = true',observed_at:4,expires_at:5,expired:true}],links:[{kind:'rule_subject',from:rule,to:operation,resolution:'exact',reason:'The rule names this operation.'},{kind:'operation_execution',from:operation,to:execution,resolution:'candidate',reason:'The operation identity is a candidate.'},{kind:'execution_fact',from:execution,to:fact,resolution:'exact',reason:'The fact has the exact execution identity.'}],rules:[{record:rule,kind:'policy',requirements:[{id:'approval',description:'Get approval',specification:'A reviewer must approve release.',fulfillment:'unknown',reason:'No requirement check is bound.'}],unmatched_subjects:[]}],gaps:[],omissions:{nodes:0,links:0,rules:0}};
+}
+test('native explanation preserves exact, candidate, and exact links as separate claims',()=>{
  const {dom,d,render}=setup();try{
-  const run=fixture();render(run);
+  const run=fixture();render(run,null,{status:'ready',data:nativeProjection()});
   let story=d.querySelector('.ipe-coverage-story');
   assert.match(story.textContent,/A reviewer must approve release/);
-  assert.match(story.textContent,/rule lists these operation identities/);
-  assert.match(story.textContent,/Provider result: success/);
-  assert.match(story.textContent,/Possible run of: Release operation/);
-  assert.match(story.textContent,/connection is not confirmed/);
-  assert.match(story.textContent,/same execution/);assert.match(story.textContent,/Expired/);
-  assert.match(story.textContent,/We cannot tell from this capture/);
+  assert.match(story.textContent,/Exact match · Release operation/);
+  assert.match(story.textContent,/Possible execution link/);
+  assert.match(story.textContent,/Same execution/);
+  assert.match(story.textContent,/Expired or unusable evidence/);
+  assert.match(story.textContent,/No requirement check is bound/);
   assert.equal(story.querySelector('script,img'),null);
   const outcome=run.records.find(r=>r.model.entity.kind==='outcome');
-  outcome.model.entity.definition={...outcome.model.entity.definition,revision:'unrelated'};render(run);
+  outcome.model.entity.definition={...outcome.model.entity.definition,revision:'unrelated'};render(run,null,{status:'ready',data:nativeProjection()});
   story=d.querySelector('.ipe-coverage-story');
-  assert.match(story.textContent,/No related execution was captured/);
-  assert.doesNotMatch(story.textContent,/Provider result: success/);
+  assert.match(story.textContent,/Possible execution link/);
+  assert.doesNotMatch(story.textContent,/No related execution was captured/);
   run.records.find(r=>r.model.entity.record?.type==='policy').model.entity.record.subjects=[];render(run);
-  assert.match(d.querySelector('.ipe-coverage-story').textContent,/No operation is linked/);
+  assert.match(d.querySelector('.ipe-coverage-story').textContent,/does not include this explanation/);
+ }finally{dom.window.close();}
+});
+test('missing, failed, unavailable, and unsupported explanations never trigger browser joins',()=>{
+ const {dom,d,render}=setup();try{
+  const run=fixture();
+  for(const [explanation,expected] of [
+   [{status:'missing'},/saved snapshot does not include this explanation/],
+   [{status:'error',message:'Host request failed: unavailable'},/shared explanation could not be loaded/],
+   [{status:'run-unavailable'},/run is no longer available/],
+   [{status:'ready',data:{...nativeProjection(),run_id:9}},/belongs to another run/],
+   [{status:'unsupported',data:{schema:'ipe.integration.coverage-explanation.v0',run_id:1}},/unsupported explanation version/],
+   [{status:'ready',data:{schema:'ipe.integration.coverage-explanation.v0',run_id:1}},/unsupported explanation version/]
+  ]){
+   render(run,null,explanation);const story=d.querySelector('.ipe-coverage-story');
+   assert.match(story.textContent,expected);assert.doesNotMatch(story.textContent,/Possible run of|Possible link|Provider result/);
+   assert.match(d.querySelector('.ipe-coverage-technical').textContent,/browser|candidate/i);
+  }
+ }finally{dom.window.close();}
+});
+test('native explanation selects one rule and reports host omission counts',()=>{
+ const {dom,d,render}=setup();try{
+  const data=nativeProjection();data.rules.push(...Array.from({length:10},(_,i)=>({record:{key:'rule:'+i,revision_id:'revision:'+i},requirements:[],unmatched_subjects:[]})));
+  data.omissions={nodes:7,links:9,rules:2};render(fixture(),null,{status:'ready',data});
+  const story=d.querySelector('.ipe-coverage-story');assert.match(story.textContent,/7 nodes, 9 links, 2 rules/);
+  assert.equal(story.querySelectorAll('.ipe-coverage-step').length,3);assert.equal(d.querySelectorAll('.ipe-native-rule-select option').length,11);
+ }finally{dom.window.close();}
+});
+test('selected native rule and requirement drive the three-part story across refresh',()=>{
+ const {dom,d,render}=setup();try{
+  const data=nativeProjection(),second={key:'rule:second',revision_id:'mapped:second'};
+  data.nodes.push({record:second,kind:'governance',title:'Second policy'});
+  data.rules.push({record:second,kind:'contract',requirements:[{id:'branch',description:'Use a protected branch',specification:'branch is protected',fulfillment:'unknown',reason:'No check is bound.'}],unmatched_subjects:[]});
+  const run=fixture();render(run,null,{status:'ready',data});
+  const rule=d.querySelector('.ipe-native-rule-select');rule.value=JSON.stringify([second.key,second.revision_id]);rule.dispatchEvent(new dom.window.Event('change'));
+  assert.match(d.querySelector('.ipe-coverage-story').textContent,/Use a protected branch/);
+  assert.doesNotMatch(d.querySelector('.ipe-coverage-story').textContent,/Get approval/);
+  const requirement=d.querySelector('.ipe-native-requirement-select');assert.equal(requirement.value,'branch');
+  render(run,null,{status:'ready',data});assert.equal(d.querySelector('.ipe-native-rule-select').value,JSON.stringify([second.key,second.revision_id]));
+ }finally{dom.window.close();}
+});
+test('native source disclosures and selector focus survive same-run refresh only',()=>{
+ const {dom,d,render}=setup();try{
+  const run=fixture(),data=nativeProjection();render(run,null,{status:'ready',data});
+  const story=d.querySelector('.ipe-coverage-story');
+  const source=[...story.querySelectorAll('details[data-key]')].find(detail=>detail.dataset.key.startsWith('coverage-spec:'));
+  const freshness=[...story.querySelectorAll('details[data-key]')].find(detail=>detail.dataset.key.includes(':fact:'));
+  source.open=true;freshness.open=true;d.querySelector('.ipe-native-requirement-select').focus();
+  const refreshed={...data,as_of:11};render(run,null,{status:'ready',data:refreshed});
+  const next=d.querySelector('.ipe-coverage-story');
+  assert.equal([...next.querySelectorAll('details[data-key]')].find(detail=>detail.dataset.key===source.dataset.key).open,true);
+  assert.equal([...next.querySelectorAll('details[data-key]')].find(detail=>detail.dataset.key===freshness.dataset.key).open,true);
+  assert.equal(d.activeElement,d.querySelector('.ipe-native-requirement-select'));
+  render({...run,id:2},null,{status:'ready',data:{...refreshed,run_id:2}});
+  assert.equal([...d.querySelectorAll('.ipe-coverage-story details[data-key]')].find(detail=>detail.dataset.key===source.dataset.key).open,false);
+ }finally{dom.window.close();}
+});
+test('projection gaps and collection receipts stay distinct from requirement checks',()=>{
+ const {dom,d,render}=setup();try{
+  const data=nativeProjection();data.gaps=[{kind:'missing_requirement_check',record:{key:'fact:approval'},reason:'No check binds this observation to the selected requirement.'},{kind:'partial_capture',reason:'The provider response was truncated.'}];
+  data.nodes[3].claim='observed';data.nodes[3].receipts=['receipt-a','receipt-b'];
+  render(fixture(),null,{status:'ready',data});const story=d.querySelector('.ipe-coverage-story');
+  const gaps=[...story.querySelectorAll('details')].find(detail=>detail.querySelector('summary')?.textContent==='Missing evidence and limits · 2');assert.ok(gaps);assert.match(gaps.textContent,/missing requirement check · fact:approval: No check binds this observation/);
+  assert.match(gaps.textContent,/partial capture: The provider response was truncated/);
+  assert.match(story.textContent,/Collection receipts: receipt-a, receipt-b/);assert.match(story.textContent,/Source claim: observed/);
+  assert.match(story.textContent,/does not prove that a rule applied or that a requirement was met/);
  }finally{dom.window.close();}
 });
 test('an empty governance capture exposes denied API reads instead of implying policy absence',()=>{
@@ -62,7 +130,7 @@ test('same receipt or title never joins governance to an unrelated execution',()
 });
 test('reference revisions and ambiguity remain gaps and unchanged refresh preserves focus',()=>{
  const {dom,d,render}=setup();try{const run=fixture();const principal=run.records[1];run.records.push({...principal,revision_id:'duplicate'});render(run);assert.match(d.querySelector('.ipe-governance-gaps').textContent,/Ambiguous reference/);const select=d.querySelector('.ipe-governance-select');select.focus();render(run);assert.equal(d.querySelector('.ipe-governance-select'),select);assert.equal(d.activeElement,select);
- render({id:2,status:'failed',records:[],trace:{emissions:[{kind:'governance'}]}});assert.match(d.querySelector('#view').textContent,/No governance descriptions/);assert.match(d.querySelector('#view').textContent,/Policy applicability at execution time: Unknown/);assert.equal(d.querySelector('.ipe-governance-select'),null);assert.doesNotMatch(d.querySelector('#view').textContent,/Release approval/);}finally{dom.window.close();}
+  render({id:2,status:'failed',records:[],trace:{emissions:[{kind:'governance'}]}});assert.match(d.querySelector('#view').textContent,/No governance descriptions/);assert.match(d.querySelector('#view').textContent,/This capture did not commit records/);assert.equal(d.querySelector('.ipe-governance-select'),null);assert.doesNotMatch(d.querySelector('#view').textContent,/Release approval/);}finally{dom.window.close();}
 });
 
 test('plain explanation precedes collapsed record connections',()=>{

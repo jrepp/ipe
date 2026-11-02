@@ -32,7 +32,7 @@
 'use strict';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const frozen=!!document.getElementById('host-snapshot');
-let token='',state=null,latestExplanations=null,recordKind='',selectedRun=null,activeId='',refreshSerial=0,comparisonSerial=0,starting=false,inFlightId=null,pendingRun=null;
+let token='',state=null,latestExplanations=null,recordKind='',selectedRun=null,activeId='',refreshSerial=0,comparisonSerial=0,coverageSerial=0,coverageExplanation={key:'',status:'missing'},starting=false,inFlightId=null,pendingRun=null;
 const manifests=new Map();
 const date=t=>t&&Number.isFinite(Number(t))?new Date(t*1000).toISOString().replace('T',' ').replace('.000Z',' UTC'):'Unknown';
 const short=s=>s?String(s).replace('sha256:','').slice(0,12):'Unknown';
@@ -96,10 +96,28 @@ function showGovernance(){
  render('#governance-run',runs.slice().reverse().map(r=>`<option value="${r.id}">Run ${r.id} · ${esc(r.status)}</option>`).join(''));
  $('#governance-run').disabled=!run;if(run)$('#governance-run').value=String(run.id);
  if(!run){render('#governance','<p>No collector run is available.</p>');return;}
- if(window.IpeGovernanceView)window.IpeGovernanceView.render($('#governance'),run,{snapshot:frozen,adapter_digest:state.p?.adapter_digest,package:state.p?.package?{operations:state.p.package.operations,output_kinds:state.p.package.output_kinds,enabled:state.p.package.enabled,interval_seconds:state.p.package.interval_seconds,fact_ttl_seconds:state.p.package.fact_ttl_seconds}:null});
+ selectedRun=run.id;
+ const key=JSON.stringify([activeId,run.id]);
+ if(coverageExplanation.key!==key||coverageExplanation.status==='refreshing'){
+  coverageExplanation={...coverageExplanation,key,status:coverageExplanation.data?'refreshing':'loading'};
+  void loadCoverageExplanation(activeId,run.id,key);
+ }
+ if(window.IpeGovernanceView)window.IpeGovernanceView.render($('#governance'),run,{snapshot:frozen,adapter_digest:state.p?.adapter_digest,package:state.p?.package?{operations:state.p.package.operations,output_kinds:state.p.package.output_kinds,enabled:state.p.package.enabled,interval_seconds:state.p.package.interval_seconds,fact_ttl_seconds:state.p.package.fact_ttl_seconds}:null},coverageExplanation);
  else render('#governance','<p>The governance view did not load. Inspect the retained run records.</p>');
 }
-$('#governance-run').onchange=()=>{selectedRun=Number($('#governance-run').value);showRuns();};
+async function loadCoverageExplanation(integrationId,runId,key){
+ const serial=++coverageSerial;
+ try{
+  const data=await api('/v2/integrations/'+encodeURIComponent(integrationId)+'/runs/'+encodeURIComponent(runId)+'/coverage-explanation');
+  if(serial!==coverageSerial||integrationId!==activeId||!state||!state.h.runs.some(run=>run.id===runId)||selectedRun!==runId)return;
+  coverageExplanation={key,status:!data&&frozen?'missing':data?.run_id!==runId?'mismatch':data?.schema==='ipe.integration.coverage-explanation.v1'?'ready':'unsupported',data};
+ }catch(error){
+  if(serial!==coverageSerial||integrationId!==activeId||selectedRun!==runId)return;
+  coverageExplanation={key,status:/run_unavailable/.test(error.message)?'run-unavailable':'error',message:error.message};
+ }
+ if(integrationId===activeId&&selectedRun===runId){const run=state?.h.runs.find(item=>item.id===runId);if(run&&window.IpeGovernanceView)window.IpeGovernanceView.render($('#governance'),run,{snapshot:frozen,adapter_digest:state.p?.adapter_digest,package:state.p?.package?{operations:state.p.package.operations,output_kinds:state.p.package.output_kinds,enabled:state.p.package.enabled,interval_seconds:state.p.package.interval_seconds,fact_ttl_seconds:state.p.package.fact_ttl_seconds}:null},coverageExplanation);}
+}
+$('#governance-run').onchange=()=>{selectedRun=Number($('#governance-run').value);coverageExplanation={key:'',status:'missing'};showRuns();};
 function showRuns(){
  showGovernance();
  const {h,p,item}=state;render('#schedule',`<p>${esc(scheduleText(item,p?.package))} ${h.runs.length} retained runs${h.retention_runs?' of '+h.retention_runs:''}.</p>`);
@@ -206,7 +224,7 @@ async function compareProgram(){
 }
 async function api(path,method='GET',body){
  const embedded=document.getElementById('host-snapshot');
- if(embedded){if(method!=='GET')throw new Error('Snapshots cannot change the host');const data=JSON.parse(embedded.textContent);if(path.includes('/revisions/'))return data.revision_details?.[decodeURIComponent(path.split('/').at(-1))]||null;return path.endsWith('/operations')?data.operations||null:path.endsWith('/explanations')?data.explanations||null:path.endsWith('/revisions')?data.revisions||null:path.endsWith('/records')?data.records:path.endsWith('/runs')?data.history:path==='/v1/integrations'?data.list:data.program;}
+ if(embedded){if(method!=='GET')throw new Error('Snapshots cannot change the host');const data=JSON.parse(embedded.textContent);if(path.includes('/coverage-explanation')){const runId=decodeURIComponent(path.split('/').at(-2));return data.coverage_explanations?.[runId]||null;}if(path.includes('/revisions/'))return data.revision_details?.[decodeURIComponent(path.split('/').at(-1))]||null;return path.endsWith('/operations')?data.operations||null:path.endsWith('/explanations')?data.explanations||null:path.endsWith('/revisions')?data.revisions||null:path.endsWith('/records')?data.records:path.endsWith('/runs')?data.history:path==='/v1/integrations'?data.list:data.program;}
  const response=await fetch(path,{method,headers:{'X-IPE-Monitor':'1',...(body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{})});
  if(!response.ok){if(response.status===401){$('#login').hidden=false;$('#run').disabled=true;throw new Error('Session unavailable. Refresh to reconnect, or open the local monitor launcher.');}const body=await response.json().catch(()=>({}));throw new Error(body.code==='integration_busy'?'An extraction is already running':body.code?`Host request failed: ${body.code}`:`Host request failed (${response.status})`);}
  return response.json();
@@ -220,6 +238,9 @@ async function refresh(){
   const [p,h,c,x,v,list,o]=await Promise.all([api(base),api(base+'/runs'),api(base+'/records'),api(base+'/explanations'),api(base+'/revisions'),api('/v1/integrations'),api('/v2/integrations/'+encodeURIComponent(id)+'/operations')]);
   if(serial!==refreshSerial||id!==$('#integration').value)return;
   state={p,h:{...h,runs:h?.runs||[],external_outcomes:h?.external_outcomes||[]},c:{...c,records:c?.records||[]},x,v,o,item:list.integrations.find(i=>i.id===id)};
+  const activeRun=state.h.runs.find(run=>run.id===selectedRun)||state.h.runs.at(-1);
+  const activeCoverageKey=activeRun?JSON.stringify([id,activeRun.id]):'';
+  coverageExplanation=coverageExplanation.key===activeCoverageKey&&coverageExplanation.data?{...coverageExplanation,status:'refreshing'}:{key:'',status:'missing'};
   if(state.h.runs.some(r=>r.id===pendingRun))pendingRun=null;
   showOverview();showProgram();showRecords();showRuns();showOutcomes();showExplanations(x);showReview(v);showBaselines();
   $('#status').textContent=frozen?'Snapshot · '+date(c.as_of):'Live · refreshed '+new Date().toLocaleTimeString();

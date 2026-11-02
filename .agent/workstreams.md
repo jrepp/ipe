@@ -8,7 +8,7 @@ Update the status and next action when a workstream changes.
 
 | Workstream | Location | State | Next action |
 | --- | --- | --- | --- |
-| Integration host usability | `feat/integration-host-usability`, main checkout | Implementation committed in `2776c8e`; preview packaging fixed in `48045fd`. Local server rebuilt with existing state. | Review the new Runtime and Integration coverage views, then prepare the branch for integration. |
+| Integration host usability | `feat/integration-host-usability`, main checkout | Host usability and coverage simplification are committed. This pass adds shared native coverage explanations and snapshot support. Local server rebuilt with existing state. | Review the new Runtime and Integration coverage views, then prepare the branch for integration. |
 | Admin control plane architecture | `docs/admin-architecture-review`, sibling `ipe-admin-review` worktree | Proposal and exports committed in `7bc4be5`. No control plane implementation is claimed. | Review the architecture against current main before opening a PR. |
 | Admin UX prototype | Separate repository at `ipe-admin-review/design/admin-ux-review` | Clean at `d353faa` on its own `main`; no Git remote is configured. | Decide how to retain and review this prototype with the architecture work. |
 | Dependency maintenance | GitHub PRs [57](https://github.com/jrepp/ipe/pull/57) and [58](https://github.com/jrepp/ipe/pull/58) | Open Dependabot updates for setup-python and setup-node. | Review CI results and the existing pinned versions before merging. |
@@ -22,7 +22,8 @@ The usability branch contains these related changes:
 
 - Runtime and Integration coverage navigation, source comparisons, record filters, and run inspection.
 - Coverage simplification: requirement, operation, and execution explanations first; record connections in supporting details.
-- Design recommendations updated from the ontology article review. Shared native explanations and governance requirement bindings remain proposed next steps.
+- Shared native coverage explanations now serve the monitor and agent clients for one retained run. Snapshot exports retain the same responses.
+- Design recommendations updated from the ontology article review. Exact governance requirement-to-check bindings remain the next proposed system change.
 - SDK helpers, bounded progress and emission traces, v2 domain APIs, and contextual evidence assessments.
 - GitHub environment and ruleset capture, governance descriptions, and source-backed handoff descriptions.
 - Vocabulary and model documentation, acceptance evidence, and local documentation packaging.

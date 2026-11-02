@@ -28,7 +28,7 @@ They supersede a category map as the default coverage view. They preserve the do
 | Responsibility | IPE component and current state | Recommendation |
 | --- | --- | --- |
 | Define meaning and identity | Native typed records, source revisions, SDK types, and vocabulary exist. | Preserve policy, requirement, operation, execution, and observation as distinct concepts. |
-| Explain connections | The coverage browser derives links from one retained capture. The host also provides operation explanations. | Add one shared native relationship explanation for agents and the monitor. This unified projection is proposed. |
+| Explain connections | The host projects one retained capture through the shared coverage explanation API. | Use the same native links in the monitor and agent clients. Keep the full record map in supporting details. |
 | Check evidence | V2 evidence assessments pin operation records and configured rules. They do not establish governance requirement fulfillment. | Add an explicit governance requirement binding before reporting that its requirement was checked. |
 | Permit and perform reads | The native broker enforces installation grants, credentials, and budgets. | Keep capability descriptions separate from executable authority. External write execution remains outside this host. |
 
@@ -46,7 +46,7 @@ For the current GitHub example, answer these questions in order:
 4. Which observations belong to that exact run, attempt, and job?
 5. What evidence is missing before we can check the requirement?
 
-Each proposed shared explanation must retain endpoint identities, source and mapped revisions, supporting records, resolution status, and freshness limits.
+Each shared explanation retains endpoint identities, source and mapped revisions, supporting records, resolution status, and freshness limits.
 State the relation in a sentence with its actual record names. Keep identifiers and native receipts in supporting details.
 For example: “The environment rule names Publish docs as a subject.”
 Then state: “This historical publish result is a possible execution of that operation; the connection is not confirmed.”
@@ -56,16 +56,17 @@ An exact operation identity does not make the following candidate execution link
 An exact execution-to-fact link does not establish that the rule applied or that its requirement was met.
 Shared source receipts prove collection provenance, not a business relationship or a causal effect.
 
-The current coverage UI implements the question sequence and bounded explanations in browser code.
-It does not yet expose this complete sequence through one native agent API.
-See [governance-view.js](../tools/integration-host/governance-view.js) and the [host guide](INTEGRATION_HOST.md#governance-extraction-and-execution-overlay).
+The coverage UI uses the native explanation for its default question sequence.
+Agent clients request the same run-specific graph from `GET /v2/integrations/:id/runs/:run_id/coverage-explanation`.
+The supporting record map remains a browser projection. It does not replace unavailable native explanations.
+See [coverage_explanations.rs](../crates/ipe-integration/src/host/coverage_explanations.rs), [governance-view.js](../tools/integration-host/governance-view.js), and the [host guide](INTEGRATION_HOST.md#governance-extraction-and-execution-overlay).
 
 ### Prioritize missing evidence over additional categories
 
 | Order | Work | Acceptance condition |
 | --- | --- | --- |
 | Now | Keep the coverage default focused on a requirement, linked operations, and reported executions. | A reader can explain each connection without opening raw JSON. Missing, candidate, and expired evidence remain explicit. |
-| Next | Move the relationship explanation into a shared native projection. | Human and agent clients receive the same links, reasons, revision pins, omissions, and unknowns. |
+| Implemented | Move the relationship explanation into a shared native projection. | Human and agent clients receive the same links, reasons, revision pins, omissions, and unknowns. |
 | Next | Specify governance requirement-to-check bindings. | A changed rule or mapper revision invalidates a stale binding. A matching predicate name alone cannot establish fulfillment. |
 | Later | Describe additional agent capabilities when an actual workload needs them. | A capability identifies its target, inputs, effects, owner, authority checks, evidence, and any approval or recovery requirements. |
 
@@ -76,6 +77,11 @@ Use the existing synthetic handoff and ticket fixtures before claiming support f
 An agent capability description is metadata about an available operation. It is not a contract record or a grant.
 For a future write capability, authorization and approval checks must occur at execution time in the owning system.
 Descriptions of an approval gate or a person's contact route do not authorize deployment, approval, or messaging.
+
+The next binding design should identify one governance requirement, its source revision, and its mapped record revision.
+It must also pin the configured evidence check and the operation record it checks.
+Report a missing or stale binding separately from an evidence-check result. Keep fulfillment unknown until its interpretation and authority are defined.
+Existing v2 operation evidence rules do not provide this governance binding. Do not infer it from equal names or predicates.
 
 ### Limits of this recommendation
 

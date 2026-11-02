@@ -16,7 +16,7 @@
   function specification(doc, requirement) {
     const node=el(doc,'div',null,'ipe-governance-specification');
     node.append(el(doc,'strong',requirement.description),el(doc,'p',`Requirement ID: ${requirement.id}`));
-    const text=String(requirement.specification??'');
+    const text=typeof requirement.specification==='string'?requirement.specification:JSON.stringify(requirement.specification??'');
     let parsed;
     try { parsed=JSON.parse(text); } catch { /* Opaque and truncated specifications remain source text. */ }
     if(parsed && typeof parsed==='object' && !Array.isArray(parsed)){
@@ -26,21 +26,120 @@
       }
       node.append(dl,el(doc,'p','Field names and values come from the retained specification. Their presence does not prove enforcement.'));
       if(fields.length>16)node.append(el(doc,'p',`Showing 16 of ${fields.length} fields. Open the retained specification for the rest.`));
-      const raw=el(doc,'details');raw.append(el(doc,'summary','Retained specification'),el(doc,'pre',text));node.append(raw);
+      const raw=el(doc,'details'),limited=text.length>16384?text.slice(0,16384)+'\nDisplay limited to 16 KiB.':text;raw.append(el(doc,'summary','Retained specification'),el(doc,'pre',limited));node.append(raw);
     }else node.append(el(doc,'p',text),el(doc,'small','Source text. No structured interpretation is available.'));
     return node;
   }
-  function render(container, run, installation = null) {
+  function identity(record) { return JSON.stringify([record?.key,record?.revision_id]); }
+  function drawNativeStory(doc, story, data, run, session, redraw) {
+    const nodes=array(data.nodes), links=array(data.links), rules=array(data.rules);
+    const byId=new Map(nodes.map(node=>[identity(node.record),node]));
+    const label=node=>String(node?.title||node?.record?.key||'Unknown record').slice(0,200);
+    const displayValue=value=>{const text=JSON.stringify(value)??'Unknown';return text.length>512?text.slice(0,512)+'… (value shortened)':text;};
+    const appendReason=(parent,link)=>{if(!link?.reason)return;const detail=el(doc,'details');detail.dataset.key=`coverage-link:${session.nativeRule}:${link.kind}:${identity(link.from)}:${identity(link.to)}`;detail.open=session.openDetails.includes(detail.dataset.key);detail.append(el(doc,'summary','Why this link?'),el(doc,'p',String(link.reason).slice(0,1024)));parent.append(detail);};
+    const maxOperations=6,maxExecutions=6,maxFacts=6;
+    const header=el(doc,'div',null,'ipe-coverage-header');
+    header.append(el(doc,'h3','Rule and evidence'),el(doc,'p',`Run ${data.run_id} · ${words(data.run_status)}.`));
+    header.append(el(doc,'p','A link describes retained records. It does not prove that a rule applied or that a requirement was met.'));
+    const ruleSelect=el(doc,'select',null,'ipe-native-rule-select');ruleSelect.setAttribute('aria-label','Rule to explain');
+    for(const rule of rules){const node=byId.get(identity(rule.record)),option=el(doc,'option',`${words(rule.kind||'rule')} · ${label(node)}`);option.value=identity(rule.record);ruleSelect.append(option);}
+    const selectedRule=rules.find(rule=>identity(rule.record)===session.nativeRule)||rules[0];
+    if(selectedRule){session.nativeRule=identity(selectedRule.record);ruleSelect.value=session.nativeRule;}
+    const ruleLabel=el(doc,'label','Rule to explain');ruleLabel.append(ruleSelect);header.append(ruleLabel);
+    const allRequirements=array(selectedRule?.requirements),requirements=allRequirements.slice(0,32),reqSelect=el(doc,'select',null,'ipe-native-requirement-select');reqSelect.setAttribute('aria-label','Requirement to explain');
+    for(const requirement of requirements){const option=el(doc,'option',requirement.description||requirement.id||'Requirement');option.value=String(requirement.id);reqSelect.append(option);}
+    const selectedRequirement=requirements.find(requirement=>String(requirement.id)===session.nativeRequirement)||requirements[0];
+    if(selectedRequirement){session.nativeRequirement=String(selectedRequirement.id);reqSelect.value=session.nativeRequirement;}
+    if(requirements.length){const requirementLabel=el(doc,'label','Requirement to explain');requirementLabel.append(reqSelect);header.append(requirementLabel);}
+    story.append(header);
+    const ruleNode=byId.get(identity(selectedRule?.record));
+    const requirementSection=el(doc,'section',null,'ipe-coverage-step');requirementSection.append(el(doc,'h3','1. What is required?'));
+    if(selectedRequirement){
+      requirementSection.append(el(doc,'strong',String(selectedRequirement.description||selectedRequirement.id||'Requirement').slice(0,300)),el(doc,'p',`Fulfillment: ${words(selectedRequirement.fulfillment)}. ${String(selectedRequirement.reason||'').slice(0,240)}`));
+      const text=String(selectedRequirement.specification??'');
+      let fields;try{fields=JSON.parse(text);}catch{/* Opaque source remains literal. */}
+      if(fields&&typeof fields==='object'&&!Array.isArray(fields)){
+        const values=Object.entries(fields).filter(([name,value])=>!['id','node_id'].includes(name)&&typeof value!=='object');
+        const summary=el(doc,'dl');for(const [name,value] of values.slice(0,4))summary.append(el(doc,'dt',words(name)),el(doc,'dd',typeof value==='boolean'?(value?'Yes':'No'):String(value).slice(0,240)));
+        requirementSection.append(summary);
+      }else if(text)requirementSection.append(el(doc,'p',text.length>512?text.slice(0,512)+'… (open source requirement for the rest)':text));
+      if(selectedRequirement.specification!=null){const detail=el(doc,'details');detail.dataset.key=`coverage-spec:${identity(selectedRule.record)}:${selectedRequirement.id}`;detail.open=session.openDetails.includes(detail.dataset.key);detail.append(el(doc,'summary','Source requirement'),specification(doc,{id:selectedRequirement.id,description:selectedRequirement.description||'Source requirement',specification:selectedRequirement.specification}));requirementSection.append(detail);}
+      if(ruleNode)appendNodeFreshness(doc,requirementSection,ruleNode,`coverage-node:${identity(selectedRule.record)}:rule`,session.openDetails);
+    }else requirementSection.append(el(doc,'p','No requirement was retained for this rule.'));
+    const operationSection=el(doc,'section',null,'ipe-coverage-step');operationSection.append(el(doc,'h3','2. Which operation is linked?'));
+    const ruleLinks=links.filter(link=>link.kind==='rule_subject'&&identity(link.from)===identity(selectedRule?.record));
+    if(!ruleLinks.length)operationSection.append(el(doc,'p','No operation link was retained for this rule.'));
+    for(const link of ruleLinks.slice(0,maxOperations)){
+      const operation=byId.get(identity(link.to));
+      const item=el(doc,'p',`${link.resolution==='exact'?'Exact match':'Possible match'} · ${label(operation)}`);operationSection.append(item);appendReason(operationSection,link);
+      if(operation)appendNodeFreshness(doc,operationSection,operation,`coverage-node:${identity(selectedRule.record)}:operation:${identity(link.to)}`,session.openDetails);
+    }
+    if(ruleLinks.length>maxOperations)operationSection.append(el(doc,'p',`Showing ${maxOperations} of ${ruleLinks.length} operation links.`));
+    const executionSection=el(doc,'section',null,'ipe-coverage-step');executionSection.append(el(doc,'h3','3. What happened?'));
+    let executionCount=0,factCount=0;
+    for(const ruleLink of ruleLinks.slice(0,maxOperations)){
+      for(const executionLink of links.filter(link=>link.kind==='operation_execution'&&identity(link.from)===identity(ruleLink.to)).slice(0,maxExecutions)){
+        if(executionCount++>=maxExecutions)break;
+        const execution=byId.get(identity(executionLink.to));
+        const outcome=el(doc,'article',null,'ipe-coverage-outcome');
+        outcome.append(el(doc,'strong',label(execution)),el(doc,'p',executionLink.resolution==='exact'?'Exact execution link':'Possible execution link'));appendReason(outcome,executionLink);
+        if(execution?.status||execution?.conclusion)outcome.append(el(doc,'p',`Provider result: ${words(execution.conclusion||execution.status)}.`));
+        if(execution)appendNodeFreshness(doc,outcome,execution,`coverage-node:${identity(selectedRule.record)}:execution:${identity(executionLink.to)}`,session.openDetails);
+        const facts=links.filter(link=>link.kind==='execution_fact'&&identity(link.from)===identity(executionLink.to));
+        if(!facts.length)outcome.append(el(doc,'p','No facts were linked to this exact execution.'));
+        for(const factLink of facts.slice(0,maxFacts)){
+          if(factCount++>=maxFacts)break;
+          const fact=byId.get(identity(factLink.to));
+          outcome.append(el(doc,'p',`${factLink.resolution==='exact'?'Same execution':'Possible observation'} · ${label(fact)}`));appendReason(outcome,factLink);
+          if(fact?.predicate)outcome.append(el(doc,'p',`${words(fact.predicate)}: ${displayValue(fact.value)}`));
+          if(fact?.expired===true)outcome.append(el(doc,'p','Expired or unusable evidence.'));
+          if(fact)appendNodeFreshness(doc,outcome,fact,`coverage-node:${identity(selectedRule.record)}:fact:${identity(factLink.to)}`,session.openDetails);
+        }
+        if(facts.length>maxFacts)outcome.append(el(doc,'p',`Showing ${maxFacts} of ${facts.length} fact links.`));
+        executionSection.append(outcome);
+      }
+    }
+    if(!executionCount)executionSection.append(el(doc,'p','No execution candidate was linked to these operations.'));
+    if(executionCount>=maxExecutions)executionSection.append(el(doc,'p',`Showing at most ${maxExecutions} execution links.`));
+    if(factCount>maxFacts)executionSection.append(el(doc,'p',`Showing at most ${maxFacts} observations. Inspect retained records for the rest.`));
+    if(allRequirements.length>requirements.length)requirementSection.append(el(doc,'p',`Showing ${requirements.length} of ${allRequirements.length} requirements.`));
+    const conclusion=el(doc,'section',null,'ipe-coverage-conclusion');
+    conclusion.append(el(doc,'h3','Was the requirement met?'),el(doc,'strong','We cannot tell from this capture.'),el(doc,'p','No recorded check connects this requirement to the evidence. A successful run alone does not prove the requirement was met.'));
+    story.append(requirementSection,operationSection,executionSection,conclusion);
+    const gaps=array(data.gaps),omissions=data.omissions||{};
+    if(gaps.length){const details=el(doc,'details',null,'ipe-coverage-gaps');details.append(el(doc,'summary',`Missing evidence and limits · ${gaps.length}`));for(const gap of gaps.slice(0,32))details.append(el(doc,'p',`${words(gap.kind)}${gap.record?.key?` · ${gap.record.key}`:''}: ${gap.reason||'Reason not provided'}`));if(gaps.length>32)details.append(el(doc,'p',`Showing 32 of ${gaps.length} items.`));story.append(details);}
+    const omitted=['nodes','links','rules','gaps'].filter(name=>Number.isFinite(omissions[name])&&omissions[name]>0).map(name=>`${omissions[name]} ${name}`);
+    if(omitted.length)story.append(el(doc,'p',`The host omitted ${omitted.join(', ')} from this bounded explanation.`,'ipe-coverage-omissions'));
+    ruleSelect.onchange=()=>{session.nativeRule=ruleSelect.value;session.nativeRequirement=null;session.openDetails=[];redraw();story.ownerDocument.querySelector('.ipe-native-rule-select')?.focus({preventScroll:true});};
+    reqSelect.onchange=()=>{session.nativeRequirement=reqSelect.value;session.openDetails=[];redraw();story.ownerDocument.querySelector('.ipe-native-requirement-select')?.focus({preventScroll:true});};
+  }
+  function appendNodeFreshness(doc, parent, node, key, openDetails=[]) {
+    const detail=el(doc,'details');detail.dataset.key=key;detail.open=openDetails.includes(key);detail.append(el(doc,'summary','Source, freshness, and collection details'));
+    const times=[];
+    if(Number.isFinite(node.observed_at))times.push(`Observed ${new Date(node.observed_at*1000).toISOString()}`);
+    if(Number.isFinite(node.expires_at))times.push(`Expires ${new Date(node.expires_at*1000).toISOString()}`);
+    if(node.expired===true)times.push('Expired or unusable evidence');
+    if(node.temporal_state)times.push(`Temporal state: ${words(node.temporal_state)}`);
+    if(node.valid_from!=null)times.push(`Valid from ${node.valid_from}`);
+    if(node.valid_until!=null)times.push(`Valid until ${node.valid_until}`);
+    if(node.source)times.push(`Source ${typeof node.source==='string'?node.source:JSON.stringify(node.source)}`);
+    if(node.claim)times.push(`Source claim: ${words(node.claim)}`);
+    for(const value of times)detail.append(el(doc,'p',value));
+    if(array(node.receipts).length){detail.append(el(doc,'p',`Collection receipts: ${node.receipts.slice(0,8).join(', ')}`));if(node.receipts.length>8)detail.append(el(doc,'p',`Showing 8 of ${node.receipts.length} receipts.`));}
+    parent.append(detail);
+  }
+  function render(container, run, installation = null, explanation = {status:'missing'}) {
     if (!container) return;
     const now=Math.floor(Date.now()/1000);
     const temporal=array(run?.records).map(record=>{const item=governance(record);return [record.expires_at,item?.valid_until].some(value=>Number.isFinite(value)&&value<=now)||Number.isFinite(item?.valid_from)&&item.valid_from>now;});
-    const fingerprint=JSON.stringify([run ?? null,temporal,installation]), previous=sessions.get(container);
+    const fingerprint=JSON.stringify([run ?? null,temporal,installation,explanation]), previous=sessions.get(container);
     if(previous?.fingerprint===fingerprint)return;
+    const openDetails=previous?.runId===run?.id?[...container.querySelectorAll('.ipe-coverage-story details[open][data-key]')].map(detail=>detail.dataset.key):[];
     const focused=container.contains(container.ownerDocument.activeElement)?container.ownerDocument.activeElement:null;
     const focusConcept=focused?.matches('button[data-concept]')?focused.dataset.concept:null;
-    const focusClass=['ipe-governance-select','ipe-governance-requirement-select','ipe-ontology-filter'].find(name=>focused?.classList.contains(name));
+    const focusClass=['ipe-governance-select','ipe-governance-requirement-select','ipe-ontology-filter','ipe-native-rule-select','ipe-native-requirement-select'].find(name=>focused?.classList.contains(name));
     const doc=container.ownerDocument, root=el(doc,'section',null,'ipe-governance');
-    const session={fingerprint,runId:run?.id,selected:previous?.runId===run?.id?previous.selected:null,requirement:previous?.runId===run?.id?previous.requirement:null,concept:previous?.runId===run?.id?previous.concept:null,gapsOnly:previous?.runId===run?.id?previous.gapsOnly:false,technicalOpen:previous?.runId===run?.id?previous.technicalOpen:false};sessions.set(container,session);
+    const session={fingerprint,runId:run?.id,selected:previous?.runId===run?.id?previous.selected:null,requirement:previous?.runId===run?.id?previous.requirement:null,nativeRule:previous?.runId===run?.id?previous.nativeRule:null,nativeRequirement:previous?.runId===run?.id?previous.nativeRequirement:null,openDetails,concept:previous?.runId===run?.id?previous.concept:null,gapsOnly:previous?.runId===run?.id?previous.gapsOnly:false,technicalOpen:previous?.runId===run?.id?previous.technicalOpen:false};sessions.set(container,session);
     const all=array(run?.records), records=all.slice(0,512), entries=records.filter(governance).map(record=>({record,item:governance(record)}));
     const guide=el(doc,'details',null,'ipe-governance-guide');guide.append(el(doc,'summary','Capture scope and mapping states'));
     guide.append(el(doc,'p','Select a concept to inspect its source and next check. The map groups concepts; it does not imply links between adjacent cards.'));
@@ -66,13 +165,28 @@
     }
     if(all.length>records.length)root.append(el(doc,'p',`Inspection limited to ${records.length} of ${all.length} records. Missing links can result from this limit.`));
     if(run?.status!=='succeeded')root.append(el(doc,'p','This capture did not commit records. Retained emissions do not establish captured governance.','ipe-governance-warning'));
-    if(!entries.length){root.append(el(doc,'p','No governance descriptions were retained in this capture. Operation declarations alone do not establish policy, contract, or control records. Policy applicability at execution time: Unknown. Collection time does not establish when a rule took effect.'));root.append(guide);container.replaceChildren(root);return;}
+    if(!entries.length){
+      root.append(el(doc,'p','No governance descriptions were retained in this capture.'));
+      const story=el(doc,'section',null,'ipe-coverage-story');story.setAttribute('aria-label','Rule and evidence explanation');
+      const statusHeader=el(doc,'div',null,'ipe-coverage-header');statusHeader.append(el(doc,'h3','Rule and evidence'));
+      if(explanation?.status==='loading'||(explanation?.status==='refreshing'&&!explanation?.data))statusHeader.append(el(doc,'p','Loading explanation…'));
+      else if(explanation?.status==='error')statusHeader.append(el(doc,'p',`The shared explanation could not be loaded. ${explanation.message||'Refresh to try again.'} Retained records remain available below.`,'ipe-governance-warning'));
+      else if(explanation?.status==='run-unavailable')statusHeader.append(el(doc,'p','This run is no longer available for explanation. Select another retained run. Retained records remain available below.','ipe-governance-warning'));
+      else if(explanation?.status==='missing')statusHeader.append(el(doc,'p','This saved snapshot does not include this explanation. The browser will not infer these links. Inspect retained records below.','ipe-governance-warning'));
+      else if(explanation?.status==='mismatch'||(explanation?.data&&explanation.data.run_id!==run?.id))statusHeader.append(el(doc,'p','This explanation belongs to another run. The browser will not use its links. Inspect retained records below.','ipe-governance-warning'));
+      else if(explanation?.status==='unsupported'||explanation?.data?.schema!=='ipe.integration.coverage-explanation.v1')statusHeader.append(el(doc,'p','This host returned an unsupported explanation version. The browser will not infer these links. Inspect retained records below.','ipe-governance-warning'));
+      else drawNativeStory(doc,story,explanation.data,run,session,()=>{});
+      if(!story.querySelector('.ipe-coverage-header'))story.prepend(statusHeader);
+      root.append(story);
+      const rawRecords=el(doc,'details');rawRecords.append(el(doc,'summary',`Raw supporting records · ${all.length}`),el(doc,'pre',JSON.stringify(all.slice(0,32),null,2)));
+      if(all.length>32)rawRecords.append(el(doc,'p',`Showing 32 of ${all.length} records.`));root.append(rawRecords,guide);container.replaceChildren(root);return;
+    }
     const rules=entries.filter(({item})=>['policy','contract'].includes(item.type));
     const label=el(doc,'label','Rule to inspect'), select=el(doc,'select',null,'ipe-governance-select');select.setAttribute('aria-label','Rule to inspect');
     for(const entry of rules){const option=el(doc,'option',`${words(entry.item.type)} · ${entry.item.title}`);option.value=key(entry.item)+'@'+entry.item.source.revision;select.append(option);}
     if(!rules.length){const option=el(doc,'option','No policy or contract captured');option.value='';select.append(option);select.disabled=true;}
     if([...select.options].some(option=>option.value===session.selected))select.value=session.selected;
-    label.append(select);root.append(label);const body=el(doc,'div',null,'ipe-governance-body');root.append(body,guide);container.replaceChildren(root);
+    label.append(select);const body=el(doc,'div',null,'ipe-governance-body');root.append(body,guide);container.replaceChildren(root);
     function resolve(ref){const matches=entries.filter(({item})=>ref && item.type===ref.kind && same(item.id,ref.id) && item.source.revision===ref.source_revision);return {matches,status:matches.length>1?'Ambiguous reference':matches.length===0?'Target not captured at this source revision':ref.resolution==='resolved'?'Exact retained reference':'Candidate reference'};}
     function reference(ref){if(!ref)return 'Reference unavailable';const result=resolve(ref),name=result.matches.length===1?(result.matches[0].item.title||result.matches[0].item.id.local_id):ref.id?.local_id;return `${name ?? 'Unknown'} · ${result.status}`;}
     function field(dl,name,value){dl.append(el(doc,'dt',name),el(doc,'dd',value));}
@@ -94,7 +208,7 @@
       for(const read of reads.slice(0,32))support.append(el(doc,'p',`${read.operation} · ${read.step==null?'Step not retained':'Step '+read.step} · ${read.receipt}`));article.append(support);
       const raw=el(doc,'details',null,'ipe-governance-raw');raw.append(el(doc,'summary','Raw retained record'),el(doc,'pre',JSON.stringify(record,null,2).length>32768?JSON.stringify(record,null,2).slice(0,32768)+'\nDisplay limited to 32 KiB. Inspect the full retained run for this record.':JSON.stringify(record,null,2)));article.append(raw);return article;
     }
-    function draw(){session.technicalOpen=body.querySelector('.ipe-coverage-technical')?.open??session.technicalOpen;if(session.selected!==select.value){session.requirement=null;session.concept=null;session.gapsOnly=false;session.technicalOpen=false;}session.selected=select.value;body.replaceChildren();const selected=rules.find(({item})=>key(item)+'@'+item.source.revision===select.value);
+    function draw(){session.technicalOpen=body.querySelector('.ipe-coverage-technical')?.open??session.technicalOpen;const open=[...body.querySelectorAll('.ipe-coverage-story details[open][data-key]')].map(detail=>detail.dataset.key);if(open.length)session.openDetails=open;if(session.selected!==select.value){session.requirement=null;session.concept=null;session.gapsOnly=false;session.technicalOpen=false;}session.selected=select.value;body.replaceChildren();const selected=rules.find(({item})=>key(item)+'@'+item.source.revision===select.value);
       if(selected){const description=el(doc,'details',null,'ipe-governance-description');description.append(el(doc,'summary','Full policy or contract description'),card(selected));body.append(description);}
       const related=selected?entries.filter(({item})=>['control','handoff'].includes(item.type)&&refs(item).some(ref=>ref.kind===selected.item.type&&same(ref.id,selected.item.id)&&ref.source_revision===selected.item.source.revision)):[];
       const mechanisms=el(doc,'details',null,'ipe-governance-mechanisms');mechanisms.append(el(doc,'summary',`Mechanism and handoff details · ${related.length}`));if(!related.length)mechanisms.append(el(doc,'p','No mechanism or handoff reference to this rule was captured at this source revision.'));for(const entry of related.slice(0,32))mechanisms.append(card(entry));
@@ -216,66 +330,28 @@
       const routes=el(doc,'ul');for(const {item,record} of contacts.slice(0,6)){const expired=[record.expires_at,item.valid_until].some(value=>Number.isFinite(value)&&value<=Date.now()/1000);routes.append(el(doc,'li',`${reference(item.owner)} · ${words(item.channel)}: ${item.endpoint||'Contact not captured'} · ${words(item.availability)}${expired?' · Expired — historical route only':''} · Claim: ${words(record.model?.claim)}`));}summary.append(routes);body.append(summary,mechanisms,people);
       const inventory=el(doc,'details',null,'ipe-governance-inventory');inventory.append(el(doc,'summary',`All captured governance descriptions · ${entries.length}`));for(const entry of entries.slice(0,32))inventory.append(card(entry));if(entries.length>32)inventory.append(el(doc,'p','Showing the first 32 descriptions. Inspect the full retained run for additional records.'));body.append(inventory);
 
-      // Explain the same retained links before exposing the model vocabulary.
+      // The native projection is the only source for the default relationship story.
       const technical=el(doc,'details',null,'ipe-coverage-technical');
       technical.open=session.technicalOpen===true;
-      technical.append(el(doc,'summary','Inspect record connections and source data'));
+      technical.append(el(doc,'summary','Supporting record map and source data'));
+      technical.append(el(doc,'p','This supporting map is derived in the browser from retained records. Use the shared explanation above for run-specific relationship status.'));
+      technical.append(label);
       for(const child of [...body.children])technical.append(child);
       technical.ontoggle=()=>{if(technical.isConnected)session.technicalOpen=technical.open;};
       const collectionDetails=root.querySelector('.ipe-governance-collection-gaps');
       if(collectionDetails)technical.append(collectionDetails);
       technical.append(guide);
-      const story=el(doc,'section',null,'ipe-coverage-story');story.setAttribute('aria-label','Rule and evidence');
-      const requirement=array(selected?.item.requirements).find(item=>item.id===session.requirement);
-      const required=el(doc,'section',null,'ipe-coverage-step');
-      required.append(el(doc,'h3','1. What is required?'));
-      if(requirementChoice)required.append(requirementChoice);
-      if(requirement){
-        let fields;try{fields=JSON.parse(requirement.specification);}catch{/* Keep opaque source text literal. */}
-        if(fields&&typeof fields==='object'){
-          const values=Object.entries(fields).filter(([name,value])=>!['id','node_id'].includes(name)&&typeof value!=='object');
-          if(values.length){const dl=el(doc,'dl');for(const [name,value] of values.slice(0,4))field(dl,words(name),typeof value==='boolean'?(value?'Yes':'No'):words(value));required.append(dl,el(doc,'small','Settings reported by the source.'));}
-          else required.append(el(doc,'p','This condition uses structured source data. Open the source condition to inspect it.'));
-          if(selected?.item.source.definition.namespace==='github'&&fields.type==='branch_policy'&&Object.keys(fields).every(name=>['id','node_id','type'].includes(name)))required.append(el(doc,'p','The source reports a branch policy. This requirement does not identify which branch names are allowed.'));
-        }else required.append(el(doc,'p',requirement.specification||'The source did not include a condition.','ipe-coverage-value'));
-        const details=el(doc,'details');details.append(el(doc,'summary','Read the source condition'),specification(doc,requirement));required.append(details);
-      }else required.append(el(doc,'p','No requirement was captured for this rule.'));
-      if(selected){
-        const source=selected.item.source.definition;
-        required.append(el(doc,'p',`Source: ${source.resource} · ${source.path}`,'ipe-coverage-source'));
-      }
-      const applies=el(doc,'section',null,'ipe-coverage-step');
-      applies.append(el(doc,'h3','2. Which operation is linked?'));
-      if(operations.length){
-        const list=el(doc,'ul');for(const operation of operations.slice(0,6))list.append(el(doc,'li',entity(operation).title||entity(operation).control.local_id));applies.append(list);
-        applies.append(el(doc,'p','Why linked: the rule lists these operation identities. This describes scope; it does not prove the rule applied to a run.'));
-      }else applies.append(el(doc,'p','No operation is linked to this rule in the capture. We cannot connect it to a run by name alone.'));
-      if(unmatched.length)applies.append(el(doc,'p',`${unmatched.length} rule subjects have no matching operation in this capture.`));
-      if(operations.length>6)applies.append(el(doc,'p',`Showing 6 of ${operations.length} linked operations. Inspect record connections for more.`));
-      const observed=el(doc,'section',null,'ipe-coverage-step');
-      observed.append(el(doc,'h3','3. What happened?'));
-      for(const outcomeRecord of outcomes.slice(0,3)){
-        const outcome=entity(outcomeRecord),entry=el(doc,'article',null,'ipe-coverage-outcome');
-        const linked=operations.filter(operation=>same(entity(operation).source.definition,outcome.definition?.definition)&&entity(operation).source.revision===outcome.definition?.revision&&array(outcome.declaration_candidates).some(id=>same(id,entity(operation).control)));
-        entry.append(el(doc,'strong',outcome.title||'Unnamed execution'),el(doc,'p',`Provider result: ${words(outcome.conclusion||outcome.status)}.`));
-        const execution=outcome.execution;
-        if(execution)entry.append(el(doc,'small',`External run ${execution.run} · attempt ${execution.attempt}${execution.job?' · job '+execution.job:''}`));
-        entry.append(el(doc,'p',`Possible run of: ${linked.map(operation=>entity(operation).title||entity(operation).control.local_id).join(', ')}.`));
-        entry.append(el(doc,'p','Why linked: the source revision matches, and the collector lists this operation as a candidate. The connection is not confirmed.'));
-        const facts=records.filter(record=>entity(record)?.kind==='fact'&&same(entity(record).execution,outcome.execution));
-        if(facts.length){
-          const list=el(doc,'ul');
-          for(const fact of facts.slice(0,3))list.append(el(doc,'li',`${words(entity(fact).predicate)}: ${JSON.stringify(entity(fact).value)}${fact.expires_at!=null&&fact.expires_at<=now?' · Expired':''}`));
-          entry.append(el(doc,'p','Observations from this same execution:'),list);
-          if(facts.length>3)entry.append(el(doc,'p',`Showing 3 of ${facts.length} observations. Inspect record connections for more.`));
-        }else entry.append(el(doc,'p','No observations were captured for this exact execution.'));
-        observed.append(entry);
-      }
-      if(!outcomes.length)observed.append(el(doc,'p','No related execution was captured. This does not mean the operation never ran.'));
-      if(outcomes.length>3)observed.append(el(doc,'p',`Showing 3 of ${outcomes.length} possible executions. Inspect record connections for more.`));
-      const conclusion=el(doc,'section',null,'ipe-coverage-conclusion');
-      conclusion.append(el(doc,'h3','Was the requirement met?'),el(doc,'strong','We cannot tell from this capture.'),el(doc,'p','No retained check connects this requirement to an execution observation. A successful run alone does not prove the requirement was met.'),el(doc,'p','To answer: identify the rule version that applied to the run and the evidence that checks this requirement.'));
-      story.append(required,applies,observed,conclusion);body.append(story,technical);
+      const nativeStory=el(doc,'section',null,'ipe-coverage-story');nativeStory.setAttribute('aria-label','Rule and evidence explanation');
+      const statusHeader=el(doc,'div',null,'ipe-coverage-header');statusHeader.append(el(doc,'h3','Rule and evidence'));
+      if(explanation?.status==='loading'||(explanation?.status==='refreshing'&&!explanation?.data))statusHeader.append(el(doc,'p','Loading explanation…'));
+      else if(explanation?.status==='error')statusHeader.append(el(doc,'p',`The shared explanation could not be loaded. ${explanation.message||'Refresh to try again.'} Retained records remain available below.`,'ipe-governance-warning'));
+      else if(explanation?.status==='run-unavailable')statusHeader.append(el(doc,'p','This run is no longer available for explanation. Select another retained run. Retained records remain available below.','ipe-governance-warning'));
+      else if(explanation?.status==='missing')statusHeader.append(el(doc,'p','This saved snapshot does not include this explanation. The browser will not infer these links. Inspect retained records below.','ipe-governance-warning'));
+      else if(explanation?.status==='mismatch'||(explanation?.data&&explanation.data.run_id!==run?.id))statusHeader.append(el(doc,'p','This explanation belongs to another run. The browser will not use its links. Inspect retained records below.','ipe-governance-warning'));
+      else if(explanation?.status==='unsupported'||explanation?.data?.schema!=='ipe.integration.coverage-explanation.v1')statusHeader.append(el(doc,'p','This host returned an unsupported explanation version. The browser will not infer these links. Inspect retained records below.','ipe-governance-warning'));
+      else drawNativeStory(doc,nativeStory,explanation.data,run,session,draw);
+      if(!nativeStory.querySelector('.ipe-coverage-header'))nativeStory.prepend(statusHeader);
+      body.replaceChildren(nativeStory,technical);
     }
     select.onchange=draw;draw();
     if(focusConcept)[...body.querySelectorAll('button[data-concept]')].find(button=>button.dataset.concept===focusConcept&&!button.hidden)?.focus({preventScroll:true});
