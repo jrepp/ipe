@@ -21,6 +21,8 @@ It is not an uncommitted source change or a configured submodule. Do not add an 
 The usability branch contains these related changes:
 
 - Runtime and Integration coverage navigation, source comparisons, record filters, and run inspection.
+- Coverage simplification: requirement, operation, and execution explanations first; record connections in supporting details.
+- Design recommendations updated from the ontology article review. Shared native explanations and governance requirement bindings remain proposed next steps.
 - SDK helpers, bounded progress and emission traces, v2 domain APIs, and contextual evidence assessments.
 - GitHub environment and ruleset capture, governance descriptions, and source-backed handoff descriptions.
 - Vocabulary and model documentation, acceptance evidence, and local documentation packaging.

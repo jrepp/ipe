@@ -1,7 +1,7 @@
 # Integration domain model review
 
 **Status:** Versioned domain APIs and the first governance record slice are implemented. Full governance and handoff discovery remains incomplete.
-**Updated:** 2026-10-29
+**Updated:** 2026-11-02
 **Scope:** Integration SDK, native record validation, identities, evidence assessments, and monitor UX.
 
 ## Recommendation
@@ -10,6 +10,79 @@ Treat the integration model as a description of the rules, agreements, responsib
 Operations and execution evidence support that description. They are not the primary purpose of discovery.
 Keep governing rules separate from operating controls and evidence assessments.
 Do not infer a policy, contract, or control instance merely because a collector found a workflow definition.
+
+## Design update: explain relationships before expanding the model
+
+This update responds to the Integration coverage usability review and Fanghua (Joshua) Yu's August 16, 2026 article.
+Yu distinguishes the needs of formal meaning, graph navigation, decisions, and agent capabilities.
+He argues that a shared semantic foundation can support these different workloads without serving as their entire implementation.
+His capability discussion includes preconditions, effects, authority, and evidence.
+This is architectural guidance, not evidence that IPE implements these capabilities.
+See [The Evolution of Ontology](https://medium.com/@yu-joshua/the-evolution-of-ontology-from-formal-semantics-to-knowledge-graphs-decisions-and-ai-agents-dfe8814dcc1b).
+
+The recommendations below are IPE design decisions based on our source and observed usability gaps.
+They supersede a category map as the default coverage view. They preserve the domain distinctions above.
+
+### Assign each responsibility to a specific component
+
+| Responsibility | IPE component and current state | Recommendation |
+| --- | --- | --- |
+| Define meaning and identity | Native typed records, source revisions, SDK types, and vocabulary exist. | Preserve policy, requirement, operation, execution, and observation as distinct concepts. |
+| Explain connections | The coverage browser derives links from one retained capture. The host also provides operation explanations. | Add one shared native relationship explanation for agents and the monitor. This unified projection is proposed. |
+| Check evidence | V2 evidence assessments pin operation records and configured rules. They do not establish governance requirement fulfillment. | Add an explicit governance requirement binding before reporting that its requirement was checked. |
+| Permit and perform reads | The native broker enforces installation grants, credentials, and budgets. | Keep capability descriptions separate from executable authority. External write execution remains outside this host. |
+
+These responsibilities do not require separate services or a new graph database.
+Retain the bounded store and current APIs until measured workloads require another representation.
+Do not add OWL reasoning, causal inference, or a general decision engine merely to support this view.
+
+### Make the connection itself explainable
+
+For the current GitHub example, answer these questions in order:
+
+1. What requirement does the captured environment describe?
+2. Which operation does that rule name?
+3. Which external run might correspond to that operation, and why?
+4. Which observations belong to that exact run, attempt, and job?
+5. What evidence is missing before we can check the requirement?
+
+Each proposed shared explanation must retain endpoint identities, source and mapped revisions, supporting records, resolution status, and freshness limits.
+State the relation in a sentence with its actual record names. Keep identifiers and native receipts in supporting details.
+For example: “The environment rule names Publish docs as a subject.”
+Then state: “This historical publish result is a possible execution of that operation; the connection is not confirmed.”
+
+A shortened display path must retain its full supporting path for inspection.
+An exact operation identity does not make the following candidate execution link exact.
+An exact execution-to-fact link does not establish that the rule applied or that its requirement was met.
+Shared source receipts prove collection provenance, not a business relationship or a causal effect.
+
+The current coverage UI implements the question sequence and bounded explanations in browser code.
+It does not yet expose this complete sequence through one native agent API.
+See [governance-view.js](../tools/integration-host/governance-view.js) and the [host guide](INTEGRATION_HOST.md#governance-extraction-and-execution-overlay).
+
+### Prioritize missing evidence over additional categories
+
+| Order | Work | Acceptance condition |
+| --- | --- | --- |
+| Now | Keep the coverage default focused on a requirement, linked operations, and reported executions. | A reader can explain each connection without opening raw JSON. Missing, candidate, and expired evidence remain explicit. |
+| Next | Move the relationship explanation into a shared native projection. | Human and agent clients receive the same links, reasons, revision pins, omissions, and unknowns. |
+| Next | Specify governance requirement-to-check bindings. | A changed rule or mapper revision invalidates a stale binding. A matching predicate name alone cannot establish fulfillment. |
+| Later | Describe additional agent capabilities when an actual workload needs them. | A capability identifies its target, inputs, effects, owner, authority checks, evidence, and any approval or recovery requirements. |
+
+Test denied reads, partial captures, expired observations, ambiguous identities, changed revisions, and a candidate link between otherwise exact links.
+Test a successful deployment with no recorded approval check. Its reported outcome must not turn an unknown requirement into success.
+Use the existing synthetic handoff and ticket fixtures before claiming support for another live provider.
+
+An agent capability description is metadata about an available operation. It is not a contract record or a grant.
+For a future write capability, authorization and approval checks must occur at execution time in the owning system.
+Descriptions of an approval gate or a person's contact route do not authorize deployment, approval, or messaging.
+
+### Limits of this recommendation
+
+The article does not validate IPE's mappings or establish the meaning of a provider field.
+Provider semantics still require source evidence and specific tests.
+The UI must expose a missing allowed-branch list instead of inventing one from a branch-policy label.
+Keep source restrictions, evidence-check results, requirement fulfillment, and runtime authorization separate.
 
 ## Governing rules and human handoffs
 
@@ -131,7 +204,7 @@ Use the [vocabulary review](VOCABULARY_REVIEW.md#scholarly-grounding) for the re
 
 ## Evidence and research basis
 
-The review uses the current workspace, including uncommitted assessment support.
+The review uses the current workspace and committed assessment support.
 It follows the [SDK types](../crates/ipe-integration/sdk/index.d.ts), [native model](../crates/ipe-integration/src/host/model.rs), and [GitHub collector](../testing/integration/hosted/github-actions.js).
 It also checks the [explanation projection](../crates/ipe-integration/src/host/explanations.rs), [assessment evaluator](../crates/ipe-integration/src/host/assessments.rs), and their tests.
 

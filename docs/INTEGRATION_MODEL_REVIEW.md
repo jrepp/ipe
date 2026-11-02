@@ -5,6 +5,11 @@ Status: the six initial recommendations are implemented. Additional recommendati
 For the subsequent ontology review, see [Integration domain model review](INTEGRATION_DOMAIN_MODEL.md).
 It reassesses operation identity, obligations, controls, and assessment meaning without changing this implementation history.
 
+The [November 2 design update](INTEGRATION_DOMAIN_MODEL.md#design-update-explain-relationships-before-expanding-the-model) sets the current follow-up priorities.
+It separates domain meaning, relationship explanations, evidence checks, and executable capabilities.
+Integration coverage now starts with a rule and explains its links to operations and execution evidence.
+The operation-first milestone and baseline findings below remain implementation history, not the default coverage navigation design.
+
 ## Recommendation
 
 Make the next milestone a reviewable contract revision for one operation: publish the IPE docs site.
