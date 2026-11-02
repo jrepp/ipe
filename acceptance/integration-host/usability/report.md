@@ -1,5 +1,45 @@
 # Integration host usability review
 
+## Current pass: 2026-11-02
+
+The current monitor has two primary views: Runtime and Integration coverage.
+The dated sections below retain evidence from earlier layouts and SDK versions.
+They are not verification of the current build.
+
+The local server still served the November 1 binary after the monitor source changed on November 2.
+The binary embeds the UI. Rebuilding and restarting with the existing configuration restored the current views.
+The private state backup remains in `target/integration-host-local`. Existing installations, credentials, and history were preserved.
+The host guide now explains this restart procedure and distinguishes it from demo setup.
+
+The browser audit found a skipped heading level and an unsupported label on the ontology container.
+The ontology title now uses heading level 3; its lanes use level 4. The named container now has a group role.
+
+### Current verification
+
+- Default and all-feature workspace tests each passed 346 tests, with two opt-in tests ignored.
+- The discovery acceptance test passed when explicitly enabled.
+- All-feature workspace Clippy passed with warnings denied. Formatting and the TypeScript authoring check passed.
+- All 64 host JavaScript tests passed, including the final accessibility markup changes.
+- `make docs-check` passed after the documentation updates.
+- The rebuilt host serves the current source. The installed collector source also matches the repository file.
+- All seven detail views fit a 390-pixel viewport. Navigation moves focus to the selected heading.
+- The ontology gap filter and selected requirement survive refresh.
+- Axe reported zero violations across all seven views after the fix. The browser reported no application script errors.
+- Manual GitHub capture 641 succeeded in 11,080 ms, with 41 requests, nine failed reads, and 58 stored records.
+- The monitor disabled extraction while the run was active, then restored the action after completion.
+
+Evidence: [desktop coverage](screenshots/2026-11-02-coverage.png) and [mobile coverage](screenshots/2026-11-02-mobile-coverage.png).
+
+### Current limits
+
+Axe could not determine contrast for some SVG graph labels in Runs. This remains a manual accessibility review item.
+The successful capture includes failed reads and collection gaps. It does not establish complete external policy coverage.
+Requirement fulfillment and policy applicability remain unknown. No policy activation or deployment occurred.
+The local server remains available at `http://127.0.0.1:8767/` for review.
+See the [workstream register](../../../.agent/workstreams.md) for committed work and next actions.
+
+## Earlier pass: 2026-10-29
+
 Date: 2026-10-29. URL: http://127.0.0.1:8767. Browser session: `ipe-usability`.
 Scope: authored program, installed state, captured records, runs, and changes.
 The review used agent-browser with the existing GitHub installation and real retained data.

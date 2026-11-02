@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved sanitizer checks to handle multiline output correctly
 
 ### Fixed
+- Ontology navigation uses consecutive heading levels and a named group that assistive tools can identify.
 - Monitor sessions now cover v1 and v2 APIs. Refreshing the monitor upgrades existing v1-only cookies without relaxing origin or authentication checks.
 - Documentation previews include new top-level Markdown guides before staging. Site checks verify Markdown viewer targets in the packaged artifact.
 - Hosted declaration projection avoids repeated internal JSON copies while keeping SDK and native validation at the input and output boundaries.

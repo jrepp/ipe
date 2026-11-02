@@ -62,6 +62,21 @@ Manual token entry remains available for API operators. The GitHub helper creden
 Use Ctrl-C to stop the host. Without `--serve`, the demo stops it after capture.
 Do not combine `--serve` with the two-second proof schedule for normal use. The default schedule is 300 seconds.
 
+### Refresh the local build
+
+The binary embeds the monitor HTML, styles, JavaScript, and guest SDK at build time.
+A browser refresh cannot load source changes from an older running binary.
+
+1. Run `cargo build --locked -p ipe-integration --bins`.
+2. Wait for any active capture to finish, then stop the host.
+3. Back up the private state directory.
+4. Restart `target/debug/ipe-integration <config-path> --host` with the existing operator credential in its environment.
+5. Open the existing private `open-monitor.html` launcher.
+
+Reuse the existing configuration and state directory to preserve installations and history.
+Do not rerun the demo setup to restart an existing installation; setup installs the example program and writes new operator credentials.
+The installed collector source is separate from the embedded monitor. Review Program before changing an installation through the API.
+
 ## Monitor views
 
 The monitor has two primary views. **Runtime** opens by default.

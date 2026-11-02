@@ -110,10 +110,10 @@
       for(const record of outcomes.slice(0,32)){const outcome=entity(record),facts=records.filter(record=>entity(record)?.kind==='fact'&&same(entity(record).execution,outcome.execution));overlay.append(el(doc,'h5',outcome.title),el(doc,'p',`Candidate execution link · ${words(outcome.conclusion||outcome.status)}`),el(doc,'p',`${facts.length} facts have this exact execution identity. Execution success does not establish requirement fulfillment.`));for(const fact of facts.slice(0,6))overlay.append(el(doc,'p',`${entity(fact).predicate}: ${JSON.stringify(entity(fact).value)}${fact.expires_at!=null&&fact.expires_at<=Date.now()/1000?' · Expired':''}`));}
       const mapping=el(doc,'section',null,'ipe-governance-mapping');
       const heading=el(doc,'div',null,'ipe-ontology-heading');
-      heading.append(el(doc,'h4','Policy ontology'));
+      heading.append(el(doc,'h3','Policy ontology'));
       const filter=el(doc,'button','Show gaps and unknowns','ipe-ontology-filter');filter.type='button';filter.setAttribute('aria-pressed',String(session.gapsOnly));heading.append(filter);
       mapping.append(heading,el(doc,'p','Select a concept to inspect its mapping. Adjacent cards do not establish a relationship.','ipe-ontology-caption'));
-      const wrap=el(doc,'div',null,'ipe-ontology-map');wrap.setAttribute('aria-label','Policy ontology concepts');
+      const wrap=el(doc,'div',null,'ipe-ontology-map');wrap.setAttribute('role','group');wrap.setAttribute('aria-label','Policy ontology concepts');
       const inspector=el(doc,'section',null,'ipe-ontology-inspector');inspector.setAttribute('aria-label','Selected concept details');
       const groups=new Map();mapping.append(wrap,inspector);
       function sourceDetail(record){
@@ -183,7 +183,7 @@
       const lanes=[['Governing rule',['policy','contract','Requirement']],['Mechanisms and people',['Control','Handoff','Principal']],['Operation scope',['Operation','Operation scope']],['Execution evidence',['External outcome','Integration fact','Policy applicability']]];
       const nodes=new Map();
       for(const [title,concepts] of lanes){
-        const lane=el(doc,'section',null,'ipe-ontology-lane');lane.append(el(doc,'h5',title));wrap.append(lane);
+        const lane=el(doc,'section',null,'ipe-ontology-lane');lane.append(el(doc,'h4',title));wrap.append(lane);
         for(const concept of concepts){
           const items=groups.get(concept);if(!items)continue;
           const button=el(doc,'button',null,'ipe-ontology-node');button.type='button';button.dataset.concept=concept;
