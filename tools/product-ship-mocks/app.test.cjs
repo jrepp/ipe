@@ -320,3 +320,38 @@ test('agent activity is unavailable after evidence, policy, or event scope chang
     } finally {dom.window.close();}
   }
 });
+
+test('chain report counts recorded runs, keeps policy gates separate, and opens findings',async()=>{
+  const dom=await page('board','?report=usage');
+  try {
+    const doc=dom.window.document;
+    assert.equal(doc.querySelector('.chain-report').open,true);
+    assert.match(doc.querySelector('.chain-report summary').textContent,/5 simulated runs · 6 agents/);
+    assert.equal(doc.querySelectorAll('.chain-run-history tbody tr').length,5);
+    assert.match(doc.querySelector('.chain-report-body').textContent,/19 calls · 18 controls/);
+    assert.match(doc.querySelector('.chain-report-body').textContent,/15 checks · 15 passed · 0 failed · 0 unknown/);
+    doc.querySelector('[data-report-scenario="blocked"]').click();
+    assert.match(doc.querySelector('.chain-report-body').textContent,/15 checks · 14 passed · 1 failed · 0 unknown/);
+    assert.match(doc.querySelector('.chain-report-body').textContent,/17 met · 1 not met · 0 unknown/);
+    doc.querySelector('[data-report-control]').click();
+    assert.match(doc.querySelector('.agent-ledger').textContent,/completed · not_met/);
+    doc.querySelector('[data-report-scenario="missing"]').click();
+    assert.match(doc.querySelector('.chain-report-body').textContent,/15 checks · 14 passed · 0 failed · 1 unknown/);
+    assert.match(doc.querySelector('.chain-report-body').textContent,/17 met · 0 not met · 1 unknown/);
+    assert.match(doc.querySelector('.chain-report summary').textContent,/5 simulated runs/);
+  } finally {dom.window.close();}
+});
+
+test('chain report starts closed and excludes stale runs from history',async()=>{
+  const fixture=structuredClone(data);
+  fixture.agent_activity.scenarios[1].events[0].artifact='stale';
+  const dom=await page('board','',fixture);
+  try {
+    const doc=dom.window.document;
+    assert.equal(doc.querySelector('.chain-report').open,false);
+    assert.match(doc.querySelector('.chain-report summary').textContent,/4 simulated runs/);
+    assert.equal(doc.querySelector('[data-report-scenario="blocked"]'),null);
+    assert.match(doc.querySelector('.chain-cost').textContent,/Dollar cost is unavailable/);
+    assert.match(doc.querySelector('.chain-cost').textContent,/not peak context-window use/);
+  } finally {dom.window.close();}
+});

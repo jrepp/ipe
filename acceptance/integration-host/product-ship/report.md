@@ -111,3 +111,18 @@ All 105 JavaScript tests passed. These include four activity model tests and 16 
 Documentation and whitespace checks passed. No Rust runtime or SDK behavior changed, so Rust tests were not rerun.
 Desktop and mobile checks found zero Axe violations, no script errors, and no page overflow at 390 pixels.
 No live agent usage was collected and no agent service was called for this fixture.
+
+## Policy chain usage report
+
+The default preview replaces the metric strip with a closed chain report. Control activity remains in the evidence workspace.
+The report separates how agents use the chain, its ship gate, findings, intended optimization, and resource cost.
+Run history counts five simulated scenario runs. Page views do not add uses. Mismatched runs do not enter the count.
+Findings open the affected control. Policy outcomes remain separate from agent qualification coverage.
+Context use means cumulative input tokens. The report separates output tokens, elapsed time, and summed work.
+All comparisons remain illustrative. No dollar cost, model training, avoided work, or live enforcement is measured.
+Evidence: [Chain usage report](screenshots/policy-usage-report.png).
+
+All 107 JavaScript tests passed. The final UI run passed all 18 tests.
+Desktop and mobile accessibility scans found zero violations. The mobile page fits a 390-pixel viewport.
+No browser script errors were reported. Documentation and whitespace checks passed.
+No runtime or SDK behavior changed; Rust tests were not rerun.

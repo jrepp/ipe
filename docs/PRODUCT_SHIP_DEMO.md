@@ -106,7 +106,7 @@ A production binding must specify which record states and role actions a control
 
 ## Agent evaluation and model efficiency
 
-The **Agent evaluation** preview adds activity to the policy chain without changing its qualification result.
+The **Agent activity** preview adds activity to the policy chain without changing its qualification result.
 Each step distinguishes an agent query from a completed qualification check.
 The chain summary counts distinct agents and controls. Repeated calls remain separate events and do not inflate those counts.
 A qualified step requires a completed check with a `met` result and matching evidence.
@@ -154,3 +154,18 @@ The host permits four installed programs per state directory. The nine-instance 
 The native fact TTL bounds retained records. The demo separately checks the source observation and expiry timestamps stored in each record.
 Policy authoring changes this fixture. It does not publish an enforcement policy or create a production deployment gate.
 Production use still needs reviewed evidence bindings, authority rules, policy revision pins, and runtime activation.
+
+## Policy chain usage report
+
+Open `board.html?report=usage` to inspect the chain report. The report stays closed on the default preview to keep control evidence visible.
+The report separates use, gates, findings, optimization, and cost. Select a recorded scenario to inspect its result.
+Five simulated uses mean five fixture runs, one per scenario. Page views and repeated queries do not add runs.
+Only runs with matching policy, release, and evidence scope enter the history count.
+
+The gate reports the full policy decision. Agent qualification covers only the controls those agents checked.
+A passing evidence check can therefore remain unqualified by an agent. Findings link to the affected control.
+Findings describe evidence discovered during evaluation. They do not imply model training or measured improvement from prior policy knowledge.
+
+Context use reports input tokens across calls, including repeated context. It does not report peak context-window use.
+The cost table separates input tokens, output tokens, elapsed time, and summed work. Preparation is counted once per selected run.
+The raw-source comparison remains illustrative. Dollar cost, live enforcement, and measured avoided work remain unavailable.

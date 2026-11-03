@@ -57,3 +57,5 @@ These are future scope, not separate implementation workstreams currently runnin
 
 The usability branch started at `2eaa394`. Fetched main is `733f6d7`, which also contains PRs 54 and 56.
 The local commits have not been pushed. No PR, merge, or deployment was performed during this pass.
+
+The policy chain preview now includes a collapsible usage report. Live usage collection and measured optimization remain future work.

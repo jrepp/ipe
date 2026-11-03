@@ -211,3 +211,31 @@
 @media(max-width:650px) { .agent-activity-bar { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:11px; } .agent-activity-bar>div:first-child { grid-column:1/-1; } .agent-activity-bar.unavailable { grid-template-columns:minmax(0,1fr); } .agent-activity-bar.unavailable span { line-height:1.4; } .agent-activity-workspace,.agent-activity-empty { padding:14px 12px 18px; } .agent-baseline dl { grid-template-columns:minmax(0,1fr); } }
 .agent-activity-bar { margin-bottom:16px; }
 .agent-evidence-link { border:0; background:none; padding:0; font:inherit; color:#006c66; text-decoration:underline; text-align:left; cursor:pointer; overflow-wrap:anywhere; }
+
+/* Keep chain usage separate from the control evidence workspace. */
+.chain-report { display:block; padding:0; background:#fff; }
+.chain-report>summary { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px 20px; cursor:pointer; color:#203746; }
+.chain-report>summary h2 { display:block; font-size:14px; margin:0; }
+.chain-report>summary small { display:block; margin-top:5px; color:#455c68; font-size:12px; }
+.chain-report>summary>span:last-child { font-size:12px; color:#455c68; }
+.chain-report-body { padding:0 20px 20px; border-top:1px solid #dce5e8; }
+.chain-report-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin:20px 0; }
+.chain-report h3 { font-size:16px; margin:0 0 10px; color:#203746; }
+.chain-report p,.chain-report li { font-size:13px; line-height:1.6; color:#455c68; }
+.chain-report dl { margin:12px 0; }
+.chain-report dl>div { display:flex; justify-content:space-between; gap:16px; padding:6px 0; }
+.chain-report dt,.chain-report dd { font-size:12px; margin:0; }
+.chain-report dd { font-weight:600; text-align:right; }
+.chain-report button { background:transparent; border:0; padding:4px 0; color:#006c66; text-decoration:underline; cursor:pointer; text-align:left; font:inherit; }
+.chain-cost,.chain-run-history { border-top:1px solid #dce5e8; padding-top:18px; margin-top:20px; }
+.chain-report .report-table { font-size:12px; }
+.chain-report .report-table th { font-size:11px; }
+.chain-run-history>summary { cursor:pointer; font-size:13px; font-weight:600; }
+.chain-run-history .report-table { min-width:0; width:100%; margin-top:12px; }
+@media(max-width:650px) { .chain-report-grid { grid-template-columns:1fr; gap:16px; } .chain-report>summary { align-items:flex-start; } .chain-report>summary>span:last-child { max-width:110px; } .chain-report-body { padding:0 14px 16px; } .chain-report dl>div { flex-wrap:wrap; } }
+
+.report-table { width:100%; border-collapse:collapse; text-align:left; color:#203746; }
+.report-table th,.report-table td { padding:10px; border-bottom:1px solid #dce5e8; }
+.chain-cost .report-table { min-width:600px; }
+.chain-report .decision-pill { display:inline-flex; margin:0; color:#203746; background:#f0f5f4; font-size:10px; }
+.chain-report>summary b { display:inline; }
