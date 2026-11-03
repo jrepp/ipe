@@ -12,7 +12,7 @@
   ];
   const initialQuery = new URLSearchParams(location.search);
   const state = { scenario: initialQuery.get('scenario') || 'ready', policyId: initialQuery.get('policy') || '', controlId: initialQuery.get('control') || '', evidenceIndex: 0 };
-  Object.assign(state, {openPolicies: new Set(), evidenceNode:'observation', evidenceLink:null, evidenceView:['map','record','systems'].includes(initialQuery.get('view'))?initialQuery.get('view'):'map', provenanceNode:'record', evidenceFocus:false, openApplication:false, openRaw:false});
+  Object.assign(state, {openPolicies: new Set(), evidenceNode:'observation', evidenceLink:null, evidenceView:['map','record','systems','agents'].includes(initialQuery.get('view'))?initialQuery.get('view'):'map', provenanceNode:'record', evidenceFocus:false, openApplication:false, openRaw:false});
   let data;
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -85,6 +85,73 @@
   const controlsStatus = (policy, result) => {
     const items = controls(policy).map((c) => checkFor(c.id, result));
     return { met: items.filter((c) => c.status === 'met').length, total: items.length, unknown: items.filter((c) => c.status === 'unknown').length, notMet: items.filter((c) => c.status === 'not_met').length };
+  };
+  let activityCacheData = null;
+  let activityCache = new Map();
+  const activityForScenario = () => {
+    if (activityCacheData !== data) { activityCacheData = data; activityCache = new Map(); }
+    if (activityCache.has(state.scenario)) return activityCache.get(state.scenario);
+    const activity = data?.agent_activity;
+    const sample = (activity?.scenarios || []).find((item) => item.scenario === state.scenario);
+    if (activity?.schema !== 'ipe.product-ship-agent-activity.v1' || !sample || !sample.scope) { activityCache.set(state.scenario,null); return null; }
+    const scope = sample.scope;
+    // Do not show a ledger when it describes a different release or source snapshot.
+    if (scope.release_id !== data.release?.id || scope.artifact !== data.release?.artifact || scope.environment !== data.release?.environment) { activityCache.set(state.scenario,null); return null; }
+    const policyManifest = scope.policy_manifest;
+    if (!policyManifest || JSON.stringify(policyManifest.policy) !== JSON.stringify(rootPolicy()) || JSON.stringify(policyManifest.policies) !== JSON.stringify(data.policies)) { activityCache.set(state.scenario,null); return null; }
+    const manifest = scope.evidence_manifest;
+    if (!manifest || manifest.as_of !== data.as_of || !scope.evidence_snapshot) { activityCache.set(state.scenario,null); return null; }
+    const expected = (evaluate().checks || []).filter((check) => check.evidence).map((check) => {
+      const evidence = check.evidence;
+      return {control_id:check.control_id,release_id:evidence.release_id,artifact:evidence.artifact,environment:evidence.environment,source:evidence.source,status:evidence.status,observed_at:evidence.observed_at,expires_at:evidence.expires_at,receipt:evidence.receipt};
+    });
+    if (JSON.stringify(manifest.evidence) !== JSON.stringify(expected)) { activityCache.set(state.scenario,null); return null; }
+    if (!Array.isArray(sample.events) || sample.events.some(event=>event.model_revision!==scope.model_revision || event.evidence_snapshot!==scope.evidence_snapshot || event.release_id!==scope.release_id || event.artifact!==scope.artifact || event.environment!==scope.environment)) { activityCache.set(state.scenario,null); return null; }
+    const matched = {activity, sample};
+    activityCache.set(state.scenario,matched);
+    return matched;
+  };
+  const activityEventsForControl = (sample, controlId) => (sample.events || []).filter((event) => event.control_id === controlId);
+  const activityControlCounts = (sample, controlId) => ({queried:(sample.agent_activity || []).filter((agent) => (agent.queried_steps || []).includes(controlId)).length, qualified:(sample.agent_activity || []).filter((agent) => (agent.qualified_steps || []).includes(controlId)).length});
+  const formatTokens = (value) => Number.isFinite(value) ? `${value.toLocaleString()} tokens` : 'Unknown';
+  const formatDuration = (value) => Number.isFinite(value) ? `${(value / 1000).toFixed(1)} s` : 'Unknown';
+  const totalTokens = (metrics) => Number.isFinite(metrics?.total_tokens) ? metrics.total_tokens : Number.isFinite(metrics?.input_tokens) && Number.isFinite(metrics?.output_tokens) ? metrics.input_tokens + metrics.output_tokens : null;
+  const comparisonSavings = (comparison) => {
+    const baseline=comparison?.baseline, modeled=comparison?.modeled;
+    const baseTokens=totalTokens(baseline), modelTokens=totalTokens(modeled);
+    if (!Number.isFinite(baseTokens) || baseTokens <= 0 || !Number.isFinite(modelTokens) || modelTokens < 0 || !Number.isFinite(baseline?.elapsed_ms) || baseline.elapsed_ms <= 0 || !Number.isFinite(modeled?.elapsed_ms) || modeled.elapsed_ms < 0) return null;
+    const work=Number.isFinite(baseline.work_ms) && baseline.work_ms > 0 && Number.isFinite(modeled.work_ms) ? baseline.work_ms-modeled.work_ms : null;
+    return {total_tokens:baseTokens-modelTokens,elapsed_ms:baseline.elapsed_ms-modeled.elapsed_ms,work_ms:work};
+  };
+  const savingAmount = (value) => Number.isFinite(value) ? value : Number.isFinite(value?.saved) ? value.saved : null;
+  const formatSavings = (value, unit) => {
+    value=savingAmount(value);
+    if (!Number.isFinite(value)) return 'Unknown';
+    const label = unit === 'tokens' ? `${Math.abs(value).toLocaleString()} tokens` : `${(Math.abs(value) / 1000).toFixed(1)} s`;
+    return `${value > 0 ? label + (unit === 'tokens' ? ' fewer' : ' faster') : value < 0 ? label + (unit === 'tokens' ? ' more' : ' slower') : label}`;
+  };
+  const globalActivityBar = () => {
+    const current = activityForScenario();
+    if (!current) return `<section class="agent-activity-bar unavailable" aria-label="Agent activity"><strong>Agent activity unavailable</strong><span>There is no matching activity record for this scenario and release snapshot.</span><span class="simulation-caveat">Illustrative simulation</span></section>`;
+    const summary = current.sample.summary || {};
+    const savings = comparisonSavings(current.sample.comparison);
+    return `<section class="agent-activity-bar" aria-label="Agent activity summary"><div><small>ILLUSTRATIVE SIMULATION</small><strong>${Number.isFinite(summary.agent_count) ? summary.agent_count : '—'} agents</strong></div><div><b>${Number.isFinite(summary.queried_controls) ? summary.queried_controls : '—'}</b><span>controls queried</span></div><div><b>${Number.isFinite(summary.qualified_controls) ? summary.qualified_controls : '—'}</b><span>controls qualified</span></div><div><b>${formatSavings(savings?.total_tokens, 'tokens')}</b><span>vs raw-source baseline</span></div><div><b>${formatSavings(savings?.elapsed_ms, 'time')}</b><span>wall time vs raw-source baseline</span></div></section>`;
+  };
+  const agentActivityWorkspace = (control) => {
+    const current = activityForScenario();
+    if (!current) return `<section class="agent-activity-empty"><h3>No matching agent activity</h3><p>The activity ledger is unavailable for this scenario or release evidence snapshot. It does not change the policy result.</p><span class="simulation-caveat">Illustrative simulation · no measured agent cost</span></section>`;
+    const {activity,sample} = current, events = control ? activityEventsForControl(sample, control.id) : [];
+    const activeAgentIds = [...new Set(events.map((event) => event.agent_id))];
+    const eventRows = events.map((event) => {
+      const agent=(activity.agents || []).find((item)=>item.id===event.agent_id);
+      return `<tr><td>${esc(text(agent?.name, event.agent_id))}</td><td>${esc(event.action==='qualify'?'Qualification':event.action==='query'?'Query':event.action)}</td><td>${esc(text(event.status))}${event.result?` · ${esc(event.result)}`:''}</td><td>${event.evidence_receipt?`<button class="agent-evidence-link" data-agent-evidence>${esc(event.evidence_receipt)}</button>`:'No evidence record'}</td><td>${esc(text(event.model_revision))}</td><td>${formatDuration(Date.parse(event.ended_at)-Date.parse(event.started_at))}</td><td>${formatTokens(event.input_tokens)} / ${formatTokens(event.output_tokens)}</td></tr>`;
+    }).join('');
+    const comparison = sample.comparison || {};
+    const baseline = comparison.baseline, modeled = comparison.modeled, savings = comparisonSavings(comparison);
+    const baselineDisclosure = baseline && modeled && savings ? `<details class="agent-baseline"><summary>How the comparison works</summary><p>${esc(text(comparison.label, 'Illustrative same-workload comparison'))}. The raw-source baseline and model-backed path cover the same controls. The model-backed total includes one-time model preparation.</p><dl><div><dt>Raw-source baseline</dt><dd>${formatTokens(baseline.input_tokens)} input · ${formatTokens(baseline.output_tokens)} output · ${formatDuration(baseline.elapsed_ms)} wall · ${formatDuration(baseline.work_ms)} summed work</dd></div><div><dt>Model-backed, incl. preparation</dt><dd>${formatTokens(modeled.input_tokens)} input · ${formatTokens(modeled.output_tokens)} output · ${formatDuration(modeled.elapsed_ms)} wall · ${formatDuration(modeled.work_ms)} summed work</dd></div><div><dt>Model preparation, counted once</dt><dd>${formatTokens(activity.model_preparation?.input_tokens)} input · ${formatTokens(activity.model_preparation?.output_tokens)} output · ${formatDuration(activity.model_preparation?.elapsed_ms)} wall</dd></div><div><dt>Difference (baseline − model-backed)</dt><dd>${formatSavings(savings?.total_tokens, 'tokens')} · ${formatSavings(savings?.elapsed_ms, 'time')} wall · ${formatSavings(savings.work_ms, 'time')} summed work</dd></div></dl><small>Positive values mean fewer tokens or less time. Negative values mean more tokens or slower work. These values are illustrative, not measured agent costs.</small></details>` : `<section class="agent-baseline agent-baseline-unknown"><h3>Baseline comparison unavailable</h3><p>A zero or missing baseline is unknown. No savings value is estimated.</p></section>`;
+    const controlCounts=control?activityControlCounts(sample,control.id):{queried:0,qualified:0};
+    const queried = controlCounts.queried, qualified=controlCounts.qualified;
+    return `<section class="agent-activity-workspace" aria-label="Agent evaluation activity"><div class="agent-scope-note"><strong>Illustrative simulation</strong><span>Agent results describe evidence research and qualification work. They do not grant policy authorization or show native enforcement.</span></div><div class="agent-summary"><span>${queried} querying agent${queried===1?'':'s'}</span><span>${qualified} qualifying agent${qualified===1?'':'s'}</span><span>${activeAgentIds.length} agent${activeAgentIds.length===1?'':'s'} active for this control</span></div>${control ? `<h3>Agent evaluation · ${esc(control.title)}</h3>${events.length ? `<div class="agent-ledger-scroll"><table class="agent-ledger"><thead><tr><th>Agent</th><th>Step</th><th>Result</th><th>Evidence receipt</th><th>Revision</th><th>Elapsed</th><th>Input / output</th></tr></thead><tbody>${eventRows}</tbody></table></div>` : '<p class="empty-state">No agent queried or qualified this control in the selected scenario.</p>'}` : '<p class="empty-state">Select a control to inspect its agent activity.</p>'}${baselineDisclosure}</section>`;
   };
   const badge = (status) => `<span class="status-pill ${statusClass(status)}">${statusName(status)}</span>`;
   const decisionBadge = (decision) => `<span class="decision-pill ${statusClass(decision === 'allow' ? 'met' : decision === 'deny' ? 'not_met' : 'unknown')}">${decisionName(decision)}</span>`;
@@ -241,8 +308,8 @@
     const relation = index => `<button class="evidence-relation" data-link="${index}" aria-pressed="${state.evidenceLink===index}" aria-label="Explain connection: ${esc(nodes.find(n=>n.id===links[index][0]).kind+' '+links[index][2]+' '+nodes.find(n=>n.id===links[index][1]).kind)}"><span>${esc(links[index][2])}</span><span aria-hidden="true">${index===3?'←':index===2?'↓':'→'}</span></button>`;
     const fields = values => `<dl class="object-fields">${Object.entries(values).map(([key,value])=>`<div><dt>${esc(key)}</dt><dd>${esc(text(value))}</dd></div>`).join('')}</dl>`;
     const selectedLink = state.evidenceLink===null ? null : links[state.evidenceLink];
-    return `${provenanceSummary(provenance)}<div class="evidence-tabs" role="group" aria-label="Evidence view"><button data-evidence-view="map" aria-pressed="${state.evidenceView==='map'}">Connections</button><button data-evidence-view="record" aria-pressed="${state.evidenceView==='record'}">Evidence record</button><button data-evidence-view="systems" aria-pressed="${state.evidenceView==='systems'}">Systems &amp; people</button><span>Sample relationships · no enforcement event</span></div>
-      ${state.evidenceView==='map' ? `<section class="evidence-canvas" aria-label="Control evidence connections"><div class="evidence-path">${nodeButton('policy')}${relation(0)}${nodeButton('control')}${relation(1)}${nodeButton('check')}</div><div class="evidence-branch"><svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M83.33 0 V20 H50 V58 M49 53 L50 58 L51 53"/></svg>${relation(2)}</div><div class="evidence-path evidence-sources">${nodeButton('source')}${relation(3)}${nodeButton('observation')}${relation(4)}${nodeButton('artifact')}</div><p class="map-help">Select an object or a connection to inspect it. Dashed borders mark missing or mismatched evidence.</p></section>
+    return `${provenanceSummary(provenance)}<div class="evidence-tabs" role="group" aria-label="Evidence view"><button data-evidence-view="map" aria-pressed="${state.evidenceView==='map'}">Connections</button><button data-evidence-view="record" aria-pressed="${state.evidenceView==='record'}">Evidence record</button><button data-evidence-view="systems" aria-pressed="${state.evidenceView==='systems'}">Systems &amp; people</button><button data-evidence-view="agents" aria-pressed="${state.evidenceView==='agents'}">Agent evaluation</button><span>Sample relationships · no enforcement event</span></div>
+      ${state.evidenceView==='agents' ? agentActivityWorkspace(control) : state.evidenceView==='map' ? `<section class="evidence-canvas" aria-label="Control evidence connections"><div class="evidence-path">${nodeButton('policy')}${relation(0)}${nodeButton('control')}${relation(1)}${nodeButton('check')}</div><div class="evidence-branch"><svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M83.33 0 V20 H50 V58 M49 53 L50 58 L51 53"/></svg>${relation(2)}</div><div class="evidence-path evidence-sources">${nodeButton('source')}${relation(3)}${nodeButton('observation')}${relation(4)}${nodeButton('artifact')}</div><p class="map-help">Select an object or a connection to inspect it. Dashed borders mark missing or mismatched evidence.</p></section>
       <section class="object-inspector detail-card" aria-label="Selected evidence object"><div class="object-heading"><div><p class="eyebrow">${selectedLink?'CONNECTION DETAILS':esc(active.kind)}</p><h3>${selectedLink?esc(nodes.find(n=>n.id===selectedLink[0]).kind+' → '+nodes.find(n=>n.id===selectedLink[1]).kind):esc(active.title)}</h3></div><div class="inspector-result">Check result ${badge(check.status)}</div></div><p>${esc(selectedLink ? selectedLink[3] : active.description)}</p>${selectedLink ? fields({From:nodes.find(n=>n.id===selectedLink[0]).title,Relationship:selectedLink[2],To:nodes.find(n=>n.id===selectedLink[1]).title}) : fields(active.fields)}</section>` : state.evidenceView==='record' ? evidenceDetail(control,check) : provenanceWorkspace(provenance)}
       <details class="application-details" data-disclosure="openApplication" ${state.openApplication?'open':''}><summary>How this control applies to the release</summary><p>${esc(policy.description)}</p>${fields({'Central policy':rootPolicy().title,'Child policy':policy.title,'Control':control.title,'Owner':policy.owner,'Release':data.release.id,'Environment':data.release.environment})}<p>All child policies and their required controls must pass in this simulation. These links do not record a production enforcement event.</p></details>
       <details class="application-details raw-evidence" data-disclosure="openRaw" ${state.openRaw?'open':''}><summary>Full evidence record${evidence?'':' · unavailable'}</summary>${evidence ? `<pre>${esc(JSON.stringify(evidence,null,2))}</pre>` : '<p>No evidence record is available for this control and release.</p>'}</details>`;
@@ -254,13 +321,13 @@
     const met=result.checks.filter(item=>item.status==='met').length;
     const total=result.checks.length;
     app.innerHTML=`<div class="page-shell board-page chain-page ${state.evidenceFocus?'evidence-focused':''}"><div class="chain-heading"><div><p class="eyebrow">PRODUCT SHIP QUALIFICATION</p><h1>Release qualification</h1><p>${esc(data.release.name)} <strong>${esc(data.release.version)}</strong> <span>· ${esc(data.release.environment)}</span></p></div>${selectScenario()}</div>
-      <section class="readiness-strip compact-readiness" aria-label="Release summary"><div><small>SIMULATED DECISION</small>${decisionBadge(result.decision)}</div><strong>${met}/${total} <span>controls met</span></strong><span class="release-summary-reason">${esc(resultReason(result)||'All required controls have matching evidence.')}</span><span class="evaluation-clock">Evaluated at <time datetime="${esc(data.as_of)}">${esc(data.as_of)}</time></span></section>
+      <section class="readiness-strip compact-readiness" aria-label="Release summary"><div><small>SIMULATED DECISION</small>${decisionBadge(result.decision)}</div><strong>${met}/${total} <span>controls met</span></strong><span class="release-summary-reason">${esc(resultReason(result)||'All required controls have matching evidence.')}</span><span class="evaluation-clock">Evaluated at <time datetime="${esc(data.as_of)}">${esc(data.as_of)}</time></span></section>${globalActivityBar()}
       <div class="chain-workspace"><aside class="chain-checklist" aria-label="Policy and control checklist"><div class="checklist-heading"><h2>Policy chain</h2><span>${children().length} policies · ${total} controls</span></div><a class="chain-root" href="index.html">${esc(rootPolicy().title)} <span>All required</span></a><div class="checklist-actions"><button data-chain-action="expand">Expand all</button><button data-chain-action="collapse">Collapse all</button></div>
       <div class="chain-groups">${children().map(policy=>{
         const summary=controlsStatus(policy,result),open=state.openPolicies.has(policy.id);
         return `<section class="chain-group"><button class="chain-policy ${selected?.id===policy.id?'selected':''}" data-policy="${esc(policy.id)}" aria-expanded="${open}" aria-controls="group-${esc(policy.id)}"><span aria-hidden="true">${open?'▾':'▸'}</span><strong>${esc(policy.title)}</strong><span>${summary.met}/${summary.total}</span></button><div id="group-${esc(policy.id)}" ${open?'':'hidden'}>${controls(policy).map(item=>{
           const itemCheck=checkFor(item.id,result);
-          return `<button class="chain-control ${control?.id===item.id?'chosen':''}" data-policy="${esc(policy.id)}" data-control="${esc(item.id)}" ${control?.id===item.id?'aria-current="true"':''}><span class="check-mark ${statusClass(itemCheck.status)}" aria-label="${statusName(itemCheck.status)}">${itemCheck.status==='met'?'✓':itemCheck.status==='not_met'?'!':'?'}</span><span>${esc(item.title)}</span></button>`;
+          return `<button class="chain-control ${control?.id===item.id?'chosen':''}" data-policy="${esc(policy.id)}" data-control="${esc(item.id)}" ${control?.id===item.id?'aria-current="true"':''}><span class="check-mark ${statusClass(itemCheck.status)}" aria-label="${statusName(itemCheck.status)}">${itemCheck.status==='met'?'✓':itemCheck.status==='not_met'?'!':'?'}</span><span class="chain-control-label">${esc(item.title)}<small class="control-activity-count">${(()=>{const a=activityForScenario();if(!a)return 'Agent activity unavailable';const counts=activityControlCounts(a.sample,item.id);return `Agents: ${counts.queried} queried · ${counts.qualified} qualified`; })()}</small></span></button>`;
         }).join('')}</div></section>`;
       }).join('')}</div><p class="checklist-note">Status comes from evidence. Selecting a control does not mark it complete.</p></aside>
       <section class="evidence-workbench" aria-label="Evidence workspace"><div class="evidence-heading"><div class="selected-control"><p class="eyebrow">${esc(selected?.title || 'Policy')} / CONTROL EVIDENCE</p><h2>${esc(control?.title || 'Select a control')}</h2><p>${esc(check.reason || 'Select a control to explore its evidence.')}</p></div><button class="evidence-focus" data-focus-evidence aria-pressed="${state.evidenceFocus}">${state.evidenceFocus?'Show checklist':'Expand evidence'}</button></div>${evidenceWorkspace(selected,control,check)}</section></div></div>`;
@@ -275,6 +342,7 @@
     document.querySelectorAll('[data-evidence-view]').forEach(button=>button.addEventListener('click',()=>{state.evidenceView=button.dataset.evidenceView;rerender(`[data-evidence-view="${state.evidenceView}"]`);}));
     document.querySelectorAll('[data-open-provenance]').forEach(button=>button.addEventListener('click',()=>{state.evidenceView='systems';rerender('[data-evidence-view="systems"]');}));
     document.querySelectorAll('[data-prov-node]').forEach(button=>button.addEventListener('click',()=>{state.provenanceNode=button.dataset.provNode;render();[...document.querySelectorAll('[data-prov-node]')].find(item=>item.dataset.provNode===state.provenanceNode)?.focus();}));
+    document.querySelectorAll('[data-agent-evidence]').forEach(button=>button.addEventListener('click',()=>{state.evidenceView='record';rerender('[data-evidence-view="record"]');}));
     document.querySelectorAll('[data-object]').forEach(button=>button.addEventListener('click',()=>{state.evidenceNode=button.dataset.object;state.evidenceLink=null;rerender(`[data-object="${state.evidenceNode}"]`);}));
     document.querySelectorAll('[data-link]').forEach(button=>button.addEventListener('click',()=>{state.evidenceLink=Number(button.dataset.link);rerender(`[data-link="${state.evidenceLink}"]`);}));
   }

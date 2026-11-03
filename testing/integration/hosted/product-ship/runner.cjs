@@ -9,6 +9,7 @@ const sdk = fs.readFileSync(path.resolve(here, '../../../../crates/ipe-integrati
 const collectorPath = path.join(here, 'collector.js');
 const collector = fs.readFileSync(collectorPath, 'utf8');
 const provenanceRunner = require('./provenance-runner.cjs');
+const {createAgentActivity} = require('./agent-activity.cjs');
 require('./product-ship.js');
 const productShip = globalThis.IpeProductShip;
 const scenarioNames = ['ready', 'blocked', 'missing', 'expired', 'wrong-artifact'];
@@ -86,12 +87,14 @@ function run() {
   const model = modelFromCaptures(integrations.map(integration=>integration._capture));
   for (const integration of integrations) delete integration._capture;
   const scenarios = scenarioNames.map(scenario => ({scenario,assessment:productShip.evaluate(model,scenario)}));
+  const agentActivity=createAgentActivity(model);
   return {
     ...model,
     provenance: provenanceRunner.collectProvenance(),
     integrations,
     scenarios,
     assessments:Object.fromEntries(scenarios.map(item=>[item.scenario,item.assessment])),
+    agent_activity:agentActivity,
     notes:[
       'Synthetic broker replay; no external system was queried.',
       'The policy tree is descriptive input for this demonstration; native hierarchy enforcement is not claimed.',

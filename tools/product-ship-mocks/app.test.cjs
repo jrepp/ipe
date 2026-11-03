@@ -246,3 +246,77 @@ test('duplicate identities and unresolved references do not choose a person by n
     assert.equal(duplicate.window.document.querySelectorAll('[data-prov-node]').length,0);
   } finally {duplicate.window.close();}
 });
+
+test('agent activity distinguishes unique agents, repeated calls, and qualification outcomes',async()=>{
+  const dom=await page('board','?view=agents');
+  try {
+    const doc=dom.window.document;
+    assert.match(doc.querySelector('.agent-activity-bar').textContent,/6 agents/);
+    assert.match(doc.querySelector('.agent-summary').textContent,/2 querying agents/);
+    assert.match(doc.querySelector('.agent-summary').textContent,/1 qualifying agent/);
+    assert.match(doc.querySelector('.agent-summary').textContent,/2 agents active/);
+    assert.equal(doc.querySelectorAll('.agent-ledger tbody tr').length,3);
+    assert.match(doc.querySelector('.agent-baseline').textContent,/Model preparation, counted once/);
+    scenario(dom,'blocked');
+    assert.match(doc.querySelector('.agent-summary').textContent,/0 qualifying agents/);
+    assert.match(doc.querySelector('.agent-ledger').textContent,/completed · not_met/);
+    assert.equal(doc.querySelector('.decision-pill').textContent,'DENY');
+    scenario(dom,'missing');
+    assert.match(doc.querySelector('.agent-ledger').textContent,/completed · unknown/);
+    assert.match(doc.querySelector('.agent-ledger').textContent,/No evidence record/);
+    scenario(dom,'ready');
+    doc.querySelector('[data-agent-evidence]').click();
+    assert.equal(doc.querySelector('[data-evidence-view="record"]').getAttribute('aria-pressed'),'true');
+    assert.match(doc.querySelector('.detail-card').textContent,/Evidence|EVIDENCE/);
+  } finally {dom.window.close();}
+});
+
+test('query-only steps remain unqualified despite met policy evidence',async()=>{
+  const dom=await page('board','?view=agents&policy=ship-operations&control=ship.operations.support-owner');
+  try {
+    const doc=dom.window.document;
+    assert.match(doc.querySelector('.agent-summary').textContent,/1 querying agent/);
+    assert.match(doc.querySelector('.agent-summary').textContent,/0 qualifying agents/);
+    assert.equal(doc.querySelectorAll('.agent-ledger tbody tr').length,1);
+    assert.doesNotMatch(doc.querySelector('.agent-ledger tbody').textContent,/Qualification/);
+    assert.equal(doc.querySelector('.decision-pill').textContent,'ALLOW');
+  } finally {dom.window.close();}
+});
+
+test('missing and zero baselines suppress savings; negative savings remain additional usage',async()=>{
+  for(const variant of ['missing','zero','negative']) {
+    const fixture=structuredClone(data),comparison=fixture.agent_activity.scenarios[0].comparison;
+    if(variant==='missing') comparison.baseline=null;
+    else if(variant==='zero') comparison.baseline={input_tokens:0,output_tokens:0,total_tokens:0,elapsed_ms:0,work_ms:0};
+    else comparison.baseline={input_tokens:10,output_tokens:10,total_tokens:20,elapsed_ms:10,work_ms:10};
+    const dom=await page('board','?view=agents',fixture);
+    try {
+      const doc=dom.window.document;
+      assert.equal(doc.querySelector('.load-error'),null);
+      if(variant==='negative') {
+        assert.match(doc.querySelector('.agent-activity-bar').textContent,/tokens more/);
+        assert.match(doc.querySelector('.agent-activity-bar').textContent,/slower/);
+      } else {
+        assert.match(doc.querySelector('.agent-baseline-unknown').textContent,/unavailable/);
+        assert.match(doc.querySelector('.agent-activity-bar').textContent,/Unknown/);
+        assert.doesNotMatch(doc.querySelector('.agent-activity-bar').textContent,/fewer|faster/);
+      }
+    } finally {dom.window.close();}
+  }
+});
+
+test('agent activity is unavailable after evidence, policy, or event scope changes',async()=>{
+  for(const variant of ['evidence','policy','event']) {
+    const fixture=structuredClone(data);
+    if(variant==='evidence') fixture.evidence[0].status='not_met';
+    if(variant==='policy') fixture.policies[0].controls[0].description='A changed requirement';
+    if(variant==='event') fixture.agent_activity.scenarios[0].events[0].artifact='different-artifact';
+    const dom=await page('board','?view=agents',fixture);
+    try {
+      const doc=dom.window.document;
+      assert.match(doc.querySelector('.agent-activity-bar').textContent,/unavailable/);
+      assert.match(doc.querySelector('.agent-activity-empty').textContent,/No matching agent activity/);
+      assert.equal(doc.querySelector('.agent-ledger'),null);
+    } finally {dom.window.close();}
+  }
+});

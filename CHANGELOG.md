@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Product ship preview shows simulated agent queries and qualification checks per control, with scoped activity and explicit token/time comparison baselines.
 - Product ship preview links controls to simulated ServiceNow record identities and states, source provenance, responsible roles, and email or Slack profiles through SDK extraction.
 - Product ship readiness combines policy and control navigation in one checklist. A larger evidence workspace supports object and connection inspection, source records, and full-width review.
 - Product ship qualification example adds nine linked policies, SDK collector simulations, and three interactive views for readiness, policy navigation, and simulated enforcement.

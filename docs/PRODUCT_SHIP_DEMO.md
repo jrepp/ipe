@@ -104,6 +104,48 @@ This preview does not connect to real ServiceNow or Slack accounts. All people a
 Source record context and contact resolution remain separate from the existing qualification evaluator.
 A production binding must specify which record states and role actions a control requires before they can affect its result.
 
+## Agent evaluation and model efficiency
+
+The **Agent evaluation** preview adds activity to the policy chain without changing its qualification result.
+Each step distinguishes an agent query from a completed qualification check.
+The chain summary counts distinct agents and controls. Repeated calls remain separate events and do not inflate those counts.
+A qualified step requires a completed check with a `met` result and matching evidence.
+An unsuccessful or unknown check remains visible. A query alone does not qualify a step.
+
+The selected-control ledger shows the agent, action, result, time, input tokens, output tokens, and evidence reference.
+Activity is bound to the release, artifact, environment, policy model, evidence snapshot, and scenario.
+The UI hides activity that no longer matches that context.
+Agent statements are recorded check results, not deployment authorization or proof of an approval action.
+
+### Compare equivalent work
+
+The preview compares a simulated raw-source workflow with a simulated workflow that queries the policy model.
+Both use the same scenario and required work. The comparison includes the one-time model preparation cost.
+
+| Metric | Meaning |
+| --- | --- |
+| Token use | Input plus output tokens across the compared calls, including model preparation once. |
+| Elapsed time | The interval from work start to final completion, including preparation. Parallel intervals are not added. |
+| Agent work time | The sum of individual work durations. This differs from elapsed time when agents work in parallel. |
+| Savings | Baseline total minus model-backed total. Negative savings remain visible as additional use or time. |
+
+Missing or incompatible baseline data produces no savings claim. A zero baseline cannot support a percentage reduction.
+All token and timing values in this example are fixture inputs. They are illustrative, not measured benefits or billing data.
+The [activity generator](../testing/integration/hosted/product-ship/agent-activity.cjs) derives event results from the shared scenario evaluator.
+It does not call an agent service or measure the agents that built this repository.
+
+### Instrumentation for a real comparison
+
+A measured run should record a run ID, agent ID, control ID, attempt ID, model revision, and evidence snapshot.
+Record each query and check with its start, end, outcome, and cited evidence.
+Use provider-reported input, output, and cached-token usage. Do not estimate usage from text length.
+Include failed calls, retries, and model preparation. Report cache usage separately to avoid counting it twice.
+Compare the same controls and acceptance criteria under the same model, tool, and concurrency settings.
+Separate first-use preparation from later reuse, and disclose how many runs share that preparation cost.
+
+Model queries may reduce repeated source discovery and the amount of context sent to an agent.
+That is the hypothesis to measure. The mock comparison does not establish those savings in a real deployment.
+
 ## Limits
 
 The synthetic integrations do not query accessibility tools, vulnerability scanners, legal systems, or approval systems.

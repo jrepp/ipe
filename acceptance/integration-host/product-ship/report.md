@@ -90,3 +90,24 @@ Desktop and mobile browser checks found zero Axe violations, no script errors, a
 
 All records and people are synthetic. No ServiceNow or Slack account was connected and no message was sent.
 Record context and role assignments do not change the qualification evaluator or establish that an approval occurred.
+
+
+## Agent evaluation and illustrative efficiency
+
+The readiness view now shows distinct agents, queried controls, and qualified controls for the selected scenario.
+Checklist rows show how many agents queried and qualified each control.
+The selected-control ledger separates queries from qualification attempts and links each cited receipt to its evidence record.
+The ready fixture contains six agents, 18 queried controls, 15 qualified controls, and three query-only controls.
+A repeated query increases call count, not the number of unique agents or controls.
+Evidence: [Agent evaluation](screenshots/agent-evaluation.png) and [comparison details](screenshots/agent-comparison.png).
+
+Each scenario comparison includes model preparation once. It reports input/output tokens, elapsed time, and summed work separately.
+The raw-source baseline uses fixture totals for equivalent work. All activity and usage values are illustrative, not measured agent savings.
+Missing or zero baselines suppress savings claims. Additional usage remains visible as more tokens or slower work.
+Activity is hidden when policy, evidence, or event scope no longer matches the selected release and scenario.
+Policy manifests remain separate snapshots when the caller changes the current model.
+
+All 105 JavaScript tests passed. These include four activity model tests and 16 mock UI tests.
+Documentation and whitespace checks passed. No Rust runtime or SDK behavior changed, so Rust tests were not rerun.
+Desktop and mobile checks found zero Axe violations, no script errors, and no page overflow at 390 pixels.
+No live agent usage was collected and no agent service was called for this fixture.
