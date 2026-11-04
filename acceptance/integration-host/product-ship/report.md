@@ -173,3 +173,12 @@ Desktop and mobile overview scans found zero accessibility violations. The polic
 The mobile overview fits a 390-pixel viewport. No browser script errors were reported.
 Font files returned HTTP 200. Unlisted repository paths and traversal requests returned HTTP 404.
 The design skill validator, documentation checks, and whitespace checks passed. Rust tests were not rerun for this preview change.
+
+## Header cleanup
+
+The shared header removes the secondary product label and uses a compact sample-data badge.
+Each page has one short title that matches its navigation label. Repeated introductory text no longer precedes the content.
+Evidence: [Overview headers](screenshots/overview-headers.png).
+All 21 UI tests passed. Desktop and mobile accessibility scans found zero violations.
+The overview fits a 390-pixel viewport. Documentation and whitespace checks passed.
+Rust tests were not rerun for this text and layout change.

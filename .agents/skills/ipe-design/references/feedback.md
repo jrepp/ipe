@@ -12,6 +12,7 @@ This record captures feedback from the IPE preview work. Apply it within this pr
 | “How the policy is being used, what it's optimizing, gating and costing.” | Explain use, decisions, findings, tokens, and timing at chain level. | User requirement |
 | “Rewrite the preview language using ~/d/SimpleEnglish.” | Use short, complete sentences and consistent terms. Preserve domain meaning. | User requirement |
 | “I don't like this kind of phrasing: What it permits, What it can reduce.” | Use direct content labels. Simple words alone do not make a useful heading. | Rejected pattern |
+| “Cleanup the headers and simplify the top of the page headings.” | Use one short page title. Remove repeated product labels and introductory text. | User requirement |
 | “Make the overview less sales” and include outcome, health, and time trends. | Lead with useful metrics and trends. Keep visual character without a sales hero. | User requirement |
 | “Use the modernized plex style” from prior explorations. | Reuse the Contemporary Plex typography, panels, and navigation. | User preference |
 | “The usage report is just sitting on top of the policy chain.” | Integrate report navigation with the policy that owns it. Do not place a large report above the chain. | Rejected placement |

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Preview headers use one short page title and remove repeated labels and introductory text.
 - Product ship overview uses Contemporary Plex styling with sample outcome, evaluation health, time, and context trends.
 - Policy usage opens beside the policy chain with direct section labels. A local IPE design skill records language and layout feedback.
 - Product ship preview uses shorter sentences and plain terms for policy checks, agent activity, source records, and cost.

@@ -174,6 +174,9 @@ The raw-source comparison remains illustrative. Dollar cost, live enforcement, a
 
 ## Preview language
 
+Each page uses one short title: Overview, Readiness, Policy map, or Evaluation.
+The shared header names the product and labels the preview as sample data.
+
 The preview uses the Simple English guide in pragmatic mode. It uses short sentences and one term for each concept.
 “Direct source reads” names the comparison path without the policy model. “Total work time” adds the duration of each call.
 A query reads evidence. A qualification check records whether a control is met.
