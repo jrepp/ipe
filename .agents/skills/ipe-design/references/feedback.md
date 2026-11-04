@@ -32,3 +32,13 @@ This is an implementation for review, not a user-approved layout yet.
 | Illustrative simulation | Sample data | Marks the data clearly |
 
 These examples are local choices. Keep a technical term when a shorter label would change its meaning.
+
+## Fleet and planning feedback
+
+- Show the entire system state when a transition diagram first opens.
+- Keep new failures one click away. The user approved this filter as useful.
+- Clear failure filters when users return to all applications. Retain the selected consumer or team.
+- Keep definitions, consumers, applications, executions, and agent jobs distinct.
+- Model full engineering, product, and design jobs. Small policy-query budgets do not represent those workloads.
+- Label assumed ranges and sample counts. Fixed-seed variation must preserve rollup totals.
+- Keep the product header short and use the established Plex navigation.

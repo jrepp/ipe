@@ -201,3 +201,28 @@ Each completed sample run has a comparison for the same checks and outcome. Cost
 Each modeled run includes preparation once. Elapsed time saved adds paired differences; it does not measure calendar time saved.
 Zero baselines show unknown savings. A more expensive model path shows additional time or tokens.
 All trend values remain illustrative. They do not establish actual savings, better accuracy, or production health.
+
+## Fleet and enterprise planning preview
+
+Open `/fleet.html` on the preview server.
+The sample contains 500 shared definitions, 3,500 consumers, and 350,000 applications.
+Counts use a fixed seed. Reloads retain the same sample values.
+
+Application transitions show all states by default.
+Select **New failures** in the diagram or summary to inspect previously passing applications.
+Select **All applications** to clear result, transition, and change filters within the selected consumer or team.
+**Reset filters** returns to the whole fleet.
+
+Search supports consumer, policy, and application IDs. URLs retain filters and selection.
+The directory renders 25 rows per page.
+The comparison shows retained last-pass and first-failure inputs. Replay restores selected inputs in the sample predicate.
+Observed changes are candidates, not proven shared causes. Missing baselines remain explicit.
+Combined changes can require more than one restored input.
+
+This is a browser design sample, not a production fleet backend.
+A production design needs indexed search, cursor pagination, consistent rollup snapshots, and bounded change groups.
+Retain source receipts, policy revisions, engine versions, and evaluated inputs for comparisons.
+
+The overview uses the [enterprise planning model](ENTERPRISE_SCALE_PLANNING.md).
+It separates quarterly executions, full agent jobs, shared-context savings, and possible early stops.
+Salary and token budgets are assumptions. They are not measured return on investment.

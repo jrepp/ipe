@@ -61,3 +61,6 @@ The local commits have not been pushed. No PR, merge, or deployment was performe
 The policy chain preview includes a usage report in the detail workspace. Live usage collection and measured optimization remain future work.
 
 The local IPE design skill captures user feedback and guides policy and integration UX changes.
+
+The fleet and enterprise planning preview now includes full-state transitions, failure filters, retained-input comparisons, and whole-job cost assumptions.
+This work remains part of the integration-host usability branch. Production fleet storage and measured savings remain future work.

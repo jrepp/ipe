@@ -9,7 +9,11 @@ ROOT = Path(__file__).resolve().parent
 MODEL = ROOT.parents[1] / "testing/integration/hosted/product-ship"
 ASSETS = {
     "/": ("index.html", "text/html"),
-    **{"/" + name: (name, "text/html") for name in ["index.html", "board.html", "network.html", "console.html"]},
+    **{"/" + name: (name, "text/html") for name in ["index.html", "board.html", "network.html", "console.html", "fleet.html"]},
+    "/projection.js": ("projection.js", "text/javascript"),
+    "/fleet.js": ("fleet.js", "text/javascript"),
+    "/fleet-model.js": ("fleet-model.js", "text/javascript"),
+    "/fleet.css": ("fleet.css", "text/css"),
     "/app.js": ("app.js", "text/javascript"),
     "/styles.css": ("styles.css", "text/css"),
     **{"/fonts/" + name: ("fonts/" + name, "font/woff2") for name in [
@@ -29,7 +33,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def respond(self, head):
         path = urlsplit(self.path).path
-        if path == "/model/evaluate.js":
+        if path == "/planning.md":
+            file, mime = ROOT.parents[1] / "docs/ENTERPRISE_SCALE_PLANNING.md", "text/plain"
+        elif path == "/model/evaluate.js":
             file, mime = MODEL / "product-ship.js", "text/javascript"
         elif path in ASSETS:
             name, mime = ASSETS[path]

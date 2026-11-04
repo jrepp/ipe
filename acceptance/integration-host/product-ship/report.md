@@ -182,3 +182,16 @@ Evidence: [Overview headers](screenshots/overview-headers.png).
 All 21 UI tests passed. Desktop and mobile accessibility scans found zero violations.
 The overview fits a 390-pixel viewport. Documentation and whitespace checks passed.
 Rust tests were not rerun for this text and layout change.
+
+## Fleet and planning pass — 2026-11-03
+
+- Added 350,000 generated applications across 3,500 consumers and 500 shared definitions.
+- Default transitions include passing, denied, unknown, and error states. New failures have direct controls.
+- Verified new-failure selection, return to all states, scope retention, reset, search, paging, and retained-input replay.
+- Added full-job engineering, product, and design projections with quarterly volume and explicit assumptions.
+- Ran product preview, integration-host, and GitHub contract JavaScript tests: 106 passed.
+- Checked desktop at 1440 pixels and narrow layouts at 390 pixels. No page overflow appeared.
+- Checked the planning document route: HTTP 200. Design skill validation and git diff checks passed.
+- This pass does not validate a production fleet backend or measured savings.
+
+Screenshots from this pass: `/tmp/ipe-fleet-final.png`, `/tmp/ipe-fleet-mobile-final.png`, and `/tmp/ipe-overview-final.png`.

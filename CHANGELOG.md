@@ -8,12 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Fleet transitions show all application states by default. A direct failure filter and reset support rapid investigation.
+- Preview navigation uses a compact IPE header. Enterprise projections cover full engineering, product, and design jobs with cached-token costs.
 - Preview headers use one short page title and remove repeated labels and introductory text.
 - Product ship overview uses Contemporary Plex styling with sample outcome, evaluation health, time, and context trends.
 - Policy usage opens beside the policy chain with direct section labels. A local IPE design skill records language and layout feedback.
 - Product ship preview uses shorter sentences and plain terms for policy checks, agent activity, source records, and cost.
 
 ### Added
+- Sample fleet adds 350,000 policy applications, bounded navigation, observed changes, and retained-input replay.
+- Enterprise scale planning records assumptions, quarterly volume, and reproducible savings ranges.
 - Product ship preview adds a compact chain usage report for simulated runs, gate outcomes, findings, context use, and timing.
 - Product ship preview shows simulated agent queries and qualification checks per control, with scoped activity and explicit token/time comparison baselines.
 - Product ship preview links controls to simulated ServiceNow record identities and states, source provenance, responsible roles, and email or Slack profiles through SDK extraction.

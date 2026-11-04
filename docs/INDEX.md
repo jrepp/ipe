@@ -230,3 +230,5 @@ no collection-listing route is implemented by this document.
 - [Integration model review](INTEGRATION_MODEL_REVIEW.md): evidence-backed recommendations for collection, contract identity, reasoning, and updates.
 
 - [Product ship qualification simulation](PRODUCT_SHIP_DEMO.md): linked policy model, headless SDK collectors, and three UX studies.
+
+- [Enterprise scale planning](ENTERPRISE_SCALE_PLANNING.md): quarterly volume, full agent jobs, and assumed savings ranges.

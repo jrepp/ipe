@@ -13,6 +13,7 @@ async function page(name,query='',response=data) {
   const dom=new JSDOM(html,{url:'http://127.0.0.1:8768/'+name+'.html'+query,runScripts:'outside-only'});
   dom.window.fetch=async()=>({ok:true,json:async()=>structuredClone(response)});
   dom.window.eval(evaluator);
+  if(name==='index') dom.window.eval(fs.readFileSync(path.join(__dirname,'projection.js'),'utf8'));
   dom.window.eval(app);
   await new Promise(resolve=>setImmediate(resolve));
   return dom;
@@ -420,4 +421,23 @@ test('overview handles stale, missing, invalid, zero, and more expensive history
       if(variant==='negative') {assert.match(doc.querySelector('[data-metric="time"]').textContent,/more/);assert.match(doc.querySelector('.context-delta').textContent,/more/);}
     } finally {dom.window.close();}
   }
+});
+
+
+test('planning overview uses quarterly volume and salary per employee without changing policy volume',async()=>{
+  const dom=await page('index');
+  try {
+    const doc=dom.window.document;
+    assert.ok(doc.querySelector('.planning-overview'));
+    assert.equal(doc.querySelector('[name="period"]').value,'91.25');
+    const initialExecutions=doc.querySelector('[data-projection="executions"]').textContent;
+    const initialSavings=doc.querySelector('[data-projection="savings"]').textContent;
+    doc.querySelector('[name="employees"]').value='2000';
+    doc.querySelector('#projection-form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));
+    assert.equal(doc.querySelector('[data-projection="executions"]').textContent,initialExecutions);
+    assert.equal(doc.querySelector('[data-projection="savings"]').textContent,initialSavings);
+    assert.match(doc.querySelector('.budget-panel').textContent,/2,000 employees/);
+    assert.match(doc.querySelector('.budget-panel').textContent,/\$300M/);
+    assert.equal(doc.querySelector('.sample-history-disclosure').open,false);
+  } finally {dom.window.close();}
 });
