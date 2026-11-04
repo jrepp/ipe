@@ -157,7 +157,9 @@ Production use still needs reviewed evidence bindings, authority rules, policy r
 
 ## Policy chain usage report
 
-Open `board.html?report=usage` to inspect the chain report. The report stays closed on the default preview to keep control evidence visible.
+Open `board.html?report=usage` to inspect the chain report. The default preview shows control evidence.
+Select **Usage report** under the central policy to open the report in the detail workspace.
+Select **Control evidence** or a control to return to its evidence. The workspace retains the selected control.
 The report separates use, gates, findings, optimization, and cost. Select a recorded scenario to inspect its result.
 Five simulated uses mean five fixture runs, one per scenario. Page views and repeated queries do not add runs.
 Only runs with matching policy, release, and evidence scope enter the history count.

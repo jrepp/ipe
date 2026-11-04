@@ -325,8 +325,8 @@ test('chain report counts recorded runs, keeps policy gates separate, and opens 
   const dom=await page('board','?report=usage');
   try {
     const doc=dom.window.document;
-    assert.equal(doc.querySelector('.chain-report').open,true);
-    assert.match(doc.querySelector('.chain-report summary').textContent,/5 simulated runs · 6 agents/);
+    assert.equal(doc.querySelector('.chain-report-panel').hidden,false);
+    assert.match(doc.querySelector('.chain-report-heading').textContent,/5 simulated runs · 6 agents/);
     assert.equal(doc.querySelectorAll('.chain-run-history tbody tr').length,5);
     assert.match(doc.querySelector('.chain-report-body').textContent,/19 calls · 18 controls/);
     assert.match(doc.querySelector('.chain-report-body').textContent,/15 checks · 15 passed · 0 failed · 0 unknown/);
@@ -335,10 +335,11 @@ test('chain report counts recorded runs, keeps policy gates separate, and opens 
     assert.match(doc.querySelector('.chain-report-body').textContent,/17 met · 1 not met · 0 unknown/);
     doc.querySelector('[data-report-control]').click();
     assert.match(doc.querySelector('.agent-ledger').textContent,/completed · not_met/);
+    doc.querySelector('[data-chain-report]').click();
     doc.querySelector('[data-report-scenario="missing"]').click();
     assert.match(doc.querySelector('.chain-report-body').textContent,/15 checks · 14 passed · 0 failed · 1 unknown/);
     assert.match(doc.querySelector('.chain-report-body').textContent,/17 met · 0 not met · 1 unknown/);
-    assert.match(doc.querySelector('.chain-report summary').textContent,/5 simulated runs/);
+    assert.match(doc.querySelector('.chain-report-heading').textContent,/5 simulated runs/);
   } finally {dom.window.close();}
 });
 
@@ -348,10 +349,32 @@ test('chain report starts closed and excludes stale runs from history',async()=>
   const dom=await page('board','',fixture);
   try {
     const doc=dom.window.document;
-    assert.equal(doc.querySelector('.chain-report').open,false);
-    assert.match(doc.querySelector('.chain-report summary').textContent,/4 simulated runs/);
+    assert.equal(doc.querySelector('.chain-report-panel').hidden,true);
+    assert.match(doc.querySelector('.chain-report-heading').textContent,/4 simulated runs/);
     assert.equal(doc.querySelector('[data-report-scenario="blocked"]'),null);
     assert.match(doc.querySelector('.chain-cost').textContent,/Dollar cost is unavailable/);
     assert.match(doc.querySelector('.chain-cost').textContent,/excludes peak context-window use/);
+  } finally {dom.window.close();}
+});
+
+
+test('policy usage shares the detail workspace and preserves control selection',async()=>{
+  const dom=await page('board');
+  try {
+    const doc=dom.window.document;
+    const title=doc.querySelector('.selected-control h2').textContent;
+    assert.equal(doc.querySelector('.evidence-workbench').hidden,false);
+    doc.querySelector('.chain-checklist [data-chain-report]').click();
+    assert.equal(doc.querySelector('.chain-report-panel').hidden,false);
+    assert.equal(doc.querySelector('.evidence-workbench').hidden,true);
+    assert.equal(doc.querySelector('.chain-report').closest('.chain-detail')!==null,true);
+    doc.querySelector('[data-close-report]').click();
+    assert.equal(doc.querySelector('.chain-report-panel').hidden,true);
+    assert.equal(doc.querySelector('.selected-control h2').textContent,title);
+    doc.querySelector('[data-chain-report]').click();
+    doc.querySelector('[data-control="ship.security.vulnerability-scan"]').click();
+    assert.equal(doc.querySelector('.chain-report-panel').hidden,true);
+    assert.equal(doc.querySelector('.evidence-workbench').hidden,false);
+    assert.equal(doc.querySelector('.selected-control h2').textContent,data.policies.flatMap(policy=>policy.controls).find(control=>control.id==='ship.security.vulnerability-scan').title);
   } finally {dom.window.close();}
 });

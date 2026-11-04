@@ -138,3 +138,17 @@ Evidence: [Revised preview text](screenshots/simple-english-preview.png).
 All 18 UI tests passed. Documentation and whitespace checks passed.
 Desktop and mobile accessibility scans found zero violations. The page fits a 390-pixel viewport and reports no browser script errors.
 Rust tests were not rerun for this text change.
+
+## Policy report placement and design skill
+
+The usage report opens in the detail workspace beside the policy checklist.
+The central policy includes a report link and the count of simulated runs.
+Control evidence remains the default view. Report findings open the affected control, and view changes preserve the selected control.
+The report uses direct labels for activity, decisions, findings, comparisons, and resource use.
+Evidence: [Policy usage workspace](screenshots/policy-usage-workspace.png).
+
+The project-local IPE design skill records user feedback, plain-language rules, and checks for policy interfaces.
+The agent guide links to the skill. Its feedback record marks this layout as a revision for user review.
+The skill validator passed. All 19 UI tests passed, including report navigation and control selection.
+Desktop and mobile accessibility scans found zero violations. The page fits a 390-pixel viewport and reports no script errors.
+Documentation and whitespace checks passed. Rust tests were not rerun for this UI and guidance change.

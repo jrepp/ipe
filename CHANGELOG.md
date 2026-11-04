@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Policy usage opens beside the policy chain with direct section labels. A local IPE design skill records language and layout feedback.
 - Product ship preview uses shorter sentences and plain terms for policy checks, agent activity, source records, and cost.
 
 ### Added
