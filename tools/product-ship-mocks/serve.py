@@ -12,6 +12,10 @@ ASSETS = {
     **{"/" + name: (name, "text/html") for name in ["index.html", "board.html", "network.html", "console.html"]},
     "/app.js": ("app.js", "text/javascript"),
     "/styles.css": ("styles.css", "text/css"),
+    **{"/fonts/" + name: ("fonts/" + name, "font/woff2") for name in [
+        "IBMPlexSans-Regular.woff2", "IBMPlexSans-Medium.woff2", "IBMPlexSans-SemiBold.woff2"
+    ]},
+    "/fonts/LICENSE.txt": ("fonts/LICENSE.txt", "text/plain"),
     "/data.json": ("data.json", "application/json"),
 }
 

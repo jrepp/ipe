@@ -152,3 +152,24 @@ The agent guide links to the skill. Its feedback record marks this layout as a r
 The skill validator passed. All 19 UI tests passed, including report navigation and control selection.
 Desktop and mobile accessibility scans found zero violations. The page fits a 390-pixel viewport and reports no script errors.
 Documentation and whitespace checks passed. Rust tests were not rerun for this UI and guidance change.
+
+## Contemporary Plex overview
+
+The overview replaces the sales banner with run totals, completion rate, allow rate, and elapsed time saved.
+Daily charts show release outcomes, evaluation health, and mean evaluation time. The period selector updates all history metrics.
+The daily table gives exact values. Current release evidence and scenario controls remain separate from history.
+The preview reuses IBM Plex Sans and the Contemporary Plex style from the earlier workspace study.
+Fonts and their license are local. The server permits only named font assets.
+Evidence: [Desktop overview](screenshots/overview-plex.png) and [mobile overview](screenshots/overview-plex-mobile.png).
+
+Seven generated daily summaries contain 168 sample evaluations: 165 completed and three errors.
+The sample outcomes include 102 allowed, 28 denied, and 35 unknown results.
+Completion and known-result rates use separate denominators. Errors do not count as denied or unknown outcomes.
+Cost comparisons cover the same completed runs and include preparation once per modeled run.
+All history values are sample data. They do not measure production health or actual savings.
+
+All 111 JavaScript tests passed. They cover period totals, scenario links, invalid history, missing data, zero baselines, and additional cost.
+Desktop and mobile overview scans found zero accessibility violations. The policy report scan also found zero violations after shared style changes.
+The mobile overview fits a 390-pixel viewport. No browser script errors were reported.
+Font files returned HTTP 200. Unlisted repository paths and traversal requests returned HTTP 404.
+The design skill validator, documentation checks, and whitespace checks passed. Rust tests were not rerun for this preview change.

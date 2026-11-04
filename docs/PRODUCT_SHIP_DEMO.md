@@ -178,3 +178,23 @@ The preview uses the Simple English guide in pragmatic mode. It uses short sente
 “Direct source reads” names the comparison path without the policy model. “Total work time” adds the duration of each call.
 A query reads evidence. A qualification check records whether a control is met.
 Source values, identifiers, and recorded results keep their original text.
+
+## Overview and sample history
+
+The overview uses the Contemporary Plex style from the earlier policy workspace study.
+Local IBM Plex Sans fonts include their license. The preview requires no external font request.
+
+The overview shows evaluation runs, completion rate, allow rate, and elapsed time saved.
+Charts show daily outcomes, evaluation health, and mean time for paired runs. A period selector applies to all history metrics.
+The daily data table gives exact chart values. The current release remains separate from history and links to the policy chain.
+
+The [history generator](../testing/integration/hosted/product-ship/overview-history.cjs) supplies seven daily summaries for design review.
+These summaries are sample data, not captured runs. They are separate from the five scenario runs in the policy usage report.
+History must match the current policy revision and release. Missing or inconsistent history shows no summary metrics.
+
+Completion rate divides completed evaluations by all runs. Allow rate divides allowed outcomes by completed evaluations.
+Known-result rate includes allowed and denied outcomes, divided by completed evaluations. Unknown evidence differs from an evaluation error.
+Each completed sample run has a comparison for the same checks and outcome. Cost totals exclude errors from both paths.
+Each modeled run includes preparation once. Elapsed time saved adds paired differences; it does not measure calendar time saved.
+Zero baselines show unknown savings. A more expensive model path shows additional time or tokens.
+All trend values remain illustrative. They do not establish actual savings, better accuracy, or production health.

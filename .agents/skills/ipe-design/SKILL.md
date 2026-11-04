@@ -29,6 +29,8 @@ Use the detail workspace for the selected control or policy report. Keep navigat
 Show source records, people, and connections through focused detail views. Use a graph when it helps users trace evidence links.
 Keep IDs and raw records available in details. Do not make them the main explanation.
 
+For overview screens and the modernized Plex style, read [Contemporary Plex](references/modern-plex.md).
+
 ## Meaning and measurement
 
 Keep policy decisions, agent checks, source states, and enforcement events distinct.

@@ -378,3 +378,46 @@ test('policy usage shares the detail workspace and preserves control selection',
     assert.equal(doc.querySelector('.selected-control h2').textContent,data.policies.flatMap(policy=>policy.controls).find(control=>control.id==='ship.security.vulnerability-scan').title);
   } finally {dom.window.close();}
 });
+
+test('overview totals and trend data share the selected period and preserve scenario links',async()=>{
+  const dom=await page('index');
+  try {
+    const doc=dom.window.document,days=data.agent_activity.overview_history.days;
+    const check=rows=>{
+      const runs=rows.reduce((n,d)=>n+d.runs,0),errors=rows.reduce((n,d)=>n+d.errors,0);
+      assert.equal(doc.querySelector('[data-metric="runs"]').textContent,String(runs));
+      assert.equal(doc.querySelector('[data-metric="completion"]').textContent,((runs-errors)/runs*100).toFixed(1)+'%');
+      assert.equal(doc.querySelectorAll('.history-data tbody tr').length,rows.length);
+      assert.equal(doc.querySelectorAll('.outcome-column').length,rows.length);
+      const saved=rows.reduce((n,d)=>n+d.baseline_elapsed_ms-d.modeled_elapsed_ms,0);
+      assert.equal(doc.querySelector('[data-metric="time"]').textContent,(saved/60000).toFixed(1)+' min saved');
+    };
+    check(days);
+    const select=doc.querySelector('#history-period');select.value='3';select.dispatchEvent(new dom.window.Event('change'));
+    check(days.slice(-3));
+    scenario(dom,'blocked');
+    check(days.slice(-3));
+    assert.equal(new URL(doc.querySelector('[data-fixed-link]').href).searchParams.get('scenario'),'blocked');
+    assert.equal(new URL(doc.querySelector('[data-fixed-link]').href).searchParams.get('report'),'usage');
+    assert.equal(doc.querySelector('.current-release .decision-pill').textContent,'DENY');
+  } finally {dom.window.close();}
+});
+
+test('overview handles stale, missing, invalid, zero, and more expensive history',async()=>{
+  for(const variant of ['stale','missing','invalid','zero','negative']) {
+    const fixture=structuredClone(data),history=fixture.agent_activity.overview_history;
+    if(variant==='stale') history.scope.model_revision='stale';
+    if(variant==='missing') delete fixture.agent_activity.overview_history;
+    if(variant==='invalid') history.days[0].allow+=1;
+    if(variant==='zero') for(const day of history.days) for(const key of Object.keys(day)) if(key!=='date') day[key]=0;
+    if(variant==='negative') for(const day of history.days) {day.modeled_elapsed_ms=day.baseline_elapsed_ms*2;day.modeled_input_tokens=day.baseline_input_tokens*2;}
+    const dom=await page('index','',fixture);
+    try {
+      const doc=dom.window.document;
+      assert.equal(doc.querySelector('.load-error'),null);
+      if(['stale','missing','invalid'].includes(variant)) {assert.ok(doc.querySelector('.overview-unavailable'));assert.equal(doc.querySelector('[data-metric="runs"]'),null);}
+      if(variant==='zero') {assert.equal(doc.querySelector('[data-metric="completion"]').textContent,'Unknown');assert.equal(doc.querySelector('[data-metric="time"]').textContent,'Unknown');assert.doesNotMatch(doc.querySelector('.operations-overview').innerHTML,/NaN|Infinity/);}
+      if(variant==='negative') {assert.match(doc.querySelector('[data-metric="time"]').textContent,/more/);assert.match(doc.querySelector('.context-delta').textContent,/more/);}
+    } finally {dom.window.close();}
+  }
+});

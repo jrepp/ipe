@@ -100,3 +100,18 @@ test('paired comparisons include preparation, guard zero denominators, and count
   assert.equal(metricDelta(0,12),null);
   assert.equal(metricDelta(null,12),null);
 });
+
+test('overview samples separate evaluation errors from outcomes and pair completed runs',()=>{
+  const history=createAgentActivity(model).overview_history;
+  assert.equal(history.measured,false);
+  assert.equal(history.days.length,7);
+  assert.equal(history.scope.release_id,model.release.id);
+  for (const [index,day] of history.days.entries()) {
+    assert.equal(day.runs,day.allow+day.deny+day.unknown+day.errors);
+    assert.equal(day.paired_runs,day.runs-day.errors);
+    assert.equal(day.baseline_elapsed_ms,day.paired_runs*180000);
+    assert.ok(day.modeled_elapsed_ms>=day.paired_runs*18000);
+    assert.ok(day.modeled_input_tokens>=day.paired_runs*12000);
+    if(index) assert.equal(Date.parse(day.date)-Date.parse(history.days[index-1].date),86400000);
+  }
+});

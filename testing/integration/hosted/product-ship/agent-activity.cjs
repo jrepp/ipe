@@ -2,6 +2,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const {createOverviewHistory}=require('./overview-history.cjs');
 
 const SCENARIOS = ['ready', 'blocked', 'missing', 'expired', 'wrong-artifact'];
 const AGENTS = [
@@ -241,6 +242,7 @@ function createAgentActivity(model) {
     label:'Illustrative simulated agent activity',
     measured:false,
     units:'fixture tokens and milliseconds; no monetary cost',
+    overview_history:createOverviewHistory(model,revision),
     agents:AGENTS,
     model_preparation:{...PREPARATION,counted_once:true},
     aggregate_comparison:{
