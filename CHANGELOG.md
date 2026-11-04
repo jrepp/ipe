@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Product ship preview uses shorter sentences and plain terms for policy checks, agent activity, source records, and cost.
+
 ### Added
 - Product ship preview adds a compact chain usage report for simulated runs, gate outcomes, findings, context use, and timing.
 - Product ship preview shows simulated agent queries and qualification checks per control, with scoped activity and explicit token/time comparison baselines.

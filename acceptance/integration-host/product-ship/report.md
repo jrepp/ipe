@@ -126,3 +126,15 @@ All 107 JavaScript tests passed. The final UI run passed all 18 tests.
 Desktop and mobile accessibility scans found zero violations. The mobile page fits a 390-pixel viewport.
 No browser script errors were reported. Documentation and whitespace checks passed.
 No runtime or SDK behavior changed; Rust tests were not rerun.
+
+## Simple English copy pass
+
+The preview text follows the local Simple English skill in pragmatic mode.
+The rewrite covers the usage report, agent activity, source details, evidence explanations, view introductions, and load errors.
+The copy review checks sentence length, active voice, consistent terms, and sample-data labels.
+Source values, identifiers, and policy behavior remain unchanged.
+Evidence: [Revised preview text](screenshots/simple-english-preview.png).
+
+All 18 UI tests passed. Documentation and whitespace checks passed.
+Desktop and mobile accessibility scans found zero violations. The page fits a 390-pixel viewport and reports no browser script errors.
+Rust tests were not rerun for this text change.

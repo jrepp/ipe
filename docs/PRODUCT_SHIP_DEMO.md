@@ -169,3 +169,10 @@ Findings describe evidence discovered during evaluation. They do not imply model
 Context use reports input tokens across calls, including repeated context. It does not report peak context-window use.
 The cost table separates input tokens, output tokens, elapsed time, and summed work. Preparation is counted once per selected run.
 The raw-source comparison remains illustrative. Dollar cost, live enforcement, and measured avoided work remain unavailable.
+
+## Preview language
+
+The preview uses the Simple English guide in pragmatic mode. It uses short sentences and one term for each concept.
+“Direct source reads” names the comparison path without the policy model. “Total work time” adds the duration of each call.
+A query reads evidence. A qualification check records whether a control is met.
+Source values, identifiers, and recorded results keep their original text.

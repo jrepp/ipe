@@ -164,7 +164,7 @@ test('systems view traces canonical source records to roles and contact profiles
     const person=context.people.find(item=>item.id===assignment.person_id);
     assert.ok(doc.querySelector('.provenance-inspector').textContent.includes(person.email.value));
     assert.ok(doc.querySelector('.provenance-inspector').textContent.includes(person.slack.user_id));
-    assert.match(doc.querySelector('.provenance-workspace').textContent,/role does not prove an approval/i);
+    assert.match(doc.querySelector('.provenance-workspace').textContent,/role does not prove approval/i);
     assert.equal(doc.querySelector('.decision-pill').textContent,'ALLOW');
   } finally {dom.window.close();}
 });
@@ -352,6 +352,6 @@ test('chain report starts closed and excludes stale runs from history',async()=>
     assert.match(doc.querySelector('.chain-report summary').textContent,/4 simulated runs/);
     assert.equal(doc.querySelector('[data-report-scenario="blocked"]'),null);
     assert.match(doc.querySelector('.chain-cost').textContent,/Dollar cost is unavailable/);
-    assert.match(doc.querySelector('.chain-cost').textContent,/not peak context-window use/);
+    assert.match(doc.querySelector('.chain-cost').textContent,/excludes peak context-window use/);
   } finally {dom.window.close();}
 });
