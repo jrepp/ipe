@@ -124,3 +124,26 @@ test('CLI writes UI-ready model and assessments to a requested target path',()=>
     assert.equal(output.assessments.blocked.decision,'deny');
   } finally { fs.rmSync(target,{force:true}); }
 });
+
+test('collector constructs each observation only in its emitted batch',()=>{
+  const vm=require('node:vm');
+  const sdk=fs.readFileSync(path.resolve(dir,'../../../../crates/ipe-integration/sdk/index.js'),'utf8')
+    .replace('function observation(model, data, receipts) {','function observation(model, data, receipts) { __constructed++;');
+  const collector=fs.readFileSync(path.join(dir,'collector.js'),'utf8');
+  let state=null,responses=[],total=0;
+  for (let index=0;index<8;index++) {
+    const sandbox={__constructed:0,__args:JSON.stringify([{input:{release:fixture.release}},responses,state])};
+    const result=JSON.parse(vm.runInNewContext(`${sdk}\n${collector}\nJSON.stringify(step(...JSON.parse(__args)))`,sandbox,{timeout:1000}));
+    assert.equal(sandbox.__constructed,(result.observations||[]).length);
+    assert.ok(sandbox.__constructed<=16);
+    total+=sandbox.__constructed;
+    if ('outputs' in result) {
+      assert.equal(total,47);
+      assert.equal(result.outputs.status,'succeeded');
+      return;
+    }
+    state=result.state;
+    responses=(result.requests||[]).map(request=>({id:request.id,operation:request.operation,data:[fixture],receipt:'fixture:qualification'}));
+  }
+  assert.fail('collector did not complete within the native step budget');
+});

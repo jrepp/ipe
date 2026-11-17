@@ -36,11 +36,14 @@
       }
     }
     const text = JSON.stringify(value);
-    // JSON escapes lone surrogates; count UTF-8 without needing host TextEncoder.
-    let bytes = 0;
-    for (const char of text) {
-      const point = char.codePointAt(0);
-      bytes += point < 128 ? 1 : point < 2048 ? 2 : point < 65536 ? 3 : 4;
+    // ASCII already uses one byte per UTF-16 unit. Scan only non-ASCII code
+    // points; astral pairs need two extra bytes and other non-ASCII needs 1–2.
+    // JSON.stringify escapes lone surrogates before this count.
+    let bytes = text.length;
+    const nonAscii = /[^\x00-\x7f]/gu;
+    let match;
+    while ((match = nonAscii.exec(text)) !== null) {
+      bytes += match[0].codePointAt(0) < 2048 ? 1 : 2;
     }
     if (bytes > limits.resultBytes) fail("ipe_json_limit");
     return JSON.parse(text);
