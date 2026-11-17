@@ -5,7 +5,9 @@ The original LICENSE remains unchanged. Package archive SHA-256: `391f153431ab68
 
 [RUSTSEC-2026-0543](https://github.com/RustSec/advisory-db/blob/main/crates/chrono/RUSTSEC-2026-0543.md) marks every Chrono version unmaintained.
 The published SDK requires Chrono even with default features disabled.
-[IPE-CHANGES.patch](IPE-CHANGES.patch) records the complete code and manifest delta from the registry source.
+[IPE-CHANGES.patch.gz](IPE-CHANGES.patch.gz) records the complete code and manifest delta from the registry source.
+Read the exact patch with `gzip -dc vendor/rmcp/IPE-CHANGES.patch.gz` from the repository root.
+The compressed form preserves upstream whitespace in deletion lines.
 Registry cache markers and the unused upstream Cargo.lock are omitted. Cargo.toml.orig remains the original source manifest.
 
 Replace timestamp operations with Jiff 1.0. Keep timestamp wire values as RFC 3339 strings and epoch milliseconds.
