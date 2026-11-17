@@ -190,3 +190,18 @@ jobs:
 
       # Note: Removed redundant ipe-core check - the wrapper script above
       # already validates all workspace crates including ipe-core
+
+  queue-gate:
+    name: Security gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [cargo-audit, cargo-deny, miri, sanitizers, supply-chain]
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Require every prerequisite to succeed
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          jq -e 'length > 0 and all(.[]; .result == "success")' <<< "$JOB_RESULTS"

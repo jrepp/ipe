@@ -36,7 +36,14 @@
       if (href.startsWith('#') || /^[a-z][\w+.-]*:/i.test(href)) continue;
       const target = new URL(href, source);
       if (target.origin !== location.origin) continue;
-      link.href = target.pathname.endsWith('.md') ? `doc.html?path=${fromDocs(target)}${target.hash}` : target.href;
+      const project = new URL('../', location.href);
+      const path = target.pathname.slice(project.pathname.length);
+      // Pages omits dotfiles, including GitHub workflows and repository agent guides.
+      if (target.pathname.startsWith(project.pathname) && path.split('/').some(part => part.startsWith('.'))) {
+        link.href = `https://github.com/jrepp/ipe/blob/main/${path}${target.hash}`;
+      } else {
+        link.href = target.pathname.endsWith('.md') ? `doc.html?path=${fromDocs(target)}${target.hash}` : target.href;
+      }
     }
     for (const image of body.querySelectorAll('img[src]')) image.src = new URL(image.getAttribute('src'), source).href;
   }
@@ -110,12 +117,29 @@
       body.replaceChildren(pre);
       return fail('The Markdown renderer did not load, so this is the raw source.');
     }
-    body.innerHTML = window.marked.parse(text, { gfm: true });
+    // Structured design records use a leading YAML block with plain title and status fields.
+    const frontmatter = requested.startsWith('../docs-cms/')
+      ? text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)
+      : null;
+    const metadata = frontmatter?.[1] || '';
+    const sourceTitle = metadata.match(/^title: *(.+)$/m)?.[1].trim();
+    const sourceStatus = metadata.match(/^status: *(.+)$/m)?.[1].trim();
+    body.innerHTML = window.marked.parse(text.slice(frontmatter?.[0].length || 0), { gfm: true });
+    if (sourceTitle && body.querySelector('h1')?.textContent !== sourceTitle) {
+      for (const heading of body.querySelectorAll('h1, h2, h3, h4, h5')) {
+        const section = document.createElement(`h${Number(heading.tagName.slice(1)) + 1}`);
+        section.append(...heading.childNodes);
+        heading.replaceWith(section);
+      }
+      const heading = document.createElement('h1');
+      heading.textContent = sourceTitle;
+      body.prepend(heading);
+    }
     rewrite(source);
     outline();
     const title = body.querySelector('h1');
     if (title) document.title = `${title.textContent} · IPE`;
-    status.textContent = `Rendered from ${requested}${await diagrams()}`;
+    status.textContent = [sourceStatus, `Rendered from ${requested}${await diagrams()}`].filter(Boolean).join(' · ');
     if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
   }
 

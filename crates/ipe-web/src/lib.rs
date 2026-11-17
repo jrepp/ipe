@@ -1,14 +1,6 @@
 // IPE Web - Web application
-// Status: Stub - To be implemented in Phase 6
+// Status: Placeholder; no implementation is provided by this crate.
 
 #![warn(missing_docs)]
 
 //! Web application for policy management
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn stub_test() {
-        // Stub test - implementation pending
-    }
-}

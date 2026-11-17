@@ -5,6 +5,9 @@ This records the implemented stack and the next dependency choices. Rows marked
 implemented describe branch code; remaining recommendations
 are not installed dependencies or completed migrations.
 
+The [shared-foundations survey](../docs-cms/memos/memo-001-shared-foundations.md) extends this audit across P1–P5 with a dated package, license, and maintenance snapshot.
+Its recommendations do not change the implementation decisions below.
+
 ## Stack and ownership
 
 | Layer | Implemented today | Direction |

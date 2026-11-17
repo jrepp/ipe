@@ -188,21 +188,10 @@ jobs:
             v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.cachekey }}-release-${{ matrix.target }}-all-features-${{ hashFiles('**/Cargo.toml', '.cargo/config', '.cargo/config.toml', 'rust-toolchain', 'rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}-
 
       - name: Build release
-        run: cargo build --release --target ${{ matrix.target }} --all-features
+        run: cargo build --locked --workspace --release --target ${{ matrix.target }} --all-features
 
-      - name: Check binary size
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            size=$(stat -c%s "target/${{ matrix.target }}/release/ipe-cli.exe" 2>/dev/null || echo "0")
-          else
-            size=$(stat -f%z "target/${{ matrix.target }}/release/ipe-cli" 2>/dev/null || stat -c%s "target/${{ matrix.target }}/release/ipe-cli" 2>/dev/null || echo "0")
-          fi
-          echo "Binary size: $size bytes"
-          # Target is <2MB (2097152 bytes)
-          if [ "$size" -gt 2097152 ]; then
-            echo "⚠️  Warning: Binary size exceeds 2MB target"
-          fi
-        shell: bash
+      - name: Check server release artifact
+        run: python scripts/check-release-artifact.py ${{ matrix.target }}
 
   check-docs:
     name: Documentation
@@ -273,3 +262,18 @@ jobs:
 
       - name: Check minimal versions
         run: ./.github/scripts/check-minimal-versions.sh
+
+  queue-gate:
+    name: CI gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [fmt, clippy, test, test-default-features, build-release, check-docs, minimal-versions]
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Require every prerequisite to succeed
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          jq -e 'length > 0 and all(.[]; .result == "success")' <<< "$JOB_RESULTS"

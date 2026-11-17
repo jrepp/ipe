@@ -1,18 +1,6 @@
 name: Integration workload
 on:
   pull_request:
-    paths:
-      - 'crates/ipe-integration/**'
-      - 'crates/ipe-json/**'
-      - 'acceptance/integration-discovery/**'
-      - 'testing/integration/**'
-      - 'tools/integration-packages/**'
-      - 'tools/github-contract/**'
-      - 'tools/integration-host/**'
-      - '.cargo/config.toml'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - '.github/workflows/integration.yml'
   push:
     branches: [main]
     paths:
@@ -35,6 +23,7 @@ permissions:
   contents: read
 jobs:
   discovery:
+    name: Integration acceptance
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

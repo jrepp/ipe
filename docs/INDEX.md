@@ -7,85 +7,55 @@
 - [Release guide](RELEASES.md): generated notes, labels, draft review, and publication.
 - [Changelog](../CHANGELOG.md): GitHub Releases and archived history.
 
+## Product and project organization
+
+- [Mission and product principles](../MISSION.md): current positioning and implemented boundaries.
+- [Project map](../docs-cms/PROJECTS.md): subway routes, dependencies, delivery states, and five project PRDs.
+- [Merge queue](MERGE_QUEUE.md): speculative batching, required checks, and activation limits.
+
+## Design documentation
+
+The [design index](../docs-cms/README.md) contains structured requirements, proposals, and decisions.
+Existing guides and RFCs retain their paths. See [ADR 001](../docs-cms/adr/adr-001-hybrid-documentation.md) for the hybrid structure.
+
+- [PRD 001](../docs-cms/prd/prd-001-evidence-system-map.md): system map, evidence suppliers and consumers, temporal controls, exceptions, and access grants.
+- [RFC 018](../docs-cms/rfcs/rfc-018-evidence-system-map.md): proposed design and verification coverage for those requests.
+
+Both feature documents are Draft. Run `make docs-cms-check` to validate structured documents.
+
+[Repository map](REPOSITORY.md) and [cleanup design](../docs-cms/rfcs/rfc-019-cohesive-monorepo.md) describe component ownership, contributor commands, and remaining audit work.
+
 ## Local Documentation Site
 
-Run `make docs-site` to export the generated docs data, then `make docs-serve`
-and open <http://127.0.0.1:8000/docs/>.
-
-> **Legacy data.** The site's parser trees and interpreter microbenchmarks are
-> generated from the removed legacy engine and are kept as an archive. They do
-> not measure the v2 runtime, whose performance under production load is not
-> characterized.
-
-The build requires Rust and [uv](https://docs.astral.sh/uv/). Python is pinned to
-**3.15.0** in `.python-version` (the stable release published October 9, 2026).
-Both local Make targets and CI read that file; the builder rejects other versions.
-The first build downloads Cargo dependencies. If an older uv cannot install the
-pin, update uv or use `uvx --from uv uv python install 3.15.0` once.
-
-- [AST explorer](ast.html): rendered, expandable trees with source and node details (legacy-parser output, archived).
-- [Contract summary](contract.html): inputs, decisions, application responsibilities,
-  and current implementation limits in plain language for the v2 runtime.
-- [Performance dashboard](performance.html): archived legacy-interpreter latency
-  percentiles, throughput, outliers, downloadable results, and requirement coverage.
-
-Generated data lives in `docs/data/site-data.json` and records the run time, platform,
-Rust version, and Git revision. Run `make docs-site` again after code changes.
-The dashboard measured hand-built bytecode through the legacy interpreter; it excluded
-parsing, compilation, context construction, and JIT. These are local microbenchmarks
-of the removed engine, not production performance validation.
-
-### Checks and pull request artifacts
+Run `make docs-serve`, then open <http://127.0.0.1:8000/docs/>.
+The target builds and serves `target/docs-site`, not the checkout.
+The build uses the Python version in `.python-version` through uv and copies the static site and archived measurement data.
+It does not compile Rust or generate new runtime measurements.
 
 ```sh
 npm ci --prefix docs --ignore-scripts
 make docs-check
+make docs-cms-check
 ```
 
-The checks validate parser structure, percentile consistency, portable artifact
-links, expanded tree rendering, node selection, example switching, dashboard
-filters, and missing-data errors. JavaScript checks use jsdom; they do not verify
-browser layout. The new views need no CDN libraries. Existing architecture
-diagrams on the overview still use Mermaid from its CDN.
+The site checks cover the project map, Markdown viewer, archived explorers, artifact links, and HTTP paths under `/ipe/`.
+Docuchango checks structured design records and requirement traceability.
+The overview map is static SVG with text links. The Markdown viewer has raw-source fallback when its rendering libraries are unavailable.
 
-The **Docs site / Build and check docs site** workflow runs on pull requests and
-main-branch pushes. It uses the Python pin, locked Cargo/npm dependencies, and
-immutable GitHub Action revisions. It uploads `target/docs-site/` as a 14-day
-artifact named for the commit. Download and extract the artifact, serve its root
-with `python -m http.server --bind 127.0.0.1`, then visit `/docs/`.
-This preserves the relative paths to Markdown and source references.
+The [site and publishing guide](README.md) describes the archive, source revision, and deployment process.
+The [Docs site workflow](../.github/workflows/docs-site.yml) builds review artifacts on PRs.
+Publication from main requires successful site, design-document, and workflow validation jobs.
+PR builds do not deploy the production site.
+The public site is [jrepp.github.io/ipe](https://jrepp.github.io/ipe/).
 
-The HTTP test serves the packaged site under `/ipe/`, the GitHub Pages project path.
-It checks the root redirect and each local HTML link.
-It also checks that the server returns the generated parser and benchmark data.
-The same test runs through `make docs-check` and the PR workflow.
+### Archived references
 
-Fresh measurements are generated in CI and kept in the artifact, not committed.
-Shared-runner timings are reported as evidence and never used as pass/fail
-performance thresholds. JIT, end-to-end policy compilation, and production load
-remain outside the measurement scope. Dependency updates are proposed monthly
-by Dependabot; update `.python-version` after checking a new stable Python release
-and rerun `make docs-check`.
+- [AST explorer](ast.html): parsed trees from the removed legacy engine.
+- [Contract summary](contract.html): v2 runtime inputs, decisions, application responsibilities, and limits.
+- [Performance dashboard](performance.html): archived interpreter measurements, not current runtime capacity.
 
-### Automated publishing
-
-The same workflow publishes the checked artifact to GitHub Pages after a successful
-push to `main`. Pull requests build and validate the Pages archive without deploying.
-The live site address is `https://jrepp.github.io/ipe/`; its root forwards to `docs/`.
-Publication begins once the workflow change is merged into `main`.
-
-Repository Pages settings use **GitHub Actions** as the publishing source. The
-`github-pages` environment permits deployment from `main` only. The deploy job has
-the Pages and identity-token permissions it needs; the PR build stays read-only.
-Python comes from `.python-version` in both local builds and CI. Deployment runs
-are serialized, and a newer push does not interrupt a running main-branch build
-or deployment.
-
-To republish, run **Docs site → Run workflow** with `main` selected. To roll back,
-revert the unwanted change on `main`; the next successful workflow republishes the
-site. If a check fails, the deploy job does not run and the last published site
-remains available. The workflow's deployment environment links to the live site;
-the artifact also remains downloadable for review.
+The frozen `docs/data/site-data.json` records the original run time, platform, Rust version, and source revision.
+Rebuilding the site does not refresh those measurements. Current production performance is not characterized.
 
 This index provides a guided path through IPE's documentation based on your needs.
 

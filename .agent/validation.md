@@ -39,6 +39,11 @@ For Rust changes, run formatting, lint, and the affected tests. Before handoff, 
 
 Measure performance changes against the same workload and environment. Do not reuse historical latency or coverage claims as new results.
 
+For structured design documents, run `make docs-cms-check`.
+This uses pinned Docuchango 1.20.0 with read-only metadata, link, and requirement-traceability checks.
+It scans the folders in [docs-project.yaml](../docs-cms/docs-project.yaml), not all existing documentation.
+Use `uvx docuchango==1.20.0 validate --skip-build` only when applying reviewed automatic repairs.
+
 For documentation-site changes:
 
 ```sh
@@ -46,9 +51,15 @@ npm ci --prefix docs --ignore-scripts
 make docs-check
 ```
 
-See the [Makefile](../Makefile) and the [runtime](../.github/workflows/runtime-data.yml), [integration](../.github/workflows/integration.yml), and [general CI](../.github/workflows/ci.yml) workflows for exact automation. Some `justfile` and benchmark targets reference removed legacy code.
+See the [Makefile](../Makefile) and the [runtime](../.github/workflows/runtime-data.yml), [integration](../.github/workflows/integration.yml), and [general CI](../.github/workflows/ci.yml) workflows for exact automation. `justfile` delegates to Make. Run `make repo-check` after changing repository structure or contributor entry points.
 
 Acceptance guides explain prerequisites, cleanup, and report paths: [runtime](../acceptance/runtime-data/README.md) and [integration](../acceptance/integration-discovery/README.md). Keep generated credentials temporary. Stop processes started for a test or preview.
+
+## Merge automation
+
+Read the [Mergify queue guide](../docs/MERGE_QUEUE.md) before changing required checks or PR triggers.
+Run `actionlint`, `mergify config validate`, and the queue regression tests listed in that guide.
+Required workflows must run on ordinary PRs and Mergify batch PRs, including workflow-only changes.
 
 ## Commits and review
 

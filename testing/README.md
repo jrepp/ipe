@@ -1,4 +1,14 @@
-# IPE Testing Directory
+# Testing
+
+Use [validation](../.agent/validation.md) to select checks.
+Current provider fixtures and their limits are documented in [integration](integration/README.md).
+External service checks live in [acceptance](../acceptance/).
+
+The policy-tree examples below describe a historical GitOps proposal.
+They do not establish a working synchronizer or current server endpoints.
+
+## Historical policy-tree examples
+
 
 This directory contains example policy trees for testing GitOps-based policy synchronization (RFC-005).
 
