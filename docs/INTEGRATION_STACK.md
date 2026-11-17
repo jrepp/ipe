@@ -1,6 +1,6 @@
 # Integration stack and crate reuse audit
 
-Reviewed 2026-10-18; updated after MCP, CLI, shared JSON, secret-wrapper and enforcement worker lifecycle migrations.
+Reviewed 2026-10-18; security remediation updated 2026-11-17.
 This records the implemented stack and the next dependency choices. Rows marked
 implemented describe branch code; remaining recommendations
 are not installed dependencies or completed migrations.
@@ -14,7 +14,7 @@ Its recommendations do not change the implementation decisions below.
 | --- | --- | --- |
 | Enforcement | Existing `ipe-core` policy/fact semantics and `ipe-server` | Preserve local evaluation; no MCP or adapter execution on the evaluation path |
 | Integration workload | Rust `ipe-integration`, Tokio, Axum, reqwest with rustls | Keep native connection/authentication, bounded reads, identity generation and safe projection |
-| Agent protocol | Rust `integration-toolkit` using `rmcp` 3.5.1 with typed tools | SDK owns lifecycle/dispatch; a bounded strict transport guard owns frame and disclosure limits |
+| Agent protocol | Rust `integration-toolkit` using `rmcp` 3.11.0 with typed tools | SDK owns lifecycle/dispatch; a bounded strict transport guard owns frame and disclosure limits |
 | HTTP MCP | Not implemented | Mount `rmcp` Streamable HTTP as a Tower service in the Integration Workload's Axum router |
 | CLI | `clap` derives in workload, toolkit and demo | Keep sanitized parse errors and MCP channel isolation |
 | Sandbox | Wasmi interpreter, binary WASM, bundled WAT compiled at build time | Keep the bounded metadata ABI; expand only with explicit capability contracts |
@@ -28,6 +28,11 @@ keys. The test facade is an external synthetic provider, not a guest runtime.
 See [discovery operations](INTEGRATION_DISCOVERY.md) and the
 [implemented WASM ABI](../crates/ipe-integration/adapters/README.md).
 
+The SDK uses a [temporary source patch](../vendor/rmcp/IPE-PATCH.md) to replace its unmaintained Chrono dependency with Jiff.
+The patch preserves protocol behavior and license notices; the exact upstream diff is included.
+IPE also uses Jiff for epoch timestamps. ApprovalError::Expired now exposes jiff::Timestamp instead of chrono::DateTime.
+Stored approval, relationship, and runtime timestamps remain epoch seconds; RFC 3339 text remains interoperable.
+
 The recommended MCP SDK is the [official `rmcp`](https://github.com/modelcontextprotocol/rust-sdk).
 Its [StreamableHttpService](https://docs.rs/rmcp/latest/rmcp/transport/streamable_http_server/tower/index.html)
 implements Tower service integration; it also supports Tokio stdio and a reqwest
@@ -35,10 +40,10 @@ client transport. One typed tool implementation should serve both transports.
 Authorization and execution limits belong at the operation boundary, so stdio
 cannot bypass controls enforced only by HTTP middleware.
 
-Current lockfile: Axum 0.7.9, Tokio 1.48.0, Hyper 1.7.0, reqwest 0.13.5,
+Current lockfile: Axum 0.7.9, Tokio 1.53.3, Hyper 1.12.0, reqwest 0.13.5,
 rustls 0.23.46 and Wasmi 2.0.0. Tower resolves both 0.4.13 and 0.5.2;
 tower-http resolves both 0.5.2 and 0.6.11. These are observed resolutions, not a
-recommendation to pin old versions indefinitely. The SDK migration uses published `rmcp` 3.5.1 (Apache-2.0, declared Rust minimum
+recommendation to pin old versions indefinitely. The SDK migration uses published `rmcp` 3.11.0 (Apache-2.0, declared Rust minimum
 1.88), with server/macros/stdio features and a development-only SDK client. It
 does not add an HTTP transport or change Axum. The dependency-tree review found
 no new HTTP-stack version introduced by this migration; cargo-audit reported no
@@ -102,7 +107,7 @@ only a stub, not an existing custom RPC implementation to replace.
 
 ## Migration order and proof
 
-1. **Implemented:** `rmcp` 3.5.1 protocol machinery and typed tools. Live acceptance
+1. **Implemented:** `rmcp` 3.11.0 protocol machinery and typed tools. Live acceptance
    uses an SDK client; independent wire tests cover malformed/fragmented frames,
    typed-argument rejection, sanitized errors and outstanding-request limits.
    SDK conformance alone does not prove IPE authorization or masking.

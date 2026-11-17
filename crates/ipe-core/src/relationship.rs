@@ -4,7 +4,7 @@
 //! enabling efficient validation of direct relationships (e.g., "is editor")
 //! and transitive trust chains (e.g., "is trusted through root CA").
 
-use chrono::Utc;
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::Path;
@@ -139,7 +139,7 @@ impl Relationship {
             object: object.into(),
             relation_type,
             created_by: created_by.into(),
-            created_at: Utc::now().timestamp(),
+            created_at: Timestamp::now().as_second(),
             expires_at: None,
             metadata: HashMap::new(),
             scope: Scope::Global,
@@ -184,13 +184,13 @@ impl Relationship {
     /// Set TTL (also sets expires_at)
     pub fn with_ttl(mut self, ttl_seconds: i64) -> Self {
         self.ttl_seconds = Some(ttl_seconds);
-        self.expires_at = Some(Utc::now().timestamp() + ttl_seconds);
+        self.expires_at = Some(Timestamp::now().as_second() + ttl_seconds);
         self
     }
 
     /// Set expiration time (seconds from now)
     pub fn with_expiration(mut self, seconds: i64) -> Self {
-        self.expires_at = Some(Utc::now().timestamp() + seconds);
+        self.expires_at = Some(Timestamp::now().as_second() + seconds);
         self
     }
 
@@ -203,7 +203,7 @@ impl Relationship {
     /// Check if relationship is expired
     pub fn is_expired(&self) -> bool {
         if let Some(expires_at) = self.expires_at {
-            Utc::now().timestamp() >= expires_at
+            Timestamp::now().as_second() >= expires_at
         } else {
             false
         }

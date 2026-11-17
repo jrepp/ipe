@@ -11,6 +11,7 @@ members = [
     "crates/ipe-json",
 ]
 resolver = "2"
+exclude = ["vendor/rmcp"]
 
 [workspace.package]
 version = "0.1.0"
@@ -54,7 +55,7 @@ tracing = ">=0.1.40"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Time
-chrono = { version = "0.4", features = ["serde"] }
+jiff = { version = "1.0.0", default-features = false, features = ["std", "serde"] }
 
 # Regex (fix minimal versions - old regex versions have syntax module issues)
 regex = "1.5.5"
@@ -72,3 +73,16 @@ strip = true
 
 [profile.bench]
 inherits = "release"
+
+# Guest execution has a fixed 100 ms deadline. Optimize test builds so CI tests
+# exercise that production bound without changing the timeout or assertions.
+[profile.dev]
+opt-level = 1
+
+[profile.test]
+opt-level = 1
+
+# Temporary published SDK patch: remove unmaintained Chrono (RUSTSEC-2026-0543).
+# Source, exact delta, and removal condition: vendor/rmcp/IPE-PATCH.md.
+[patch.crates-io]
+rmcp = { path = "vendor/rmcp" }

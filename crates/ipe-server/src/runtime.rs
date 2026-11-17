@@ -113,7 +113,7 @@ struct Clock {
 }
 impl Clock {
     fn new() -> Self {
-        let wall = chrono::Utc::now().timestamp();
+        let wall = jiff::Timestamp::now().as_second();
         Self {
             wall,
             started: Instant::now(),
@@ -122,7 +122,7 @@ impl Clock {
     }
     fn now(&self) -> Result<i64, ApiError> {
         let anchored = self.wall.saturating_add(self.started.elapsed().as_secs() as i64);
-        let wall = chrono::Utc::now().timestamp();
+        let wall = jiff::Timestamp::now().as_second();
         if (wall as i128 - anchored as i128).abs() > 5 {
             return Err(ApiError(
                 StatusCode::SERVICE_UNAVAILABLE,
@@ -607,7 +607,7 @@ async fn poll_connector(state: &AppState, connector: &Connector) -> Result<Value
             )
             .map_err(|e| e.to_string())?;
         Ok(
-            json!({"status":"ok","source_revision":envelope.source_revision,"items":records.len(),"checked_at":chrono::Utc::now().timestamp()}),
+            json!({"status":"ok","source_revision":envelope.source_revision,"items":records.len(),"checked_at":jiff::Timestamp::now().as_second()}),
         )
     };
     let result = tokio::select! {
@@ -620,7 +620,7 @@ async fn poll_connector(state: &AppState, connector: &Connector) -> Result<Value
     *connector.status.lock().unwrap() = match &result {
         Ok(value) => value.clone(),
         Err(message) => {
-            json!({"status":"error","message":message,"checked_at":chrono::Utc::now().timestamp()})
+            json!({"status":"error","message":message,"checked_at":jiff::Timestamp::now().as_second()})
         },
     };
     result

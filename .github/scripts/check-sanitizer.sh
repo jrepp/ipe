@@ -81,6 +81,8 @@ if [ "$SANITIZER_TYPE" = "thread" ]; then
     cflags_name="CFLAGS_$native_target"
     cxxflags_name="CXXFLAGS_$native_target"
     native_flags="-fsanitize=thread -fno-omit-frame-pointer -O1"
+    # Preserve RocksDB header compatibility when overriding Cargo target flags.
+    export "$cxxflags_name=${!cxxflags_name:-} -include cstdint"
     if [[ "$sanitizer_target" == aarch64-* ]]; then
         # Keep the production CRC workaround even when overriding target flags
         # from .cargo/config.toml to add native sanitizer instrumentation.
