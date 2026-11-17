@@ -30,7 +30,8 @@ def main():
     sources += list((ROOT / "docs").glob("*.css")) + list((ROOT / "docs").glob("*.js"))
     # Preview new top-level guides before they are added to the Git index.
     sources += list((ROOT / "docs").glob("*.md"))
-    sources += [ROOT / "CONTRIBUTING.md", ROOT / "Makefile", ROOT / "justfile"]
+    sources += [ROOT / "CONTRIBUTING.md", ROOT / "Makefile", ROOT / "justfile",
+                ROOT / "vendor/rmcp/IPE-CHANGES.patch.gz", ROOT / "vendor/rmcp/LICENSE"]
     # Include new design records and their schema before they are added to Git.
     sources += [path for path in (ROOT / "docs-cms").rglob("*")
                 if path.is_file() and path.suffix in {".md", ".yaml", ".json"}]

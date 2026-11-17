@@ -26,6 +26,7 @@ Placeholder packages retain their paths and public module names. They contain no
 
 | Location | Project | Contract |
 | --- | --- | --- |
+| [MCP SDK patch](../vendor/rmcp/IPE-PATCH.md) | P2 | Published third-party SDK with a documented timestamp patch; excluded from workspace membership |
 | [Integration fixtures](../testing/integration/README.md) | P2 | Synthetic source protocols and independent clients |
 | [Package cache](../tools/integration-packages/) | P2 | Build-side artifacts for the integration SDK |
 | [Product previews](../tools/product-ship-mocks/) | P1, P4 | Sample-data interfaces, not live enforcement |

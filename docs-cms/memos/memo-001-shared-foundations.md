@@ -19,6 +19,20 @@ The [project map](../PROJECTS.md) defines P1–P5. The [repository map](../../do
 The [integration audit](../../docs/INTEGRATION_STACK.md) retains its implementation decisions; this memo expands the survey across lanes.
 No dependencies or runtime behavior change in this research slice.
 
+# Security follow-up, 2026-11-17
+
+The CI security pass found evidence that changes this survey's initial recommendations.
+[RUSTSEC-2026-0543](https://github.com/RustSec/advisory-db/blob/main/crates/chrono/RUSTSEC-2026-0543.md) marks every Chrono version unmaintained.
+Chrono is excluded from new adoption. IPE now uses Jiff for UTC timestamps.
+The latest official MCP SDK still requires Chrono. The project owner selected a reviewed local SDK patch using a supported time library.
+The [patch record](../../vendor/rmcp/IPE-PATCH.md) preserves the upstream source, license, archive checksum, exact delta, and removal condition.
+The initial registry snapshot below is retained as historical evidence; release activity alone did not establish acceptable maintenance.
+
+The CI remediation also updates the MCP SDK to 3.11.0, libz-sys to 1.1.33, rustix to 1.1.6, and removes pin-utils through compatible parent updates.
+Wasmi 2.0.0 was subsequently reported yanked; the selected patch release is 2.0.1 with the same feature set.
+The resulting workspace passed `cargo audit --deny warnings` and `cargo deny --locked --all-features check`.
+The all-feature suite passed 363 tests, with two external acceptance tests ignored. Cross-platform CI remains a separate result.
+
 # Selection method and evidence limits
 
 The shortlist considers ecosystem adoption, release activity, project stewardship, current-stack fit, and license metadata.
@@ -29,7 +43,7 @@ Apalis has less registry adoption than the major infrastructure crates; it is a 
 
 Registry facts below were retrieved from the official crates.io API on 2026-11-17.
 Each package link selects the observed release. The version is the registry's maximum stable release, not an adoption recommendation.
-Locked versions come from this checkout's Cargo.lock. Presence in the lockfile can be transitive and does not prove application use.
+Locked versions come from the initial survey checkout's Cargo.lock, before the security follow-up. Presence in the lockfile can be transitive and does not prove application use.
 Repository status was checked for 27 principal incumbents and candidates through GitHub's repository API; details appear below.
 API documentation supplies the capability evidence linked in the matrix and tradeoff sections.
 Candidate dependency graphs, feature combinations, native code licenses, and security advisories have not all been audited.
@@ -49,13 +63,13 @@ Licenses and observed versions for every named candidate appear in the registry 
 | Secrets and credentials | P2–P4; P2 | Keep secrecy and zeroize. Use configured secret references and an external secret system when required. | Prevent serialization and logging of secret values. These crates do not provide a secret vault, rotation service, or identity provider. |
 | Login, federation, token validation | P1–P4; P4 | openidconnect for OIDC; oauth2 for OAuth flows; jsonwebtoken for a defined JWT verification boundary. | Choose the actual protocol first. Configure issuer, audience, algorithms, key rotation, clock tolerance, and disclosure. Do not write token parsers. |
 | Grants, access policies, exceptions | P1, P3, P4; P4 | Compare cedar-policy first for declarative authorization; casbin for RBAC/ABAC models and adapters. | Test semantic fit before extending our policy language. Keep issuer authority, explicit exception eligibility, expiry, and revocation contracts. |
-| Timestamps, deadlines, calendar windows | P1–P4; P4 | Keep std::time and existing chrono for current UTC use. Compare jiff for zoned calendar rules; time for a smaller date/time API. | Use monotonic deadlines for elapsed work. Define DST ambiguity, clock jumps, evidence expiry, and exception expiry separately. |
+| Timestamps, deadlines, calendar windows | P1–P4; P4 | Use std::time for deadlines and jiff for UTC records. Evaluate Jiff calendar rules and time against specific needs. Chrono is excluded after the security review. | Use monotonic deadlines for elapsed work. Define DST ambiguity, clock jumps, evidence expiry, and exception expiry separately. |
 | Durable facts and policy revisions | P1–P3; P3 | Keep rocksdb for existing fact storage. Compare redb only if a pure-Rust store solves a measured deployment problem. | Require migration, crash recovery, snapshot consistency, fencing, and atomic writes. A new database is not a routine cleanup. |
 | Queryable audit and operations records | P2–P4; P4 | Compare rusqlite for local relational records with sqlx for a selected async SQL backend. Reuse RocksDB where it already fits. | Decide query, retention, transaction, and deployment needs before choosing storage. Tracing logs are not the durable audit record. |
 | Scheduling and durable execution | P2, P4; P2 | Keep Tokio timers for current local periodic collection. Compare apalis for durable jobs; async-nats/JetStream for a required broker-backed delivery topology. | These solve different problems. Define restart, acknowledgement, duplicate work, fencing, and expiry first; do not write a queue broker. |
 | Evidence topology and impact traversal | P1, P2, P4; P4 | Evaluate petgraph for graph data structures, cycle detection, and traversal. | IPE owns node roles, provenance, scope filtering, and bounded traversal. Do not build generic graph algorithms or infer enforcement from a graph edge. |
 | Configuration, CLI, and errors | P2, P3, P5; P3 | Keep clap, Serde, thiserror, and anyhow. Compare figment with config only when layered configuration is required. | Preserve strict parsing, precedence, secret references, and sanitized errors. Do not add a layering engine for one configuration file. |
-| Adapter runtimes and SDK protocols | P2, P4; P2 | Keep wasmi, rquickjs, and official rmcp. Compare wasmtime only for a demonstrated execution or component-model need. | Keep host capabilities, limits, and grants in native code. A runtime or protocol SDK does not authorize operations. |
+| Adapter runtimes and SDK protocols | P2, P4; P2 | Keep wasmi 2.0.1, rquickjs, and the patched official rmcp. Compare wasmtime only for a demonstrated execution or component-model need. | Keep host capabilities, limits, and grants in native code. A runtime or protocol SDK does not authorize operations. |
 | Telemetry and operational diagnostics | P2–P5; P3 | Keep tracing/tracing-subscriber and existing prometheus. Add opentelemetry plus a compatible tracing-opentelemetry/exporter set when needed. Compare prometheus-client or metrics before changing metric APIs. | Agree on correlation IDs, redaction, cardinality, and export budgets. Do not install multiple instrumentation stacks without a consumer. |
 | Shared fixtures, property tests, and performance | P1–P5; P5 | Keep tempfile and criterion. Add proptest for invariants, insta for stable redacted snapshots, wiremock for ordinary HTTP fixtures; evaluate cargo-nextest for execution. | Keep independent protocol clients and malformed-wire tests. Snapshot approval cannot replace behavioral assertions. |
 | Package compatibility and supply-chain checks | P1–P5; P5 | Keep Cargo/Cargo.lock, cargo-deny, and cargo-audit. Use cargo_metadata for Rust graph tooling and semver for Rust version requirements if needed. | Existing npm tooling owns integration-package resolution. Rust semver is not an npm resolver; do not build a second package manager. |
@@ -84,7 +98,7 @@ Use ed25519-dalek only if a reviewed protocol needs direct Ed25519 signatures; p
 ## Time and durable work are separate contracts
 
 [Jiff](https://docs.rs/jiff/1.0.0/jiff/) supports time-zone-aware date/time operations. Its reviewed release is recent; evaluate migration cost before adopting it.
-Keep chrono for current UTC records unless calendar rules demonstrate a gap. A date library cannot choose our clock-skew or offline-revocation policy.
+IPE now uses Jiff for UTC records after the Chrono advisory. A date library cannot choose our clock-skew or offline-revocation policy.
 
 The existing host uses Tokio intervals with skipped missed ticks. Restart does not replay missed runs or refresh evidence.
 [Apalis](https://docs.rs/apalis/1.2.0/apalis/) offers job processing and selectable storage backends.
@@ -120,7 +134,7 @@ See [cargo-deny license configuration](https://embarkstudios.github.io/cargo-den
 On 2026-11-17, `cargo deny --locked check licenses` passed for the current workspace graph.
 It reported one unused Unicode-DFS-2016 allowance. No allowlist change was needed.
 This run does not cover dependencies that are only candidates here, nor does it establish advisory status.
-The source audit's older lockfile-version paragraph is historical; use the table below for this review's observed versions.
+The table below records the initial survey. The security follow-up and current Cargo.lock take precedence for adoption.
 
 # Adoption order and proof
 
