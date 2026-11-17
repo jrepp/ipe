@@ -267,7 +267,7 @@ fn test_expiration_at_exact_timestamp() {
     let store = ApprovalStore::new_temp().unwrap();
 
     // Create approval that expires at current timestamp
-    let now = chrono::Utc::now().timestamp();
+    let now = jiff::Timestamp::now().as_second();
     let mut approval = Approval::new("bot-123", "resource", "GET", "admin");
     approval.expires_at = Some(now);
 

@@ -66,6 +66,7 @@ exit 0
 [ "$CXX_x86_64_unknown_linux_gnu" = clang++ ]
 [[ "$CFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
 [[ "$CXXFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
+[[ "$CXXFLAGS_x86_64_unknown_linux_gnu" == *"-include cstdint"* ]]
 [[ "$RUSTFLAGS" == *sanitizer=thread* ]]
 [[ "$RUSTFLAGS" == *-C*opt-level=1* ]]
 [[ "$RUSTDOCFLAGS" == *-C*opt-level=1* ]]

@@ -60,3 +60,10 @@ A PR description should state the problem, the resulting behavior, and the verif
 
 Release notes come from merged PRs. Use clear titles, release labels, and explicit migration notes.
 Do not add manual changelog entries. Follow the [release guide](../docs/RELEASES.md).
+
+## Native compilation and bounded guest tests
+
+The pinned RocksDB headers need an explicit `cstdint` include with newer Linux C++ toolchains.
+Cargo target flags provide it; sanitizer overrides must preserve it.
+Development and test profiles use optimization level 1 so guest tests exercise the unchanged 100 ms execution limit.
+Do not extend guest deadlines or skip failure tests to compensate for unoptimized instrumentation.

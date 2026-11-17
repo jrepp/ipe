@@ -1,0 +1,103 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -926 +925,0 @@
+-features = ["chrono04"]
+@@ -1030 +1028,0 @@
+-features = ["chrono04"]
+@@ -1060,17 +1058 @@
+-[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies.chrono]
+-version = "0.4.38"
+-features = [
+-    "serde",
+-    "clock",
+-    "std",
+-    "oldtime",
+-]
+-default-features = false
+-
+-[target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies.chrono]
+-version = "0.4.38"
+-features = [
+-    "serde",
+-    "now",
+-]
+-default-features = false
++
+@@ -1088,0 +1071,5 @@
++
++[dependencies.jiff]
++version = "1.0.0"
++default-features = false
++features = ["std"]
+--- a/src/model/annotated.rs
++++ b/src/model/annotated.rs
+@@ -6 +6 @@
+-use chrono::{DateTime, Utc};
++use jiff::Timestamp;
+@@ -36 +36 @@
+-    pub fn for_resource(priority: f32, timestamp: DateTime<Utc>) -> Self {
++    pub fn for_resource(priority: f32, timestamp: Timestamp) -> Self {
+@@ -43 +43 @@
+-            last_modified: Some(timestamp.to_rfc3339()),
++            last_modified: Some(timestamp.to_string()),
+@@ -59,2 +59,2 @@
+-    pub fn with_timestamp(mut self, timestamp: DateTime<Utc>) -> Self {
+-        self.last_modified = Some(timestamp.to_rfc3339());
++    pub fn with_timestamp(mut self, timestamp: Timestamp) -> Self {
++        self.last_modified = Some(timestamp.to_string());
+@@ -66 +66 @@
+-        self.with_timestamp(Utc::now())
++        self.with_timestamp(Timestamp::now())
+@@ -72 +71,0 @@
+-    use chrono::TimeZone;
+@@ -114 +113 @@
+-        let timestamp = Utc.with_ymd_and_hms(2025, 1, 12, 15, 0, 58).unwrap();
++        let timestamp = "2025-01-12T15:00:58Z".parse::<Timestamp>().unwrap();
+@@ -118 +117 @@
+-        assert_eq!(value["lastModified"], json!(timestamp.to_rfc3339()));
++        assert_eq!(value["lastModified"], json!(timestamp.to_string()));
+--- a/src/model/request_state.rs
++++ b/src/model/request_state.rs
+@@ -785 +785 @@
+-        chrono::Utc::now().timestamp_millis()
++        jiff::Timestamp::now().as_millisecond()
+--- a/src/service.rs
++++ b/src/service.rs
+@@ -92 +92 @@
+-    #[error("request timeout after {}", chrono::Duration::from_std(*timeout).unwrap_or_default())]
++    #[error("request timeout after {timeout:?}")]
+--- a/src/task_manager.rs
++++ b/src/task_manager.rs
+@@ -46 +46 @@
+-    chrono::Utc::now().to_rfc3339()
++    jiff::Timestamp::now().to_string()
+--- a/tests/common/handlers.rs
++++ b/tests/common/handlers.rs
+@@ -141 +141 @@
+-                        "timestamp": chrono::Utc::now().to_rfc3339(),
++                        "timestamp": jiff::Timestamp::now().to_string(),
+@@ -154 +154 @@
+-                        "timestamp": chrono::Utc::now().to_rfc3339(),
++                        "timestamp": jiff::Timestamp::now().to_string(),
+@@ -167 +167 @@
+-                        "timestamp": chrono::Utc::now().to_rfc3339(),
++                        "timestamp": jiff::Timestamp::now().to_string(),
+@@ -174 +174 @@
+-                        "timestamp": chrono::Utc::now().to_rfc3339(),
++                        "timestamp": jiff::Timestamp::now().to_string(),
+--- a/tests/test_json_schema_detection.rs
++++ b/tests/test_json_schema_detection.rs
+@@ -50 +50 @@
+-    /// Tool that returns Result with inner Json - should have output schema  
++    /// Tool that returns Result with inner Json - should have output schema
+--- a/tests/test_logging.rs
++++ b/tests/test_logging.rs
+@@ -34 +34 @@
+-                        "timestamp": chrono::Utc::now().to_rfc3339(),
++                        "timestamp": jiff::Timestamp::now().to_string(),
+@@ -90 +90 @@
+-        chrono::DateTime::parse_from_rfc3339(timestamp).expect("RFC3339 timestamp");
++        timestamp.parse::<jiff::Timestamp>().expect("RFC3339 timestamp");
+@@ -332 +332 @@
+-        chrono::DateTime::parse_from_rfc3339(timestamp).expect("RFC3339 timestamp");
++        timestamp.parse::<jiff::Timestamp>().expect("RFC3339 timestamp");
