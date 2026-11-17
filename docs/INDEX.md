@@ -2,6 +2,11 @@
 
 **Welcome to the Idempotent Predicate Engine documentation!**
 
+## Releases
+
+- [Release guide](RELEASES.md): generated notes, labels, draft review, and publication.
+- [Changelog](../CHANGELOG.md): GitHub Releases and archived history.
+
 ## Local Documentation Site
 
 Run `make docs-site` to export the generated docs data, then `make docs-serve`
