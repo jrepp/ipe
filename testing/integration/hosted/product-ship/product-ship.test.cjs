@@ -143,6 +143,10 @@ test('collector constructs each observation only in its emitted batch',()=>{
       return;
     }
     state=result.state;
+    if (state.phase==='emit') {
+      assert.equal(typeof state.snapshotJson,'string');
+      assert.deepEqual(JSON.parse(state.snapshotJson),fixture);
+    }
     responses=(result.requests||[]).map(request=>({id:request.id,operation:request.operation,data:[fixture],receipt:'fixture:qualification'}));
   }
   assert.fail('collector did not complete within the native step budget');
