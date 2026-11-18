@@ -1,0 +1,169 @@
+<div id="intent-contracts">
+  <style>
+    #intent-contracts { color:var(--foreground); }
+    #intent-contracts .ic-heading { margin-bottom:calc(var(--font-size-base)*1); padding-right:90px; }
+    #intent-contracts .ic-controls { margin-bottom:calc(var(--font-size-base)*1.5); }
+    #intent-contracts .ic-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:calc(var(--font-size-base)*2); }
+    #intent-contracts .ic-scene { display:block; width:100%; overflow:visible; }
+    #intent-contracts .ic-caption { margin-top:calc(var(--font-size-base)*.5); }
+    #intent-contracts .ic-key { margin-top:calc(var(--font-size-base)*1); }
+    #intent-contracts .ic-scene text { fill:var(--foreground); font-weight:400; }
+    #intent-contracts .ic-scene .secondary { fill:var(--muted-foreground); }
+    #intent-contracts .ic-scene .node-title { font-weight:500; }
+    #intent-contracts .ic-scene path { stroke-linejoin:round; stroke-linecap:round; }
+    #intent-contracts .ic-key span { display:inline-flex; align-items:center; gap:6px; }
+    #intent-contracts .ic-key i { display:inline-block; width:22px; height:2px; background:var(--muted-foreground); }
+    #intent-contracts .ic-key .fact { background:var(--viz-series-2); }
+    #intent-contracts .ic-key .decision { background:var(--viz-series-1); }
+    @media(max-width:760px) { #intent-contracts .ic-pair { grid-template-columns:1fr; } }
+  </style>
+  <div class="ic-heading"><h2>Enterprise Intent Contracts</h2><div class="text-muted">Agent architecture · conceptual before and after</div></div>
+  <div class="viz-controls ic-controls">
+    <label class="form-label">Deployment evidence
+      <select class="form-select" id="ic-evidence">
+        <option value="approved">Approved · current evidence</option>
+        <option value="denied">Rejected · current evidence</option>
+        <option value="stale">Approval evidence expired</option>
+      </select>
+    </label>
+    <button type="button" class="btn btn-primary" id="ic-run">Trace deployment</button>
+  </div>
+  <div class="ic-pair">
+    <section><h3>Before · controls in each layer</h3><svg class="ic-scene" id="ic-before" role="img" aria-label="Agent stack with sandbox, harness, network controls, token broker, integration gateway, external access checks, and audit logs."></svg><div id="ic-before-result" class="ic-caption" aria-live="polite">Existing controls apply at each boundary.</div></section>
+    <section><h3>After · shared policy decisions</h3><svg class="ic-scene" id="ic-after" role="img" aria-label="The same agent stack with policy modeling, sourced facts, a policy engine, and enforcement at tool, credential, and action boundaries."></svg><div id="ic-after-result" class="ic-caption" aria-live="polite">Enforcement points require an allow decision.</div></section>
+  </div>
+  <div class="viz-row ic-key text-small"><span><i></i>Request / credentials</span><span><i class="fact"></i>Facts with source + expiry</span><span><i class="decision"></i>Policy / decision</span><span>◇ Enforcement point</span></div>
+  <div class="text-small text-muted ic-caption">Assumed baseline · Sample deployment · Proposed end-to-end connections</div>
+  <div class="sr-only">Both views retain identity, model access, memory, human approval, network restrictions, scoped credentials, external permissions, and audit logs. The token broker issues credentials to the integration gateway. It does not proxy all action traffic. The after view adds a versioned policy model and authorized fact publication. Missing or expired evidence produces an indeterminate result. Enforcement points block that result. These connections describe a conceptual architecture, not a completed implementation.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script>
+(() => {
+  const root=document.getElementById('intent-contracts');
+  const select=root.querySelector('#ic-evidence'), button=root.querySelector('#ic-run');
+  const colors={base:'var(--muted-foreground)', policy:'var(--viz-series-1)', fact:'var(--viz-series-2)'};
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  let generation=0, scenes=[];
+  const saved=window.openai?.widgetState?.modelContent;
+  if(['approved','denied','stale'].includes(saved?.evidence)) select.value=saved.evidence;
+  function save(){window.openai?.setWidgetState({modelContent:{evidence:select.value},privateContent:null})?.catch(()=>{});}
+  function text(g,x,y,value,cls='',anchor='middle'){
+    return g.append('text').attr('x',x).attr('y',y).attr('text-anchor',anchor).attr('class',cls).text(value);
+  }
+  function draw(el,after){
+    const w=el.clientWidth, h=724, left=w*.235, right=w*.755;
+    const nw=Math.min(184,w*.43), rw=Math.min(184,w*.43);
+    const svg=d3.select(el).attr('viewBox',`0 0 ${w} ${h}`).attr('height',h);
+    svg.selectAll('*').remove();
+    svg.append('title').text(after?'Shared policy decisions and explicit enforcement':'A capable baseline agent stack');
+    const defs=svg.append('defs');
+    Object.entries(colors).forEach(([key,color])=>defs.append('marker').attr('id',`${el.id}-${key}`).attr('viewBox','0 0 10 10').attr('refX',9).attr('refY',5).attr('markerWidth',7).attr('markerHeight',7).attr('orient','auto').append('path').attr('d','M1 1L9 5L1 9').attr('fill','none').attr('stroke',color));
+    const links=svg.append('g'), nodes=svg.append('g'), front=svg.append('g');
+    const paths={};
+    function link(id,points,type='base',dash=false){
+      const p=links.append('path').attr('d',d3.line().curve(d3.curveBumpY)(points)).attr('fill','none').attr('stroke',colors[type]).attr('stroke-width',1.3).attr('stroke-dasharray',dash?'4 5':null).attr('marker-end',`url(#${el.id}-${type})`);
+      paths[id]=p.node(); return p;
+    }
+    function node(x,y,width,title,sub,type='base',shape='service'){
+      const g=nodes.append('g').attr('transform',`translate(${x-width/2},${y-30})`);
+      const fill=type==='base'?'var(--background)':`color-mix(in srgb, ${colors[type]} 9%, var(--background))`;
+      g.append('rect').attr('width',width).attr('height',60).attr('rx',shape==='store'?16:6).attr('fill',fill).attr('stroke','var(--border)');
+      g.append('line').attr('x1',12).attr('x2',width-12).attr('y1',5).attr('y2',5).attr('stroke',type==='base'?'var(--border)':colors[type]).attr('stroke-width',2);
+      text(g,width/2,27,title,'node-title'); text(g,width/2,46,sub,'secondary text-small');
+      return g;
+    }
+    // An explicit sandbox boundary encloses the agent execution environment.
+    nodes.append('rect').attr('x',4).attr('y',36).attr('width',w-8).attr('height',179).attr('rx',12).attr('fill','none').attr('stroke','var(--border)').attr('stroke-dasharray','5 5');
+    text(nodes,16,24,'SANDBOX · isolated execution','secondary text-small','start');
+    node(left,86,nw,'Agent harness','Plan · tools · limits');
+    node(right,86,rw,'Model + memory','Context · retrieval');
+    link('context',[[left+nw/2+5,86],[right-rw/2-5,86]]);
+    node(left,176,nw,'Tool call','Deploy release');
+    node(right,176,rw,'Identity + review','User · approval');
+    link('agent',[[left,120],[left,142]]);
+    node(left,286,nw,'Network controls','SDN · egress rules');
+    node(left,396,nw,'Token broker','Scoped credentials');
+    node(left,506,nw,'Integration gateway','MCP · APIs · tools');
+    node(left,616,nw,'External systems','Native access checks');
+    link('tool',[[left,210],[left,252]]);
+    link('network',[[left,320],[left,362]]);
+    link('credentials',[[left,430],[left,472]]);
+    link('action',[[left,540],[left,582]]);
+    node(w/2,698,Math.min(w-20,350),'Audit + observability','Requests · credentials · actions');
+    link('audit',[[left,650],[left,658],[w/2,664]]);
+    if(after){
+      node(right,268,rw,'Policy modeling','Test · activate','policy');
+      node(right,378,rw,'Policy engine','Scoped snapshot','policy');
+      node(right,506,rw,'Integration layer','Publish facts','fact');
+      node(right,616,rw,'Source records','Approval · asset · risk','fact','store');
+      link('model',[[right,302],[right,344]],'policy');
+      link('source',[[right,582],[right,540]],'fact',true);
+      link('facts',[[right,472],[right,412]],'fact',true);
+      text(nodes,right,446,'Source + expiry','secondary text-small');
+      [238,348,458].forEach((y,i)=>{
+        const mid=(left+right)/2;
+        const p=links.append('path').attr('d',`M${right-rw/2-4},378 H${mid} V${y} H${left+11}`).attr('fill','none').attr('stroke',colors.policy).attr('stroke-width',1.2).attr('marker-end',`url(#${el.id}-policy)`);
+        paths['decision'+i]=p.node();
+        front.append('path').attr('d',`M${left},${y-9}l9,9l-9,9l-9,-9Z`).attr('fill','var(--background)').attr('stroke',colors.policy).attr('stroke-width',2);
+        text(front,Math.max(1,left-nw/2),y+4,['Tool','Token','Action'][i],'secondary text-small','start');
+      });
+    }else{
+      node(right,286,rw,'Local rules','Allowlist · rate limits');
+      node(right,396,rw,'Credential rules','Identity · scope · TTL');
+      node(right,506,rw,'Tool validation','Schema · parameters');
+      node(right,616,rw,'Approval checks','Where configured');
+      [286,396,506,616].forEach((y,i)=>link('local'+i,[[right-rw/2-4,y],[left+nw/2+4,y]]));
+    }
+    return {svg,paths,front,left,right,after};
+  }
+  function reset(){
+    generation++; button.disabled=false;
+    scenes.forEach(s=>{s.svg.selectAll('*').interrupt();s.front.selectAll('.packet').remove();});
+    root.querySelector('#ic-before-result').textContent='Existing controls apply at each boundary.';
+    root.querySelector('#ic-after-result').textContent='Enforcement points require an allow decision.';
+  }
+  function render(){reset(); scenes=[draw(root.querySelector('#ic-before'),false),draw(root.querySelector('#ic-after'),true)];}
+  async function pulse(scene,id,color,token){
+    if(token!==generation)return false;
+    const path=scene.paths[id],length=path.getTotalLength();
+    const p=scene.front.append('circle').attr('class','packet').attr('r',5).attr('fill',color);
+    const start=path.getPointAtLength(0);p.attr('cx',start.x).attr('cy',start.y);
+    try {await p.transition().duration(reduced.matches?0:650).ease(d3.easeCubicInOut).attrTween('transform',()=>t=>{const q=path.getPointAtLength(t*length);return `translate(${q.x-start.x},${q.y-start.y})`;}).end();}catch(e){}
+    p.remove();return token===generation;
+  }
+  async function trace(scene,token){
+    const status=root.querySelector(scene.after?'#ic-after-result':'#ic-before-result');
+    const state=select.value;
+    if(scene.after){
+      status.textContent='Read source records. Publish authorized facts.';
+      if(!await pulse(scene,'source',colors.fact,token))return;
+      if(!await pulse(scene,'facts',colors.fact,token))return;
+      if(!await pulse(scene,'model',colors.policy,token))return;
+    }
+    for(const [i,id] of ['agent','tool','network','credentials','action','audit'].entries()){
+      if(scene.after && i>=1 && i<=3){
+        status.textContent='Evaluate the request against the policy and fact snapshot.';
+        if(!await pulse(scene,'decision'+(i-1),colors.policy,token))return;
+        if(state!=='approved'){
+          status.textContent=state==='stale'?'Indeterminate → blocked. Approval evidence expired.':'Deny → blocked. The approval was rejected.';
+          return;
+        }
+      }
+      if(!await pulse(scene,id,colors.base,token))return;
+    }
+    status.textContent=scene.after?'Allow → action proceeds. Native checks still apply.':'Local checks complete. Outcome depends on configured rules.';
+  }
+  button.addEventListener('click',async()=>{
+    reset();button.disabled=true;save();const token=generation;
+    await Promise.all(scenes.map(s=>trace(s,token)));
+    if(token===generation){button.disabled=false;}
+  });
+  select.addEventListener('change',()=>{reset();save();});
+  window.addEventListener('openai:set_globals',event=>{
+    const value=event.detail?.globals?.widgetState?.modelContent?.evidence;
+    if(['approved','denied','stale'].includes(value)){select.value=value;reset();}
+  });
+  let previousWidth=0;
+  new ResizeObserver(()=>{const width=root.clientWidth;if(width!==previousWidth){previousWidth=width;render();}}).observe(root);
+})();
+</script>

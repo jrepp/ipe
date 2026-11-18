@@ -40,6 +40,7 @@ Open the guides for your task. Follow their links for additional detail.
 | Tests, builds, performance, commits, or PRs | [Validation and review](.agent/validation.md) |
 | Deployment | [Deployment guide](deploy/README.md) |
 | Policy and integration UX | [IPE design skill](.agents/skills/ipe-design/SKILL.md) |
+| Architecture diagrams and animated comparisons | [Diagram workflow](.agent/diagram-workflow.md) |
 | Documentation or UX | [Documentation index](docs/INDEX.md), [writing and terms](.agent/writing.md) |
 
 Use [the repository map](docs/REPOSITORY.md) for component ownership. Legacy parser and JIT documents are historical; verify their claims against current source and CI.

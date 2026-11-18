@@ -20,6 +20,7 @@ package-lock.json
 !docs/package-lock.json
 !testing/integration/package-lock.json
 !tools/integration-packages/package-lock.json
+!design/enterprise-intent-contracts/package-lock.json
 
 # AST explorer and performance dashboard render this frozen final export of the
 # legacy-engine exporter (deleted with the legacy cluster); build-docs.py

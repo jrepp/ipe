@@ -1,0 +1,68 @@
+.landing {
+  --action: var(--muted);
+  --credential: var(--warn-ink);
+  --fact: var(--accent);
+  --request: var(--muted);
+  --decision: var(--accent);
+  --audit: var(--muted);
+}
+.landing main { gap: 28px; padding-block: 30px; }
+.landing .page-header h1 { font-size: clamp(26px, 3.4vw, 38px); font-weight: 500; }
+.project-key { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 14px 0 0; font-size: 14px; }
+.project-key span { color: var(--route); font-weight: 500; }
+.comparison-heading { margin-bottom: 18px; }
+.comparison-heading h2 { margin-bottom: 6px; }
+.comparison-heading p, .study-note { color: var(--muted); font-size: 15px; margin: 0; }
+.enforcement { display: grid; gap: 0; }
+.study-note { border-top: 1px solid var(--line); padding-top: 14px; }
+@media (max-width: 650px) { .project-summary { grid-template-columns: 1fr; gap: 12px; } }
+.page-header { display: block; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+.architecture-notes { border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 14px; }
+.architecture-notes summary { cursor: pointer; }
+.architecture-notes p { max-width: 85ch; margin-top: 12px; }
+.controls label { font-size: 15px; font-weight: 600; }
+.controls { position: relative; }
+.controls .visually-hidden { left: 0; top: 0; }
+.controls button { border: 0; }
+.controls button:disabled { opacity: .64; cursor: wait; }
+.legend { gap: 7px 17px; color: var(--muted); font-size: 13px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; border-top: 2px solid; }
+.legend .action { color: var(--action); }
+.legend .credential { color: var(--credential); }
+.legend .fact, .legend .request { color: var(--route); border-top-style: dashed; }
+.legend .decision, .legend .policy { color: var(--route); }
+.legend .gate { color: var(--route); border: 2px solid; width: 8px; height: 8px; transform: rotate(45deg); margin: 0 4px; }
+.legend .audit { color: var(--audit); border-top-style: dotted; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pair > .panel { min-width: 0; overflow: hidden; display: grid; grid-template-rows: subgrid; grid-row: span 3; row-gap: 0; padding: 0; border-radius: 6px; box-shadow: 0 3px 12px #193b680a; }
+.panel-header { padding: 16px 16px 11px; border-top: 3px solid var(--line); }
+.proposed .panel-header { border-top-color: var(--route, var(--accent)); }
+.proposed .eyebrow { color: var(--route, var(--accent)); }
+.panel-header .eyebrow { font-size: 11px; margin: 0 0 5px; }
+.panel-header :is(h2, h3) { margin: 0 0 4px; font-size: clamp(1.125rem, 2.4vw, 1.5rem); letter-spacing: -.025em; }
+.panel-header > p:last-child, .footnote { margin: 0; color: var(--muted); font-size: 15px; }
+.canvas { background: var(--paper); border-block: 1px solid var(--line); }
+.canvas svg { display: block; width: 100%; }
+.canvas .boundary { fill: color-mix(in srgb, var(--line) 25%, white); stroke: var(--muted); stroke-dasharray: 4 4; }
+.canvas .edge { fill: none; stroke-width: 1.4px; stroke-linejoin: round; }
+.canvas .node rect { fill: var(--paper); stroke: var(--line); }
+.canvas .node.credential rect { fill: var(--warn-bg); stroke: var(--warn-line); }
+.canvas .node:is(.policy, .fact, .decision) rect { fill: color-mix(in srgb, var(--route, var(--decision)) 7%, white); stroke: color-mix(in srgb, var(--route, var(--decision)) 55%, white); }
+.canvas text { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.canvas .secondary { fill: var(--muted); font-size: 11px; font-weight: 500; }
+.canvas .boundary-label { fill: var(--muted); font: 600 11px var(--mono); }
+.canvas .gate { fill: var(--paper); stroke: var(--route); stroke-width: 1.8px; }
+.canvas .reached rect, .canvas .reached.gate { stroke: var(--route, var(--accent)); stroke-width: 2px; }
+.canvas .blocked rect, .canvas .blocked.gate { stroke: var(--deny); stroke-width: 2.5px; }
+.canvas .packet { stroke: white; stroke-width: 1.5px; pointer-events: none; }
+.result { min-height: 3em; margin: 0; padding: 11px 16px; font-size: 15px; font-weight: 500; color: var(--muted); }
+.result[data-outcome="allowed"] { color: var(--allow); background: var(--accent-soft); }
+.result[data-outcome="blocked"] { color: var(--deny); background: var(--warn-bg); }
+@media (max-width: 840px) {
+  .pair { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 460px) {
+  .panel-header { padding-inline: 12px; }
+  .controls label { width: 100%; }
+}

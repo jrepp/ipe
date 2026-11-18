@@ -20,6 +20,12 @@ This record captures feedback from the IPE preview work. Apply it within this pr
 The current revision puts **Usage report** under the central policy and opens it in the detail workspace.
 This is an implementation for review, not a user-approved layout yet.
 
+## Management diagrams
+
+- The user requested less text and more visual contrast. Use short labels, distinct paths, and motion; keep technical notes in a disclosure.
+- Show P1 through P5 on one page using the static site's styles. Export self-contained HTML with embedded assets for offline sharing.
+- These are user requirements. The resulting layout still requires user review.
+
 ## Copy examples
 
 | Avoid | Prefer | Reason |

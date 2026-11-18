@@ -26,6 +26,10 @@ Start with the [project map](PROJECTS.md) for principles, subway routes, depende
 
 Draft designs do not establish implemented behavior.
 
+[Agent stack diagram review](memos/memo-002-agent-stack-diagram.md) records the Enterprise Intent Contracts comparison, source boundaries, and refinement findings.
+
+[Enforcement detail review](memos/memo-003-enforcement-detail.md) records the proposed JWT/RAR flow and the sources for its non-functional constraints.
+
 ## Where documents belong
 
 | Content | Location and rule |

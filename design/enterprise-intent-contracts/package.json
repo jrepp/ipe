@@ -1,0 +1,12 @@
+{
+  "name": "enterprise-intent-contracts-diagram",
+  "private": true,
+  "scripts": {
+    "test": "npm run export && node --test *.test.cjs",
+    "previews": "node capture-previews.cjs",
+    "export": "node export.cjs && node export.cjs enforcement-detail.html policy-enforcement.html"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enterprise Intent Contracts — Policy enforcement</title>
+  <link rel="stylesheet" href="../../docs/site.css">
+  <link rel="stylesheet" href="enforcement-detail.css">
+  <script src="vendor/d3.v7.9.0.min.js" defer></script>
+  <script src="enforcement-detail.js" defer></script>
+</head>
+<body class="landing detail-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <main class="landing-wrap" id="main">
+    <header class="detail-heading landing-hero">
+      <div>
+        <p class="eyebrow">Enterprise Intent Contracts · P3</p>
+        <h1>Policy enforcement</h1>
+        <p class="landing-lede">The policy engine decides. The service controls the action.</p>
+      </div>
+      <span class="detail-status">Proposed flow · Sample data</span>
+    </header>
+
+    <section class="detail-trace" aria-labelledby="trace-heading">
+      <header class="section-heading">
+        <h2 id="trace-heading">Release authorization</h2>
+        <div class="controls">
+          <label class="visually-hidden" for="trace-scenario">Trace scenario</label>
+          <select id="trace-scenario">
+            <option value="allowed">Approval current</option>
+            <option value="denied">Policy denies</option>
+            <option value="stale">Evidence expired</option>
+            <option value="jwt">Invalid JWT</option>
+            <option value="endpoint">Endpoint mismatch</option>
+            <option value="unavailable">Engine unavailable</option>
+          </select>
+          <button type="button" class="decision-link" id="trace-run">Play trace <span aria-hidden="true">→</span></button>
+        </div>
+      </header>
+      <figure class="map-panel">
+        <div class="detail-claim">
+          <span>JWT claim <code>policy_endpoint</code></span>
+          <code>https://policy.example/v1/scopes/acme/prod/evaluate</code>
+          <span><strong>RAR</strong> · Resource-Action-Request</span>
+        </div>
+        <div class="detail-canvas">
+          <svg id="trace-map" role="img" aria-labelledby="trace-map-title trace-map-description"></svg>
+        </div>
+        <figcaption id="trace-result" role="status" aria-atomic="true">Ready to trace a release request.</figcaption>
+      </figure>
+    </section>
+
+    <section class="detail-nfr" aria-labelledby="nfr-heading">
+      <h2 id="nfr-heading">Enforcement requirements</h2>
+      <dl>
+        <div><dt>Scope isolation</dt><dd>Exact tenant and environment</dd></div>
+        <div><dt>Stable reads</dt><dd>Captured policy revisions and facts</dd></div>
+        <div><dt>Fresh evidence</dt><dd>Recheck expiry before returning allow</dd></div>
+        <div><dt>Bounded work</dt><dd>Request, state, and evaluation limits</dd></div>
+        <div><dt>Local evaluation</dt><dd>Fact publication runs independently</dd></div>
+        <div><dt>Block on failure</dt><dd>Require usable allow for this request</dd></div>
+      </dl>
+    </section>
+
+    <details class="archive detail-notes">
+      <summary>JWT, request, and implementation notes</summary>
+      <div class="detail-note-body">
+        <section>
+          <h3>Sample signed JWT payload</h3>
+          <pre><code>{
+  "iss": "https://identity.example",
+  "aud": "release-service",
+  "sub": "agent-01",
+  "exp": 1800000000,
+  "policy_endpoint": "https://policy.example/v1/scopes/acme/prod/evaluate"
+}</code></pre>
+          <p>The service verifies the signature with a configured issuer and algorithm. It checks the audience and expiry. It matches the custom claim to a trusted route for the request scope.</p>
+          <p>The claim identifies a configured evaluation endpoint. The service uses the registered destination. The engine evaluates all applicable policies in that scope. <a href="https://www.rfc-editor.org/rfc/rfc7519.html">JWT claims</a> · <a href="https://www.rfc-editor.org/rfc/rfc8725.html">JWT security practices</a></p>
+        </section>
+        <section>
+          <h3>Resource-Action-Request (RAR)</h3>
+          <p>Illustrative input for a configured schema. The service authenticates separately from the agent JWT.</p>
+          <pre><code>POST /v1/scopes/acme/prod/evaluate
+{
+  "input": {
+    "resource": { "id": "release-42" },
+    "action": { "operation": "Deploy" },
+    "request": {
+      "id": "request-42",
+      "principal": { "id": "agent-01" }
+    }
+  }
+}</code></pre>
+          <p>The authenticated service sends the attested principal, resource, action, and context. The engine checks the service grant, exact tenant and environment binding, evaluation route, and input schema.</p>
+          <p>The principal matches the validated JWT subject. Trusted configuration binds the endpoint to <code>acme/prod</code>; request fields cannot change that binding.</p>
+          <p>The service applies a matching allow only within its usable validity. It records the applied decision separately from the release result.</p>
+        </section>
+        <section>
+          <h3>Policy and fact reads</h3>
+          <p>Policy publication appends an immutable revision. Activation selects the revisions available for evaluation. Each request captures the active revisions and a scoped fact snapshot.</p>
+          <p>Authorized publishers update facts separately. A fact retains its source, revision, and expiry. The engine reads local facts and rechecks the earliest required expiry before it returns allow.</p>
+        </section>
+        <section>
+          <h3>Runtime status</h3>
+          <p>The current runtime uses scoped bearer secrets. The JWT claim, route adapter, RAR exchange, and action gate show a proposal. The diagram makes no network requests.</p>
+          <p>The current runtime limits JSON bodies to 1 MiB. Its evaluation budget defaults to 10,000 steps. Captured reads do not establish a transaction across stores or a production performance target.</p>
+          <p><a href="../../docs/RUNTIME_DATA.md">Runtime data</a> · <a href="../../docs-cms/prd/prd-004-policy-enforcement.md">P3 enforcement requirements</a> · <a href="../../rfcs/009-runtime-facts-and-policy-language.md">Runtime facts design</a> · <a href="../../docs-cms/memos/memo-003-enforcement-detail.md">Design review</a></p>
+        </section>
+        <section class="detail-source-map">
+          <h3>NFR source map</h3>
+          <p>These are current documented constraints. A separate curated NFR document has not been identified. Numerical limits are not performance guarantees.</p>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Constraint</th><th>Source</th><th>Basis</th></tr></thead>
+              <tbody>
+                <tr><td>Scope isolation</td><td>PRD 001 · NFR-1; Runtime data · Credentials</td><td>Exact tenant/environment and separate grants</td></tr>
+                <tr><td>Stable reads</td><td>PRD 004 · AC-1; Runtime data · Policy API</td><td>Captured policy revisions and one fact snapshot; no joint store transaction</td></tr>
+                <tr><td>Fresh evidence</td><td>Runtime data · Expiration</td><td>Finite TTL and a final expiry check before allow</td></tr>
+                <tr><td>Bounded work</td><td>runtime_policy.rs · EvalBudget; runtime.rs · MAX_BODY</td><td>Default: 10,000 steps, 1,000 collection-item visits; HTTP JSON: 1 MiB</td></tr>
+                <tr><td>Bounded storage</td><td>runtime_facts.rs · State limits</td><td>10,000 keys/collections; 16 MiB encoded state</td></tr>
+                <tr><td>Local evaluation</td><td>PRD 004 · FR-1</td><td>No provider request during evaluation</td></tr>
+                <tr><td>Block on uncertainty</td><td>PRD 004 · AC-2; Runtime data · Aggregation</td><td>Deny and indeterminate block. An empty applicable set does not allow.</td></tr>
+                <tr><td>Traceable decisions</td><td>PRD 004 · FR-3; Runtime data · Policy API</td><td>Retain policy revisions/digests and fact revision context</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Current performance budgets remain unestablished. Older interpreter/JIT targets in REQUIREMENTS.md do not describe the current service.</p>
+        </section>
+      </div>
+    </details>
+    <noscript><p>Enable JavaScript to trace the diagram.</p></noscript>
+  </main>
+</body>
+</html>
