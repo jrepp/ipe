@@ -19,6 +19,7 @@ function step(context,responses,state) {
     if (rows.length!==1 || !rows[0].release || !rows[0].policy || !Array.isArray(rows[0].policies) || !Array.isArray(rows[0].evidence)) return ipe.complete({status:'unknown',reason:'provider_response_invalid',gaps:[{code:'provider_response_invalid'}],publication:false});
     snapshot=rows[0];
     receipt=response.receipt;
+    return ipe.exchange([],{phase:'emit',snapshot,receipt,offset:0});
   }
   const release=snapshot.release,root=snapshot.policy;
   let policies=snapshot.policies,evidence=snapshot.evidence;
@@ -30,7 +31,7 @@ function step(context,responses,state) {
   }
   const observations=[];
   let index=0;
-  const selected=()=>{const current=index++;return current>=offset&&current<offset+8;};
+  const selected=()=>{const current=index++;return current>=offset&&current<offset+4;};
   if (selected()) {
     const owner={type:'principal',id:id('principal','release-governance'),title:'Release governance owners',principal_kind:'group',source:source('/owners')};
     observations.push(ipe.observation(ipe.governanceModel(owner,{scope:'release:'+release.id,claim:'provider_reported'}),{owner_count:policies.length},[receipt]));
