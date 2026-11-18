@@ -42,7 +42,7 @@ graph TB
     end
 
     subgraph "Output Layer"
-        D[Decision<br/>Allow / Deny / Indeterminate<br/>plus evidence deadline]
+        D[Decision: Allow / Deny<br/>Status may be Indeterminate<br/>plus evidence deadline]
         EV --> D
     end
 

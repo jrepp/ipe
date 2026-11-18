@@ -30,7 +30,7 @@ deployment demo uses a lightweight HTTPS stand-in and needs no real provider acc
 The local [integration host](docs/integration-host.md) runs installed JavaScript on a schedule.
 Its GitHub example captures external requirements, expiring status facts, and execution outcomes for agent and human review.
 
-IPE is a Rust authorization runtime. The version-2 runtime service (`ipe-server`) evaluates language-2 policy documents against TTL-bounded runtime facts and returns allow, deny, or indeterminate per scoped tenant/environment. Facts persist in RocksDB with atomic multi-key commits and a configured HTTPS pull connector; policy documents publish as immutable, activatable revisions with typed `policy.*` parameters and external provenance. Every decision reads one immutable snapshot and rechecks its earliest evidence deadline before allowing — missing or expired evidence is indeterminate, and consumers must treat indeterminate as denial.
+IPE is a Rust authorization runtime. The version-2 runtime service (`ipe-server`) evaluates language-2 policy documents against TTL-bounded runtime facts and returns an allow or deny decision and an evaluation status per scoped tenant/environment. An indeterminate evaluation results in a deny decision. Facts persist in RocksDB with atomic multi-key commits and a configured HTTPS pull connector; policy documents publish as immutable, activatable revisions with typed `policy.*` parameters and external provenance. Every decision reads one immutable snapshot and rechecks its earliest evidence deadline before allowing — missing or expired evidence is indeterminate, and consumers must treat indeterminate as denial.
 
 **Quick facts:** scoped multi-tenant API | mandatory fact TTL | versioned policy documents | bounded storage with explicit limits
 
@@ -84,7 +84,7 @@ graph TB
     end
 
     subgraph "Output"
-        D[Decision<br/>Allow / Deny / Indeterminate]
+        D[Decision: Allow / Deny<br/>Status may be Indeterminate]
         EV --> D
     end
 

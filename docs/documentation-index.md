@@ -16,7 +16,7 @@ The integration host does not yet publish facts to the enforcement runtime. See 
 
 - [Design records](../docs-cms/README.md): draft requirements and RFCs, decisions, and research.
 - [Repository map](repository-guide.md): workspace components, ownership boundaries, and placeholders.
-- [Vocabulary](vocabulary-guide.md): project terms and their meanings.
+- [Domain model and mappings](domain-model.md) and [vocabulary](vocabulary-guide.md): terms, code mappings, and proposed roles.
 - [Contributing](../CONTRIBUTING.md) and [validation guide](../.agent/validation.md): setup and checks.
 - [Release guide](release-guide.md) and [merge queue guide](merge-queue.md): delivery procedures and limits.
 

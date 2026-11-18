@@ -76,3 +76,5 @@ Expand validation only after reviewing the target folder. Preserve historical co
 [Documentation unification](memos/memo-006-documentation-unification.md) records canonical guide names and compatibility paths.
 
 [Documentation archive review](memos/memo-007-documentation-archive.md) records the historical classification and its limits.
+
+[Ontology audit](memos/memo-008-ontology-audit.md) records domain mappings, code evidence, and open terminology decisions.

@@ -1,6 +1,6 @@
 # Project vocabulary
 
-**Status:** Canonical integration terms adopted in SDK 0.7, v2 domain APIs, governance model v2, and monitor UX. Stored v1 names remain compatible.
+**Status:** Preferred project terms and known schema mappings. Adoption varies by component; stored v1 names remain compatible.
 **Updated:** 2026-10-29
 
 See the [vocabulary review and update plan](vocabulary-review.md) for evidence, recommended decisions, and exact update targets.
@@ -9,7 +9,7 @@ The integration domain and monitor apply the decisions below. Historical documen
 Use this reference for new documentation, UX text, and design reviews.
 It defines preferred terms and their boundaries. It does not rename API fields or change runtime behavior.
 The review covers the current runtime, integration host, and RFC 013 domain model.
-It is not a complete audit of historical documents or provider-specific terms.
+It is not a complete audit of historical documents or provider-specific terms. The [domain model and mappings](domain-model.md) distinguishes implemented fields from proposed roles.
 
 ## Review rules
 
@@ -46,7 +46,7 @@ If a rename affects a public schema, record the compatibility plan before changi
 | Principal | A provider- or authority-scoped identity. A human can have several principals; a service principal need not represent a human. | [Identity and contact design](integration-domain-model.md#principals-roles-and-contact-methods) |
 | Role assignment | A sourced relationship assigning a principal a responsibility or authority within a scope and validity interval. Membership alone does not establish approval authority. | [Identity and contact design](integration-domain-model.md#principals-roles-and-contact-methods) |
 | Contact method | A sourced route for a person, principal, group, or role, such as an email address, team channel, or ticket queue. It does not confer authority. | [Identity and contact design](integration-domain-model.md#principals-roles-and-contact-methods) |
-| Evaluation result | The result of IPE policy evaluation. Preserve `allow`, `deny`, `indeterminate`, and `not_applicable` where the interface uses them. | [`PolicyOutcome`](../crates/ipe-core/src/runtime_policy.rs) |
+| Evaluation result | An individual policy or document result can be `allow`, `deny`, `indeterminate`, or `not_applicable`. The aggregate HTTP `decision` is `allow` or `deny`; its `evaluation_status` can be `indeterminate`. | [`PolicyOutcome`](../crates/ipe-core/src/runtime_policy.rs), [server](../crates/ipe-server/src/runtime.rs) |
 | Review catalog | A retained integration capture with declarations, source evidence, coverage, code, input, and grants. It is separate from the runtime policy catalog. | [Host review catalogs](integration-host.md#review-catalogs-and-operation-explanations) |
 | Catalog acceptance | Selection of a review catalog for local review and explanations. It does not activate an enforcement policy. | [Host review catalogs](integration-host.md#review-catalogs-and-operation-explanations) |
 
@@ -120,11 +120,11 @@ These findings need targeted follow-up. The baseline does not approve schema ren
 | --- | --- | --- | --- |
 | V01 | [Writing guide](../.agent/writing.md) uses “policy”; [RFC 013](../rfcs/013-domain-constraints-and-projections.md) separates descriptions and executable policies. | Use “enforcement policy” and “external policy” across the boundary. | Review product pages for unqualified uses. |
 | V02 | [Host guide](integration-host.md) calls constraints “requirements”; the model nests `Requirement` inside `Obligation`. | Use operation, named requirement, and requirement specification in domain UX. Preserve exact v1 names in schema references. | Adopted in SDK 0.6, v2 APIs, and monitor. Live non-workflow provider validation remains open. |
-| V03 | [Assessment guide](integration-assessments.md) uses “contract”; the host rejects new `contract` output kinds. | Name the actual object: constraint, definition, or review catalog. | Define whether “contract” remains an umbrella term. Inventory existing routes and fields before any rename. |
+| V03 | The host rejects the legacy top-level `contract` output kind but supports nested v2 governance contract records. | Name the actual object: governance contract, operation, definition, or review catalog. | Validate contract-party mappings and retain existing wire identifiers. |
 | V04 | [Host guide](integration-host.md) calls all emitted envelopes “observations,” including constraints and outcomes. | Use “source observation” for a read and “integration record” for a typed stored record. | Review SDK prose without changing wire names. |
 | V05 | Both runtime and host store “facts”; their schemas and publication paths differ. | Use “runtime fact” or “integration fact” across components. | Keep this distinction in future publication designs and tests. |
 | V06 | Runtime `PolicyOutcome` and host `Entity::Outcome` use the same noun for different results. | Use “evaluation result” and “external outcome.” | Review UI labels and reports; retain current identifiers. |
-| V07 | [Model review](integration-model-review.md#contract-construction) includes commit and digest in definition identity; `DefinitionId` uses namespace, resource, and path. | Separate logical definition identity from source revision and content digest. | Correct the earlier recommendation when its review document is next updated. |
+| V07 | An earlier model review included commit and digest in definition identity; `DefinitionId` uses namespace, resource, and path. | Separate logical definition identity from source revision and content digest. | The model review now uses the current identity mapping. Validate provider identity mappings when adding sources. |
 | V08 | [Host guide](integration-host.md) uses program, adapter, collector, and installation near the same code. | Use “program” for code, “collector” for its read role, and “installation” for configured hosted code. | Audit “adapter” across WASM discovery, script steps, and hosted programs before choosing a broader definition. |
 | V09 | [RFC 013](../rfcs/013-domain-constraints-and-projections.md) proposes coverage values; the host guide describes verified declaration scopes and native read status. | Name the coverage mechanism and scope. | Do not present proposed coverage values as the current host schema. |
 

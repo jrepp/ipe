@@ -45,7 +45,7 @@ Reserve “contract” for a defined agreement or specification with explicit pa
 Decide whether IPE needs service agreements, interface specifications, or both before introducing a contract entity.
 The replacements below correct ambiguous references to existing objects. They do not prohibit a future contract model.
 
-The reviewed model has no current `contract` entity. The installation endpoint rejects new `contract` output grants.
+At the time of this review, the model had no governance `contract` entity. The current v2 model supports a nested governance contract. The installation endpoint still rejects the legacy top-level `contract` output grant.
 The assessment request selects a control and source revision. It does not select an object named a contract.
 Use the object actually referenced:
 

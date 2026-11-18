@@ -126,9 +126,9 @@ Use a small typed graph, with provider-specific payloads where normalization wou
 
 | Entity | Identity and purpose |
 | --- | --- |
-| Definition | Repository, commit, path, and content digest; immutable source |
-| Logical control | Stable provider namespace, resource, operation, and declared identifier |
-| Control revision | Logical control plus source and mapping revisions |
+| Definition | Logical namespace, resource, and path. A source revision and content digest identify captured content separately. |
+| Operation identity (v1 `ControlId`) | Stable provider namespace, resource, operation, and declared identifier; not a control mechanism |
+| Mapped operation record revision | Operation record with its source and mapping revisions |
 | Invocation | Parent definition and call-site pointer, with supplied and defaulted inputs |
 | Execution | Provider run, attempt, job, and step identities |
 | Evidence | Source observations and field-level references that support a claim |
