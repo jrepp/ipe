@@ -19,7 +19,10 @@ These rules summarize the standard. Check its full rules and dictionary before c
 
 ### UX terms
 
-- **Policy:** A rule evaluated by an enforcement node.
+Use the [project vocabulary](../docs/VOCABULARY.md) for domain terms and open naming decisions.
+Check it before adding or renaming a concept. Update it in the same change when a meaning changes.
+
+- **Enforcement policy:** A rule evaluated by IPE. Use “policy” alone only when the enforcement context is clear.
 - **External policy:** A requirement enforced by an external system and described by an integration.
 - **VPC:** Virtual private cloud.
 - **Policy service layer:** Services that store and distribute policy data within a VPC. This is a design term, not proof of implementation.

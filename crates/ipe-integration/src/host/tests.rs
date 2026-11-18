@@ -239,6 +239,8 @@ async fn durable_state_has_one_writer_and_interrupted_runs_are_not_success() {
             evidence: vec![],
             summary: Value::Null,
             coverage: Vec::new(),
+            progress: Vec::new(),
+            trace: None,
         });
         persist(&dir.path().join("state"), &store).unwrap();
     }
@@ -289,6 +291,12 @@ async fn monitor_session_requires_token_and_protects_cookie_requests() {
     assert_eq!(response.headers()["location"], "/");
     let cookie = response.headers()["set-cookie"].to_str().unwrap();
     assert!(cookie.contains("HttpOnly; SameSite=Strict"));
+    assert!(cookie.contains("Path=/;"));
+    assert!(response
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .any(|v| { v.to_str().is_ok_and(|s| s.contains("Path=/v1/; Max-Age=0")) }));
     assert!(!cookie.contains(host.token.expose_secret()));
     let cookie = cookie.split(';').next().unwrap();
     let url = format!("{base}/v1/integrations/example");
@@ -319,6 +327,38 @@ async fn monitor_session_requires_token_and_protects_cookie_requests() {
     let text = response.text().await.unwrap();
     assert!(text.contains("source"));
     assert!(!text.contains(host.token.expose_secret()));
+    let refresh = || client.post(format!("{base}/v1/host/session"));
+    assert_eq!(refresh().send().await.unwrap().status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        refresh()
+            .header("cookie", cookie)
+            .header("x-ipe-monitor", "1")
+            .header("origin", "https://other.test")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    let migrated = refresh()
+        .header("cookie", cookie)
+        .header("x-ipe-monitor", "1")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(migrated.status(), StatusCode::OK);
+    assert!(migrated.headers()["set-cookie"].to_str().unwrap().contains("Path=/;"));
+    assert_eq!(
+        client
+            .get(format!("{base}/v2/integrations/example/operations"))
+            .header("cookie", cookie)
+            .header("x-ipe-monitor", "1")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::OK
+    );
     assert_eq!(
         client
             .post(format!("{base}/v1/integrations/example/runs"))
@@ -741,4 +781,49 @@ fn state_file_creation_and_replacement_round_trip() {
         serde_json::from_slice(&std::fs::read(dir.path().join("state.json")).unwrap()).unwrap();
     assert_eq!(replaced.next_run, 1);
     assert!(!dir.path().join("state.tmp").exists());
+}
+
+#[tokio::test]
+async fn sdk_task_progress_and_read_builders_survive_capture_and_restart() {
+    let (origin, _, provider) = fixture().await;
+    let dir = tempfile::tempdir().unwrap();
+    let host = Host::new(config(dir.path(), &origin)).await.unwrap();
+    let mut installed = package(false);
+    installed.source = r#"
+function step(context,responses,state) {
+  if(context.capabilities.length!==1 || context.capabilities[0].name!=='sample'
+    || context.capabilities[0].connection!==undefined || context.limits.steps!==128) throw Error('bad_capabilities');
+  const plan=ipe.tasks(state);
+  if(state===null) {
+    plan.enqueue({kind:'sample'},'sample');
+    const task=plan.next();
+    return ipe.exchange([plan.request(task,'sample',{})],plan.state,[],plan.progress('dispatch','sample'));
+  }
+  const pending=plan.state.current;
+  if(!pending)return ipe.complete({coverage:'sample'});
+  const read=ipe.readResult(responses,pending.id);
+  plan.receive(responses);
+  const source={definition:{namespace:'fixture',resource:'fixture',path:'sample'},revision:'1',pointer:''};
+  const record=read.observations('fixture','provider_reported').emit({kind:'evidence',source,method:'provider_document',description:'Observed sample'},read.data[0]);
+  const association=read.observations('fixture','provider_reported').emit({kind:'association',subject:'release',predicate:'change_for',target:'ticket:42',context:{artifact:'sha256:fixture'},authority:'fixture',resolution:'resolved'},{});
+  return ipe.exchange([],plan.state,[record,association],plan.progress('emit','sample'));
+}"#.into();
+    installed.output_kinds.push("association".into());
+    host.install("sdk", installed).await.unwrap();
+    let id = host.start("sdk", "manual").await.unwrap();
+    let run = completed(&host, "sdk", id).await;
+    assert_eq!(run.status, "succeeded", "{:?}", run.error);
+    assert_eq!(run.records.len(), 2);
+    let association = run.records.iter().find(|r| r.kind == "association").unwrap();
+    assert_eq!(association.expires_at, Some(association.observed_at + 1));
+    assert_eq!(run.progress.len(), 2);
+    assert_eq!(run.progress[0]["reported"]["phase"], "dispatch");
+    assert_eq!(run.progress[1]["reported"]["completed"], 1);
+    assert_eq!(run.records[0].receipts[0], run.evidence[0]["receipt"]);
+    host.stop().await;
+    drop(host);
+    let restored = Host::new(config(dir.path(), &origin)).await.unwrap();
+    assert_eq!(restored.store.lock().await.integrations["sdk"].runs[0].progress.len(), 2);
+    restored.stop().await;
+    provider.abort();
 }

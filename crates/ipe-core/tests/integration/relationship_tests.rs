@@ -176,7 +176,7 @@ fn test_relationship_expiration() {
 
     // Add expired relationship
     let mut expired_rel = Relationship::role("alice", "editor", "document-123", "admin");
-    expired_rel.expires_at = Some(chrono::Utc::now().timestamp() - 100);
+    expired_rel.expires_at = Some(jiff::Timestamp::now().as_second() - 100);
     store.add_relationship(expired_rel).unwrap();
 
     // Expired relationship should not be found
@@ -839,7 +839,7 @@ fn test_relationship_ttl_sets_expiration() {
     assert!(rel.expires_at.is_some());
 
     // Verify expiration is approximately 7200 seconds in the future
-    let now = chrono::Utc::now().timestamp();
+    let now = jiff::Timestamp::now().as_second();
     let expires_at = rel.expires_at.unwrap();
     assert!((expires_at - now) >= 7190 && (expires_at - now) <= 7210);
 }
@@ -913,7 +913,7 @@ fn test_expired_relationship_in_transitive_path() {
         .unwrap();
 
     let mut expired_rel = Relationship::trust("intermediate-ca", "root-ca", "pki");
-    expired_rel.expires_at = Some(chrono::Utc::now().timestamp() - 100);
+    expired_rel.expires_at = Some(jiff::Timestamp::now().as_second() - 100);
     store.add_relationship(expired_rel).unwrap();
 
     // Should not find transitive path through expired relationship

@@ -334,10 +334,10 @@ fn bench_with_expiration(c: &mut Criterion) {
 
         if i % 2 == 0 {
             // Half expired
-            rel.expires_at = Some(chrono::Utc::now().timestamp() - 100);
+            rel.expires_at = Some(jiff::Timestamp::now().as_second() - 100);
         } else {
             // Half valid
-            rel.expires_at = Some(chrono::Utc::now().timestamp() + 3600);
+            rel.expires_at = Some(jiff::Timestamp::now().as_second() + 3600);
         }
 
         store.add_relationship(rel).unwrap();

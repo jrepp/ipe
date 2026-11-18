@@ -1,0 +1,282 @@
+{
+  "description": "Synthetic fixture. No real ticketing or compliance system was queried.",
+  "as_of": 100,
+  "observed_at": 90,
+  "expires_at": 110,
+  "request": {
+    "control": {
+      "namespace": "github",
+      "resource": "fixture/service",
+      "operation": "github_actions.run_job",
+      "local_id": ".github/workflows/release.yml#release"
+    },
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "context": {
+      "execution": "execution:[\"github\",\"fixture/service\",\"42\",2,null,null]",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production"
+    }
+  },
+  "evidence_rules": [
+    {
+      "id": "release_build",
+      "consumer": "ci",
+      "control": {
+        "namespace": "github",
+        "resource": "fixture/service",
+        "operation": "github_actions.run_job",
+        "local_id": ".github/workflows/release.yml#release"
+      },
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "obligation": "build",
+      "producer": "ci",
+      "authority": "github",
+      "predicate": "job.conclusion",
+      "expected": "success",
+      "subject": {
+        "kind": "association",
+        "producer": "ci",
+        "authority": "github",
+        "subject": {
+          "kind": "dependency"
+        },
+        "predicate": "ipe.control_execution",
+        "context_keys": [
+          "execution",
+          "revision"
+        ]
+      }
+    },
+    {
+      "id": "release_approval",
+      "consumer": "ci",
+      "control": {
+        "namespace": "github",
+        "resource": "fixture/service",
+        "operation": "github_actions.run_job",
+        "local_id": ".github/workflows/release.yml#release"
+      },
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "obligation": "approval",
+      "producer": "tickets",
+      "authority": "ticketing",
+      "predicate": "change.approved",
+      "expected": true,
+      "subject": {
+        "kind": "association",
+        "producer": "tickets",
+        "authority": "ticketing",
+        "subject": {
+          "kind": "literal",
+          "subject": "service:release"
+        },
+        "predicate": "change_for",
+        "context_keys": [
+          "artifact",
+          "environment"
+        ]
+      }
+    },
+    {
+      "id": "release_compliance",
+      "consumer": "ci",
+      "control": {
+        "namespace": "github",
+        "resource": "fixture/service",
+        "operation": "github_actions.run_job",
+        "local_id": ".github/workflows/release.yml#release"
+      },
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "obligation": "compliance",
+      "producer": "compliance",
+      "authority": "compliance",
+      "predicate": "check.result",
+      "expected": "pass",
+      "subject": {
+        "kind": "association",
+        "producer": "compliance",
+        "authority": "compliance",
+        "subject": {
+          "kind": "literal",
+          "subject": "service:release"
+        },
+        "predicate": "report_for",
+        "context_keys": [
+          "artifact",
+          "environment"
+        ]
+      }
+    }
+  ],
+  "models": {
+    "ci": [
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "declared",
+        "entity": {
+          "kind": "constraint",
+          "control": {
+            "namespace": "github",
+            "resource": "fixture/service",
+            "operation": "github_actions.run_job",
+            "local_id": ".github/workflows/release.yml#release"
+          },
+          "source": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/service",
+              "path": ".github/workflows/release.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": "/jobs/release"
+          },
+          "title": "Release",
+          "actor_context": "unobserved",
+          "applicability": {
+            "dialect": "provider",
+            "expression": null,
+            "default_behavior": "unknown"
+          },
+          "obligations": [
+            {
+              "id": "build",
+              "description": "Observe build success in this attempt",
+              "requirement": {
+                "kind": "dependency",
+                "control": {
+                  "namespace": "github",
+                  "resource": "fixture/service",
+                  "operation": "github_actions.run_job",
+                  "local_id": ".github/workflows/release.yml#build"
+                }
+              },
+              "next_observation": null
+            },
+            {
+              "id": "approval",
+              "description": "Observe approval for this artifact and environment",
+              "requirement": {
+                "kind": "opaque",
+                "reason": "Approval evidence required"
+              },
+              "next_observation": null
+            },
+            {
+              "id": "compliance",
+              "description": "Observe compliance for this artifact and environment",
+              "requirement": {
+                "kind": "opaque",
+                "reason": "Compliance evidence required"
+              },
+              "next_observation": null
+            }
+          ],
+          "dependencies": [
+            {
+              "namespace": "github",
+              "resource": "fixture/service",
+              "operation": "github_actions.run_job",
+              "local_id": ".github/workflows/release.yml#build"
+            }
+          ],
+          "enforcer": "github"
+        }
+      },
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "inferred",
+        "entity": {
+          "kind": "association",
+          "subject": "control:[\"github\",\"fixture/service\",\"github_actions.run_job\",\".github/workflows/release.yml#build\"]",
+          "predicate": "ipe.control_execution",
+          "target": "job:42:2:build",
+          "context": {
+            "execution": "execution:[\"github\",\"fixture/service\",\"42\",2,null,null]",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "authority": "github",
+          "resolution": "candidate"
+        }
+      },
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "fact",
+          "subject": "job:42:2:build",
+          "predicate": "job.conclusion",
+          "value": "success",
+          "authority": "github",
+          "execution": null
+        }
+      }
+    ],
+    "tickets": [
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "association",
+          "subject": "service:release",
+          "predicate": "change_for",
+          "target": "ticket:CHG42",
+          "context": {
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "authority": "ticketing",
+          "resolution": "resolved"
+        }
+      },
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "fact",
+          "subject": "ticket:CHG42",
+          "predicate": "change.approved",
+          "value": true,
+          "authority": "ticketing",
+          "execution": null
+        }
+      }
+    ],
+    "compliance": [
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "association",
+          "subject": "service:release",
+          "predicate": "report_for",
+          "target": "report:123",
+          "context": {
+            "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "environment": "production"
+          },
+          "authority": "compliance",
+          "resolution": "resolved"
+        }
+      },
+      {
+        "schema_version": 1,
+        "scope": "fixture",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "fact",
+          "subject": "report:123",
+          "predicate": "check.result",
+          "value": "pass",
+          "authority": "compliance",
+          "execution": null
+        }
+      }
+    ]
+  }
+}

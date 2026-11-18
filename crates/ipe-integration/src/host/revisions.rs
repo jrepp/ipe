@@ -6,6 +6,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) const LIMIT: usize = 8;
 const BYTE_LIMIT: usize = 4 * 1024 * 1024;
+pub(super) fn is_review_record(record: &Record) -> bool {
+    !["fact", "outcome", "association"].contains(&record.kind.as_str())
+        && !record.model.as_ref().is_some_and(
+            |model| matches!(&model.entity, Entity::Governance { record } if record.is_temporal()),
+        )
+}
 #[derive(Clone, Serialize, Deserialize)]
 pub(super) struct Revision {
     pub schema_version: u16,
@@ -37,7 +43,7 @@ impl Archive {
     ) -> Result<()> {
         let records: Vec<Record> = records
             .iter()
-            .filter(|r| r.model.is_some() && !["fact", "outcome"].contains(&r.kind.as_str()))
+            .filter(|r| r.model.is_some() && is_review_record(r))
             .cloned()
             .collect();
         let mut identities:Vec<Value> = records.iter().map(|r|json!({"model":r.model,"adapter_digest":r.adapter_digest,"sources":r.source_evidence.iter().map(|e| &e["source_digest"]).collect::<Vec<_>>()})).collect();
@@ -97,6 +103,13 @@ impl Archive {
 // Remove only typed source revision fields. Expressions, defaults and bindings remain semantic.
 fn semantic(record: &Record) -> Value {
     let mut model = serde_json::to_value(&record.model).unwrap_or(Value::Null);
+    if let Some(source) = model["entity"]
+        .get_mut("record")
+        .and_then(|record| record.get_mut("source"))
+        .and_then(Value::as_object_mut)
+    {
+        source.remove("revision");
+    }
     for field in ["source", "parent", "callee", "definition"] {
         if let Some(source) = model["entity"].get_mut(field).and_then(Value::as_object_mut) {
             source.remove("revision");
@@ -106,7 +119,7 @@ fn semantic(record: &Record) -> Value {
 }
 fn groups(records: &[Record]) -> BTreeMap<String, Vec<&Record>> {
     let mut groups: BTreeMap<String, Vec<&Record>> = BTreeMap::new();
-    for r in records.iter().filter(|r| !["fact", "outcome"].contains(&r.kind.as_str())) {
+    for r in records.iter().filter(|r| is_review_record(r)) {
         if let Some(model) = &r.model {
             groups.entry(model.logical_key()).or_default().push(r);
         }
@@ -125,7 +138,8 @@ pub(super) fn diff(before: &[Record], after: &[Record]) -> Value {
         let b=new.get(key).map(Vec::as_slice).unwrap_or(&[]);
         let category=if a.is_empty(){"added"}else if b.is_empty(){"removed"}
         else if values(a,true)!=values(b,true) {
-            if b.iter().any(|r|r.model.as_ref().is_some_and(|m|matches!(m.entity,Entity::Constraint{..}|Entity::Definition{..}|Entity::Invocation{..}))) {"requirement_changed"}else{"evidence_changed"}
+            if b.iter().any(|r|r.kind=="governance") {"governance_changed"}
+            else if b.iter().any(|r|r.model.as_ref().is_some_and(|m|matches!(m.entity,Entity::Constraint{..}|Entity::Definition{..}|Entity::Invocation{..}))) {"requirement_changed"}else{"evidence_changed"}
         }else if values(a,false)!=values(b,false){"source_changed"}
         else if a.iter().map(|r| &r.adapter_digest).collect::<BTreeSet<_>>() != b.iter().map(|r| &r.adapter_digest).collect::<BTreeSet<_>>() {"mapping_changed"}
         else if a.iter().map(|r|(r.observed_at,&r.receipts)).collect::<Vec<_>>() != b.iter().map(|r|(r.observed_at,&r.receipts)).collect::<Vec<_>>(){"evidence_refreshed"}

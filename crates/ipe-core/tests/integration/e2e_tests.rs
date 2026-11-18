@@ -66,7 +66,7 @@ fn test_e2e_bot_workflow_without_approval() {
         Request {
             principal: Principal::bot("service-bot-alpha")
                 .with_attribute("environment", AttributeValue::String("production".into())),
-            timestamp: chrono::Utc::now().timestamp(),
+            timestamp: jiff::Timestamp::now().as_second(),
             source_ip: Some("10.0.1.42".into()),
             ..Default::default()
         },
@@ -96,7 +96,7 @@ fn test_e2e_bot_workflow_with_approval() {
         Request {
             principal: Principal::bot("service-bot-alpha")
                 .with_attribute("environment", AttributeValue::String("production".into())),
-            timestamp: chrono::Utc::now().timestamp(),
+            timestamp: jiff::Timestamp::now().as_second(),
             source_ip: Some("10.0.1.42".into()),
             ..Default::default()
         },
@@ -302,7 +302,7 @@ fn test_e2e_approval_with_metadata_audit_trail() {
             .with_metadata("ticket", "INCIDENT-2024-001")
             .with_metadata("justification", "Emergency cleanup after data corruption")
             .with_metadata("approved_by_email", "admin@example.com")
-            .with_metadata("approval_timestamp", chrono::Utc::now().to_rfc3339())
+            .with_metadata("approval_timestamp", jiff::Timestamp::now().to_string())
             .with_expiration(3600), // 1 hour emergency access
         )
         .unwrap();

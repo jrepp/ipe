@@ -16,6 +16,22 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[2]
 REPOSITORIES = ['jrepp/ipe', 'actions/checkout', 'actions/setup-python', 'actions/setup-node', 'actions/upload-artifact', 'actions/upload-pages-artifact', 'actions/configure-pages', 'actions/deploy-pages']
 
+def render_snapshot(snapshot):
+    """Bundle the monitor and trace assets without starting a host or provider."""
+    page_html = (ROOT/'tools/integration-host/index.html').read_text()
+    embedded = json.dumps(snapshot).replace('&','\\u0026').replace('<','\\u003c').replace('>','\\u003e')
+    page_html = page_html.replace('<script id="monitor-app">', '<script id="host-snapshot" type="application/json">'+embedded+'</script><script id="monitor-app">', 1)
+    # Keep shared snapshots self-contained and independent of a CDN or host.
+    for asset in ['d3.v7.9.0.min.js', 'trace-model.js', 'trace-view.js', 'governance-view.js']:
+        relative = 'vendor/'+asset if asset.startswith('d3.') else asset
+        source = (ROOT/'tools/integration-host'/relative).read_text().replace('</script', '<\\/script')
+        page_html = page_html.replace('<script src="/assets/'+asset+'"></script>', '<script>'+source+'</script>')
+    style = (ROOT/'tools/integration-host/trace-view.css').read_text()
+    page_html = page_html.replace('<link rel="stylesheet" href="/assets/trace-view.css">', '<style>'+style+'</style>')
+    style = (ROOT/'tools/integration-host/governance-view.css').read_text()
+    page_html = page_html.replace('<link rel="stylesheet" href="/assets/governance-view.css">', '<style>'+style+'</style>')
+    return page_html
+
 def configuration(output, port):
     connection = {'id': 'github', 'origin': 'https://api.github.com/', 'headers': {'x-github-api-version': '2022-11-28'}}
     connection['git_credential_url'] = 'https://github.com'
@@ -30,6 +46,9 @@ def configuration(output, port):
         op('list_tree', '/repos/{repository}/git/trees/{revision}', {'repository': repo, 'revision': {'kind': 'sha'}}, fields=['path', 'type'], pointer='/tree', max_records=128, query={'recursive': '1'}),
         op('list_runs', '/repos/{repository}/actions/workflows/{workflow}/runs', {'repository': root, 'revision': {'kind': 'sha'}, 'workflow': {'kind': 'identifier', 'values': ['docs-site.yml']}}, fields=['id', 'head_sha', 'name', 'event', 'path', 'status', 'conclusion', 'run_attempt', 'created_at', 'run_started_at', 'updated_at', 'html_url'], pointer='/workflow_runs', max_records=3, query={'head_sha': '{revision}', 'per_page': '3'}),
         op('list_jobs', '/repos/{repository}/actions/runs/{run_id}/attempts/{attempt}/jobs', {'repository': root, 'run_id': {'kind': 'integer'}, 'attempt': {'kind': 'integer'}}, fields=['id', 'name', 'status', 'conclusion', 'started_at', 'completed_at', 'steps', 'head_sha'], pointer='/jobs', max_records=6, query={'per_page': '6'}),
+        op('list_environments', '/repos/{repository}/environments', {'repository': root}, fields=['id', 'name', 'protection_rules', 'deployment_branch_policy'], pointer='/environments', max_records=8, query={'per_page': '20', 'page': '1'}),
+        op('list_rulesets', '/repos/{repository}/rulesets', {'repository': root}, fields=['id', 'name', 'target', 'source_type', 'source', 'enforcement'], max_records=6, query={'per_page': '20', 'page': '1', 'includes_parents': 'true'}),
+        op('get_ruleset', '/repos/{repository}/rulesets/{ruleset_id}', {'repository': root, 'ruleset_id': {'kind': 'integer'}}, fields=['id', 'name', 'target', 'source_type', 'source', 'enforcement', 'conditions', 'rules', 'bypass_actors']),
     ]
     return {'listen': f'127.0.0.1:{port}', 'api_token_env': 'IPE_HOST_OPERATOR_TOKEN', 'state_dir': str(output / 'state'), 'connections': [connection], 'operations': operations}
 
@@ -66,7 +85,7 @@ def main():
         request = urllib.request.Request(base+path, method=method, data=None if data is None else json.dumps(data).encode(), headers={'Authorization': 'Bearer '+token, 'Content-Type': 'application/json'})
         with urllib.request.urlopen(request, timeout=15) as response:
             return json.load(response)
-    package = {'source': (ROOT/'testing/integration/hosted/github-actions.js').read_text(), 'operations': [o['name'] for o in config['operations']], 'input': {'repository': 'jrepp/ipe', 'revision': '8346e53d0b428b701349817df6624f0ad33a1639', 'workflow': '.github/workflows/docs-site.yml', 'allowed_repositories': REPOSITORIES}, 'interval_seconds': 2 if args.prove_schedule else 300, 'enabled': True, 'fact_ttl_seconds': 900, 'output_kinds': ['definition', 'evidence', 'constraint', 'invocation', 'fact', 'outcome']}
+    package = {'source': (ROOT/'testing/integration/hosted/github-actions.js').read_text(), 'operations': [o['name'] for o in config['operations']], 'input': {'repository': 'jrepp/ipe', 'revision': '8346e53d0b428b701349817df6624f0ad33a1639', 'workflow': '.github/workflows/docs-site.yml', 'allowed_repositories': REPOSITORIES}, 'interval_seconds': 2 if args.prove_schedule else 300, 'enabled': True, 'fact_ttl_seconds': 900, 'output_kinds': ['definition', 'evidence', 'constraint', 'invocation', 'fact', 'outcome', 'association', 'governance']}
     try:
         for _ in range(100):
             if process.poll() is not None:
@@ -125,15 +144,17 @@ def main():
                 'diff_categories':sorted({c['category'] for c in revisions['diff']['changes']}),
                 'context_changed':revisions['collection_context_changed'],
                 'limitation':'The second live capture changes collector source. Requirement and external source changes use deterministic tests.'}
-        snapshot = {'review_proof': review_proof, 'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records'), 'coverage': api('/v1/integrations/github_actions/coverage'), 'explanations': api('/v1/integrations/github_actions/explanations'), 'revisions': api('/v1/integrations/github_actions/revisions')}
+        snapshot = {'review_proof': review_proof, 'installation': installation, 'program': api('/v1/integrations/github_actions'), 'list': api('/v1/integrations'), 'history': history, 'records': api('/v1/integrations/github_actions/records'), 'coverage': api('/v1/integrations/github_actions/coverage'), 'explanations': api('/v1/integrations/github_actions/explanations'), 'operations': api('/v2/integrations/github_actions/operations'), 'revisions': api('/v1/integrations/github_actions/revisions')}
+        # Preserve the native relationships for each retained capture in offline review.
+        snapshot['coverage_explanations'] = {
+            str(capture['id']): api('/v2/integrations/github_actions/runs/'+str(capture['id'])+'/coverage-explanation')
+            for capture in history['runs']
+        }
         encoded = json.dumps(snapshot, indent=2)
         if token in encoded:
             raise RuntimeError('Credential disclosure detected')
         (output/'snapshot.json').write_text(encoded+'\n')
-        page_html = (ROOT/'tools/integration-host/index.html').read_text()
-        embedded = json.dumps(snapshot).replace('&','\\u0026').replace('<','\\u003c').replace('>','\\u003e')
-        page_html = page_html.replace('<script>', '<script id="host-snapshot" type="application/json">'+embedded+'</script><script>', 1)
-        (output/'snapshot.html').write_text(page_html)
+        (output/'snapshot.html').write_text(render_snapshot(snapshot))
         counts = {kind:sum(r['record']['kind']==kind and bool(r['record'].get('model')) for r in snapshot['records']['records']) for kind in ['definition','evidence','constraint','invocation','fact']}
         counts['legacy_untyped_records'] = sum(not bool(r['record'].get('model')) for r in snapshot['records']['records'])
         counts['external_outcomes'] = len(history['external_outcomes'])
