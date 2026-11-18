@@ -30,7 +30,7 @@ function step(context,responses,state) {
   }
   const observations=[];
   let index=0;
-  const selected=()=>{const current=index++;return current>=offset&&current<offset+16;};
+  const selected=()=>{const current=index++;return current>=offset&&current<offset+8;};
   if (selected()) {
     const owner={type:'principal',id:id('principal','release-governance'),title:'Release governance owners',principal_kind:'group',source:source('/owners')};
     observations.push(ipe.observation(ipe.governanceModel(owner,{scope:'release:'+release.id,claim:'provider_reported'}),{owner_count:policies.length},[receipt]));

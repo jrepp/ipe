@@ -135,7 +135,7 @@ test('collector constructs each observation only in its emitted batch',()=>{
     const sandbox={__constructed:0,__args:JSON.stringify([{input:{release:fixture.release}},responses,state])};
     const result=JSON.parse(vm.runInNewContext(`${sdk}\n${collector}\nJSON.stringify(step(...JSON.parse(__args)))`,sandbox,{timeout:1000}));
     assert.equal(sandbox.__constructed,(result.observations||[]).length);
-    assert.ok(sandbox.__constructed<=16);
+    assert.ok(sandbox.__constructed<=8);
     total+=sandbox.__constructed;
     if ('outputs' in result) {
       assert.equal(total,47);

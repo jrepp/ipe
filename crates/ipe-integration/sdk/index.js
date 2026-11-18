@@ -15,26 +15,19 @@
   const name = value => token(value, 64);
   function json(value) {
     const seen = new Set();
-    const pending = [{ item: value, depth: 0, exit: false }];
-    while (pending.length) {
-      const frame = pending.pop();
-      const item = frame.item;
-      if (frame.exit) {
-        seen.delete(item);
-        continue;
-      }
-      if (frame.depth > 32) fail("ipe_json_depth");
-      if (item === null || typeof item === "string" || typeof item === "boolean") continue;
-      if (typeof item === "number" && Number.isFinite(item)) continue;
+    // Depth is checked before descent, so validation needs at most 33 frames.
+    // Avoid allocating a work object for every property in large observations.
+    function validate(item, depth) {
+      if (depth > 32) fail("ipe_json_depth");
+      if (item === null || typeof item === "string" || typeof item === "boolean") return;
+      if (typeof item === "number" && Number.isFinite(item)) return;
       if (typeof item !== "object" || seen.has(item)) fail("ipe_json_invalid");
       if (!Array.isArray(item) && Object.getPrototypeOf(item) !== Object.prototype && Object.getPrototypeOf(item) !== null) fail("ipe_json_invalid");
       seen.add(item);
-      pending.push({ item, depth: frame.depth, exit: true });
-      const keys = Object.keys(item);
-      for (let index = keys.length - 1; index >= 0; index--) {
-        pending.push({ item: item[keys[index]], depth: frame.depth + 1, exit: false });
-      }
+      for (const key of Object.keys(item)) validate(item[key], depth + 1);
+      seen.delete(item);
     }
+    validate(value, 0);
     const text = JSON.stringify(value);
     // ASCII already uses one byte per UTF-16 unit. Scan only non-ASCII code
     // points; astral pairs need two extra bytes and other non-ASCII needs 1–2.

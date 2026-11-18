@@ -76,3 +76,14 @@ test('JSON byte limits include Unicode and escaped lone surrogates at the bounda
   assert.throws(()=>evaluate(`ipe.complete(${JSON.stringify(value+'a')})`),/ipe_json_limit/);
  }
 });
+
+test('JSON validation preserves depth, cycle, type, and shared-object checks',()=>{
+ assert.doesNotThrow(()=>evaluate(`ipe.state(Array.from({length:32}).reduce(value=>({value}),null))`));
+ assert.throws(()=>evaluate(`ipe.state(Array.from({length:33}).reduce(value=>({value}),null))`),/ipe_json_depth/);
+ assert.throws(()=>evaluate(`(()=>{const value={};value.self=value;return ipe.state(value);})()`),/ipe_json_invalid/);
+ assert.deepEqual(evaluate(`(()=>{const value={ok:true};return ipe.state([value,value]);})()`),[{ok:true},{ok:true}]);
+ for (const value of ['undefined','NaN','Infinity','()=>0','1n','new Map()','Object.create({inherited:1})']) {
+  assert.throws(()=>evaluate(`ipe.state({value:${value}})`),/ipe_json_invalid/);
+ }
+ assert.deepEqual(evaluate(`ipe.state(Object.assign(Object.create(null),{ok:true}))`),{ok:true});
+});
