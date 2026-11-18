@@ -100,7 +100,7 @@ function githubGovernance(task, response, subjects, gap) {
   const source=pointer=>({definition:{namespace:'github',resource:task.repo,path},revision,pointer});
   const id=local_id=>({namespace:'github',authority:task.repo,local_id});
   const ref=(kind,local_id,resolution='resolved')=>({kind,id:id(local_id),source_revision:resolution==='resolved'?revision:null,resolution});
-  const emit=(record,pointer,data)=>{const key=record.type+':'+record.id.local_id;if(emitted.has(key))return;emitted.add(key);if(output.length>=96){gap(task,'governance_record_limit');return;}output.push(ipe.observation(ipe.governanceModel({...record,source:source(pointer)},{scope:'governance:'+task.repo,claim:'provider_reported'}),data,[response.receipt]));};
+  const emit=(record,pointer,data)=>{const key=record.type+':'+record.id.local_id;if(emitted.has(key))return;emitted.add(key);if(output.length>=96){gap(task,'governance_record_limit');return;}output.push(JSON.stringify({record:{...record,source:source(pointer)},scope:'governance:'+task.repo,data,receipt:response.receipt}));};
   const unknown=local=>ref('principal',local,'unknown');
   if(task.type==='environments') {
     if(response.data.length>2)gap(task,'environment_sample_limit');
@@ -160,7 +160,15 @@ function step(context, responses, state) {
   const exchange = (requests,observations,phase,task=null) => ipe.exchange(requests,s,observations,plan.progress(phase,task));
   const elapsed = ipe.elapsed;
   let observations=[];
-  if(s.governance?.length)return exchange([],ipe.emitBatch(s.governance,item=>item,8),'emit','governance');
+  if(s.governance?.length) {
+    // Build and validate only the current batch. Pending source records stay
+    // encoded so each exchange does not walk every remaining description.
+    const batch=ipe.emitBatch(s.governance,encoded=>{
+      const item=JSON.parse(encoded);
+      return ipe.observation(ipe.governanceModel(item.record,{scope:item.scope,claim:'provider_reported'}),item.data,[item.receipt]);
+    },4);
+    return exchange([],batch,'emit','governance');
+  }
   if(s.associations?.length) {
     const batch=ipe.emitBatch(s.associations,item=>observation(item.entity,'inferred','execution:'+input.repository,{},item.receipt),8);
     return exchange([],batch,'emit','association');
