@@ -28,6 +28,8 @@ def main():
         shutil.rmtree(package)
     sources = list((ROOT / "docs").glob("*.html"))
     sources += list((ROOT / "docs").glob("*.css")) + list((ROOT / "docs").glob("*.js"))
+    # Preview new top-level guides before they are added to the Git index.
+    sources += list((ROOT / "docs").glob("*.md"))
     sources += [data_file]
     # Source references from contract.html resolve inside the packaged artifact.
     sources += [ROOT / "crates/ipe-core/src/runtime_policy.rs",

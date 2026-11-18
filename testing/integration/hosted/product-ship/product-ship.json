@@ -1,0 +1,455 @@
+{
+  "schema": "ipe.product-ship-demo.v1",
+  "as_of": "2026-11-02T12:00:00Z",
+  "release": {
+    "id": "release-2026.11.02-rc1",
+    "name": "Payments API",
+    "version": "4.8.0-rc1",
+    "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environment": "production"
+  },
+  "policy": {
+    "id": "product-ship",
+    "title": "Product ship qualification",
+    "description": "Qualify a specific release candidate before a proposed production ship decision. This model is a simulation and does not enforce a release gate.",
+    "children": [
+      "ship-accessibility",
+      "ship-security",
+      "ship-open-source-legal",
+      "ship-build-provenance",
+      "ship-test-quality",
+      "ship-privacy",
+      "ship-change-control",
+      "ship-reliability",
+      "ship-operations"
+    ]
+  },
+  "policies": [
+    {
+      "id": "ship-accessibility",
+      "parent_id": "product-ship",
+      "title": "Accessibility",
+      "owner": "Product accessibility lead",
+      "description": "Check accessible user journeys and assistive technology support.",
+      "controls": [
+        {
+          "id": "ship.accessibility.keyboard-navigation",
+          "title": "Keyboard navigation works",
+          "description": "Keyboard navigation works. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.accessibility.screen-reader",
+          "title": "Screen reader labels are present",
+          "description": "Screen reader labels are present. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-security",
+      "parent_id": "product-ship",
+      "title": "Security",
+      "owner": "Product security team",
+      "description": "Check security review and dependency risk.",
+      "controls": [
+        {
+          "id": "ship.security.security-review",
+          "title": "Security review is complete",
+          "description": "Security review is complete. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.security.vulnerability-scan",
+          "title": "Dependency scan has no blocking findings",
+          "description": "Dependency scan has no blocking findings. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-open-source-legal",
+      "parent_id": "product-ship",
+      "title": "Open-source legal",
+      "owner": "Open-source review group",
+      "description": "Check license review and third-party notices.",
+      "controls": [
+        {
+          "id": "ship.open-source-legal.license-review",
+          "title": "Dependency licenses are approved for this release",
+          "description": "Dependency licenses are approved for this release. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.open-source-legal.third-party-notices",
+          "title": "Third-party notices are included",
+          "description": "Third-party notices are included. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-build-provenance",
+      "parent_id": "product-ship",
+      "title": "Build provenance",
+      "owner": "Release engineering",
+      "description": "Check build origin and artifact identity.",
+      "controls": [
+        {
+          "id": "ship.build-provenance.provenance",
+          "title": "Build provenance identifies the source revision",
+          "description": "Build provenance identifies the source revision. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.build-provenance.artifact-digest",
+          "title": "Artifact digest matches the release candidate",
+          "description": "Artifact digest matches the release candidate. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-test-quality",
+      "parent_id": "product-ship",
+      "title": "Test quality",
+      "owner": "Quality engineering",
+      "description": "Check required tests and release coverage.",
+      "controls": [
+        {
+          "id": "ship.test-quality.required-tests",
+          "title": "Required test suites pass",
+          "description": "Required test suites pass. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.test-quality.coverage-threshold",
+          "title": "Coverage meets the release threshold",
+          "description": "Coverage meets the release threshold. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-privacy",
+      "parent_id": "product-ship",
+      "title": "Privacy",
+      "owner": "Privacy review group",
+      "description": "Check data handling and privacy review.",
+      "controls": [
+        {
+          "id": "ship.privacy.privacy-review",
+          "title": "Privacy review is complete",
+          "description": "Privacy review is complete. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.privacy.data-inventory",
+          "title": "Data inventory is current",
+          "description": "Data inventory is current. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-change-control",
+      "parent_id": "product-ship",
+      "title": "Change control",
+      "owner": "Change management",
+      "description": "Check release approval and change traceability.",
+      "controls": [
+        {
+          "id": "ship.change-control.change-approval",
+          "title": "Change approval is recorded",
+          "description": "Change approval is recorded. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.change-control.change-record",
+          "title": "Change record names this artifact",
+          "description": "Change record names this artifact. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-reliability",
+      "parent_id": "product-ship",
+      "title": "Reliability",
+      "owner": "Site reliability engineering",
+      "description": "Check operational readiness and recovery.",
+      "controls": [
+        {
+          "id": "ship.reliability.operational-readiness",
+          "title": "Operational readiness review is complete",
+          "description": "Operational readiness review is complete. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.reliability.recovery-plan",
+          "title": "Recovery plan is current",
+          "description": "Recovery plan is current. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "ship-operations",
+      "parent_id": "product-ship",
+      "title": "Operations",
+      "owner": "Service owner",
+      "description": "Check monitoring and support readiness.",
+      "controls": [
+        {
+          "id": "ship.operations.monitoring",
+          "title": "Release monitoring is configured",
+          "description": "Release monitoring is configured. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        },
+        {
+          "id": "ship.operations.support-owner",
+          "title": "A support owner is assigned",
+          "description": "A support owner is assigned. Evidence comes from the synthetic release qualification broker.",
+          "source": "qualification-snapshot-v1",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "control_id": "ship.accessibility.keyboard-navigation",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.accessibility.keyboard-navigation",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.accessibility.screen-reader",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.accessibility.screen-reader",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.security.security-review",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.security.security-review",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.security.vulnerability-scan",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.security.vulnerability-scan",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.open-source-legal.license-review",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.open-source-legal.license-review",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.open-source-legal.third-party-notices",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.open-source-legal.third-party-notices",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.build-provenance.provenance",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.build-provenance.provenance",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.build-provenance.artifact-digest",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.build-provenance.artifact-digest",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.test-quality.required-tests",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.test-quality.required-tests",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.test-quality.coverage-threshold",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.test-quality.coverage-threshold",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.privacy.privacy-review",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.privacy.privacy-review",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.privacy.data-inventory",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.privacy.data-inventory",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.change-control.change-approval",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.change-control.change-approval",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.change-control.change-record",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.change-control.change-record",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.reliability.operational-readiness",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.reliability.operational-readiness",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.reliability.recovery-plan",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.reliability.recovery-plan",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.operations.monitoring",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.operations.monitoring",
+      "source": "qualification-snapshot-v1"
+    },
+    {
+      "control_id": "ship.operations.support-owner",
+      "release_id": "release-2026.11.02-rc1",
+      "artifact": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "environment": "production",
+      "status": "met",
+      "observed_at": "2026-11-02T11:50:00Z",
+      "expires_at": "2026-11-02T12:30:00Z",
+      "reason": "Synthetic provider reported this check as met.",
+      "receipt": "fixture:qualification:ship.operations.support-owner",
+      "source": "qualification-snapshot-v1"
+    }
+  ],
+  "source": "Synthetic broker fixture; no external systems queried. Controls are proposed examples and do not assert legal or compliance certification."
+}
