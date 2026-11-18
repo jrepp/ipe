@@ -68,6 +68,37 @@ class MergeQueueChecks(unittest.TestCase):
                     self.assertIn(job.get('if'), [None, '${{ !cancelled() }}'])
         self.assertEqual(merge, set(definitions))
 
+    def test_release_builds_are_partitioned_without_removing_pr_tests(self):
+        ci = load(WORKFLOWS / 'ci.yml')
+        matrix = ci['jobs']['build-release']['strategy']['matrix']['include']
+        self.assertEqual({entry['target'] for entry in matrix}, {'x86_64-unknown-linux-gnu'})
+        test_matrix = ci['jobs']['test']['strategy']['matrix']
+        self.assertEqual(set(test_matrix['os']), {'ubuntu-latest', 'macos-latest', 'windows-latest'})
+        self.assertEqual(ci['jobs']['test']['strategy']['fail-fast'], 'false')
+        test_commands = [step.get('run', '') for step in ci['jobs']['test']['steps']]
+        self.assertIn('cargo test --locked --workspace --all-features --verbose', test_commands)
+        self.assertFalse(any(command.startswith('cargo build ') for command in test_commands))
+        runtime = load(WORKFLOWS / 'runtime-data.yml')['jobs']['acceptance']['steps']
+        runtime_commands = [step.get('run', '') for step in runtime]
+        self.assertFalse(any(command.startswith('cargo test ') for command in runtime_commands))
+        self.assertIn('make policy-acceptance', runtime_commands)
+        self.assertIn('python3 scripts/accept-runtime-data.py', runtime_commands)
+        self.assertIn('build-release', ci['jobs']['queue-gate']['needs'])
+        self.assertIn('test', ci['jobs']['queue-gate']['needs'])
+        nightly = load(WORKFLOWS / 'nightly-release-build.yml')
+        self.assertIn('schedule', nightly['on'])
+        self.assertIn('workflow_dispatch', nightly['on'])
+        self.assertNotIn('pull_request', nightly['on'])
+        job = nightly['jobs']['build']
+        self.assertEqual(job['strategy']['fail-fast'], 'false')
+        targets = {entry['target'] for entry in job['strategy']['matrix']['include']}
+        self.assertEqual(targets, {'x86_64-apple-darwin', 'aarch64-apple-darwin', 'x86_64-pc-windows-msvc'})
+        steps = job['steps']
+        self.assertTrue(any('cargo build --locked --workspace --release' in step.get('run', '') for step in steps))
+        self.assertTrue(any('scripts/check-release-artifact.py' in step.get('run', '') for step in steps))
+        upload = next(step for step in steps if step.get('uses', '').startswith('actions/upload-artifact@'))
+        self.assertEqual(upload['with']['if-no-files-found'], 'error')
+
     def test_review_and_hold_conditions_have_no_auto_approval(self):
         config = load(ROOT / '.mergify.yml')
         queue = config['queue_rules'][0]

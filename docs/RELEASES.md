@@ -38,8 +38,11 @@ Review category placement when a PR has multiple labels.
 
 The workflow creates a draft with GitHub's generated notes.
 A tag suffix such as `-rc.1` marks the draft as a prerelease.
-The workflow does not bump versions, build assets, create tags, or publish releases.
-It does not change the existing test and release-build workflows.
+The release-notes workflow does not bump versions, build assets, create tags, or publish releases.
+The nightly release-build workflow builds macOS and Windows server binaries from the selected revision and retains them as Actions artifacts.
+It runs on a schedule and by manual dispatch. It does not create a release or publish assets.
+PR CI builds the Linux release and runs the existing macOS and Windows test matrices.
+Check the nightly run and target revision before attaching an artifact to a release.
 
 For an existing tag, run **Release notes** from the Actions page and enter the tag.
 The workflow must first exist on the default branch for manual dispatch.

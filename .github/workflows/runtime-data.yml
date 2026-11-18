@@ -33,16 +33,12 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y "${missing[@]}"
           fi
-      - name: Test runtime storage and language
-        run: cargo test --locked -p ipe-core --features approvals
-      - name: Test server boundaries
-        run: cargo test --locked -p ipe-server
-      - name: Build server
-        run: cargo build --locked -p ipe-server
-      - name: Exercise public API and HTTPS pull connector
-        run: python3 scripts/accept-runtime-data.py
+      # The required CI gate runs these workspace unit and integration tests.
+      # Keep this job focused on the independent external acceptance suites.
       - name: Exercise policy documents and external imports
         run: make policy-acceptance
+      - name: Exercise public API and HTTPS pull connector
+        run: python3 scripts/accept-runtime-data.py
       - name: Save acceptance evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
