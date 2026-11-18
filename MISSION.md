@@ -29,11 +29,11 @@ See the [project map](docs-cms/PROJECTS.md) for project routes, requirements, de
 
 ## Implemented foundations
 
-The [runtime](docs/RUNTIME_DATA.md) supports scoped fact writes, HTTPS pull ingestion, mandatory expiry, and language-2 policy evaluation.
+The [runtime](docs/runtime-data.md) supports scoped fact writes, HTTPS pull ingestion, mandatory expiry, and language-2 policy evaluation.
 It captures immutable snapshots and rechecks evidence deadlines before returning allow.
 Policy documents have immutable revisions, source provenance, candidate evaluation, and activation operations.
 
-The [integration host](docs/INTEGRATION_HOST.md) executes installed JavaScript through bounded, permitted native reads.
+The [integration host](docs/integration-host.md) executes installed JavaScript through bounded, permitted native reads.
 It retains observations, governance descriptions, evidence checks, and run history for human and agent inspection.
 Its record acceptance does not activate enforcement policies or prove external requirement fulfillment.
 

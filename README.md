@@ -12,29 +12,29 @@ Connect external evidence to explicit policy checks. See the rule, the source, a
 
 Start with the [project map](docs-cms/PROJECTS.md) for product principles, project routes, and PRDs.
 See [design documentation](docs-cms/README.md) for new requirements, proposals, and decisions.
-See the [documentation index](docs/INDEX.md) for existing guides.
+See the [documentation index](docs/documentation-index.md) for existing guides.
 
 ## Overview
 
-The experimental [runtime data workflow](docs/RUNTIME_DATA.md) provides scoped,
+The experimental [runtime data workflow](docs/runtime-data.md) provides scoped,
 authenticated fact writes, an HTTPS pull connector, mandatory TTL, and typed
 language-2 policies. Its [external acceptance suite](acceptance/runtime-data/README.md)
 exercises the real server with several data shapes. This profile has explicit
 deployment and feature limits; the legacy APIs and architecture described below
 are not a production-readiness guarantee.
 
-The separate [Integration Workload discovery slice](docs/INTEGRATION_DISCOVERY.md)
+The separate [Integration Workload discovery slice](docs/integration-discovery.md)
 provides CLI and MCP access to bounded ServiceNow metadata discovery. Its local
 deployment demo uses a lightweight HTTPS stand-in and needs no real provider account.
 
-The local [integration host](docs/INTEGRATION_HOST.md) runs installed JavaScript on a schedule.
+The local [integration host](docs/integration-host.md) runs installed JavaScript on a schedule.
 Its GitHub example captures external requirements, expiring status facts, and execution outcomes for agent and human review.
 
 IPE is a Rust authorization runtime. The version-2 runtime service (`ipe-server`) evaluates language-2 policy documents against TTL-bounded runtime facts and returns allow, deny, or indeterminate per scoped tenant/environment. Facts persist in RocksDB with atomic multi-key commits and a configured HTTPS pull connector; policy documents publish as immutable, activatable revisions with typed `policy.*` parameters and external provenance. Every decision reads one immutable snapshot and rechecks its earliest evidence deadline before allowing — missing or expired evidence is indeterminate, and consumers must treat indeterminate as denial.
 
 **Quick facts:** scoped multi-tenant API | mandatory fact TTL | versioned policy documents | bounded storage with explicit limits
 
-See [MISSION.md](MISSION.md) for the product mission and [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md) for the implemented workflow.
+See [MISSION.md](MISSION.md) for the product mission and [docs/runtime-data.md](docs/runtime-data.md) for the implemented workflow.
 
 ### Key Capabilities
 
@@ -157,11 +157,11 @@ python3 scripts/accept-runtime-data.py
 cargo test --all-features
 ```
 
-The bootstrap JSON declares the database path, loopback bind address, input schema, scoped collections, policy sources, credentials, and connectors. See [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md) for the complete request shapes and limits.
+The bootstrap JSON declares the database path, loopback bind address, input schema, scoped collections, policy sources, credentials, and connectors. See [docs/runtime-data.md](docs/runtime-data.md) for the complete request shapes and limits.
 
 ## Documentation
 
-**📚 [Documentation Index](docs/INDEX.md)** - Start here for guided navigation
+**📚 [Documentation Index](docs/documentation-index.md)** - Start here for guided navigation
 
 ### Quick Links
 
@@ -171,8 +171,8 @@ The bootstrap JSON declares the database path, loopback bind address, input sche
 
 ### Technical Reference
 
-- **[RUNTIME_DATA](docs/RUNTIME_DATA.md)** - The implemented v2 runtime workflow and API
-- **[ARCHITECTURE](docs/ARCHITECTURE.md)** - System architecture with diagrams
+- **[RUNTIME_DATA](docs/runtime-data.md)** - The implemented v2 runtime workflow and API
+- **[ARCHITECTURE](docs/architecture-guide.md)** - System architecture with diagrams
 - **[RFCs](rfcs/INDEX.md)** - Design proposals and specifications
 
 ### Sidecar Architecture RFCs
@@ -183,7 +183,7 @@ The bootstrap JSON declares the database path, loopback bind address, input sche
 
 ## Repository and development
 
-The [repository map](docs/REPOSITORY.md) connects product projects to code, guides, and checks.
+The [repository map](docs/repository-guide.md) connects product projects to code, guides, and checks.
 Follow [QUICKSTART.md](QUICKSTART.md) for prerequisites, builds, acceptance checks, and documentation previews.
 Make owns contributor commands; Just provides aliases.
 The legacy parser, bytecode interpreter, and JIT were removed. Placeholder crates do not provide those features.
@@ -192,7 +192,7 @@ The legacy parser, bytecode interpreter, and JIT were removed. Placeholder crate
 
 The [project map](docs-cms/PROJECTS.md) organizes current product work across modeling, integration, enforcement, evidence operations, and site delivery.
 Each project links to a PRD with acceptance criteria and open decisions.
-The [runtime guide](docs/RUNTIME_DATA.md) records current implementation limits.
+The [runtime guide](docs/runtime-data.md) records current implementation limits.
 The previous [roadmap](ROADMAP.md) is historical.
 
 ## Performance
@@ -227,5 +227,5 @@ Licensed under the Mozilla Public License Version 2.0 ([LICENSE](https://www.moz
 Policy documents now separate immutable typed `policy.*` parameters from expiring
 `data.*` evidence, with named sections and external-source provenance. Run
 `make policy-acceptance` for PR-landing scenarios and the HTTPS import workflow.
-See [policy data and provenance](docs/RUNTIME_DATA.md#separate-policy-data-from-runtime-evidence)
+See [policy data and provenance](docs/runtime-data.md#separate-policy-data-from-runtime-evidence)
 for the management API, agent trust boundary, and experimental limits.

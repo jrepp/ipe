@@ -24,9 +24,9 @@ A discovered source rule is neither a reviewed IPE model nor permission to activ
 
 # Existing foundation
 
-[Policy documents](../../docs/RUNTIME_DATA.md) support immutable revisions, provenance, candidate testing, and activation.
-[Integration models](../../docs/INTEGRATION_DOMAIN_MODEL.md) describe external policies, controls, and requirements.
-The [vocabulary](../../docs/VOCABULARY.md) separates catalog acceptance from policy activation.
+[Policy documents](../../docs/runtime-data.md) support immutable revisions, provenance, candidate testing, and activation.
+[Integration models](../../docs/integration-domain-model.md) describe external policies, controls, and requirements.
+The [vocabulary](../../docs/vocabulary-guide.md) separates catalog acceptance from policy activation.
 A complete source-to-reviewed-model workspace remains planned.
 
 # Route and scope

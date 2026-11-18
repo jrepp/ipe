@@ -23,8 +23,8 @@ Runtime acceptance requires Python 3.10 or newer and OpenSSL. Integration accept
 | Integration acceptance | `cargo build --locked -p ipe-integration --bins`, then `cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored` |
 | TypeScript provider | In `testing/integration`: `npm ci`, `npm run check`, and `npm test` |
 | Integration package cache | `npm ci --ignore-scripts --prefix tools/integration-packages`, then `npm test --prefix tools/integration-packages` |
-| Hosted integrations | `cargo test --locked -p ipe-integration host --lib`; `node --test tools/integration-host/*.test.cjs`; see [live proof](../docs/INTEGRATION_HOST.md) |
-| GitHub contract capture | `cargo test --locked -p ipe-integration github_contract --lib`; see the [live proof and view checks](../docs/GITHUB_CONTRACT_SPIKE.md#proof-and-next-questions) |
+| Hosted integrations | `cargo test --locked -p ipe-integration host --lib`; `node --test tools/integration-host/*.test.cjs`; see [live proof](../docs/integration-host.md) |
+| GitHub contract capture | `cargo test --locked -p ipe-integration github_contract --lib`; see the [live proof and view checks](../docs/github-contract-spike.md#proof-and-next-questions) |
 | Runtime performance | `cargo bench --locked -p ipe-core --features approvals --bench v2_evaluation` |
 
 The `approvals` feature enables the runtime modules in `ipe-core`. Default-feature tests alone do not exercise them. Test both feature configurations when changing feature gates or dependencies.
@@ -57,7 +57,7 @@ Acceptance guides explain prerequisites, cleanup, and report paths: [runtime](..
 
 ## Merge automation
 
-Read the [Mergify queue guide](../docs/MERGE_QUEUE.md) before changing required checks or PR triggers.
+Read the [Mergify queue guide](../docs/merge-queue.md) before changing required checks or PR triggers.
 Run `actionlint`, `mergify config validate`, and the queue regression tests listed in that guide.
 Required workflows must run on ordinary PRs and Mergify batch PRs, including workflow-only changes.
 
@@ -70,7 +70,7 @@ Use Conventional Commits, such as `fix(runtime): reject expired evidence`. Keep 
 A PR description should state the problem, the resulting behavior, and the verification performed. Include compatibility changes and material limitations. Distinguish proposed designs from implemented behavior.
 
 Release notes come from merged PRs. Use clear titles, release labels, and explicit migration notes.
-Do not add manual changelog entries. Follow the [release guide](../docs/RELEASES.md).
+Do not add manual changelog entries. Follow the [release guide](../docs/release-guide.md).
 
 ## Native compilation and bounded guest tests
 

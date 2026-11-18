@@ -2,7 +2,7 @@
   const $ = id => document.getElementById(id);
   // Repository Markdown only: relative paths, optionally climbing out of docs/.
   const allowed = /^(?:\.\.\/)*(?:[\w-]+\/)*[\w.-]+\.md$/;
-  const requested = new URLSearchParams(location.search).get('path') || 'INDEX.md';
+  const requested = new URLSearchParams(location.search).get('path') || 'documentation-index.md';
   const status = $('doc-status');
   const body = $('doc-body');
 

@@ -26,7 +26,7 @@ No schedule, capacity, or staffing commitment is implied.
 | Explain the user's object first. | Start with a policy, control, evidence item, or governed action. Show raw identifiers in details. |
 | Claims follow evidence. | Separate implemented behavior, tested fixtures, proposed features, and measured outcomes. |
 
-[MISSION.md](../MISSION.md) owns product positioning. [Vocabulary](../docs/VOCABULARY.md) owns current domain terms.
+[MISSION.md](../MISSION.md) owns product positioning. [Vocabulary](../docs/vocabulary-guide.md) owns current domain terms.
 The principles summarize existing runtime and design boundaries; the PRDs identify work that is still proposed.
 
 ## Subway map
@@ -105,7 +105,7 @@ P5 can publish the honest product story and current roadmap before the live mile
 - [RFC 018](rfcs/rfc-018-evidence-system-map.md) supplies the cross-system design and its unresolved decisions.
 - The other PRDs organize supporting product work. They do not duplicate or override PRD 001's acceptance criteria.
 - Existing [RFCs](../rfcs/INDEX.md) keep their area contracts. New implementation RFCs must declare the PRDs they cover.
-- Existing [runtime](../docs/RUNTIME_DATA.md) and [integration](../docs/INTEGRATION_HOST.md) guides describe implementation.
+- Existing [runtime](../docs/runtime-data.md) and [integration](../docs/integration-host.md) guides describe implementation.
 - The previous [roadmap](../ROADMAP.md) is historical. Its parser/JIT milestones are not current project commitments.
 
 ## Product message

@@ -6,10 +6,10 @@
 
 ## Summary
 
-An experimental subset is implemented and described in the [runtime workflow guide](../docs/RUNTIME_DATA.md).
+An experimental subset is implemented and described in the [runtime workflow guide](../docs/runtime-data.md).
 The implemented extension also adds immutable sectioned policy documents, typed
 `policy.*` data, external-source provenance, and candidate/scenario testing; see
-[the policy-data contract](../docs/RUNTIME_DATA.md#separate-policy-data-from-runtime-evidence).
+[the policy-data contract](../docs/runtime-data.md#separate-policy-data-from-runtime-evidence).
 Provider-specific semantic discovery and external policy write-back are not implemented.
 That guide specifies the actual API, bearer/loopback deployment profile, supported
 types, and deferred features. This draft remains the target design; its complete

@@ -24,7 +24,7 @@
     <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html" aria-current="page">Contract</a><a href="status.html">Project status</a><a href="performance.html">Performance</a><a href="ast.html">AST explorer</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Tools</span></div>
-    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=VOCABULARY.md">Project vocabulary</a><a href="doc.html?path=VOCABULARY_REVIEW.md">Vocabulary review</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="index.html#projects">Project map</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=architecture-guide.md">Architecture</a><a href="doc.html?path=vocabulary-guide.md">Project vocabulary</a><a href="doc.html?path=vocabulary-review.md">Vocabulary review</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="index.html#projects">Project map</a></div>
   </nav>
   <main class="content">
     <article class="article">
@@ -88,7 +88,7 @@
           <li>Storage is bounded: 10,000 keys per collection, 16 MiB encoded state, 1 MiB per value, 100 policies and 100 documents per scope.</li>
           <li>The listener binds to loopback only; remote use requires a correctly configured local TLS proxy. There is no replication or joint transaction across the fact and policy stores.</li>
         </ul></div>
-        <p class="small muted">Sources: <a href="../crates/ipe-core/src/runtime_facts.rs">runtime_facts.rs</a> and <a href="../crates/ipe-core/src/runtime_policy.rs">runtime_policy.rs</a>; the full list lives in <a href="doc.html?path=RUNTIME_DATA.md">RUNTIME_DATA.md</a>.</p>
+        <p class="small muted">Sources: <a href="../crates/ipe-core/src/runtime_facts.rs">runtime_facts.rs</a> and <a href="../crates/ipe-core/src/runtime_policy.rs">runtime_policy.rs</a>; the full list lives in <a href="doc.html?path=runtime-data.md">runtime-data.md</a>.</p>
       </section>
       <section class="section" id="requirements">
         <h2>Requirements</h2>

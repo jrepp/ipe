@@ -143,7 +143,7 @@ To add new agents:
 ## Related Documentation
 
 - Project agent instructions: `/.agent/core-prompt.md`
-- Architecture documentation: `/docs/ARCHITECTURE.md`
+- Architecture documentation: `/docs/architecture-guide.md`
 - Requirements specification: `/REQUIREMENTS.md`
 - Bytecode specification: `/docs/BYTECODE.md`
 - Commit message standards: See `.agent/core-prompt.md`

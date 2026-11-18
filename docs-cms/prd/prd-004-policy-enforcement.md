@@ -24,7 +24,7 @@ A returned allow result alone does not prove the external action happened.
 
 # Existing foundation
 
-The [runtime guide](../../docs/RUNTIME_DATA.md) describes language-2 evaluation, immutable snapshots, scope isolation, finite TTLs, and deadline checks.
+The [runtime guide](../../docs/runtime-data.md) describes language-2 evaluation, immutable snapshots, scope isolation, finite TTLs, and deadline checks.
 The runtime returns policy decisions; a complete fleet of application enforcement points is not established by the current preview.
 [Enforcement MCP](../../rfcs/017-enforcement-mcp-surface.md) remains a design proposal.
 

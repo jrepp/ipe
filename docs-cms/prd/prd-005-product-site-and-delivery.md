@@ -26,7 +26,7 @@ A maintainer needs repeatable publication that does not present failed or unrevi
 
 The repository has a static HTML documentation site, a Markdown viewer, a portable archive, and GitHub Pages workflow.
 The [design index](../README.md) adds structured PRDs, RFCs, and decisions.
-The [merge queue guide](../../docs/MERGE_QUEUE.md) describes the proposed rollout of validated merge automation.
+The [merge queue guide](../../docs/merge-queue.md) describes the proposed rollout of validated merge automation.
 A local build does not establish that the current changes are deployed.
 
 # Route and scope

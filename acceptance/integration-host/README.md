@@ -27,4 +27,4 @@ The view test uses `docs/node_modules/jsdom`. Install it with `npm ci --ignore-s
 Tests cover operation grants, forged receipts, retries, denied reads, redirects, response limits, restart, scheduling, expiry, and failed extraction retention.
 The view test checks measurement separation, unknown durations, expired facts, and provider text escaping.
 
-See [the host guide](../../docs/INTEGRATION_HOST.md) for API details and implemented limits.
+See [the host guide](../../docs/integration-host.md) for API details and implemented limits.

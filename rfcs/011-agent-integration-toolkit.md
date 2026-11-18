@@ -6,7 +6,7 @@
 
 ## Purpose and boundary
 
-**Initial implementation:** the [discovery toolkit](../docs/INTEGRATION_DISCOVERY.md)
+**Initial implementation:** the [discovery toolkit](../docs/integration-discovery.md)
 exposes capability listing, connection checks and metadata discovery through a
 [Rust CLI and MCP stdio client](../crates/ipe-integration/src/bin/integration-toolkit.rs).
 The Rust acceptance/deployment harness uses a TypeScript HTTPS test facade. Discovery
@@ -20,7 +20,7 @@ and typed tool handlers with generated schemas. A small transport guard retains
 bounded framing, duplicate-key rejection and sanitized diagnostics. Streamable
 HTTP remains proposed. Integration CLI parsing now uses `clap`; credentials use
 `secrecy`, and the workload/harness have bounded local shutdown paths;
-see the [stack and crate reuse audit](../docs/INTEGRATION_STACK.md) for ownership,
+see the [stack and crate reuse audit](../docs/integration-stack.md) for ownership,
 compatibility constraints and regression gates.
 
 Provide an agent-neutral **Integration Toolkit** for discovering capabilities,
@@ -57,7 +57,7 @@ implemented APIs. It specializes RFC 010 rather than replacing its contracts.
 | [MCP tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools) provide discoverable schemas and structured results; [authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) is separate | MCP is a client interface, not the trust boundary. Tool annotations cannot confer authority or enforce side-effect limits |
 | [OpenTelemetry signals](https://opentelemetry.io/docs/concepts/signals/) distinguish traces, metrics and logs | Collect host-generated signals across broker, sandbox, publication and delivery, with explicit masking before export |
 | Existing [scenario runner](../crates/ipe-core/examples/policy_scenarios.rs) and [HTTP acceptance suites](../acceptance/runtime-data/README.md) exercise isolated fixtures and explicit clocks | Reuse test patterns, not an assumed adapter harness. Adapter staging, deployment and run APIs do not exist yet |
-| Existing [policy publication](../docs/RUNTIME_DATA.md#policy-management-and-candidate-testing-api) activates immediately | It is not a draft registry or integration deployment endpoint; the toolkit needs distinct resources |
+| Existing [policy publication](../docs/runtime-data.md#policy-management-and-candidate-testing-api) activates immediately | It is not a draft registry or integration deployment endpoint; the toolkit needs distinct resources |
 
 These sources support individual patterns, not a conclusion that their frameworks
 meet IPE's isolation or confidentiality requirements. Provider and runtime choices

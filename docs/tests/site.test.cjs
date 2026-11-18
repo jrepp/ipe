@@ -139,10 +139,10 @@ test('markdown viewer renders diagrams, keeps doc links in the viewer, and build
     + '<a href="../crates/ipe-core/src/jit.rs">jit</a> <a href="https://example.com/x.md">ext</a></p>'
     + '<pre><code class="language-mermaid">graph TD; A--&gt;B</code></pre><h2>Storage</h2><pre><code class="language-rust">fn x() {}</code></pre>'
     + '<pre><code class="language-mermaid">graph TD; C--&gt;D</code></pre><pre><code class="language-mermaid">broken</code></pre>';
-  const { dom, requests, diagrams } = await loadDoc('?path=ARCHITECTURE.md', { markdown });
+  const { dom, requests, diagrams } = await loadDoc('?path=architecture-guide.md', { markdown });
   try {
     const { document } = dom.window;
-    assert.deepEqual(requests, ['http://localhost/ipe/docs/ARCHITECTURE.md']);
+    assert.deepEqual(requests, ['http://localhost/ipe/docs/architecture-guide.md']);
     assert.deepEqual(diagrams, ['graph TD; A-->B', 'graph TD; C-->D']);
     assert.deepEqual([...document.querySelectorAll('#doc-body .mermaid svg')].map(svg => svg.id), ['doc-diagram-0', 'doc-diagram-1']);
     assert.equal([...document.querySelectorAll('#doc-body pre')].at(-1).textContent, 'broken');
@@ -151,7 +151,7 @@ test('markdown viewer renders diagrams, keeps doc links in the viewer, and build
     assert.deepEqual(links, ['doc.html?path=BYTECODE.md#opcodes', 'http://localhost/ipe/crates/ipe-core/src/jit.rs', 'https://example.com/x.md']);
     assert.deepEqual([...document.querySelectorAll('#doc-toc a')].map(link => link.getAttribute('href')), ['#layers--tiers', '#storage']);
     assert.equal(document.title, 'Architecture · IPE');
-    assert.equal(document.querySelector('.sidebar [aria-current="page"]').getAttribute('href'), 'doc.html?path=ARCHITECTURE.md');
+    assert.equal(document.querySelector('.sidebar [aria-current="page"]').getAttribute('href'), 'doc.html?path=architecture-guide.md');
     assert.match(document.querySelector('#doc-status').textContent, /3 diagrams, 1 shown as source \(invalid Mermaid\)$/);
   } finally { dom.window.close(); }
 });

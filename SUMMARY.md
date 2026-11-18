@@ -4,7 +4,7 @@
 > interpreter, adaptive JIT tiering), which was removed after the version-2
 > runtime landed. Kept for historical context. The shipping product is the
 > v2 runtime: see [README.md](README.md) and
-> [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md).
+> [docs/runtime-data.md](docs/runtime-data.md).
 
 ## Vision
 

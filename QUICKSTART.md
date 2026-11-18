@@ -1,6 +1,6 @@
 # Start development
 
-Read the [repository map](docs/REPOSITORY.md) before choosing a component.
+Read the [repository map](docs/repository-guide.md) before choosing a component.
 IPE has an experimental runtime and separate integration tools. Product designs do not establish connected runtime behavior.
 
 ## Prerequisites
@@ -38,7 +38,7 @@ cargo test --locked -p ipe-integration --test discovery_acceptance -- --ignored
 
 Read the [runtime acceptance guide](acceptance/runtime-data/README.md) and [integration acceptance guide](acceptance/integration-discovery/README.md) for prerequisites and cleanup.
 These checks use temporary credentials and synthetic sources. Do not supply production credentials.
-The runtime server requires configured credentials and a loopback listener; see [runtime data](docs/RUNTIME_DATA.md).
+The runtime server requires configured credentials and a loopback listener; see [runtime data](docs/runtime-data.md).
 
 ## Preview documentation
 

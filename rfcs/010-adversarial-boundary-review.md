@@ -64,7 +64,7 @@ Rust DB opens would leave the native background readers unprotected. Repository
 ARM64 native builds therefore disable the hardware CRC path and use the portable
 implementation, preserving the checksum format at a performance cost. The build
 constraint and custom-flag requirement are documented in the
-[discovery guide](../docs/INTEGRATION_DISCOVERY.md#native-storage-build-constraint).
+[discovery guide](../docs/integration-discovery.md#native-storage-build-constraint).
 With both Rust and C++ instrumented, the native core suites reproduce this race
 before the workaround and pass afterwards. CI now includes ARM64 ThreadSanitizer
 to keep that evidence current. An upstream initialization fix may replace this

@@ -8,7 +8,7 @@
 > **Superseded.** The legacy engine described here as current (bytecode
 > compiler, interpreter, JIT tiers, lock-free policy store) was removed after
 > the version-2 runtime landed. This RFC is kept for historical context only;
-> see [README.md](README.md) and [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md)
+> see [README.md](README.md) and [docs/runtime-data.md](docs/runtime-data.md)
 > for the shipping runtime.
 
 ## Abstract

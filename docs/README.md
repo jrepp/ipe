@@ -2,7 +2,7 @@
 
 The [public site](https://jrepp.github.io/ipe/) explains the policy runtime and the local integration host.
 The [project map](../docs-cms/PROJECTS.md) connects five project routes to their draft requirements.
-The [documentation index](INDEX.md) links to implementation and operating guides.
+The [documentation index](documentation-index.md) links to implementation and operating guides.
 
 ## Preview the site
 
@@ -33,4 +33,4 @@ Use the [workflow runs](https://github.com/jrepp/ipe/actions/workflows/docs-site
 ## Archived examples
 
 The policy explorer and performance dashboard use a fixed export from the removed interpreter.
-The build copies that export into the archive. Read the [runtime data guide](RUNTIME_DATA.md) for the current evaluation service.
+The build copies that export into the archive. Read the [runtime data guide](runtime-data.md) for the current evaluation service.

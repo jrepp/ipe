@@ -1,285 +1,227 @@
+# Document moved
+
+The canonical guide is [docker-guide.md](docker-guide.md). The sections below preserve old links.
+
 # Docker Setup for IPE Documentation
 
-This directory includes Docker Compose configuration for running the IPE documentation site with nginx.
+See [Docker Setup for IPE Documentation](docker-guide.md#docker-setup-for-ipe-documentation).
 
 ## 🐳 Quick Start
 
-```bash
+See [🐳 Quick Start](docker-guide.md#quick-start).
+
 # Start the nginx server
-just docs-serve
+
+See [Start the nginx server](docker-guide.md#start-the-nginx-server).
 
 # View at http://localhost:8080
-open http://localhost:8080
+
+See [View at http://localhost:8080](docker-guide.md#view-at-httplocalhost8080).
 
 # Stop the server
-just docs-stop
-```
+
+See [Stop the server](docker-guide.md#stop-the-server).
 
 ## 📋 Available Commands
 
+See [📋 Available Commands](docker-guide.md#available-commands).
+
 ### Server Management
 
-```bash
+See [Server Management](docker-guide.md#server-management).
+
 # Start nginx server in background
-just docs-serve
+
+See [Start nginx server in background](docker-guide.md#start-nginx-server-in-background).
 
 # Stop nginx server
-just docs-stop
+
+See [Stop nginx server](docker-guide.md#stop-nginx-server).
 
 # View server logs
-just docs-logs
+
+See [View server logs](docker-guide.md#view-server-logs).
 
 # Restart server (useful after content changes)
-just docs-stop && just docs-serve
-```
+
+See [Restart server (useful after content changes)](docker-guide.md#restart-server-useful-after-content-changes).
 
 ### Testing
 
-```bash
+See [Testing](docker-guide.md#testing).
+
 # Run Playwright tests (starts/stops Docker automatically)
-just test-pages
+
+See [Run Playwright tests (starts/stops Docker automatically)](docker-guide.md#run-playwright-tests-startsstops-docker-automatically).
 
 # Open browser for manual testing (Docker nginx)
-just test-pages-headed
+
+See [Open browser for manual testing (Docker nginx)](docker-guide.md#open-browser-for-manual-testing-docker-nginx).
 
 # Quick validation tests (no Docker needed)
-just test-pages-quick
+
+See [Quick validation tests (no Docker needed)](docker-guide.md#quick-validation-tests-no-docker-needed).
 
 # Full test suite in Docker containers
-just test-pages-docker
-```
+
+See [Full test suite in Docker containers](docker-guide.md#full-test-suite-in-docker-containers).
 
 ## 🏗️ Architecture
 
+See [🏗️ Architecture](docker-guide.md#architecture).
+
 ### docker-compose.yml
 
-Defines two services:
-
-1. **docs** (always runs)
-   - nginx:alpine container
-   - Serves static files from docs/ directory
-   - Available at http://localhost:8080
-   - Includes health checks
-
-2. **playwright** (test profile only)
-   - Official Playwright container
-   - Runs automated browser tests
-   - Only starts with `--profile test`
+See [docker-compose.yml](docker-guide.md#docker-composeyml).
 
 ### nginx.conf
 
-Custom nginx configuration with:
-- Static file serving
-- Gzip compression
-- Security headers
-- CORS headers (for local development)
-- Cache control for assets
-- Pretty URL support
+See [nginx.conf](docker-guide.md#nginxconf).
 
 ### Dockerfile
 
-Optional standalone image build:
-- Based on nginx:alpine (minimal size)
-- Copies static files into image
-- Includes health checks
-- Can be built and deployed independently
+See [Dockerfile](docker-guide.md#dockerfile).
 
 ## 🔧 Advanced Usage
 
+See [🔧 Advanced Usage](docker-guide.md#advanced-usage).
+
 ### Manual Docker Compose
 
-```bash
-cd docs
+See [Manual Docker Compose](docker-guide.md#manual-docker-compose).
 
 # Start services
-docker-compose up -d
+
+See [Start services](docker-guide.md#start-services).
 
 # View logs
-docker-compose logs -f docs
+
+See [View logs](docker-guide.md#view-logs).
 
 # Stop services
-docker-compose down
+
+See [Stop services](docker-guide.md#stop-services).
 
 # Rebuild and start
-docker-compose up -d --build
+
+See [Rebuild and start](docker-guide.md#rebuild-and-start).
 
 # Run tests
-docker-compose --profile test up --abort-on-container-exit
-```
+
+See [Run tests](docker-guide.md#run-tests).
 
 ### Build Standalone Image
 
-```bash
-cd docs
+See [Build Standalone Image](docker-guide.md#build-standalone-image).
 
 # Build image
-docker build -t ipe-docs:latest .
+
+See [Build image](docker-guide.md#build-image).
 
 # Run container
-docker run -d -p 8080:8080 --name ipe-docs ipe-docs:latest
+
+See [Run container](docker-guide.md#run-container).
 
 # Stop and remove
-docker stop ipe-docs
-docker rm ipe-docs
-```
+
+See [Stop and remove](docker-guide.md#stop-and-remove).
 
 ### Custom Port
 
-To use a different port, edit `docker-compose.yml`:
-
-```yaml
-services:
-  docs:
-    ports:
-      - "3000:8080"  # Maps host:3000 to container:8080
-```
+See [Custom Port](docker-guide.md#custom-port).
 
 ## 🔍 Health Checks
 
-The nginx container includes health checks:
+See [🔍 Health Checks](docker-guide.md#health-checks).
 
-```bash
 # Check container health
-docker inspect ipe-docs | grep -A 10 Health
+
+See [Check container health](docker-guide.md#check-container-health).
 
 # View health check logs
-docker logs ipe-docs 2>&1 | grep health
-```
+
+See [View health check logs](docker-guide.md#view-health-check-logs).
 
 ## 🐛 Troubleshooting
 
+See [🐛 Troubleshooting](docker-guide.md#troubleshooting).
+
 ### Port Already in Use
 
-```bash
+See [Port Already in Use](docker-guide.md#port-already-in-use).
+
 # Find process using port 8080
-lsof -ti:8080
+
+See [Find process using port 8080](docker-guide.md#find-process-using-port-8080).
 
 # Kill process
-kill $(lsof -ti:8080)
+
+See [Kill process](docker-guide.md#kill-process).
 
 # Or use different port in docker-compose.yml
-```
+
+See [Or use different port in docker-compose.yml](docker-guide.md#or-use-different-port-in-docker-composeyml).
 
 ### Container Won't Start
 
-```bash
+See [Container Won't Start](docker-guide.md#container-wont-start).
+
 # Check logs
-just docs-logs
+
+See [Check logs](docker-guide.md#check-logs).
 
 # Or
-docker-compose logs docs
+
+See [Or](docker-guide.md#or).
 
 # Rebuild container
-docker-compose down
-docker-compose up -d --build
-```
+
+See [Rebuild container](docker-guide.md#rebuild-container).
 
 ### Files Not Updating
 
-The docs directory is mounted as a volume, so changes should appear immediately. If not:
+See [Files Not Updating](docker-guide.md#files-not-updating).
 
-```bash
 # Restart nginx to reload config
-docker-compose restart docs
+
+See [Restart nginx to reload config](docker-guide.md#restart-nginx-to-reload-config).
 
 # Or fully restart
-just docs-stop && just docs-serve
-```
+
+See [Or fully restart](docker-guide.md#or-fully-restart).
 
 ### Permission Issues
 
-If you get permission errors:
+See [Permission Issues](docker-guide.md#permission-issues).
 
-```bash
 # Ensure files are readable
-chmod -R 755 .
+
+See [Ensure files are readable](docker-guide.md#ensure-files-are-readable).
 
 # Or run with user permissions
-docker-compose run --user $(id -u):$(id -g) docs
-```
+
+See [Or run with user permissions](docker-guide.md#or-run-with-user-permissions).
 
 ## 📊 Performance
 
-nginx:alpine is very lightweight:
-- Image size: ~40MB
-- Memory usage: ~5-10MB
-- CPU usage: Minimal (<1%)
-- Startup time: <1 second
-
-Perfect for local development and testing.
+See [📊 Performance](docker-guide.md#performance).
 
 ## 🚀 Production Deployment
 
-While this setup is great for local development, for production:
-
-1. **Use the Dockerfile** to create a standalone image:
-   ```bash
-   docker build -t ipe-docs:v1.0.0 .
-   docker push your-registry/ipe-docs:v1.0.0
-   ```
-
-2. **Or deploy to GitHub Pages** (recommended for static docs):
-   - No Docker needed
-   - Free hosting
-   - Global CDN
-   - Automatic HTTPS
-
-3. **Or use Kubernetes** for larger deployments:
-   ```bash
-   kubectl create deployment ipe-docs --image=ipe-docs:v1.0.0
-   kubectl expose deployment ipe-docs --port=80 --target-port=8080
-   ```
+See [🚀 Production Deployment](docker-guide.md#production-deployment).
 
 ## 🔐 Security Notes
 
-**For Local Development:**
-- CORS headers are permissive (`Access-Control-Allow-Origin: *`)
-- No authentication required
-- Suitable for localhost only
-
-**For Production:**
-- Remove or restrict CORS headers in nginx.conf
-- Add authentication if needed
-- Use HTTPS (TLS termination)
-- Consider rate limiting
+See [🔐 Security Notes](docker-guide.md#security-notes).
 
 ## 📝 Files
 
-- `docker-compose.yml` - Multi-service orchestration
-- `Dockerfile` - Standalone image build
-- `nginx.conf` - Web server configuration
-- `.dockerignore` - Exclude files from image
-- `DOCKER.md` - This file
+See [📝 Files](docker-guide.md#files).
 
 ## 💡 Tips
 
-1. **Keep container running** during development:
-   ```bash
-   just docs-serve
-   # Make changes to HTML/CSS/JS
-   # Refresh browser to see changes
-   ```
-
-2. **Use volumes** for live reload (already configured):
-   - Changes to files appear immediately
-   - No need to rebuild container
-
-3. **Check logs** if something doesn't work:
-   ```bash
-   just docs-logs
-   ```
-
-4. **Clean up** when done:
-   ```bash
-   just docs-stop
-   docker system prune  # Optional: clean up unused images
-   ```
+See [💡 Tips](docker-guide.md#tips).
 
 ## 🎯 Next Steps
 
-1. Start the server: `just docs-serve`
-2. Open browser: `open http://localhost:8080`
-3. Run tests: `just test-pages`
-4. Stop when done: `just docs-stop`
-
-That's it! The Docker nginx setup provides a production-like environment for local development and testing.
+See [🎯 Next Steps](docker-guide.md#next-steps).

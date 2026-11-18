@@ -19,7 +19,7 @@ These rules summarize the standard. Check its full rules and dictionary before c
 
 ### UX terms
 
-Use the [project vocabulary](../docs/VOCABULARY.md) for domain terms and open naming decisions.
+Use the [project vocabulary](../docs/vocabulary-guide.md) for domain terms and open naming decisions.
 Check it before adding or renaming a concept. Update it in the same change when a meaning changes.
 
 - **Enforcement policy:** A rule evaluated by IPE. Use “policy” alone only when the enforcement context is clear.

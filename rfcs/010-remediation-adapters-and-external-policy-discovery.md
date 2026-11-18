@@ -117,7 +117,7 @@ integration may follow the minimal scoped elevation proof.
 The initial discovery implementation is [ipe-integration](../crates/ipe-integration/src/lib.rs),
 with a [Rust CLI/MCP client](../crates/ipe-integration/src/bin/integration-toolkit.rs),
 a [TypeScript HTTPS test facade](../testing/integration/servicenow-standin.ts), and
-[Rust deployment/acceptance commands](../docs/INTEGRATION_DISCOVERY.md). The Rust
+[Rust deployment/acceptance commands](../docs/integration-discovery.md). The Rust
 workload hosts a [Wasmi metadata sandbox](../crates/ipe-integration/src/wasm.rs)
 with a bounded [metadata-field-v1 ABI](../crates/ipe-integration/adapters/README.md),
 plus a bounded QuickJS step runtime with Oxc TypeScript transpilation. Operators can
@@ -135,7 +135,7 @@ complete. No live ServiceNow tenant validation is claimed. TypeScript now serves
 both the test facade language and an optional embedded step-adapter source language;
 a TypeScript-to-WASM authoring toolchain is not implemented.
 
-Verified against the repository on 2026-10-18. [Runtime data documentation](../docs/RUNTIME_DATA.md)
+Verified against the repository on 2026-10-18. [Runtime data documentation](../docs/runtime-data.md)
 remains the reference for enforcement behavior. Roadmap capabilities beyond the
 explicit implementation grounding remain proposed.
 
