@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1010" viewBox="0 0 1440 1010" role="img" aria-labelledby="title desc"><title id="title">Three policy record families, three lifecycles</title><desc id="desc">Shared central storage does not mean shared publication permissions or activation semantics.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 9 4.5 L 0 9 Z" fill="#71879a"/></marker></defs><g font-family="Arial, Helvetica, sans-serif"><rect width="1440" height="1010" fill="white"/>
+<text x="42" y="51" fill="#17324d" font-size="32" font-weight="700" text-anchor="start"><tspan x="42" dy="0">Three policy record families, three lifecycles</tspan></text>
+<text x="42" y="86" fill="#526b80" font-size="19" font-weight="400" text-anchor="start"><tspan x="42" dy="0">Shared central storage does not mean shared publication permissions or activation semantics.</tspan></text>
+<path d="M 42 110 H 1398" fill="none" stroke="#d6e1e9" stroke-width="2.4"/>
+<rect x="42" y="168" width="1356" height="205" rx="12" fill="#fafbfd" stroke="#dce5eb" stroke-width="1.6"/>
+<text x="64" y="210" fill="#17324d" font-size="24" font-weight="650" text-anchor="start"><tspan x="64" dy="0">Executable IPE</tspan><tspan x="64" dy="29">policy</tspan></text>
+<text x="64" y="291" fill="#526b80" font-size="17" font-weight="400" text-anchor="start"><tspan x="64" dy="0">Policy author or translator</tspan></text>
+<rect x="340" y="190" width="320" height="159" rx="12" fill="#f1edfb" stroke="#9581bb" stroke-width="1.6"/>
+<text x="362" y="226" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="362" dy="0">Draft and test</tspan></text>
+<text x="362" y="259" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="362" dy="0">Validate executable semantics</tspan><tspan x="362" dy="27">and pinned schemas</tspan></text>
+<rect x="695" y="190" width="320" height="159" rx="12" fill="#f1edfb" stroke="#9581bb" stroke-width="1.6"/>
+<text x="717" y="226" fill="#17324d" font-size="21.53" font-weight="650" text-anchor="start"><tspan x="717" dy="0">Publish immutable revision</tspan></text>
+<text x="717" y="259" fill="#526b80" font-size="19.91" font-weight="400" text-anchor="start"><tspan x="717" dy="0">Assign under rollout authority</tspan><tspan x="717" dy="27">Record the exact content digest</tspan></text>
+<rect x="1050" y="190" width="320" height="159" rx="12" fill="#f1edfb" stroke="#9581bb" stroke-width="1.6"/>
+<text x="1072" y="226" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="1072" dy="0">Activate at ipe-server</tspan></text>
+<text x="1072" y="259" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="1072" dy="0">Validate the assigned revision</tspan><tspan x="1072" dy="27">Report actual active state</tspan></text>
+<path d="M 660 271 H 695" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<path d="M 1015 271 H 1050" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<rect x="42" y="410" width="1356" height="205" rx="12" fill="#fafbfd" stroke="#dce5eb" stroke-width="1.6"/>
+<text x="64" y="452" fill="#17324d" font-size="24" font-weight="650" text-anchor="start"><tspan x="64" dy="0">Discovered external</tspan><tspan x="64" dy="29">contract</tspan></text>
+<text x="64" y="533" fill="#526b80" font-size="17" font-weight="400" text-anchor="start"><tspan x="64" dy="0">Source-scoped integration</tspan></text>
+<rect x="340" y="432" width="320" height="159" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="362" y="468" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="362" dy="0">Observe requirements</tspan></text>
+<text x="362" y="501" fill="#526b80" font-size="19.60" font-weight="400" text-anchor="start"><tspan x="362" dy="0">Pin source and mapping version</tspan><tspan x="362" dy="27">Preserve unknown constraints</tspan></text>
+<rect x="695" y="432" width="320" height="159" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="717" y="468" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="717" dy="0">Publish observation</tspan></text>
+<text x="717" y="501" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="717" dy="0">Retain validity and coverage</tspan><tspan x="717" dy="27">Expose permitted descriptions</tspan></text>
+<rect x="1050" y="432" width="320" height="159" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="1072" y="468" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="1072" dy="0">Refresh or become stale</tspan></text>
+<text x="1072" y="501" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="1072" dy="0">Verified withdrawal is explicit</tspan><tspan x="1072" dy="27">No local rule activation</tspan></text>
+<path d="M 660 513 H 695" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<path d="M 1015 513 H 1050" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<rect x="42" y="652" width="1356" height="205" rx="12" fill="#fafbfd" stroke="#dce5eb" stroke-width="1.6"/>
+<text x="64" y="694" fill="#17324d" font-size="24" font-weight="650" text-anchor="start"><tspan x="64" dy="0">External evaluation</tspan><tspan x="64" dy="29">observation</tspan></text>
+<text x="64" y="775" fill="#526b80" font-size="17" font-weight="400" text-anchor="start"><tspan x="64" dy="0">Operation-scoped integration</tspan></text>
+<rect x="340" y="674" width="320" height="159" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="362" y="710" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="362" dy="0">Capture reported result</tspan></text>
+<text x="362" y="743" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="362" dy="0">Bind actor, operation and input</tspan><tspan x="362" dy="27">Record evaluation time</tspan></text>
+<rect x="695" y="674" width="320" height="159" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="717" y="710" fill="#17324d" font-size="22.30" font-weight="650" text-anchor="start"><tspan x="717" dy="0">Append contextual receipt</tspan></text>
+<text x="717" y="743" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="717" dy="0">Separate access and retention</tspan><tspan x="717" dy="27">Keep protected evidence links</tspan></text>
+<rect x="1050" y="674" width="320" height="159" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="1072" y="710" fill="#17324d" font-size="21.72" font-weight="650" text-anchor="start"><tspan x="1072" dy="0">Inspect permitted evidence</tspan></text>
+<text x="1072" y="743" fill="#526b80" font-size="18.45" font-weight="400" text-anchor="start"><tspan x="1072" dy="0">Optional authorized fact projection</tspan><tspan x="1072" dy="27">Never a reusable blanket grant</tspan></text>
+<path d="M 660 755 H 695" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<path d="M 1015 755 H 1050" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="42" y="911" fill="#17324d" font-size="21" font-weight="550" text-anchor="start"><tspan x="42" dy="0">External origin and external enforcement are different dimensions.</tspan><tspan x="42" dy="31">Existing PolicyDocument.external remains executable and retains its observation expiry.</tspan></text>
+</g></svg>
