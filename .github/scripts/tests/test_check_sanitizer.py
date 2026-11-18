@@ -62,6 +62,7 @@ exit 0
 
     def test_native_dependencies_are_instrumented_with_rust(self):
         self.run_sanitizer('''
+[ "$RUST_TEST_THREADS" = 2 ]
 [ "$CC_x86_64_unknown_linux_gnu" = clang ]
 [ "$CXX_x86_64_unknown_linux_gnu" = clang++ ]
 [[ "$CFLAGS_x86_64_unknown_linux_gnu" == *-fsanitize=thread* ]]
@@ -82,6 +83,7 @@ exit 0
         for sanitizer in ['address', 'leak', 'thread']:
             with self.subTest(sanitizer=sanitizer):
                 self.run_sanitizer('''
+[ "$RUST_TEST_THREADS" = 2 ]
 [ "$CC_x86_64_unknown_linux_gnu" = clang ]
 [ "$CXX_x86_64_unknown_linux_gnu" = clang++ ]
 [ "$CARGO_PROFILE_DEV_OPT_LEVEL" = 2 ]
@@ -95,6 +97,7 @@ exit 0
 
     def test_arm64_keeps_crc_workaround_and_native_instrumentation(self):
         self.run_sanitizer('''
+[ "$RUST_TEST_THREADS" = 2 ]
 [ "$CC_aarch64_apple_darwin" = clang ]
 [ "$CXX_aarch64_apple_darwin" = clang++ ]
 [[ "$CXXFLAGS_aarch64_apple_darwin" == *-fsanitize=thread* ]]
