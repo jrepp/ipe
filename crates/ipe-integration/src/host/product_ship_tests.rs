@@ -104,7 +104,11 @@ async fn product_ship_collector_emits_bounded_receipt_bound_hierarchy_and_unknow
 
     let successful_id = host.start("product_ship_complete", "manual").await.unwrap();
     let successful = completed_run(&host, "product_ship_complete", successful_id).await;
-    assert_eq!(successful.status, "succeeded", "{:?}", successful.error);
+    assert_eq!(
+        successful.status, "succeeded",
+        "error={:?} steps={}",
+        successful.error, successful.steps
+    );
     assert_eq!(
         successful.summary["status"], "succeeded",
         "summary={:?}, evidence={:?}",

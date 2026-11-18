@@ -131,11 +131,11 @@ test('collector constructs each observation only in its emitted batch',()=>{
     .replace('function observation(model, data, receipts) {','function observation(model, data, receipts) { __constructed++;');
   const collector=fs.readFileSync(path.join(dir,'collector.js'),'utf8');
   let state=null,responses=[],total=0;
-  for (let index=0;index<8;index++) {
+  for (let index=0;index<128;index++) {
     const sandbox={__constructed:0,__args:JSON.stringify([{input:{release:fixture.release}},responses,state])};
     const result=JSON.parse(vm.runInNewContext(`${sdk}\n${collector}\nJSON.stringify(step(...JSON.parse(__args)))`,sandbox,{timeout:1000}));
     assert.equal(sandbox.__constructed,(result.observations||[]).length);
-    assert.ok(sandbox.__constructed<=8);
+    assert.ok(sandbox.__constructed<=4);
     total+=sandbox.__constructed;
     if ('outputs' in result) {
       assert.equal(total,47);
@@ -143,6 +143,10 @@ test('collector constructs each observation only in its emitted batch',()=>{
       return;
     }
     state=result.state;
+    if (state.phase==='emit') {
+      assert.equal(typeof state.snapshotJson,'string');
+      assert.deepEqual(JSON.parse(state.snapshotJson),fixture);
+    }
     responses=(result.requests||[]).map(request=>({id:request.id,operation:request.operation,data:[fixture],receipt:'fixture:qualification'}));
   }
   assert.fail('collector did not complete within the native step budget');

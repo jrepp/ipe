@@ -77,4 +77,5 @@ Do not add manual changelog entries. Follow the [release guide](../docs/RELEASES
 The pinned RocksDB headers need an explicit `cstdint` include with newer Linux C++ toolchains.
 Cargo target flags provide it; sanitizer overrides must preserve it.
 Development and test profiles use optimization level 1 so guest tests exercise the unchanged 100 ms execution limit.
-Do not extend guest deadlines or skip failure tests to compensate for unoptimized instrumentation.
+Sanitizer builds use optimization level 2 for Rust and native code. They retain parallel tests and native sanitizer instrumentation.
+Do not extend guest deadlines or skip failure tests to compensate for instrumentation.

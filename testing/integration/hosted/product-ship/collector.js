@@ -9,9 +9,10 @@ function ref(kind, local) { return {kind,id:id(kind,local),resolution:'resolved'
 function step(context,responses,state) {
   if (state && state.phase==='complete') return ipe.complete(state.summary);
   if (state === null) return ipe.exchange([ipe.call('qualification','read_release_qualification',{release_id:context.input.release.id})],{phase:'read'});
-  let snapshot,receipt,offset=0;
+  let snapshot,snapshotJson,receipt,offset=0;
   if (state.phase==='emit') {
-    ({snapshot,receipt,offset}=state);
+    ({snapshotJson,receipt,offset}=state);
+    snapshot=JSON.parse(snapshotJson);
   } else {
     const response=ipe.response(responses,'qualification');
     if (response.code !== undefined) return ipe.complete({status:'unknown',reason:'provider_read_failed',gaps:[{code:'provider_read_failed'}],publication:false});
@@ -19,6 +20,8 @@ function step(context,responses,state) {
     if (rows.length!==1 || !rows[0].release || !rows[0].policy || !Array.isArray(rows[0].policies) || !Array.isArray(rows[0].evidence)) return ipe.complete({status:'unknown',reason:'provider_response_invalid',gaps:[{code:'provider_response_invalid'}],publication:false});
     snapshot=rows[0];
     receipt=response.receipt;
+    snapshotJson=JSON.stringify(snapshot);
+    return ipe.exchange([],{phase:'emit',snapshotJson,receipt,offset:0});
   }
   const release=snapshot.release,root=snapshot.policy;
   let policies=snapshot.policies,evidence=snapshot.evidence;
@@ -30,12 +33,11 @@ function step(context,responses,state) {
   }
   const observations=[];
   let index=0;
-  const selected=()=>{const current=index++;return current>=offset&&current<offset+8;};
+  const selected=()=>{const current=index++;return current>=offset&&current<offset+4;};
   if (selected()) {
     const owner={type:'principal',id:id('principal','release-governance'),title:'Release governance owners',principal_kind:'group',source:source('/owners')};
     observations.push(ipe.observation(ipe.governanceModel(owner,{scope:'release:'+release.id,claim:'provider_reported'}),{owner_count:policies.length},[receipt]));
   }
-  const rootRecord={type:'policy',id:id('root',root.id),title:root.title,authority:ref('principal','release-governance'),subjects:['release:'+release.id],requirements:root.children.map(childId=>({id:childId,description:'Required child policy '+childId,specification:JSON.stringify({child_policy_id:childId})})),source:source('/policies/'+root.id)};
   for (const policy of policies) {
     if (selected()) {
       const governancePolicy={type:'policy',id:id('policy',policy.id),title:policy.title,authority:ref('principal','release-governance'),subjects:['release:'+release.id],requirements:policy.controls.map(control=>({id:control.id,description:control.title,specification:control.description})),source:source('/policies/'+policy.id)};
@@ -47,7 +49,10 @@ function step(context,responses,state) {
       observations.push(ipe.observation(ipe.governanceModel(governanceControl,{scope:'release:'+release.id,claim:'declared'}),{parent_id:policy.id,source:control.source},[receipt]));
     }
   }
-  if (selected()) observations.push(ipe.observation(ipe.governanceModel(rootRecord,{scope:'release:'+release.id,claim:'declared'}),{children:root.children},[receipt]));
+  if (selected()) {
+    const rootRecord={type:'policy',id:id('root',root.id),title:root.title,authority:ref('principal','release-governance'),subjects:['release:'+release.id],requirements:root.children.map(childId=>({id:childId,description:'Required child policy '+childId,specification:JSON.stringify({child_policy_id:childId})})),source:source('/policies/'+root.id)};
+    observations.push(ipe.observation(ipe.governanceModel(rootRecord,{scope:'release:'+release.id,claim:'declared'}),{children:root.children},[receipt]));
+  }
   for (const row of evidence) {
     if (!selected()) continue;
     const value={control_id:row.control_id,release_id:row.release_id,artifact:row.artifact,environment:row.environment,status:row.status,reason:row.reason,observed_at:row.observed_at,expires_at:row.expires_at,source:row.source};
@@ -55,6 +60,6 @@ function step(context,responses,state) {
   }
   const summary={status:'succeeded',release_id:release.id,controls_observed:evidence.length,publication:false,gaps:[]};
   const next=offset+observations.length;
-  // Keep compact source data between steps; construct only the current batch.
-  return ipe.exchange([],next<index?{phase:'emit',snapshot,receipt,offset:next}:{phase:'complete',summary},observations);
+  // Keep encoded source data between steps; validate only the current batch.
+  return ipe.exchange([],next<index?{phase:'emit',snapshotJson,receipt,offset:next}:{phase:'complete',summary},observations);
 }
