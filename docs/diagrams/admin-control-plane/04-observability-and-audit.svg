@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1030" viewBox="0 0 1440 1030" role="img" aria-labelledby="title desc"><title id="title">Observe IPE services without coupling telemetry to policy decisions</title><desc id="desc">The admin owns the operational view and telemetry profile; collectors and backends own transport and storage.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 9 4.5 L 0 9 Z" fill="#71879a"/></marker></defs><g font-family="Arial, Helvetica, sans-serif"><rect width="1440" height="1030" fill="white"/>
+<text x="42" y="51" fill="#17324d" font-size="32" font-weight="700" text-anchor="start"><tspan x="42" dy="0">Observe IPE services without coupling telemetry to policy decisions</tspan></text>
+<text x="42" y="86" fill="#526b80" font-size="19" font-weight="400" text-anchor="start"><tspan x="42" dy="0">The admin owns the operational view and telemetry profile; collectors and backends own transport and storage.</tspan></text>
+<path d="M 42 110 H 1398" fill="none" stroke="#d6e1e9" stroke-width="2.4"/>
+<rect x="42" y="157" width="350" height="116" rx="12" fill="#edf4fb" stroke="#6c93b6" stroke-width="1.6"/>
+<text x="64" y="193" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="64" dy="0">ipe-control registry</tspan></text>
+<text x="64" y="226" fill="#526b80" font-size="18.97" font-weight="400" text-anchor="start"><tspan x="64" dy="0">Approved endpoint identity</tspan><tspan x="64" dy="27">Scrape address and telemetry profile</tspan></text>
+<rect x="42" y="370" width="350" height="180" rx="12" fill="#f1edfb" stroke="#9581bb" stroke-width="1.6"/>
+<text x="64" y="406" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="64" dy="0">Instrumented services</tspan></text>
+<text x="64" y="439" fill="#526b80" font-size="17.87" font-weight="400" text-anchor="start"><tspan x="64" dy="0">ipe-control: publication and rollout</tspan><tspan x="64" dy="27">ipe-integration: discovery and evidence</tspan><tspan x="64" dy="27">ipe-server: apply and evaluate</tspan></text>
+<rect x="535" y="345" width="350" height="190" rx="12" fill="#edf4fb" stroke="#6c93b6" stroke-width="1.6"/>
+<text x="557" y="381" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="557" dy="0">OTel Collector</tspan></text>
+<text x="557" y="414" fill="#526b80" font-size="19.04" font-weight="400" text-anchor="start"><tspan x="557" dy="0">Prometheus receiver: scrape metrics</tspan><tspan x="557" dy="27">OTLP receiver: receive traces</tspan><tspan x="557" dy="27">Bound queues and redact exports</tspan><tspan x="557" dy="27">Use local collectors if required</tspan></text>
+<rect x="1050" y="268" width="350" height="116" rx="12" fill="#f3f6f8" stroke="#9dabb7" stroke-width="1.6"/>
+<text x="1072" y="304" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="1072" dy="0">Metrics backend</tspan></text>
+<text x="1072" y="337" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="1072" dy="0">Rates, latency, age and lag</tspan></text>
+<rect x="1050" y="451" width="350" height="116" rx="12" fill="#f3f6f8" stroke="#9dabb7" stroke-width="1.6"/>
+<text x="1072" y="487" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="1072" dy="0">Trace backend</tspan></text>
+<text x="1072" y="520" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="1072" dy="0">Correlated permitted spans</tspan></text>
+<rect x="1050" y="651" width="350" height="140" rx="12" fill="#edf4fb" stroke="#6c93b6" stroke-width="1.6"/>
+<text x="1072" y="687" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="1072" dy="0">Admin operational view</tspan></text>
+<text x="1072" y="720" fill="#526b80" font-size="19.10" font-weight="400" text-anchor="start"><tspan x="1072" dy="0">Execution · evidence · delivery</tspan><tspan x="1072" dy="27">Telemetry freshness and compliance</tspan></text>
+<rect x="42" y="652" width="350" height="140" rx="12" fill="#eaf7f3" stroke="#58a38a" stroke-width="1.6"/>
+<text x="64" y="688" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="64" dy="0">Profile enforcement</tspan></text>
+<text x="64" y="721" fill="#526b80" font-size="17.42" font-weight="400" text-anchor="start"><tspan x="64" dy="0">Verify scrape and canary arrival</tspan><tspan x="64" dy="27">Gate enrollment or rollout as selected</tspan><tspan x="64" dy="27">No synchronous evaluation dependency</tspan></text>
+<rect x="42" y="848" width="350" height="110" rx="12" fill="#fff5e3" stroke="#c5a15d" stroke-width="1.6"/>
+<text x="64" y="884" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="64" dy="0">Local durable audit spool</tspan></text>
+<text x="64" y="917" fill="#526b80" font-size="20" font-weight="400" text-anchor="start"><tspan x="64" dy="0">For operations requiring audit</tspan></text>
+<rect x="535" y="848" width="350" height="110" rx="12" fill="#fff5e3" stroke="#c5a15d" stroke-width="1.6"/>
+<text x="557" y="884" fill="#17324d" font-size="23" font-weight="650" text-anchor="start"><tspan x="557" dy="0">Protected audit storage</tspan></text>
+<text x="557" y="917" fill="#526b80" font-size="19.99" font-weight="400" text-anchor="start"><tspan x="557" dy="0">Separate retention and read grants</tspan></text>
+<path d="M 392 215 H 710 V 345" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="554" y="193" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="554" dy="0">approved scrape targets</tspan></text>
+<path d="M 535 410 H 392" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="464" y="388" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="464" dy="0">scrape</tspan></text>
+<path d="M 392 500 H 535" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="464" y="479" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="464" dy="0">OTLP traces</tspan></text>
+<path d="M 885 396 H 970 V 326 H 1050" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="975" y="307" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="975" dy="0">metrics</tspan></text>
+<path d="M 885 490 H 1050" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="971" y="469" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="971" dy="0">traces</tspan></text>
+<path d="M 1260 384 H 1420 V 705 H 1400" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="1395" y="605" fill="#526b80" font-size="18" font-weight="500" text-anchor="end"><tspan x="1395" dy="0">query</tspan><tspan x="1395" dy="23">results</tspan></text>
+<path d="M 1225 567 V 651" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="1236" y="603" fill="#526b80" font-size="18" font-weight="500" text-anchor="start"><tspan x="1236" dy="0">query</tspan><tspan x="1236" dy="23">results</tspan></text>
+<path d="M 1050 740 H 392" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="720" y="718" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="720" dy="0">Observed freshness and diagnostic results</tspan></text>
+<path d="M 185 652 V 550" fill="none" stroke="#71879a" stroke-width="2.4" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<text x="195" y="606" fill="#526b80" font-size="18" font-weight="500" text-anchor="start"><tspan x="195" dy="0">apply profile</tspan></text>
+<path d="M 42 490 H 20 V 902 H 42" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<path d="M 392 902 H 535" fill="none" stroke="#71879a" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="464" y="880" fill="#526b80" font-size="18" font-weight="500" text-anchor="middle"><tspan x="464" dy="0">durable export</tspan></text>
+<text x="42" y="998" fill="#17324d" font-size="20" font-weight="550" text-anchor="start"><tspan x="42" dy="0">A received trace is diagnostic telemetry. It is not an activation acknowledgement or a durable decision receipt.</tspan></text>
+</g></svg>
