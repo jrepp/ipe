@@ -6,6 +6,8 @@ The [hybrid documentation decision](adr/adr-001-hybrid-documentation.md) defines
 
 Start with the [documentation map](wiki/pages/documentation-map.md) for a single route to guides, records, and operations.
 
+The [design register](wiki/pages/design-register.md) tracks open needs and links to their owning records.
+
 ## Project organization
 
 Start with the [project map](PROJECTS.md) for principles, subway routes, dependencies, delivery states, and product messaging.

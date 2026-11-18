@@ -39,6 +39,8 @@ def check_site(base):
     # The data file is loaded by JavaScript, rather than an HTML link.
     pending = {base, urljoin(base, "docs/"), urljoin(base, "docs/data/site-data.json")}
     pending.update(urljoin(base, page.relative_to(SITE).as_posix()) for page in SITE.rglob("*.html"))
+    # The Markdown viewer fetches this file from JavaScript, not a direct HTML link.
+    pending.add(urljoin(base, "docs-cms/wiki/pages/design-register.md"))
     visited = set()
     while pending:
         url = pending.pop()

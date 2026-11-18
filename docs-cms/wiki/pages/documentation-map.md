@@ -17,6 +17,7 @@ The [documentation index](../../../docs/documentation-index.md) lists detailed g
 | What can I run? | [Workloads and artifacts](../../../docs/workloads.md) | Implemented binaries, modes, and release limits. |
 | How does policy enforcement work? | [Runtime data](../../../docs/runtime-data.md) | Current scoped HTTP, facts, expiry, and policy behavior. |
 | How do integrations collect evidence? | [Integration host](../../../docs/integration-host.md), [discovery](../../../docs/integration-discovery.md) | Current collector and discovery boundaries. |
+| What design needs are open? | [Design register](design-register.md) | Status, next evidence, and links to owning records. |
 | What are we proposing? | [Design records](../../README.md) | Draft requirements and designs, decisions, and research. |
 | What do domain terms mean? | [Domain model and mappings](../../../docs/domain-model.md) | Current code and API mappings, proposed roles, and compatibility names. |
 | How do I change or release IPE? | [Repository map](../../../docs/repository-guide.md), [release guide](../../../docs/release-guide.md) | Workspace ownership and current release procedure. |

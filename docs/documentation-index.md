@@ -14,6 +14,7 @@ The integration host does not yet publish facts to the enforcement runtime. See 
 
 ## Design and develop
 
+- [Design register](../docs-cms/wiki/pages/design-register.md): open needs and links to their owning records.
 - [Design records](../docs-cms/README.md): draft requirements and RFCs, decisions, and research.
 - [Repository map](repository-guide.md): workspace components, ownership boundaries, and placeholders.
 - [Domain model and mappings](domain-model.md) and [vocabulary](vocabulary-guide.md): terms, code mappings, and proposed roles.
