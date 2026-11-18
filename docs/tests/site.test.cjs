@@ -189,3 +189,47 @@ test('every viewer link names a tracked Markdown file', () => {
     }
   }
 });
+
+test('the static project map and text routes link to the same five requirements', () => {
+  const { document } = new JSDOM(fs.readFileSync(path.join(root, 'index.html'), 'utf8')).window;
+  const routes = [...document.querySelectorAll('.route-directory li')];
+  const diagram = [...document.querySelectorAll('.network g[transform]')];
+  assert.equal(routes.length, 5);
+  assert.equal(diagram.length, routes.length);
+  const requirements = new Set();
+  routes.forEach((route, i) => {
+    const link = route.querySelector('h3 a');
+    const href = link.getAttribute('href');
+    assert.equal(diagram[i].querySelector('a').getAttribute('href'), href);
+    assert.equal(diagram[i].querySelector('.route-name').textContent, link.textContent);
+    const stations = [...diagram[i].querySelectorAll('.station')].map(station => station.textContent);
+    assert.deepEqual(stations, route.querySelector('.route-steps').textContent.split(' → '));
+    const source = new URLSearchParams(href.split('?')[1]).get('path');
+    assert.equal(route.querySelector('noscript a').getAttribute('href'), source);
+    assert.ok(fs.existsSync(path.join(root, source)));
+    requirements.add(source);
+  });
+  assert.equal(requirements.size, routes.length);
+});
+
+test('structured records show the title and status and retain the raw source', async () => {
+  const markdown = '---\ntitle: Example policy\nstatus: Draft\ndoc_uuid: example\n---\n<h1>Project</h1><h2>Acceptance</h2>';
+  const { dom } = await loadDoc('?path=../docs-cms/prd/example.md', { markdown });
+  try {
+    const { document } = dom.window;
+    assert.equal(document.title, 'Example policy · IPE');
+    assert.equal(document.querySelector('#doc-body h2').textContent, 'Project');
+    assert.doesNotMatch(document.querySelector('#doc-body').textContent, /doc_uuid/);
+    assert.match(document.querySelector('#doc-status').textContent, /^Draft · /);
+    assert.equal(document.querySelector('#doc-source').pathname, '/ipe/docs-cms/prd/example.md');
+  } finally { dom.window.close(); }
+});
+
+test('links to repository settings omitted by Pages open the tracked source', async () => {
+  const markdown = '<a href="../.mergify.yml">Queue</a> <a href="../.agent/writing.md">Writing</a>';
+  const { dom } = await loadDoc('?path=../docs-cms/README.md', { markdown });
+  try {
+    const links = [...dom.window.document.querySelectorAll('#doc-body a')].map(link => link.href);
+    assert.deepEqual(links, ['https://github.com/jrepp/ipe/blob/main/.mergify.yml', 'https://github.com/jrepp/ipe/blob/main/.agent/writing.md']);
+  } finally { dom.window.close(); }
+});

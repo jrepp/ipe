@@ -6,6 +6,14 @@
 
 RFCs (Request for Comments) are design documents that describe major features, architectural decisions, and technical specifications for the Idempotent Predicate Engine. Each RFC goes through a review process before implementation.
 
+## New design documents
+
+New RFCs use [docs-cms/rfcs](../docs-cms/README.md) with Docuchango metadata and requirement traceability.
+Continue this main RFC number sequence. Existing files and their historical status terms remain unchanged.
+Use the [RFC template](../docs-cms/templates/rfc-000-template.md) for new designs; the older process below describes existing RFCs.
+
+- [RFC 018: Evidence system map and temporary authority](../docs-cms/rfcs/rfc-018-evidence-system-map.md) — Draft; implements the design scope of [PRD 001](../docs-cms/prd/prd-001-evidence-system-map.md).
+
 ## RFC Process
 
 ```
@@ -171,3 +179,5 @@ Links to relevant documentation, papers, prior art.
 ---
 
 **Last updated:** 2026-10-18
+
+- [RFC 019: Cohesive monorepo](../docs-cms/rfcs/rfc-019-cohesive-monorepo.md) — Draft repository cleanup design and verification criteria.

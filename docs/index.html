@@ -3,46 +3,155 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IPE · Idempotent Predicate Engine</title>
-<meta name="description" content="IPE is a Rust authorization runtime. Policy documents and expiring runtime facts evaluate to Allow, Deny, or Indeterminate.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<title>IPE · Evidence-backed policy decisions</title>
+<meta name="description" content="Explore the IPE policy runtime, its evidence integration host, and the five projects that connect source records to application decisions.">
 <link rel="stylesheet" href="site.css">
 <script src="ast.js" defer></script>
 </head>
 <body class="landing">
-<div class="landing-wrap">
-  <header class="landing-header">
-    <a class="landing-brand" href="index.html">
-      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8fdcbc" stroke-width="1.8"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v5M12 11 5 17M12 11l7 6"/></svg>
-      ipe
-    </a>
-    <nav class="landing-nav" aria-label="Documentation">
-      <a href="decision.html">How it decides</a>
-      <a href="contract.html">Contract</a>
-      <a href="ast.html">AST explorer</a>
-      <a href="status.html">Status</a>
-      <a href="performance.html">Performance</a>
-      <a href="integration-service.html">Integration service</a>
-      <a href="https://github.com/jrepp/ipe">GitHub</a>
-    </nav>
-  </header>
-
-  <main>
-    <section class="landing-hero">
-      <h1>Write the rule as intent.<br><em>Read it back as a tree.</em></h1>
-      <p class="landing-lede">IPE is a Rust authorization runtime. Language-2 policy documents and TTL-bounded runtime facts evaluate in scoped tenants to Allow, Deny, or Indeterminate. Your application enforces the decision.</p>
-      <div class="actions">
-        <a class="pill pill-primary" href="decision.html">Follow one decision</a>
-        <a class="pill" href="contract.html">Read the contract</a>
-      </div>
-      <p class="status-line"><strong>Early-stage.</strong> The v2 runtime service ships with typed facts, mandatory TTL, and versioned policy documents; performance under production load is not yet characterized. <a href="status.html">See project status</a>.</p>
-    </section>
-
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="landing-header"><div class="landing-wrap">
+  <a class="landing-brand" href="index.html"><span class="brand-mark">ipe</span> Idempotent Predicate Engine</a>
+  <nav class="landing-nav" aria-label="Site">
+    <a href="#projects">Project map</a><a href="#foundations">Implementation</a><a href="#paths">Guides</a><a href="https://github.com/jrepp/ipe">GitHub <span aria-hidden="true">↗</span></a>
+  </nav>
+</div></header>
+<main class="landing-wrap" id="main">
+  <section class="landing-hero">
+    <div>
+      <h1>Evidence-backed<br>policy decisions</h1>
+      <p class="landing-lede">Connect external evidence to explicit policy checks. See the rule, the source, and the reason for each decision.</p>
+      <a class="decision-link" href="decision.html">Follow a deploy decision <span aria-hidden="true">→</span></a>
+    </div>
+    <aside class="decision-example" aria-label="Example deploy decision">
+      <h2>Production deploy <small>Example</small></h2>
+      <dl><dt>Policy</dt><dd>Two senior reviewers must approve.</dd>
+      <dt>Evidence</dt><dd>One senior reviewer approved this commit.</dd>
+      <dt>Decision</dt><dd><strong>Deny</strong> One more approval is required.</dd></dl>
+    </aside>
+  </section>
+  <section id="projects" aria-labelledby="map-heading">
+    <div class="section-heading"><div><h2 id="map-heading">Project map</h2><p>Five projects for teams that govern application and agent actions. The connected workflow is planned.</p></div>
+    <a href="doc.html?path=../docs-cms/PROJECTS.md">Read the project plan <span aria-hidden="true">→</span></a></div>
+    <figure class="map-panel">
+      <div class="map-key"><a href="#route-list">View as a list</a><span><i class="key-transfer"></i>Project handoff</span><span><i class="key-dash"></i>Planned fact publication</span></div>
+      <div class="map-scroll" tabindex="0" role="region" aria-label="Project diagram"><svg class="network" viewBox="0 0 925 302" aria-labelledby="network-title network-desc" role="group">
+            <title id="network-title">Five IPE project routes</title>
+            <desc id="network-desc">Modeling and integration supply enforcement. Enforcement outcomes feed evidence operations. Delivery publishes the checked documentation. The route list gives each step and its state.</desc>
+            <defs>
+              <path id="direction" d="m-4 -4 5 4-5 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+              <g id="stop"><circle r="5.5" fill="white" stroke="currentColor" stroke-width="3"/></g>
+              <g id="transfer"><circle r="8" fill="white" stroke="currentColor" stroke-width="2.5"/><circle r="3" fill="currentColor"/></g>
+            </defs>
+            <g class="connections">
+              <path class="p1" d="M800 36h48l40 40v56l-24 24h-64"/>
+              <path class="p2" d="M800 96h18l21 21v17l-22 22h-17"/>
+              <path class="p3" d="M270 156h-36l-16 16v28l16 16h36"/>
+              <path class="p4" d="M270 216h-36l-16 16v28l16 16h36"/>
+            </g>
+            <g class="p1" transform="translate(0 36)">
+              <a href="doc.html?path=../docs-cms/prd/prd-002-policy-modeling.md"><rect class="route-tag" x="10" y="-12" width="34" height="24" rx="4"/><text class="tag-text" x="27" y="4">P1</text>
+              <text class="route-name" x="55" y="5">Policy modeling</text></a>
+              <path class="track" d="M270 0H800"/>
+              <use href="#direction" transform="translate(527 0)"/>
+              <use href="#stop" x="270"/><text class="station" x="270" y="-14">Source</text>
+              <use href="#stop" x="440"/><text class="station" x="440" y="-14">Model</text>
+              <use href="#transfer" x="610"/><text class="station" x="610" y="-14">Review</text>
+              <use href="#transfer" x="800"/><text class="station" x="800" y="-14">Publish revision</text>
+            </g>
+            <g class="p2" transform="translate(0 96)">
+              <a href="doc.html?path=../docs-cms/prd/prd-003-evidence-integration.md"><rect class="route-tag" x="10" y="-12" width="34" height="24" rx="4"/><text class="tag-text" x="27" y="4">P2</text>
+              <text class="route-name" x="55" y="5">Evidence integration</text></a>
+              <path class="track" d="M270 0H610"/><path class="track planned" d="M610 0H800"/>
+              <use href="#direction" transform="translate(527 0)"/>
+              <use href="#stop" x="270"/><text class="station" x="270" y="-14">Connect</text>
+              <use href="#stop" x="440"/><text class="station" x="440" y="-14">Observe</text>
+              <use href="#stop" x="610"/><text class="station" x="610" y="-14">Assess evidence</text>
+              <use href="#transfer" x="800"/><text class="station" x="800" y="-14">Publish facts</text>
+            </g>
+            <g class="p3" transform="translate(0 156)">
+              <a href="doc.html?path=../docs-cms/prd/prd-004-policy-enforcement.md"><rect class="route-tag" x="10" y="-12" width="34" height="24" rx="4"/><text class="tag-text" x="27" y="4">P3</text>
+              <text class="route-name" x="55" y="5">Policy enforcement</text></a>
+              <path class="track" d="M800 0H270"/>
+              <use href="#direction" transform="translate(527 0) rotate(180)"/>
+              <use href="#transfer" x="800"/><text class="station" x="800" y="-14">Bind scope</text>
+              <use href="#transfer" x="610"/><text class="station" x="610" y="-14">Evaluate</text>
+              <use href="#stop" x="440"/><text class="station" x="440" y="-14">Apply decision</text>
+              <use href="#transfer" x="270"/><text class="station" x="270" y="-14">Record outcome</text>
+            </g>
+            <g class="p4" transform="translate(0 216)">
+              <a href="doc.html?path=../docs-cms/prd/prd-001-evidence-system-map.md"><rect class="route-tag" x="10" y="-12" width="34" height="24" rx="4"/><text class="tag-text" x="27" y="4">P4</text>
+              <text class="route-name" x="55" y="5">Evidence operations</text></a>
+              <path class="track" d="M270 0H800"/>
+              <use href="#direction" transform="translate(527 0)"/>
+              <use href="#transfer" x="270"/><text class="station" x="270" y="-14">Inspect</text>
+              <use href="#stop" x="440"/><text class="station" x="440" y="-14">Time conditions</text>
+              <use href="#stop" x="610"/><text class="station" x="610" y="-14">Temporary authority</text>
+              <use href="#stop" x="800"/><text class="station" x="800" y="-14">Audit</text>
+            </g>
+            <g class="p5" transform="translate(0 276)">
+              <a href="doc.html?path=../docs-cms/prd/prd-005-product-site-and-delivery.md"><rect class="route-tag" x="10" y="-12" width="34" height="24" rx="4"/><text class="tag-text" x="27" y="4">P5</text>
+              <text class="route-name" x="55" y="5">Product site and delivery</text></a>
+              <path class="track" d="M270 0H610"/>
+              <use href="#direction" transform="translate(527 0)"/>
+              <use href="#transfer" x="270"/><text class="station" x="270" y="-14">Explain</text>
+              <use href="#stop" x="440"/><text class="station" x="440" y="-14">Validate</text>
+              <use href="#stop" x="610"/><text class="station" x="610" y="-14">Publish</text>
+            </g>
+          </svg></div>
+      <figcaption>Modeling supplies policy revisions. Integration will supply runtime facts. Enforcement uses both. Evidence operations links decisions to observed outcomes.</figcaption>
+    </figure>
+    <details class="route-directory" id="route-list" open>
+      <summary>Project routes and draft requirements</summary>
+      <ul>
+          <li class="p1">
+            <span class="project-id">P1</span><div><noscript><a href="../docs-cms/prd/prd-002-policy-modeling.md">Read the requirements source</a></noscript><h3><a href="doc.html?path=../docs-cms/prd/prd-002-policy-modeling.md">Policy modeling</a></h3>
+            <p class="route-steps">Source → Model → Review → Publish revision</p><p>Policy authors can test a candidate against current facts. The project adds source review before an operator activates the revision.</p></div>
+          </li>
+          <li class="p2">
+            <span class="project-id">P2</span><div><noscript><a href="../docs-cms/prd/prd-003-evidence-integration.md">Read the requirements source</a></noscript><h3><a href="doc.html?path=../docs-cms/prd/prd-003-evidence-integration.md">Evidence integration</a></h3>
+            <p class="route-steps">Connect → Observe → Assess evidence → Publish facts</p><p>Collectors retain observations, assessments, and expiry times. The planned handoff publishes approved evidence as runtime facts with the original deadline.</p></div>
+          </li>
+          <li class="p3">
+            <span class="project-id">P3</span><div><noscript><a href="../docs-cms/prd/prd-004-policy-enforcement.md">Read the requirements source</a></noscript><h3><a href="doc.html?path=../docs-cms/prd/prd-004-policy-enforcement.md">Policy enforcement</a></h3>
+            <p class="route-steps">Bind scope → Evaluate → Apply decision → Record outcome</p><p>The runtime evaluates a local snapshot. The project links the result to the application that applied it and the outcome that application observed.</p></div>
+          </li>
+          <li class="p4">
+            <span class="project-id">P4</span><div><noscript><a href="../docs-cms/prd/prd-001-evidence-system-map.md">Read the requirements source</a></noscript><h3><a href="doc.html?path=../docs-cms/prd/prd-001-evidence-system-map.md">Evidence operations</a></h3>
+            <p class="route-steps">Inspect → Time conditions → Temporary authority → Audit</p><p>Previews show policies and evidence. The project connects source and outcome records, then adds time conditions, exceptions, and temporary access grants.</p></div>
+          </li>
+          <li class="p5">
+            <span class="project-id">P5</span><div><noscript><a href="../docs-cms/prd/prd-005-product-site-and-delivery.md">Read the requirements source</a></noscript><h3><a href="doc.html?path=../docs-cms/prd/prd-005-product-site-and-delivery.md">Product site and delivery</a></h3>
+            <p class="route-steps">Explain → Validate → Publish</p><p>The site links product claims to guides and draft requirements. GitHub Actions checks the site before it publishes the archive from main.</p></div>
+          </li>
+      </ul>
+    </details>
+  </section>
+  <section id="foundations" aria-labelledby="foundations-heading">
+    <div class="section-heading"><div><h2 id="foundations-heading">Current implementation</h2><p>The runtime and the integration host work separately today.</p></div></div>
+    <div class="foundations">
+      <article><h3>Evaluate a scoped request</h3><p>The Rust runtime reads an active policy and local facts from one snapshot. Each fact has an expiry time. The application must block the action after a deny or indeterminate result.</p>
+      <a href="doc.html?path=RUNTIME_DATA.md">Read the runtime guide</a></article>
+      <article><h3>Inspect source evidence</h3><p>The local integration host collects permitted source records. Reviewers can inspect an observation, its evidence assessment, and the run that produced it.</p>
+      <a href="doc.html?path=INTEGRATION_HOST.md">Read the integration guide</a></article>
+      <article><h3>First connected milestone</h3><p>The plan follows one action from a source observation to a policy decision and its recorded outcome. Missing or expired evidence must block the action.</p>
+      <a href="doc.html?path=../docs-cms/PROJECTS.md#first-connected-milestone">Read the milestone</a></article>
+    </div>
+  </section>
+  <section id="paths" aria-labelledby="paths-title">
+    <div class="section-heading"><h2 id="paths-title">Guides and references</h2><a href="doc.html?path=INDEX.md">Open the documentation index <span aria-hidden="true">→</span></a></div>
+    <div class="paths">
+      <article class="path" id="path-evaluate"><h3>Evaluate IPE</h3><a href="decision.html">Follow a decision</a><a href="status.html">Project status</a><a href="performance.html">Archived measurements</a></article>
+      <article class="path" id="path-integrate"><h3>Integrate a service</h3><a href="contract.html">Runtime contract</a><a href="integration-service.html">Integration service map</a><a href="doc.html?path=INTEGRATION_DISCOVERY.md">Source discovery</a></article>
+      <article class="path" id="path-author"><h3>Write a policy</h3><a href="doc.html?path=RUNTIME_DATA.md">Policy documents</a><a href="doc.html?path=../acceptance/runtime-data/README.md">Run the acceptance suite</a><a href="ast.html">Archived parser explorer</a></article>
+      <article class="path" id="path-internals"><h3>Contribute to IPE</h3><a href="doc.html?path=../docs-cms/README.md">Design documents</a><a href="doc.html?path=VOCABULARY.md">Project vocabulary</a><a href="doc.html?path=../rfcs/INDEX.md">RFC index</a></article>
+    </div>
+  </section>
+  <details class="archive"><summary>Explore an archived policy tree</summary>
     <section class="explorer" aria-label="Example policy and its parsed tree">
       <div class="explorer-bar">
         <label for="ast-example">Example <select id="ast-example" disabled><option>Loading…</option></select></label>
-        <span><span id="ast-count"></span> · generated by <code>make docs-site</code></span>
+        <span><span id="ast-count"></span> · Archived parser output</span>
       </div>
       <div class="explorer-body">
         <pre id="ast-source" aria-label="Policy source"></pre>
@@ -53,44 +162,8 @@
       </div>
     </section>
 
-    <section class="three" aria-label="How IPE works">
-      <div><span>01 · Write</span><h3>State the intent</h3><p>A language-2 policy says when it applies and what it requires. Intent strings stay with the parsed rules.</p></div>
-      <div><span>02 · Publish</span><h3>Version it as a document</h3><p>Publishing appends an immutable revision with typed <code>policy.*</code> parameters and activates it atomically. Facts arrive by push or pull, every value TTL-bounded.</p></div>
-      <div><span>03 · Decide</span><h3>Evaluate a snapshot</h3><p>Allow, Deny, or Indeterminate. Each evaluation reads one immutable scope snapshot and rechecks evidence deadlines before allowing.</p></div>
-    </section>
-
-    <section id="paths" aria-labelledby="paths-title">
-      <h2 id="paths-title">Choose a path</h2>
-      <div class="paths">
-        <article class="path" id="path-evaluate">
-          <span class="path-name">Evaluate IPE</span>
-          <h3>Decide whether it fits</h3>
-          <p>What it decides, what is built, and how fast it is.</p>
-          <ol><li><a href="decision.html">How it decides</a></li><li><a href="status.html">Project status</a></li><li><a href="performance.html">Performance</a></li></ol>
-        </article>
-        <article class="path" id="path-integrate">
-          <span class="path-name">Integrate IPE</span>
-          <h3>Call it from a service</h3>
-          <p>Inputs, results, conflict rules, and what your code must do.</p>
-          <ol><li><a href="contract.html">Contract</a></li><li><a href="integration-service.html">Integration service map</a></li><li><a href="decision.html">How it decides</a></li><li><a href="status.html">Project status</a></li></ol>
-        </article>
-        <article class="path" id="path-author">
-          <span class="path-name">Write policies</span>
-          <h3>Author and inspect rules</h3>
-          <p>See how source becomes a tree, then what that tree decides.</p>
-          <ol><li><a href="ast.html">AST explorer</a></li><li></li><li><a href="decision.html">How it decides</a></li><li></li></ol>
-        </article>
-        <article class="path" id="path-internals">
-          <span class="path-name">Work on IPE</span>
-          <h3>Understand the internals</h3>
-          <p>What exists, how it fits together, and what is planned.</p>
-          <ol><li><a href="status.html">Project status</a></li><li><a href="doc.html?path=ARCHITECTURE.md">Architecture</a></li><li><a href="doc.html?path=VOCABULARY_REVIEW.md">Vocabulary review</a></li><li><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a></li></ol>
-        </article>
-      </div>
-    </section>
-  </main>
-
-  <footer class="landing-footer"><span>IPE · Idempotent Predicate Engine · MPL-2.0</span><span>Parser trees and archived measurements are generated by <code>make docs-site</code>.</span></footer>
-</div>
+  </details>
+</main>
+<footer class="landing-wrap landing-footer"><span>Idempotent Predicate Engine</span><span>MPL-2.0</span></footer>
 </body>
 </html>

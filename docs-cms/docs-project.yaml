@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./docs-project.schema.json
+version: "1"
+docuchango_version: "1.20.0"
+project:
+  id: ipe
+  name: IPE
+  description: IPE requirements, design proposals, decisions, and findings
+structure:
+  template_dir: templates
+  doc_types:
+    adr:
+      schema: adr
+      folders: [adr]
+    rfc:
+      schema: rfc
+      folders: [rfcs]
+      check_traceability: true
+    memo:
+      schema: memo
+      folders: [memos]
+    prd:
+      schema: prd
+      folders: [prd]
+      check_traceability: true
+security:
+  allow_external_paths: false
+metadata:
+  created: "2026-11-17"
+  maintainers: [IPE maintainers]
+  purpose: Structured design memory alongside existing operational documentation

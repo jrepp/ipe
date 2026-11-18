@@ -1,29 +1,17 @@
-.PHONY: help build test bench lint fmt check clean install-tools coverage audit fuzz docs docs-site docs-serve docs-check runtime-acceptance policy-acceptance
+DOCUCHANGO ?= uvx docuchango==1.20.0
+
+.PHONY: release test-verbose test-default fmt-check perf watch dev pre-commit ci repo-check help build test bench lint fmt check clean install-tools coverage audit fuzz docs docs-site docs-serve docs-check docs-cms-check runtime-acceptance policy-acceptance
 
 # One exact version shared with actions/setup-python in docs CI.
 DOCS_PYTHON = uv run --no-project --python $(shell cat .python-version) python
 
 # Default target
 help:
-	@echo "Idempotent Predicate Engine - Development Makefile"
-	@echo ""
-	@echo "Available targets:"
-	@echo "  make build          - Build all crates"
-	@echo "  make test           - Run all tests"
-	@echo "  make bench          - Run benchmarks"
-	@echo "  make lint           - Run clippy linter"
-	@echo "  make fmt            - Format code with rustfmt"
-	@echo "  make check          - Run all checks (fmt, lint, test)"
-	@echo "  make coverage       - Generate code coverage report"
-	@echo "  make audit          - Run security audits"
-	@echo "  make fuzz           - Run fuzzing tests"
-	@echo "  make clean          - Clean build artifacts"
-	@echo "  make install-tools  - Install development tools"
-	@echo "  make release        - Build release binaries"
-	@echo "  make perf           - Run performance validation"
-	@echo "  make docs-site      - Generate parser trees and local performance dashboard data"
-	@echo "  make docs-serve     - Serve docs at http://127.0.0.1:8000/docs/"
-	@echo "  make docs-check     - Build and validate the docs (run npm ci --prefix docs first)"
+	@echo "IPE development commands (see QUICKSTART.md)"
+	@echo "build release test test-default lint fmt check bench perf"
+	@echo "runtime-acceptance policy-acceptance repo-check"
+	@echo "docs-site docs-serve docs-check docs-cms-check"
+	@echo "coverage audit clean install-tools"
 
 # Exercise the public runtime-data workflow against a real server.
 runtime-acceptance:
@@ -38,115 +26,88 @@ policy-acceptance:
 
 # Build all crates
 build:
-	@echo "🔨 Building all crates..."
-	cargo build --all-features
+	cargo build --locked --workspace --all-features
 
 # Build release
 release:
-	@echo "🚀 Building release binaries..."
-	cargo build --release --all-features
+	cargo build --locked --workspace --release --all-features
 	mkdir -p target/release/licenses
 	cp licenses/*.txt target/release/licenses/
-	@echo "✅ Release build complete"
 	@ls -lh target/release/ipe-* 2>/dev/null || true
 
 # Run all tests
 test:
-	@echo "🧪 Running tests..."
-	cargo test --all-features --workspace
+	cargo test --locked --workspace --all-features
 
 # Run tests with output
 test-verbose:
-	@echo "🧪 Running tests (verbose)..."
-	cargo test --all-features --workspace -- --nocapture
+	cargo test --locked --workspace --all-features -- --nocapture
 
 # Run benchmarks
 bench:
-	@echo "⚡ Running benchmarks..."
-	cargo bench --all-features
+	cargo bench --locked --workspace --all-features
 
 # Run clippy linter
 lint:
-	@echo "🔍 Running clippy..."
-	cargo clippy --all-targets --all-features -- -D warnings
+	cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
 # Format code
 fmt:
-	@echo "✨ Formatting code..."
 	cargo fmt --all
 
 # Check formatting
 fmt-check:
-	@echo "🔍 Checking formatting..."
 	cargo fmt --all -- --check
 
 # Run all checks
-check: fmt-check lint test
-	@echo "✅ All checks passed!"
+check: repo-check fmt-check lint test-default test
 
 # Generate code coverage
 coverage:
-	@echo "📊 Generating code coverage..."
 	cargo llvm-cov --all-features --workspace --html
-	@echo "✅ Coverage report generated: target/llvm-cov/html/index.html"
 	@command -v open >/dev/null 2>&1 && open target/llvm-cov/html/index.html || true
 
 # Run security audits
 audit:
-	@echo "🔒 Running security audits..."
 	cargo audit
 	cargo deny check
-	@echo "✅ Security audit complete"
 
-# Run fuzzing tests
+# No maintained fuzz target exists. Do not create a new workspace as a side effect.
 fuzz:
-	@echo "🐛 Running fuzzing tests..."
-	@if [ ! -d "fuzz" ]; then \
-		echo "Initializing fuzz targets..."; \
-		cargo install cargo-fuzz; \
-		cargo fuzz init; \
-	fi
-	cargo +nightly fuzz run parse_policy -- -max_total_time=300
-	@echo "✅ Fuzzing complete"
+	@echo "No maintained fuzz target exists. See docs-cms/rfcs/rfc-019-cohesive-monorepo.md." >&2
+	@exit 1
 
 # Clean build artifacts
 clean:
-	@echo "🧹 Cleaning build artifacts..."
 	cargo clean
-	@echo "✅ Clean complete"
 
 # Install development tools
 install-tools:
-	@echo "📦 Installing development tools..."
-	@echo "Installing rustfmt..."
 	rustup component add rustfmt
-	@echo "Installing clippy..."
 	rustup component add clippy
-	@echo "Installing llvm-tools..."
 	rustup component add llvm-tools-preview
-	@echo "Installing cargo-llvm-cov..."
 	cargo install cargo-llvm-cov
-	@echo "Installing cargo-audit..."
 	cargo install cargo-audit
-	@echo "Installing cargo-deny..."
 	cargo install cargo-deny
-	@echo "Installing cargo-fuzz..."
 	cargo install cargo-fuzz
-	@echo "Installing cargo-criterion..."
 	cargo install cargo-criterion
-	@echo "Installing cargo-geiger..."
 	cargo install cargo-geiger
-	@echo "✅ All tools installed!"
 
-# Performance validation
+# Measure the current runtime workload; Criterion writes target/criterion.
 perf:
-	@echo "⚡ Running performance validation..."
-	cargo build --release --all-features
-	@echo "Running load tests..."
-	# cargo run --release --example load_test
-	@echo "✅ Performance validation complete"
+	cargo bench --locked -p ipe-core --features approvals --bench v2_evaluation
+
+test-default:
+	cargo test --locked --workspace
+
+repo-check:
+	$(DOCS_PYTHON) scripts/check-repository.py
+	$(DOCS_PYTHON) -m unittest discover -s scripts/repository-tests -v
 
 # Documentation
+docs-cms-check:
+	$(DOCUCHANGO) validate --dry-run --verbose --skip-build
+
 docs-site:
 	$(DOCS_PYTHON) scripts/build-docs.py
 
@@ -155,28 +116,23 @@ docs-check: docs-site
 	$(DOCS_PYTHON) scripts/check-docs-http.py
 	npm test --prefix docs
 
-docs-serve:
-	$(DOCS_PYTHON) -m http.server 8000 --bind 127.0.0.1
+docs-serve: docs-site
+	$(DOCS_PYTHON) -m http.server 8000 --bind 127.0.0.1 --directory target/docs-site
 
 docs:
-	@echo "📚 Building documentation..."
-	cargo doc --all-features --no-deps --document-private-items
-	@echo "✅ Documentation built: target/doc/ipe_core/index.html"
+	cargo doc --locked --workspace --all-features --no-deps --document-private-items
 	@command -v open >/dev/null 2>&1 && open target/doc/ipe_core/index.html || true
 
 # Watch mode (requires cargo-watch)
 watch:
 	@command -v cargo-watch >/dev/null 2>&1 || (echo "Installing cargo-watch..." && cargo install cargo-watch)
-	cargo watch -x 'test --all-features'
+	cargo watch -x 'test --locked --workspace --all-features'
 
 # Quick development cycle
 dev: fmt lint test
-	@echo "✅ Development cycle complete!"
 
 # Pre-commit hook
 pre-commit: fmt-check lint test
-	@echo "✅ Pre-commit checks passed!"
 
-# CI simulation (runs all CI checks locally)
+# Local Rust checks; acceptance, documentation, and CI platform checks are separate.
 ci: fmt-check lint test coverage audit
-	@echo "✅ CI simulation complete!"

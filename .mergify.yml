@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://docs.mergify.com/mergify-configuration-schema.json
+# See docs/MERGE_QUEUE.md for required products, checks, and activation steps.
+merge_queue:
+  max_parallel_checks: 5
+
+queue_rules:
+  - name: default
+    batch_size: 5
+    batch_max_wait_time: 5min
+    merge_method: squash
+    commit_message_format:
+      title: pr-title
+      body: pr-body
+    queue_conditions:
+      - "base=main"
+      - "-draft"
+      - "label!=do-not-merge"
+      - "label!=work-in-progress"
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+      - "check-success=@github-actions/CI gate"
+      - "check-success=@github-actions/Security gate"
+      - "check-success=@github-actions/Coverage gate"
+      - "check-success=@github-actions/Performance gate"
+      - "check-success=@github-actions/Runtime acceptance"
+      - "check-success=@github-actions/Integration acceptance"
+      - "check-success=@github-actions/Build and check docs site"
+      - "check-success=@github-actions/Validate design documentation"
+      - "check-success=@github-actions/Workflow validation"
+    # CI must pass on the combined batch, not only on each original PR.
+    merge_conditions:
+      - "check-success=@github-actions/CI gate"
+      - "check-success=@github-actions/Security gate"
+      - "check-success=@github-actions/Coverage gate"
+      - "check-success=@github-actions/Performance gate"
+      - "check-success=@github-actions/Runtime acceptance"
+      - "check-success=@github-actions/Integration acceptance"
+      - "check-success=@github-actions/Build and check docs site"
+      - "check-success=@github-actions/Validate design documentation"
+      - "check-success=@github-actions/Workflow validation"
+      - "#approved-reviews-by>=1"
+      - "#changes-requested-reviews-by=0"
+
+# Requires Merge Queue and Merge Protections enabled for this repository.
+merge_protections_settings:
+  auto_merge_conditions: true

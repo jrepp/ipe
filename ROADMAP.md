@@ -1,4 +1,9 @@
-# Idempotent Predicate Engine: Production Roadmap
+# Historical production roadmap
+
+This roadmap describes the removed parser, bytecode, interpreter, and JIT architecture.
+Its completion states, dates, staffing assumptions, and performance targets are not current commitments.
+Use the [current project map](docs-cms/PROJECTS.md) and its linked PRDs for product planning.
+The historical content below is retained for context.
 
 ## Vision
 

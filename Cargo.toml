@@ -18,7 +18,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["IPE Contributors"]
 license = "MPL-2.0"
-repository = "https://github.com/yourorg/ipe"
+repository = "https://github.com/jrepp/ipe"
 
 [workspace.dependencies]
 # Core

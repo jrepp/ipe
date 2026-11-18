@@ -1,12 +1,18 @@
 # Idempotent Predicate Engine (IPE)
 
-**A fast, reliable authorization engine built in Rust**
+**Evidence-backed policy decisions**
+
+Connect external evidence to explicit policy checks. See the rule, the source, and the reason for each decision.
 
 [![Build](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=main)](https://github.com/jrepp/ipe/actions)
 [![Clippy](https://img.shields.io/github/actions/workflow/status/jrepp/ipe/ci.yml?branch=main&label=clippy)](https://github.com/jrepp/ipe/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/jrepp/ipe/branch/main/graph/badge.svg)](https://codecov.io/gh/jrepp/ipe)
 [![dependency status](https://deps.rs/repo/github/jrepp/ipe/status.svg)](https://deps.rs/repo/github/jrepp/ipe)
-[![License](https://img.shields.io/badge/license-MPLv2-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MPLv2-blue.svg)](https://www.mozilla.org/en-US/MPL/2.0/)
+
+Start with the [project map](docs-cms/PROJECTS.md) for product principles, project routes, and PRDs.
+See [design documentation](docs-cms/README.md) for new requirements, proposals, and decisions.
+See the [documentation index](docs/INDEX.md) for existing guides.
 
 ## Overview
 
@@ -159,7 +165,7 @@ The bootstrap JSON declares the database path, loopback bind address, input sche
 
 ### Quick Links
 
-- **[QUICKSTART](QUICKSTART.md)** - Get running in 5 minutes
+- **[QUICKSTART](QUICKSTART.md)** - Current setup and checks
 - **[SUMMARY](SUMMARY.md)** - Executive summary and vision (historical)
 - **[END_TO_END_EXAMPLE](END_TO_END_EXAMPLE.md)** - Complete usage walkthrough (legacy engine; historical)
 
@@ -167,8 +173,6 @@ The bootstrap JSON declares the database path, loopback bind address, input sche
 
 - **[RUNTIME_DATA](docs/RUNTIME_DATA.md)** - The implemented v2 runtime workflow and API
 - **[ARCHITECTURE](docs/ARCHITECTURE.md)** - System architecture with diagrams
-- **[AST](docs/AST.md)** - Legacy parser AST specification (historical)
-- **[BYTECODE](docs/BYTECODE.md)** - Legacy bytecode instruction set (historical)
 - **[RFCs](rfcs/INDEX.md)** - Design proposals and specifications
 
 ### Sidecar Architecture RFCs
@@ -177,63 +181,19 @@ The bootstrap JSON declares the database path, loopback bind address, input sche
 - **[RFC-002](rfcs/002-sse-json-protocol.md)** - SSE/JSON protocol (MCP-inspired)
 - **[RFC-003](rfcs/003-policy-tree-storage.md)** - Content-addressable policy storage
 
-## Project Structure
+## Repository and development
 
-```
-ipe/
-├── RFC.md                    # Historical technical specification
-├── Cargo.toml                # Workspace configuration
-├── crates/
-│   ├── ipe-core/             # Runtime facts, policy documents, language-2 evaluation
-│   ├── ipe-server/           # Axum HTTP runtime service
-│   ├── ipe-parser/           # Placeholder crate
-│   ├── ipe-control/          # Control plane placeholder
-│   ├── ipe-wasm/             # WebAssembly placeholder
-│   ├── ipe-ffi/              # C FFI placeholder
-│   └── ipe-web/              # Web application placeholder
-├── acceptance/
-│   ├── runtime-data/         # External HTTP acceptance guide
-│   └── policy-data/          # Policy document fixtures
-└── examples/
-    └── load_test.rs          # Load-test example
-```
-
-The legacy in-process engine (parser, AST, bytecode compiler, interpreter, resource index, lock-free policy store, JIT, tiering) was removed after the v2 runtime landed.
-
-## Building
-
-### Prerequisites
-
-```bash
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Install dependencies (Ubuntu/Debian)
-sudo apt-get install build-essential pkg-config
-
-# Install dependencies (macOS)
-brew install pkg-config
-```
-
-### Build
-
-```bash
-# Debug build
-cargo build
-
-# Release build
-cargo build --release
-
-# Run tests
-cargo test --all-features
-
-# Runtime acceptance (external HTTP workflow)
-make runtime-acceptance
-```
+The [repository map](docs/REPOSITORY.md) connects product projects to code, guides, and checks.
+Follow [QUICKSTART.md](QUICKSTART.md) for prerequisites, builds, acceptance checks, and documentation previews.
+Make owns contributor commands; Just provides aliases.
+The legacy parser, bytecode interpreter, and JIT were removed. Placeholder crates do not provide those features.
 
 ## Roadmap
 
-The v2 runtime is the shipping product. Near-term work hardens what exists: persistence and replication bounds, audit durability, timestamp/duration values, cross-collection transactions, live schema publication, and global execution wall-time budgets. See [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md) (limits and future work) and [ROADMAP.md](ROADMAP.md).
+The [project map](docs-cms/PROJECTS.md) organizes current product work across modeling, integration, enforcement, evidence operations, and site delivery.
+Each project links to a PRD with acceptance criteria and open decisions.
+The [runtime guide](docs/RUNTIME_DATA.md) records current implementation limits.
+The previous [roadmap](ROADMAP.md) is historical.
 
 ## Performance
 
@@ -252,7 +212,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Licensed under the Mozilla Public License Version 2.0 ([LICENSE](LICENSE) or https://www.mozilla.org/en-US/MPL/2.0/).
+Licensed under the Mozilla Public License Version 2.0 ([LICENSE](https://www.mozilla.org/en-US/MPL/2.0/) or https://www.mozilla.org/en-US/MPL/2.0/).
 
 ## Acknowledgments
 
@@ -263,7 +223,6 @@ Licensed under the Mozilla Public License Version 2.0 ([LICENSE](LICENSE) or htt
 
 **Status:** Early-stage runtime; explicit deployment limits apply
 **Version:** 0.1.0
-**Contact:** [Your contact info]
 
 Policy documents now separate immutable typed `policy.*` parameters from expiring
 `data.*` evidence, with named sections and external-source provenance. Run

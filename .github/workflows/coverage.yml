@@ -149,3 +149,18 @@ jobs:
           done
 
           echo "✅ All critical paths have 100% coverage"
+
+  queue-gate:
+    name: Coverage gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [coverage, coverage-per-crate]
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+    steps:
+      - name: Require every prerequisite to succeed
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          jq -e 'length > 0 and all(.[]; .result == "success")' <<< "$JOB_RESULTS"

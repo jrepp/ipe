@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate local docs data atomically; leave previous results intact on failure."""
+"""Package the static documentation site and archived measurement data."""
 import json
 from pathlib import Path
 import shutil
@@ -30,10 +30,20 @@ def main():
     sources += list((ROOT / "docs").glob("*.css")) + list((ROOT / "docs").glob("*.js"))
     # Preview new top-level guides before they are added to the Git index.
     sources += list((ROOT / "docs").glob("*.md"))
-    sources += [data_file]
-    # Source references from contract.html resolve inside the packaged artifact.
+    sources += [ROOT / "CONTRIBUTING.md", ROOT / "Makefile", ROOT / "justfile",
+                ROOT / "vendor/rmcp/IPE-CHANGES.patch.gz", ROOT / "vendor/rmcp/LICENSE"]
+    # Include new design records and their schema before they are added to Git.
+    sources += [path for path in (ROOT / "docs-cms").rglob("*")
+                if path.is_file() and path.suffix in {".md", ".yaml", ".json"}]
+    # The overview uses the same local Plex fonts as the product preview.
+    sources += list((ROOT / "tools/product-ship-mocks/fonts").glob("*.woff2"))
+    sources += [ROOT / "tools/product-ship-mocks/fonts/LICENSE.txt", data_file]
+    sources += [ROOT / "docs/benchmark-history.json", ROOT / "docs/benchmark-latest.json"]
+    # Keep source examples from the runtime contract and evidence design available offline.
     sources += [ROOT / "crates/ipe-core/src/runtime_policy.rs",
-                ROOT / "crates/ipe-core/src/runtime_facts.rs"]
+                ROOT / "crates/ipe-core/src/runtime_facts.rs",
+                ROOT / "crates/ipe-integration/src/host/governance.rs",
+                ROOT / "tools/product-ship-mocks/app.js"]
     tracked = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT, capture_output=True, text=True, check=True)
     sources += [ROOT / path for path in tracked.stdout.splitlines()]
     for source in sources:
@@ -41,7 +51,7 @@ def main():
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, output)
     shutil.copyfile(ROOT / "scripts/site-index.html", package / "index.html")
-    print(f"Built {len(data['examples'])} parser trees and {len(data['workloads'])} measured workloads.")
+    print(f"Packaged archived data: {len(data['examples'])} parser trees and {len(data['workloads'])} measured workloads.")
     print("Portable artifact:", package)
     print("Run make docs-serve, then open http://127.0.0.1:8000/docs/")
 

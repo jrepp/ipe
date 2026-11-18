@@ -11,7 +11,7 @@ Read this before changing runtime, integration, or shared boundary behavior.
 - The local `github-contract` CLI captures GitHub workflow and action evidence. It does not execute actions or publish policies.
 - Read each RFC's status and the implementation limits in the current guides. A proposal is not an implemented feature.
 - The legacy parser, bytecode interpreter, and JIT were removed. Several documents still describe them.
-- [QUICKSTART.md](../QUICKSTART.md), [.agent/core-prompt.md](../.agent/core-prompt.md), and some workflow examples contain historical architecture and commands.
+- [QUICKSTART.md](../QUICKSTART.md) defines current setup. See the [repository map](../docs/REPOSITORY.md) for project ownership and remaining historical surfaces.
 - Use this guide for repository orientation. Check older instructions against current source, manifests, tests, and CI before using them.
 - UI mocks, synthetic provider tests, and archived benchmarks do not establish production readiness or capacity.
 
@@ -54,6 +54,9 @@ Read this before changing runtime, integration, or shared boundary behavior.
 
 Use `Result` and `Option` for expected failures. Avoid production panics and unchecked `unwrap()` calls.
 Justify new `unsafe` code and document its safety conditions.
+
+Before adding general-purpose infrastructure, consult the [shared-foundations survey](../docs-cms/memos/memo-001-shared-foundations.md).
+Prefer existing or established packages. Record the concrete unmet requirement before writing custom machinery.
 
 Keep dependency changes scoped. Preserve `Cargo.lock` unless the task requires an update.
 Do not use a broad dependency update to fix an unrelated build failure.
