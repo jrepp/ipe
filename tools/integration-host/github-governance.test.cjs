@@ -35,3 +35,12 @@ test('a literal environment outside the captured sample remains explicitly unkno
  const policy=governance(out).find(o=>o.model.entity.record.id.local_id==='environment:1').model.entity.record;
  assert.deepEqual(policy.subjects,[]);
 });
+
+test('governance construction stays within each emitted batch',()=>{
+ const boundedSdk=sdk.replace('function governanceModel(record, options) {',`function governanceModel(record, options) {
+   globalThis.constructedGovernance=(globalThis.constructedGovernance||0)+1;
+   if(globalThis.constructedGovernance>4)throw new Error('too_many_governance_models_in_step');`);
+ const out=replay(boundedSdk,collector,{governance:fixture});
+ assert.equal(governance(out).length,13);
+ assert.deepEqual(out,replay(sdk,collector,{governance:fixture}));
+});
