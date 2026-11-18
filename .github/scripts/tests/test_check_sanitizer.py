@@ -97,7 +97,7 @@ exit 0
 
     def test_arm64_keeps_crc_workaround_and_native_instrumentation(self):
         self.run_sanitizer('''
-[ "$RUST_TEST_THREADS" = 2 ]
+[ "$RUST_TEST_THREADS" = 1 ]
 [ "$CC_aarch64_apple_darwin" = clang ]
 [ "$CXX_aarch64_apple_darwin" = clang++ ]
 [[ "$CXXFLAGS_aarch64_apple_darwin" == *-fsanitize=thread* ]]
@@ -107,6 +107,15 @@ exit 0
 [[ "$*" == *--target*aarch64-apple-darwin* ]]
 exit 0
 ''', 0, target='aarch64-apple-darwin')
+
+    def test_other_macos_sanitizers_keep_two_harness_workers(self):
+        for sanitizer in ['address', 'leak']:
+            with self.subTest(sanitizer=sanitizer):
+                self.run_sanitizer('''
+[ "$RUST_TEST_THREADS" = 2 ]
+[[ "$*" != *skip* ]]
+exit 0
+''', 0, target='aarch64-apple-darwin', sanitizer=sanitizer)
 
     def test_clean_run_succeeds_without_reusing_old_reports(self):
         self.run_sanitizer('''
