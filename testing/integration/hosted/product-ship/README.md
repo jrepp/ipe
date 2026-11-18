@@ -8,6 +8,8 @@ The policy tree is descriptive input for this simulation. It does not establish 
 
 The collector runs the embedded SDK source against a deterministic broker replay. The Node vm is a test harness, not a security sandbox. Hosted execution relies on the native host's sandbox and grant checks. The collector emits receipt-bound governance descriptions and expiring evidence observations. A denied read emits an unknown result and no evidence.
 
+Each step constructs at most eight observations. The collector keeps compact provider data between steps, instead of copying all expanded observations. Native byte limits and the 100 ms step deadline remain in force.
+
 ```sh
 node --test testing/integration/hosted/product-ship/product-ship.test.cjs
 node testing/integration/hosted/product-ship/runner.cjs --output tools/product-ship-mocks/data.json

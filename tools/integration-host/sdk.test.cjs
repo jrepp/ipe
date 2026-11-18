@@ -64,3 +64,26 @@ test('collector preserves failed root reads and incomplete sample reporting',()=
  assert.ok(out.summary.gaps.some(g=>g.code==='source_sample_truncated'));
  assert.equal(out.summary.coverage,'partial');assert.equal(out.summary.publication,false);
 });
+
+test('JSON byte limits include Unicode and escaped lone surrogates at the boundary',()=>{
+ for (const sample of ['a','é','界','😀','\ud800','\udfff','aé界😀\ud800']) {
+  const empty=Buffer.byteLength(JSON.stringify({outputs:'',state:null}));
+  const unit=Buffer.byteLength(JSON.stringify(sample))-2;
+  const repeated=sample.repeat(Math.floor((65536-empty)/unit));
+  const value=repeated+'a'.repeat(65536-empty-(Buffer.byteLength(JSON.stringify(repeated))-2));
+  assert.equal(Buffer.byteLength(JSON.stringify({outputs:value,state:null})),65536);
+  assert.equal(evaluate(`ipe.complete(${JSON.stringify(value)})`).outputs,value);
+  assert.throws(()=>evaluate(`ipe.complete(${JSON.stringify(value+'a')})`),/ipe_json_limit/);
+ }
+});
+
+test('JSON validation preserves depth, cycle, type, and shared-object checks',()=>{
+ assert.doesNotThrow(()=>evaluate(`ipe.state(Array.from({length:32}).reduce(value=>({value}),null))`));
+ assert.throws(()=>evaluate(`ipe.state(Array.from({length:33}).reduce(value=>({value}),null))`),/ipe_json_depth/);
+ assert.throws(()=>evaluate(`(()=>{const value={};value.self=value;return ipe.state(value);})()`),/ipe_json_invalid/);
+ assert.deepEqual(evaluate(`(()=>{const value={ok:true};return ipe.state([value,value]);})()`),[{ok:true},{ok:true}]);
+ for (const value of ['undefined','NaN','Infinity','()=>0','1n','new Map()','Object.create({inherited:1})']) {
+  assert.throws(()=>evaluate(`ipe.state({value:${value}})`),/ipe_json_invalid/);
+ }
+ assert.deepEqual(evaluate(`ipe.state(Object.assign(Object.create(null),{ok:true}))`),{ok:true});
+});
