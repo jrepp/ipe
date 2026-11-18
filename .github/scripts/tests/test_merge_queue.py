@@ -24,7 +24,7 @@ class MergeQueueChecks(unittest.TestCase):
             gate = jobs['queue-gate']
             with self.subTest(workflow=name):
                 self.assertEqual(set(gate['needs']), set(jobs) - {'queue-gate'})
-                self.assertEqual(gate['if'], 'always()')
+                self.assertEqual(gate['if'], '${{ !cancelled() }}')
                 step = gate['steps'][0]
                 self.assertEqual(step['env']['JOB_RESULTS'], '${{ toJSON(needs) }}')
                 for state in ['success', 'failure', 'cancelled', 'skipped', 'unknown', None]:
@@ -65,7 +65,7 @@ class MergeQueueChecks(unittest.TestCase):
                     if 'branches' in trigger:
                         self.assertIn('main', trigger['branches'])
                     self.assertNotIn('branches-ignore', trigger)
-                    self.assertIn(job.get('if'), [None, 'always()'])
+                    self.assertIn(job.get('if'), [None, '${{ !cancelled() }}'])
         self.assertEqual(merge, set(definitions))
 
     def test_review_and_hold_conditions_have_no_auto_approval(self):

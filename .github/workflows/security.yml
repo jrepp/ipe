@@ -196,7 +196,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [cargo-audit, cargo-deny, miri, sanitizers, supply-chain]
-    if: always()
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
     steps:

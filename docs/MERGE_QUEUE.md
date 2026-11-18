@@ -30,7 +30,8 @@ Review conditions apply to the original PRs; required CI runs on Mergify's tempo
 | Validate design documentation | Docuchango metadata, links, and traceability. |
 | Workflow validation | Actions syntax, Mergify schema, and merge-gate regression tests. |
 
-The aggregate gates require success from every prerequisite. Failure, cancellation, skipping, and empty results fail the gate.
+The aggregate gates require success from every prerequisite. Failure, cancellation, skipping, and empty results cannot produce a successful gate.
+Canceled workflows stop their gates so obsolete runs do not block newer commits in the same concurrency group. An active workflow still runs its gate after a prerequisite fails. Mergify requires a successful gate, so a canceled or skipped gate cannot authorize a merge.
 Integration acceptance runs on all PRs, including documentation-only and workflow-only changes.
 Other required workflows already run without PR path filters. These choices increase CI work but avoid absent required checks.
 Existing checks and their failure policies remain intact. Do not remove a gate to bypass an existing failure.
