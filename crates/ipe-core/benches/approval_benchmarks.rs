@@ -216,10 +216,10 @@ fn bench_approval_with_expiration(c: &mut Criterion) {
 
         if i % 2 == 0 {
             // Half expired
-            approval.expires_at = Some(chrono::Utc::now().timestamp() - 100);
+            approval.expires_at = Some(jiff::Timestamp::now().as_second() - 100);
         } else {
             // Half valid
-            approval.expires_at = Some(chrono::Utc::now().timestamp() + 3600);
+            approval.expires_at = Some(jiff::Timestamp::now().as_second() + 3600);
         }
 
         store.grant_approval(approval).unwrap();

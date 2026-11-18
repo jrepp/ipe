@@ -1,0 +1,550 @@
+{
+  "description": "Synthetic provider descriptions. No external contact, approval, or publication occurs.",
+  "models": [
+    {
+      "schema_version": 1,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "definition",
+        "source": {
+          "definition": {
+            "namespace": "fixture",
+            "resource": "example/release",
+            "path": ".github/workflows/release.yml"
+          },
+          "revision": "workflow-source-1",
+          "pointer": ""
+        },
+        "title": "Release workflow",
+        "inputs": [],
+        "outputs": []
+      }
+    },
+    {
+      "schema_version": 1,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "constraint",
+        "control": {
+          "namespace": "fixture",
+          "resource": "example/release",
+          "operation": "workflow.run_job",
+          "local_id": ".github/workflows/release.yml#publish"
+        },
+        "source": {
+          "definition": {
+            "namespace": "fixture",
+            "resource": "example/release",
+            "path": ".github/workflows/release.yml"
+          },
+          "revision": "workflow-source-1",
+          "pointer": "/jobs/publish"
+        },
+        "title": "Publish release",
+        "actor_context": "intended_execution_actor_unobserved",
+        "applicability": {
+          "dialect": "fixture",
+          "expression": null,
+          "default_behavior": "unknown"
+        },
+        "obligations": [
+          {
+            "id": "approval",
+            "description": "Require release approval",
+            "requirement": {
+              "kind": "opaque",
+              "reason": "External approval semantics require evidence"
+            },
+            "next_observation": null
+          }
+        ],
+        "dependencies": [],
+        "enforcer": "deployment-gate"
+      }
+    },
+    {
+      "schema_version": 1,
+      "scope": "release",
+      "claim": "provider_reported",
+      "entity": {
+        "kind": "outcome",
+        "execution": {
+          "namespace": "fixture",
+          "resource": "example/release",
+          "run": "42",
+          "attempt": 1,
+          "job": "publish",
+          "step": null
+        },
+        "definition": {
+          "definition": {
+            "namespace": "fixture",
+            "resource": "example/release",
+            "path": ".github/workflows/release.yml"
+          },
+          "revision": "workflow-source-1",
+          "pointer": ""
+        },
+        "title": "Publish attempt 42",
+        "status": "completed",
+        "conclusion": "success",
+        "duration_ms": 11000,
+        "started_at": "2026-01-01T00:00:00Z",
+        "completed_at": "2026-01-01T00:00:11Z",
+        "declaration_candidates": [
+          {
+            "namespace": "fixture",
+            "resource": "example/release",
+            "operation": "workflow.run_job",
+            "local_id": ".github/workflows/release.yml#publish"
+          }
+        ],
+        "correlation": "candidate"
+      }
+    },
+    {
+      "schema_version": 1,
+      "scope": "release",
+      "claim": "provider_reported",
+      "entity": {
+        "kind": "fact",
+        "subject": "execution:[\"fixture\",\"example/release\",\"42\",1,\"publish\",null]",
+        "predicate": "status",
+        "value": "success",
+        "authority": "fixture",
+        "execution": {
+          "namespace": "fixture",
+          "resource": "example/release",
+          "run": "42",
+          "attempt": 1,
+          "job": "publish",
+          "step": null
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "principal",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "deployment-service"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/principal/deployment-service"
+          },
+          "title": "Deployment service",
+          "principal_kind": "service"
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "principal",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "release-approver"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/principal/release-approver"
+          },
+          "title": "Release approver",
+          "principal_kind": "role"
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "principal",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "alice"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/principal/alice"
+          },
+          "title": "Example approver",
+          "principal_kind": "human"
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "policy",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "release-policy"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/policy/release-policy"
+          },
+          "title": "Release approval policy",
+          "authority": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "release-approver"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "subjects": [
+            "control:[\"fixture\",\"example/release\",\"workflow.run_job\",\".github/workflows/release.yml#publish\"]"
+          ],
+          "requirements": [
+            {
+              "id": "approval",
+              "description": "A release approver must approve this artifact.",
+              "specification": "Require approval for the exact artifact and execution."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "contract",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "release-contract"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/contract/release-contract"
+          },
+          "title": "Release approval agreement",
+          "parties": [
+            {
+              "kind": "principal",
+              "id": {
+                "namespace": "fixture",
+                "authority": "example-release",
+                "local_id": "deployment-service"
+              },
+              "source_revision": "governance-source-1",
+              "resolution": "resolved"
+            },
+            {
+              "kind": "principal",
+              "id": {
+                "namespace": "fixture",
+                "authority": "example-release",
+                "local_id": "release-approver"
+              },
+              "source_revision": "governance-source-1",
+              "resolution": "resolved"
+            }
+          ],
+          "subjects": [
+            "control:[\"fixture\",\"example/release\",\"workflow.run_job\",\".github/workflows/release.yml#publish\"]"
+          ],
+          "requirements": [
+            {
+              "id": "approval",
+              "description": "A release approver must approve this artifact.",
+              "specification": "Require approval for the exact artifact and execution."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "control",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "approval-gate"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/control/approval-gate"
+          },
+          "title": "Deployment approval gate",
+          "governing_rules": [
+            {
+              "kind": "policy",
+              "id": {
+                "namespace": "fixture",
+                "authority": "example-release",
+                "local_id": "release-policy"
+              },
+              "source_revision": "governance-source-1",
+              "resolution": "resolved"
+            },
+            {
+              "kind": "contract",
+              "id": {
+                "namespace": "fixture",
+                "authority": "example-release",
+                "local_id": "release-contract"
+              },
+              "source_revision": "governance-source-1",
+              "resolution": "resolved"
+            }
+          ],
+          "mechanism": "The provider gate checks approval before deployment. This description does not prove that the gate ran."
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "handoff",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "approval-request"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/handoff/approval-request"
+          },
+          "title": "Request release approval",
+          "policy": {
+            "kind": "policy",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "release-policy"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "from": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "deployment-service"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "to": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "release-approver"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "trigger": "Deployment awaits approval",
+          "required_action": "Review deployment evidence and record approval",
+          "completion": "Provider reports approval for the selected artifact and execution",
+          "continuation": "Deployment service can request the external gate again"
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "role_assignment",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "approver-assignment"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/role_assignment/approver-assignment"
+          },
+          "principal": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "alice"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "role": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "release-approver"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "relationship": "approval_authority",
+          "valid_from": null,
+          "valid_until": 4102444800
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "contact_method",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "approval-queue"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/contact_method/approval-queue"
+          },
+          "owner": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "release-approver"
+            },
+            "source_revision": "governance-source-1",
+            "resolution": "resolved"
+          },
+          "channel": "ticket_queue",
+          "endpoint": "release-approvals",
+          "availability": "available",
+          "purpose": "Approval requests",
+          "valid_until": 4102444800
+        }
+      }
+    },
+    {
+      "schema_version": 2,
+      "scope": "release",
+      "claim": "declared",
+      "entity": {
+        "kind": "governance",
+        "record": {
+          "type": "contact_method",
+          "id": {
+            "namespace": "fixture",
+            "authority": "example-release",
+            "local_id": "backup-contact"
+          },
+          "source": {
+            "definition": {
+              "namespace": "fixture",
+              "resource": "example/release",
+              "path": "governance.json"
+            },
+            "revision": "governance-source-1",
+            "pointer": "/contact_method/backup-contact"
+          },
+          "owner": {
+            "kind": "principal",
+            "id": {
+              "namespace": "fixture",
+              "authority": "example-release",
+              "local_id": "backup-approver"
+            },
+            "source_revision": null,
+            "resolution": "candidate"
+          },
+          "channel": "on_call",
+          "endpoint": null,
+          "availability": "unknown",
+          "purpose": "Backup approval contact",
+          "valid_until": null
+        }
+      }
+    }
+  ]
+}

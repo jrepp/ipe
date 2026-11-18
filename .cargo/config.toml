@@ -32,4 +32,7 @@ bench-core = "bench --package ipe-core --all-features"
 # CRC implementation until the pinned native dependency fixes initialization.
 # Custom target CXXFLAGS must retain this flag; sanitizer tooling appends it too.
 CXXFLAGS_aarch64_apple_darwin = "-U__ARM_FEATURE_CRC32"
-CXXFLAGS_aarch64_unknown_linux_gnu = "-U__ARM_FEATURE_CRC32"
+CXXFLAGS_aarch64_unknown_linux_gnu = "-U__ARM_FEATURE_CRC32 -include cstdint"
+
+# RocksDB 8.10 headers rely on an indirect stdint include removed by newer GCC.
+CXXFLAGS_x86_64_unknown_linux_gnu = "-include cstdint"

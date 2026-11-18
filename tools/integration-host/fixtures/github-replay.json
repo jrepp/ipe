@@ -1,0 +1,644 @@
+{
+  "observations": [
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "definition:{\"namespace\":\"github\",\"resource\":\"fixture/repo\",\"path\":\".github/workflows/test.yml\"}",
+        "claim": "declared",
+        "entity": {
+          "kind": "definition",
+          "source": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "path": ".github/workflows/test.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "title": "Test",
+          "inputs": [],
+          "outputs": []
+        }
+      },
+      "data": {
+        "kind": "workflow",
+        "source": {
+          "repository": "fixture/repo",
+          "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "path": ".github/workflows/test.yml",
+          "digest": "fixture",
+          "url": "https://github.com/fixture/repo/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/.github/workflows/test.yml"
+        },
+        "projection": {
+          "kind": "workflow",
+          "model": {
+            "name": "Test",
+            "jobs": [
+              {
+                "name": "Build",
+                "id": "build",
+                "pointer": "/jobs/build",
+                "steps": [
+                  {
+                    "uses": "fixture/action@v1",
+                    "with": {
+                      "thing": "value"
+                    }
+                  },
+                  {
+                    "uses": "fixture/action@v1"
+                  }
+                ]
+              }
+            ]
+          },
+          "references": [
+            {
+              "uses": "fixture/action@v1",
+              "pointer": "/jobs/build/steps/0/uses",
+              "kind": "action",
+              "supplied": {
+                "thing": "value"
+              }
+            },
+            {
+              "uses": "fixture/action@v1",
+              "pointer": "/jobs/build/steps/1/uses",
+              "kind": "action",
+              "supplied": {}
+            }
+          ],
+          "expressions": [],
+          "gaps": [
+            {
+              "pointer": "",
+              "code": "repository_rules_and_environment_protection_not_captured"
+            }
+          ],
+          "coverage": "partial"
+        },
+        "locations": [],
+        "interpretation": "declaration",
+        "external_enforcer": "github_actions"
+      },
+      "receipts": [
+        "read_definition{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\".github/workflows/test.yml\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "workflow:fixture/repo/.github/workflows/test.yml",
+        "claim": "declared",
+        "entity": {
+          "kind": "constraint",
+          "control": {
+            "namespace": "github",
+            "resource": "fixture/repo",
+            "operation": "github_actions.run_job",
+            "local_id": ".github/workflows/test.yml#build"
+          },
+          "source": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "path": ".github/workflows/test.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": "/jobs/build"
+          },
+          "title": "Build",
+          "actor_context": "intended_execution_actor_unobserved",
+          "applicability": {
+            "dialect": "github_actions_expression",
+            "expression": null,
+            "default_behavior": "provider_default_dependency_status"
+          },
+          "obligations": [
+            {
+              "id": "permissions",
+              "description": "Requested token permissions do not prove effective permissions",
+              "requirement": {
+                "kind": "permission",
+                "requested": null
+              },
+              "next_observation": null
+            },
+            {
+              "id": "actor",
+              "description": "Establish authorization for the intended execution actor",
+              "requirement": {
+                "kind": "opaque",
+                "reason": "The discovery principal does not establish the execution actor authorization"
+              },
+              "next_observation": null
+            }
+          ],
+          "dependencies": [],
+          "enforcer": "github_actions"
+        }
+      },
+      "data": {
+        "source": {
+          "repository": "fixture/repo",
+          "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "path": ".github/workflows/test.yml",
+          "digest": "fixture",
+          "url": "https://github.com/fixture/repo/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/.github/workflows/test.yml"
+        },
+        "job_id": "build"
+      },
+      "receipts": [
+        "read_definition{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\".github/workflows/test.yml\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "execution:fixture/repo",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "outcome",
+          "execution": {
+            "namespace": "github",
+            "resource": "fixture/repo",
+            "run": "1",
+            "attempt": 1,
+            "job": null,
+            "step": null
+          },
+          "definition": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "path": ".github/workflows/test.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "title": "Run",
+          "status": "completed",
+          "conclusion": "success",
+          "duration_ms": null,
+          "started_at": "2026-01-01T00:00:01Z",
+          "completed_at": null,
+          "declaration_candidates": [],
+          "correlation": "unknown"
+        }
+      },
+      "data": {
+        "id": 1,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "name": "Run",
+        "run_attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-01-01T00:00:00Z",
+        "run_started_at": "2026-01-01T00:00:01Z",
+        "kind": "workflow_run",
+        "repository": "fixture/repo",
+        "definition_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "created_to_started_ms": 1000,
+        "duration_ms": null,
+        "duration_reason": "workflow API has no authoritative completion timestamp",
+        "measurement_authority": "github_reported"
+      },
+      "receipts": [
+        "list_runs{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow\":\"test.yml\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "execution:fixture/repo",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "fact",
+          "subject": "execution:[\"github\",\"fixture/repo\",\"1\",1,null,null]",
+          "predicate": "external_run_status",
+          "value": {
+            "status": "completed",
+            "conclusion": "success"
+          },
+          "authority": "github",
+          "execution": {
+            "namespace": "github",
+            "resource": "fixture/repo",
+            "run": "1",
+            "attempt": 1,
+            "job": null,
+            "step": null
+          }
+        }
+      },
+      "data": {
+        "subject": "fixture/repo/runs/1/attempts/1",
+        "predicate": "external_run_status",
+        "value": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "definition_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authority": "github_reported"
+      },
+      "receipts": [
+        "list_runs{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"workflow\":\"test.yml\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "execution:fixture/repo",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "outcome",
+          "execution": {
+            "namespace": "github",
+            "resource": "fixture/repo",
+            "run": "1",
+            "attempt": 1,
+            "job": "2",
+            "step": null
+          },
+          "definition": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "path": ".github/workflows/test.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "title": "Build",
+          "status": "completed",
+          "conclusion": "success",
+          "duration_ms": 2000,
+          "started_at": "2026-01-01T00:00:01Z",
+          "completed_at": "2026-01-01T00:00:03Z",
+          "declaration_candidates": [
+            {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "operation": "github_actions.run_job",
+              "local_id": ".github/workflows/test.yml#build"
+            }
+          ],
+          "correlation": "candidate"
+        }
+      },
+      "data": {
+        "id": 2,
+        "name": "Build",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-01-01T00:00:01Z",
+        "completed_at": "2026-01-01T00:00:03Z",
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "workflow_run_id": "1",
+        "run_attempt": "1",
+        "declared_job_id": null,
+        "declaration_candidates": [
+          "build"
+        ],
+        "correlation": "static_name_only",
+        "workflow_path": ".github/workflows/test.yml",
+        "duration_ms": 2000,
+        "steps": [],
+        "measurement_authority": "github_reported",
+        "kind": "job",
+        "repository": "fixture/repo"
+      },
+      "receipts": [
+        "list_jobs{\"repository\":\"fixture/repo\",\"run_id\":\"1\",\"attempt\":\"1\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "execution:fixture/repo",
+        "claim": "provider_reported",
+        "entity": {
+          "kind": "fact",
+          "subject": "execution:[\"github\",\"fixture/repo\",\"1\",1,\"2\",null]",
+          "predicate": "external_job_conclusion",
+          "value": "success",
+          "authority": "github",
+          "execution": {
+            "namespace": "github",
+            "resource": "fixture/repo",
+            "run": "1",
+            "attempt": 1,
+            "job": "2",
+            "step": null
+          }
+        }
+      },
+      "data": {
+        "subject": "fixture/repo/runs/1/attempts/1/jobs/2",
+        "predicate": "external_job_conclusion",
+        "value": "success",
+        "definition_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authority": "github_reported"
+      },
+      "receipts": [
+        "list_jobs{\"repository\":\"fixture/repo\",\"run_id\":\"1\",\"attempt\":\"1\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "definition:{\"namespace\":\"github\",\"resource\":\"fixture/action\",\"path\":\"action.yaml\"}",
+        "claim": "declared",
+        "entity": {
+          "kind": "definition",
+          "source": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/action",
+              "path": "action.yaml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "title": "Fixture action",
+          "inputs": [
+            {
+              "name": "thing",
+              "required": null,
+              "default": "default"
+            }
+          ],
+          "outputs": []
+        }
+      },
+      "data": {
+        "kind": "action",
+        "source": {
+          "repository": "fixture/action",
+          "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "path": "action.yaml",
+          "digest": "fixture",
+          "url": "https://github.com/fixture/action/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/action.yaml"
+        },
+        "projection": {
+          "kind": "action",
+          "model": {
+            "name": "Fixture action",
+            "inputs": {
+              "thing": {
+                "default": "default"
+              }
+            },
+            "runs": {
+              "using": "node20",
+              "main": "index.js",
+              "steps": []
+            }
+          },
+          "references": [],
+          "expressions": [],
+          "gaps": [
+            {
+              "pointer": "/runs",
+              "code": "implementation_behavior_not_proven_by_metadata"
+            }
+          ],
+          "coverage": "partial"
+        },
+        "locations": [],
+        "interpretation": "declaration",
+        "external_enforcer": "github_actions"
+      },
+      "receipts": [
+        "read_definition{\"repository\":\"fixture/action\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\"action.yaml\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "definition:{\"namespace\":\"github\",\"resource\":\"fixture/action\",\"path\":\"index.js\"}",
+        "claim": "inferred",
+        "entity": {
+          "kind": "evidence",
+          "source": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/action",
+              "path": "index.js"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "method": "source_excerpt",
+          "description": "Captured source with lexical clues; runtime effects are not proven"
+        }
+      },
+      "data": {
+        "kind": "implementation",
+        "source": {
+          "repository": "fixture/action",
+          "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "path": "index.js",
+          "digest": "fixture"
+        },
+        "role": "declared_main",
+        "clues": [
+          {
+            "line": 1,
+            "text": "core.getInput(\"thing\")",
+            "interpretation": "lexical_clue_only"
+          }
+        ],
+        "excerpt": "core.getInput(\"thing\")",
+        "coverage": "captured_text_only"
+      },
+      "receipts": [
+        "read_source{\"repository\":\"fixture/action\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\"index.js\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "workflow:fixture/repo/.github/workflows/test.yml",
+        "claim": "declared",
+        "entity": {
+          "kind": "invocation",
+          "parent": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "path": ".github/workflows/test.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": "/jobs/build/steps/0/uses"
+          },
+          "callee": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/action",
+              "path": "action.yaml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "requested": "fixture/action@v1",
+          "resolution": "resolved",
+          "bindings": [
+            {
+              "name": "thing",
+              "origin": "caller",
+              "value": "value"
+            }
+          ]
+        }
+      },
+      "data": {
+        "reference": "fixture/action@v1"
+      },
+      "receipts": [
+        "read_definition{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\".github/workflows/test.yml\"}"
+      ]
+    },
+    {
+      "model": {
+        "schema_version": 1,
+        "scope": "workflow:fixture/repo/.github/workflows/test.yml",
+        "claim": "declared",
+        "entity": {
+          "kind": "invocation",
+          "parent": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/repo",
+              "path": ".github/workflows/test.yml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": "/jobs/build/steps/1/uses"
+          },
+          "callee": {
+            "definition": {
+              "namespace": "github",
+              "resource": "fixture/action",
+              "path": "action.yaml"
+            },
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pointer": ""
+          },
+          "requested": "fixture/action@v1",
+          "resolution": "resolved",
+          "bindings": [
+            {
+              "name": "thing",
+              "origin": "declared_default",
+              "value": "default"
+            }
+          ]
+        }
+      },
+      "data": {
+        "reference": "fixture/action@v1"
+      },
+      "receipts": [
+        "read_definition{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\".github/workflows/test.yml\"}"
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "operation": "resolve_revision",
+      "params": {
+        "repository": "fixture/repo",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "operation": "read_definition",
+      "params": {
+        "repository": "fixture/repo",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "path": ".github/workflows/test.yml"
+      }
+    },
+    {
+      "operation": "resolve_revision",
+      "params": {
+        "repository": "fixture/action",
+        "revision": "v1"
+      }
+    },
+    {
+      "operation": "list_runs",
+      "params": {
+        "repository": "fixture/repo",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "workflow": "test.yml"
+      }
+    },
+    {
+      "operation": "read_definition",
+      "params": {
+        "repository": "fixture/action",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "path": "action.yml"
+      }
+    },
+    {
+      "operation": "list_jobs",
+      "params": {
+        "repository": "fixture/repo",
+        "run_id": "1",
+        "attempt": "1"
+      }
+    },
+    {
+      "operation": "read_definition",
+      "params": {
+        "repository": "fixture/action",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "path": "action.yaml"
+      }
+    },
+    {
+      "operation": "read_source",
+      "params": {
+        "repository": "fixture/action",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "path": "index.js"
+      }
+    },
+    {
+      "operation": "list_tree",
+      "params": {
+        "repository": "fixture/action",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "summary": {
+    "collections": [
+      {
+        "schema_version": 1,
+        "scope": "workflow:fixture/repo/.github/workflows/test.yml",
+        "kind": "constraint",
+        "receipt": "read_definition{\"repository\":\"fixture/repo\",\"revision\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"path\":\".github/workflows/test.yml\"}"
+      }
+    ],
+    "coverage": "partial",
+    "definitions": 2,
+    "gaps": [
+      {
+        "repository": "fixture/repo",
+        "path": "list_environments",
+        "code": "governance_not_granted"
+      },
+      {
+        "repository": "fixture/repo",
+        "path": "list_rulesets",
+        "code": "governance_not_granted"
+      }
+    ],
+    "publication": false,
+    "performance_scope": "bounded sample of workflow runs and jobs; not a population success rate"
+  }
+}
