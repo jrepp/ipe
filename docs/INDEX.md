@@ -4,76 +4,76 @@ The canonical guide is [documentation-index.md](documentation-index.md). The sec
 
 # IPE Documentation Index
 
-See [IPE Documentation Index](documentation-index.md#ipe-documentation-index).
+See [IPE Documentation Index](documentation-index.md).
 
 ## Releases
 
-See [Releases](documentation-index.md#releases).
+See [Releases](documentation-index.md).
 
 ## Product and project organization
 
-See [Product and project organization](documentation-index.md#product-and-project-organization).
+See [Product and project organization](documentation-index.md).
 
 ## Design documentation
 
-See [Design documentation](documentation-index.md#design-documentation).
+See [Design documentation](documentation-index.md).
 
 ## Local Documentation Site
 
-See [Local Documentation Site](documentation-index.md#local-documentation-site).
+See [Local Documentation Site](documentation-index.md).
 
 ### Archived references
 
-See [Archived references](documentation-index.md#archived-references).
+See [Archived references](documentation-index.md).
 
 ## Getting Started
 
-See [Getting Started](documentation-index.md#getting-started).
+See [Getting Started](documentation-index.md).
 
 ## Understanding IPE
 
-See [Understanding IPE](documentation-index.md#understanding-ipe).
+See [Understanding IPE](documentation-index.md).
 
 ## Technical Reference
 
-See [Technical Reference](documentation-index.md#technical-reference).
+See [Technical Reference](documentation-index.md).
 
 ## RFCs (Request for Comments)
 
-See [RFCs (Request for Comments)](documentation-index.md#rfcs-request-for-comments).
+See [RFCs (Request for Comments)](documentation-index.md).
 
 ## Crate Documentation
 
-See [Crate Documentation](documentation-index.md#crate-documentation).
+See [Crate Documentation](documentation-index.md).
 
 ## Development
 
-See [Development](documentation-index.md#development).
+See [Development](documentation-index.md).
 
 ## API Documentation
 
-See [API Documentation](documentation-index.md#api-documentation).
+See [API Documentation](documentation-index.md).
 
 # Generate and open Rust API docs
 
-See [Generate and open Rust API docs](documentation-index.md#generate-and-open-rust-api-docs).
+See [Generate and open Rust API docs](documentation-index.md).
 
 ## Quick Reference
 
-See [Quick Reference](documentation-index.md#quick-reference).
+See [Quick Reference](documentation-index.md).
 
 ## Documentation Standards
 
-See [Documentation Standards](documentation-index.md#documentation-standards).
+See [Documentation Standards](documentation-index.md).
 
 ## Getting Help
 
-See [Getting Help](documentation-index.md#getting-help).
+See [Getting Help](documentation-index.md).
 
 ## Documentation Structure
 
-See [Documentation Structure](documentation-index.md#documentation-structure).
+See [Documentation Structure](documentation-index.md).
 
 ### Proposed fact retrieval contract
 
-See [Proposed fact retrieval contract](documentation-index.md#proposed-fact-retrieval-contract).
+See [Proposed fact retrieval contract](documentation-index.md).

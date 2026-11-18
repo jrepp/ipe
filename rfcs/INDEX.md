@@ -30,7 +30,7 @@ Draft → Review → Accepted → Implemented → Final
 
 ### Core Engine (Original Architecture)
 
-The original RFC.md has been superseded by focused RFCs below. See [archive/RFC.md](../docs/archive/) for historical reference.
+The original RFC.md has been superseded by focused RFCs below. See the [original RFC](../RFC.md) for historical reference.
 
 ### Predicate Service (New Architecture)
 

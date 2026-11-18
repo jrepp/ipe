@@ -74,3 +74,5 @@ Expand validation only after reviewing the target folder. Preserve historical co
 [Workload structure and documentation review](memos/memo-005-workload-structure.md) records the current artifact boundaries and a staged migration toward lowercase documentation paths.
 
 [Documentation unification](memos/memo-006-documentation-unification.md) records canonical guide names and compatibility paths.
+
+[Documentation archive review](memos/memo-007-documentation-archive.md) records the historical classification and its limits.

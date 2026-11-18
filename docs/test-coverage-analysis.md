@@ -1,5 +1,7 @@
 # Test Coverage Analysis - RocksDB Integration Testing
 
+> **Historical record.** This document describes an earlier plan or test run. See the [archive](archive/index.md) and current guides.
+
 ## Recorded Results
 
 This analysis records approval test coverage and gaps as of 2025-11-03.

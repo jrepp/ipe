@@ -161,25 +161,8 @@ The bootstrap JSON declares the database path, loopback bind address, input sche
 
 ## Documentation
 
-**📚 [Documentation Index](docs/documentation-index.md)** - Start here for guided navigation
-
-### Quick Links
-
-- **[QUICKSTART](QUICKSTART.md)** - Current setup and checks
-- **[SUMMARY](SUMMARY.md)** - Executive summary and vision (historical)
-- **[END_TO_END_EXAMPLE](END_TO_END_EXAMPLE.md)** - Complete usage walkthrough (legacy engine; historical)
-
-### Technical Reference
-
-- **[RUNTIME_DATA](docs/runtime-data.md)** - The implemented v2 runtime workflow and API
-- **[ARCHITECTURE](docs/architecture-guide.md)** - System architecture with diagrams
-- **[RFCs](rfcs/INDEX.md)** - Design proposals and specifications
-
-### Sidecar Architecture RFCs
-
-- **[RFC-001](rfcs/001-predicate-service-architecture.md)** - Minimal sidecar service (<50MB)
-- **[RFC-002](rfcs/002-sse-json-protocol.md)** - SSE/JSON protocol (MCP-inspired)
-- **[RFC-003](rfcs/003-policy-tree-storage.md)** - Content-addressable policy storage
+Start with the [documentation map](docs-cms/wiki/pages/documentation-map.md) for workload guides, design records, and development procedures.
+See the [historical archive](docs/archive/index.md) for earlier engine plans and reports.
 
 ## Repository and development
 

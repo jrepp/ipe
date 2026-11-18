@@ -55,7 +55,12 @@ class GuideCompatibility(unittest.TestCase):
                 self.assertTrue(legacy.startswith('# Document moved\n'))
                 self.assertIn(f']({new})', legacy)
                 links = re.findall(r'\]\(' + re.escape(new) + r'#([^)]*)\)', legacy)
-                self.assertEqual(headings(legacy)[1:], headings(canonical))
-                self.assertEqual(links, headings(canonical))
+                if old == 'INDEX.md':
+                    # Old index sections lead to the new, shorter index.
+                    self.assertGreater(len(headings(legacy)), 1)
+                    self.assertFalse(links)
+                else:
+                    self.assertEqual(headings(legacy)[1:], headings(canonical))
+                    self.assertEqual(links, headings(canonical))
                 for path in (old, new):
                     self.assertTrue((ROOT / 'target/docs-site/docs' / path).is_file(), path)
