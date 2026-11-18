@@ -401,7 +401,8 @@ The operator explicitly maps the credential lookup URL to the API origin. Instal
 Paths in the lookup URL follow Git's `credential.useHttpPath` setting.
 
 The host disables terminal prompts and asks supported helpers to avoid interactive login.
-Lookup has a five-second deadline and a 16 KiB output limit. Errors contain fixed codes, without helper output or diagnostics.
+Lookup has a five-second deadline and a 16 KiB output limit. On failure, helper termination and the wait for it are bounded.
+Errors contain fixed codes, without helper output or diagnostics.
 Missing credentials fail startup. The host does not fall back to anonymous access or invoke `approve` or `reject`.
 Credentials remain in native memory. They do not enter installation source, guest responses, durable records, or capabilities.
 The host rejects response content that contains a configured credential.

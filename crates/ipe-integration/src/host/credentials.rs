@@ -93,7 +93,9 @@ async fn lookup(mut command: Command, url: &str, deadline: Duration) -> Result<S
     .await
     .unwrap_or(Err("git_credential_timeout"));
     if result.is_err() {
-        let _ = child.kill().await;
+        // Signal the helper and bound the subsequent wait for process reaping.
+        // kill_on_drop remains a fallback if the runtime cannot reap it in time.
+        let _ = tokio::time::timeout(deadline, child.kill()).await;
     }
     result
 }
@@ -150,7 +152,13 @@ mod tests {
             let mut command = Command::new("sh");
             command.args(["-c", script]);
             assert_eq!(
-                lookup(command, "https://github.com", Duration::from_millis(100)).await.err(),
+                tokio::time::timeout(
+                    Duration::from_secs(2),
+                    lookup(command, "https://github.com", Duration::from_millis(100)),
+                )
+                .await
+                .expect("credential helper cleanup must remain bounded")
+                .err(),
                 Some(expected)
             );
         }

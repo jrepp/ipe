@@ -20,11 +20,11 @@ Review conditions apply to the original PRs; required CI runs on Mergify's tempo
 
 | Required GitHub Actions check | Coverage |
 | --- | --- |
-| CI gate | Format, Clippy, all test matrix variants, default features, release builds, Rust docs, and minimal versions. |
+| CI gate | Format, Clippy, all test matrix variants, default features, the Linux release build, Rust docs, and minimal versions. |
 | Security gate | Dependency audit, deny, Miri, sanitizers, and supply-chain checks. |
 | Coverage gate | Overall and per-crate coverage jobs. |
 | Performance gate | Benchmark and memory-profiling jobs. |
-| Runtime acceptance | Storage, server boundaries, HTTP facts, policy documents, and imports. |
+| Runtime acceptance | External HTTP facts, policy documents, and imports; CI separately runs workspace tests. |
 | Integration acceptance | Integration tests, adapters, host views, and external-client acceptance. |
 | Build and check docs site | Static site build, tests, and portable archive. |
 | Validate design documentation | Docuchango metadata, links, and traceability. |
@@ -34,6 +34,7 @@ The aggregate gates require success from every prerequisite. Failure, cancellati
 Canceled workflows stop their gates so obsolete runs do not block newer commits in the same concurrency group. An active workflow still runs its gate after a prerequisite fails. Mergify requires a successful gate, so a canceled or skipped gate cannot authorize a merge.
 Integration acceptance runs on all PRs, including documentation-only and workflow-only changes.
 Other required workflows already run without PR path filters. These choices increase CI work but avoid absent required checks.
+macOS and Windows release builds run nightly and on demand; their test matrices remain in PR CI. See the [release guide](RELEASES.md).
 Existing checks and their failure policies remain intact. Do not remove a gate to bypass an existing failure.
 
 Mergify normally creates draft PRs for speculative batches. These use pull_request workflows, not GitHub's separate native merge_group queue.
