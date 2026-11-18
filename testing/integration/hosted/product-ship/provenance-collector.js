@@ -11,9 +11,10 @@ function seconds(value){const parsed=ipe.timestamp(value);return parsed===null?n
 function step(context,responses,state){
   if(state&&state.phase==='complete')return ipe.complete(state.summary);
   if(state===null)return ipe.exchange([ipe.call('context','read_control_context',{control_id:context.input.control_id})],{phase:'read'});
-  let snapshot,receipt,offset=0;
+  let snapshot,snapshotJson,receipt,offset=0;
   if(state.phase==='emit'){
-    ({snapshot,receipt,offset}=state);
+    ({snapshotJson,receipt,offset}=state);
+    snapshot=JSON.parse(snapshotJson);
   }else{
     const result=ipe.response(responses,'context');
     if(result.code!==undefined)return ipe.complete({status:'unavailable',control_id:context.input.control_id,observed_at:context.input.observed_at,receipt:null,publication:false,gaps:[{code:'provider_read_failed'}]});
@@ -33,10 +34,17 @@ function step(context,responses,state){
       if(!snapshot.collection.gaps.some(gap=>gap.code==='record_limit'))snapshot.collection.gaps.push({code:'record_limit'});
       for(const record of snapshot.records)record.status='unavailable';
     }
+    snapshotJson=JSON.stringify(snapshot);
+    return ipe.exchange([],{phase:'emit',snapshotJson,receipt,offset:0});
   }
   const observations=[],revision=snapshot.records[0]?.source_revision||'synthetic-servicenow-provenance-v1';
-  let index=0;
-  const selected=()=>{const current=index++;return current>=offset&&current<offset+8;};
+  if(offset===0){
+    const sourceModel={schema_version:1,scope:'control:'+snapshot.control_id,claim:'provider_reported',entity:{kind:'evidence',source:source('/controls/'+snapshot.control_id,revision),method:'provider_document',description:'Synthetic ServiceNow record context and sourced responsibility/profile data.'}};
+    const evidence=ipe.observation(sourceModel,{control_id:snapshot.control_id,context_snapshot:snapshot},[receipt]);
+    return ipe.exchange([],{phase:'emit',snapshotJson,receipt,offset:1},[evidence]);
+  }
+  let index=1;
+  const selected=()=>{const current=index++;return current>=offset&&current<offset+4;};
   const add=(record,pointer,data)=>{if(selected())observations.push(ipe.observation(ipe.governanceModel({...record,source:source(pointer,revision)},{scope:'control:'+snapshot.control_id,claim:'provider_reported'}),data,[receipt]));};
   const peopleById=new Map();
   for(const person of snapshot.people){
@@ -50,8 +58,7 @@ function step(context,responses,state){
     const roleId='role:'+assignment.role.toLowerCase().replace(/[^a-z0-9]+/g,'-');
     roleIds.set(assignment.role,roleId);
   }
-  const sourceModel={schema_version:1,scope:'control:'+snapshot.control_id,claim:'provider_reported',entity:{kind:'evidence',source:source('/controls/'+snapshot.control_id,revision),method:'provider_document',description:'Synthetic ServiceNow record context and sourced responsibility/profile data.'}};
-  if(selected())observations.push(ipe.observation(sourceModel,{control_id:snapshot.control_id,context_snapshot:snapshot},[receipt]));
+
   for(const person of people.values()){
     const personRecord={type:'principal',id:id('principal',person.id),title:person.name,principal_kind:'human'};
     add(personRecord,'/people/'+person.id,{control_id:snapshot.control_id,kind:'person',person});
@@ -74,5 +81,5 @@ function step(context,responses,state){
   }
   const summary={status:snapshot.collection.status,control_id:snapshot.control_id,observed_at:context.input.observed_at,receipt,record_count:snapshot.records.length,assignment_count:snapshot.assignments.length,publication:false,gaps:snapshot.collection.gaps};
   const next=offset+observations.length;
-  return ipe.exchange([],next<index?{phase:'emit',snapshot,receipt,offset:next}:{phase:'complete',summary},observations);
+  return ipe.exchange([],next<index?{phase:'emit',snapshotJson,receipt,offset:next}:{phase:'complete',summary},observations);
 }

@@ -8,7 +8,7 @@ The policy tree is descriptive input for this simulation. It does not establish 
 
 The collector runs the embedded SDK source against a deterministic broker replay. The Node vm is a test harness, not a security sandbox. Hosted execution relies on the native host's sandbox and grant checks. The collector emits receipt-bound governance descriptions and expiring evidence observations. A denied read emits an unknown result and no evidence.
 
-The qualification collector separates response handling from projection and constructs at most four observations per step. The provenance collector constructs at most eight. The qualification collector retains its provider snapshot as JSON text between steps. It avoids repeated SDK object validation of unchanged source data. The provenance collector retains compact provider data. Native byte limits and the 100 ms step deadline remain in force.
+The qualification collector separates response handling from projection and constructs at most four observations per step. The provenance collector emits its source-evidence record separately, then constructs at most four governance observations per step. Both collectors retain provider snapshots as JSON text between steps. This avoids repeated SDK object validation of unchanged source data. Native byte limits and the 100 ms step deadline remain in force.
 
 ```sh
 node --test testing/integration/hosted/product-ship/product-ship.test.cjs
