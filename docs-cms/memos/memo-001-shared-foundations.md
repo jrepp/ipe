@@ -257,3 +257,5 @@ Packages absent from this table received registry release checks only.
 | apalis | [apalis-dev/apalis](https://github.com/apalis-dev/apalis) | 2026-11-14 |
 | petgraph | [petgraph/petgraph](https://github.com/petgraph/petgraph) | 2026-11-15 |
 | async-nats | [nats-io/nats.rs](https://github.com/nats-io/nats.rs) | 2026-11-17 |
+
+[Shared platform research spike](memo-004-shared-platform-spike.md) adds adoption order, source findings, and current dependency blockers to this survey.
