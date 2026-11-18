@@ -128,7 +128,7 @@ async fn github_collector_captures_governance_and_keeps_read_gaps_partial() {
         })
         .await
         .unwrap();
-        assert_eq!(run.status, "succeeded", "{id}: {:?}", run.error);
+        assert_eq!(run.status, "succeeded", "{id}: error={:?} steps={}", run.error, run.steps);
         assert!(run.records.iter().any(|r| r.kind == "definition"));
         assert!(run.records.iter().any(|r| r.kind == "constraint"));
         model::validate_graph(&run.records).unwrap();
