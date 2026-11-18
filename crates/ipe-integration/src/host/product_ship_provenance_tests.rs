@@ -220,7 +220,11 @@ async fn product_ship_provenance_is_bounded_receipt_bound_and_keeps_unknown_join
 
     let missing_id = host.start("provenance_missing_person", "manual").await.unwrap();
     let missing_run = completed_run(&host, "provenance_missing_person", missing_id).await;
-    assert_eq!(missing_run.status, "succeeded", "{:?}", missing_run.error);
+    assert_eq!(
+        missing_run.status, "succeeded",
+        "error={:?} steps={}",
+        missing_run.error, missing_run.steps
+    );
     let missing_assignments = missing_person_context["assignments"].as_array().unwrap();
     for assignment in missing_assignments.iter().filter(|assignment| {
         assignment["resolution"] != "resolved"

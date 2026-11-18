@@ -28,6 +28,9 @@ echo "🧹 Running $SANITIZER_TYPE sanitizer tests..."
 # Run sanitizer
 # Optimize instrumented builds without changing the 100 ms guest deadline.
 # Profile settings also pass OPT_LEVEL=2 to native dependency build scripts.
+# Keep test cases parallel without saturating hosted runners under instrumentation.
+# This only bounds the harness; threads and tasks created by each test are unchanged.
+export RUST_TEST_THREADS=2
 export CARGO_PROFILE_DEV_OPT_LEVEL=2
 export CARGO_PROFILE_TEST_OPT_LEVEL=2
 export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=2"
