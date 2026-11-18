@@ -24,7 +24,7 @@ const STACK_LIMIT: usize = 1024 * 1024;
 const STEP_DEADLINE: Duration = Duration::from_millis(100);
 const CONCURRENT_STEPS: usize = 1;
 const SDK_SOURCE: &str = include_str!("../sdk/index.js");
-pub(crate) const SDK_VERSION: &str = "0.3.0";
+pub(crate) const SDK_VERSION: &str = "0.7.0";
 
 #[derive(Clone)]
 pub(crate) struct ScriptAdapter {
@@ -47,11 +47,25 @@ pub(crate) struct StepResult {
     pub(crate) outputs: Option<Value>,
     pub(crate) state: Value,
     pub(crate) observations: Vec<Value>,
+    pub(crate) progress: Option<Progress>,
+}
+
+/// Guest-reported work counters, separate from native read evidence.
+#[derive(Clone, Debug, Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct Progress {
+    phase: String,
+    task: Option<String>,
+    queued: usize,
+    completed: usize,
+    gaps: usize,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct WireResult {
+    #[serde(default)]
+    progress: Option<Progress>,
     #[serde(default)]
     observations: Vec<Value>,
     requests: Option<Vec<Request>>,
@@ -241,6 +255,16 @@ fn validate_result(raw: String) -> Result<StepResult, &'static str> {
     let outputs = object.get("outputs").cloned();
     let wire: WireResult =
         serde_json::from_value(raw_value).map_err(|_| "script_output_invalid")?;
+    if let Some(progress) = &wire.progress {
+        if !["dispatch", "response", "emit", "complete"].contains(&progress.phase.as_str())
+            || progress.task.as_ref().is_some_and(|task| !valid_name(task))
+            || progress.queued > 64
+            || progress.completed > 80
+            || progress.gaps > 10000
+        {
+            return Err("script_progress_invalid");
+        }
+    }
     let requests = wire.requests.unwrap_or_default();
     if requests.len() > 8 || wire.observations.len() > 16 {
         return Err("script_output_invalid");
@@ -264,6 +288,7 @@ fn validate_result(raw: String) -> Result<StepResult, &'static str> {
         outputs,
         state: wire.state,
         observations: wire.observations,
+        progress: wire.progress,
     })
 }
 
@@ -279,6 +304,24 @@ fn valid_name(value: &str) -> bool {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn raw_progress_cannot_bypass_native_bounds() {
+        let valid = json!({"requests":[],"state":null,"progress":{"phase":"emit","task":"definition","queued":0,"completed":1,"gaps":0}});
+        assert!(validate_result(valid.to_string()).is_ok());
+        for (field, value) in [
+            ("queued", json!(65)),
+            ("completed", json!(81)),
+            ("gaps", json!(10001)),
+            ("phase", json!("arbitrary")),
+            ("task", json!("raw provider text")),
+            ("extra", json!(true)),
+        ] {
+            let mut bad = valid.clone();
+            bad["progress"][field] = value;
+            assert!(validate_result(bad.to_string()).is_err(), "{field}");
+        }
+    }
 
     #[tokio::test]
     async fn sdk_drives_broker_round_trip_and_validates_data() {

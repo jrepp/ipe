@@ -1,0 +1,54 @@
+.ipe-domain{margin:20px 0;padding:22px;border:1px solid #d5ded7;border-radius:10px;background:#fffefa;color:#203b37;min-width:0}
+.ipe-domain .ipe-trace-heading{font-size:21px;margin:0 0 8px}
+.ipe-domain .ipe-domain-intro,.ipe-domain .ipe-trace-state{font-size:13px;color:#52645f;max-width:880px;margin:8px 0 16px}
+.ipe-domain .ipe-domain-selectors{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.ipe-domain .ipe-domain-selectors label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600;min-width:0}
+.ipe-domain select{width:100%;font:inherit;font-size:14px;color:#203b37;background:#fffefa;border:1px solid #a8bab0;border-radius:6px;padding:9px;min-width:0}
+.ipe-domain .ipe-domain-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.ipe-domain .ipe-domain-cards>div{padding:14px;border:1px solid #d5ded7;border-radius:7px;background:#f3f6ef}
+.ipe-domain .ipe-domain-cards>div.is-uncertain,.ipe-domain .ipe-domain-fulfillment{background:#fcf6e6;border-color:#d9c99c}
+.ipe-domain .ipe-domain-card-title{display:block;font-size:12px;color:#52645f;margin-bottom:5px}
+.ipe-domain .ipe-domain-cards strong{display:block;font-size:19px;font-weight:600}
+.ipe-domain .ipe-domain-cards p{margin:7px 0 0;font-size:12px;color:#52645f}
+.ipe-domain .ipe-domain-overview dl{display:grid;grid-template-columns:145px 1fr;gap:8px 15px;font-size:13px;margin:16px 0}
+.ipe-domain .ipe-domain-overview dd{margin:0;overflow-wrap:anywhere}
+.ipe-domain .ipe-domain-overview dt{color:#52645f}
+.ipe-domain .ipe-domain-requirements{margin:10px 0 18px;padding:12px 0;border-top:1px solid #d5ded7;font-size:13px}
+.ipe-domain .ipe-domain-requirements li{margin:10px 0}
+.ipe-domain .ipe-domain-requirements ul{max-height:180px;overflow:auto;padding-right:12px}
+.ipe-domain .ipe-domain-spec{display:block;color:#52645f;font-size:12px;margin-top:3px}
+.ipe-domain .ipe-domain-legend{margin:8px 0;font-size:12px;color:#52645f}
+.ipe-domain .ipe-trace-viewport{overflow:auto;width:100%;max-height:640px;border:1px solid #d5ded7;border-radius:8px;background:#f7f9f3}
+.ipe-domain .ipe-domain-svg{display:block;width:100%;min-width:850px;height:auto;font-family:inherit}
+.ipe-domain .ipe-domain-lane{fill:#203b37;font-size:14px;font-weight:700}
+.ipe-domain .ipe-trace-edge{fill:none;stroke:#718c81;stroke-width:1.7}
+.ipe-domain .ipe-trace-edge.is-candidate{stroke:#997431;stroke-dasharray:5 4}
+.ipe-domain .ipe-trace-edge.is-selected{stroke:#296c9b;stroke-width:3}
+.ipe-domain .ipe-domain-node{cursor:pointer;outline:none}
+.ipe-domain .ipe-domain-node rect{fill:#fffefa;stroke:#a8bab0;stroke-width:1.5}
+.ipe-domain .ipe-domain-node.is-fact rect{fill:#e8f2e8;stroke:#39704e}
+.ipe-domain .ipe-domain-node.has-failure rect{fill:#fbe9e5;stroke:#a84a3b}
+.ipe-domain .ipe-domain-node.is-selected rect,.ipe-domain .ipe-domain-node:focus-visible rect{stroke:#296c9b;stroke-width:3}
+.ipe-domain .ipe-domain-node-title{fill:#203b37;font-size:13px;font-weight:600}
+.ipe-domain .ipe-domain-node-value{fill:#203b37;font-size:12px}
+.ipe-domain .ipe-domain-node-step{fill:#52645f;font-size:10px}
+.ipe-domain .ipe-domain-pagination{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:12px 0;font-size:13px}
+.ipe-domain .ipe-domain-pagination button{font:inherit;border:1px solid #a8bab0;border-radius:6px;padding:7px 11px;background:#fffefa;color:#203b37;cursor:pointer}
+.ipe-domain .ipe-domain-empty{padding:14px;background:#fcf6e6;border:1px solid #d9c99c;border-radius:7px;color:#705115;font-size:13px}
+.ipe-domain button:disabled{opacity:.5;cursor:default}
+.ipe-domain button:focus-visible,.ipe-domain select:focus-visible,.ipe-domain .ipe-trace-viewport:focus-visible{outline:3px solid #296c9b;outline-offset:3px}
+.ipe-domain .ipe-trace-details{margin:16px 0;padding:14px;background:#f3f5ef;border-radius:7px;min-width:0}
+.ipe-domain .ipe-trace-details h4{margin:0 0 7px;font-size:15px;overflow-wrap:anywhere}
+.ipe-domain .ipe-trace-details p{margin:0;font-size:13px;color:#52645f}
+.ipe-domain .ipe-domain-detail-fields{display:grid;grid-template-columns:145px 1fr;gap:7px 15px;margin:14px 0;font-size:13px}
+.ipe-domain .ipe-domain-detail-fields dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.ipe-domain .ipe-domain-detail-fields dt{color:#52645f}
+.ipe-domain .ipe-domain-detail-fields:empty{display:none}
+.ipe-domain .ipe-domain-raw{margin-top:12px;font-size:13px}
+.ipe-domain .ipe-domain-collection{margin-top:16px;padding-top:14px;border-top:1px solid #d5ded7;font-size:13px}
+.ipe-domain .ipe-domain-collection p{margin:10px 0;color:#52645f}
+.ipe-domain pre{max-height:320px;padding:12px;white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere;font-size:12px}
+.ipe-domain .ipe-trace-issues{padding-left:20px;color:#705115}
+.ipe-domain .ipe-trace-issues li{margin:8px 0}
+.ipe-domain [hidden]{display:none!important}
+@media(max-width:700px){.ipe-domain{padding:14px}.ipe-domain .ipe-domain-selectors,.ipe-domain .ipe-domain-cards{grid-template-columns:1fr}.ipe-domain .ipe-domain-overview dl,.ipe-domain .ipe-domain-detail-fields{grid-template-columns:1fr;gap:3px}.ipe-domain .ipe-domain-overview dd,.ipe-domain .ipe-domain-detail-fields dd{margin-bottom:8px}.ipe-domain .ipe-domain-pagination{flex-wrap:wrap}}

@@ -32,7 +32,7 @@ The `approvals` feature enables the runtime modules in `ipe-core`. Default-featu
 For script adapter or SDK changes, run the shared JSON/integration tests and integration acceptance checks above. After `npm ci --prefix testing/integration`, check the typed adapter example:
 
 ```sh
-testing/integration/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node testing/integration/adapters/read-step.ts --typeRoots testing/integration/node_modules/@types
+testing/integration/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node testing/integration/adapters/read-step.ts testing/integration/hosted/typed-observation.ts testing/integration/hosted/domain-types.ts testing/integration/hosted/governance-types.ts --typeRoots testing/integration/node_modules/@types
 ```
 
 For Rust changes, run formatting, lint, and the affected tests. Before handoff, run workspace tests when shared behavior or dependencies change. Run acceptance checks when API or trust-boundary behavior changes. For documentation-only changes, check links and examples; Rust tests are not normally needed.
@@ -60,3 +60,11 @@ A PR description should state the problem, the resulting behavior, and the verif
 
 Release notes come from merged PRs. Use clear titles, release labels, and explicit migration notes.
 Do not add manual changelog entries. Follow the [release guide](../docs/RELEASES.md).
+
+## Native compilation and bounded guest tests
+
+The pinned RocksDB headers need an explicit `cstdint` include with newer Linux C++ toolchains.
+Cargo target flags provide it; sanitizer overrides must preserve it.
+Development and test profiles use optimization level 1 so guest tests exercise the unchanged 100 ms execution limit.
+Sanitizer builds use optimization level 2 for Rust and native code. They retain parallel tests and native sanitizer instrumentation.
+Do not extend guest deadlines or skip failure tests to compensate for instrumentation.
