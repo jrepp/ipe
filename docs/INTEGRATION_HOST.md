@@ -218,6 +218,7 @@ The collector does not infer email addresses, team membership, policy owners, or
 Grant `list_environments`, `list_rulesets`, and `get_ruleset`, plus the `governance` output kind, to enable these reads.
 The demo installation includes these grants and retains API version `2022-11-28`.
 The collector samples at most two environments, two reviewers per environment, six environment rules, and six ruleset details.
+Governance projection constructs at most four observations per step. Pending descriptions remain encoded between steps to avoid repeated object validation.
 Each ruleset description retains at most 32 rules. Long specifications are bounded and report a truncation gap.
 Denied reads, missing grants, unmatched literal environments, and partial samples preserve explicit gaps; they do not establish policy absence.
 Rulesets retain provider scope instead of an inferred workflow link. Neither ruleset configuration nor execution success proves effective enforcement.
