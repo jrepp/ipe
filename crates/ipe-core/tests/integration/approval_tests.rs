@@ -151,7 +151,7 @@ fn test_expired_approval_denied() {
     // Grant approval that expires immediately
     let mut approval =
         Approval::new("bot-123", "https://api.example.com/data", "GET", "admin-user");
-    approval.expires_at = Some(chrono::Utc::now().timestamp() - 100); // Expired 100s ago
+    approval.expires_at = Some(jiff::Timestamp::now().as_second() - 100); // Expired 100s ago
 
     store.grant_approval(approval).unwrap();
 

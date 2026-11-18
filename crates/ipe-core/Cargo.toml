@@ -13,7 +13,7 @@ anyhow = { workspace = true }
 arc-swap = { workspace = true }
 parking_lot = { workspace = true }
 
-chrono = { workspace = true }
+jiff = { workspace = true }
 tracing = { workspace = true }
 
 # Approval storage (optional feature)

@@ -158,7 +158,7 @@ async fn input_schema_is_enforced_at_the_evaluation_boundary() {
 #[tokio::test]
 async fn write_only_publisher_can_inspect_its_fact_without_receiving_the_value() {
     let app = state(vec![allow_policy()]);
-    let now = chrono::Utc::now().timestamp();
+    let now = jiff::Timestamp::now().as_second();
     let request = json!({"mutations":[{"operation":"put","key":"secret","value":true,"expected_revision":null,"source_revision":1,"observed_at":now,"ttl_seconds":60}]});
     let committed = super::commit(
         State(Arc::clone(&app)),

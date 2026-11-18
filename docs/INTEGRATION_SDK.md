@@ -1,5 +1,8 @@
 # Integration sandbox SDK and package cache
 
+See the [integration domain model review](INTEGRATION_DOMAIN_MODEL.md) for proposed semantic boundaries and migration questions.
+The API described below is the implemented SDK contract, including the first compatible domain refactor.
+
 The workload provides the global `ipe` SDK before evaluating each JavaScript or
 TypeScript step. Its implementation is embedded in the Rust binary, frozen, and
 included in the adapter digest. There are no SDK imports to resolve at runtime.
@@ -47,9 +50,72 @@ adapters remain supported.
 
 ## Hosted programs
 
-SDK 0.3 supports [hosted integration programs](INTEGRATION_HOST.md). The endpoint installs JavaScript source and runs it manually or on a schedule.
+SDK 0.5 supports [hosted integration programs](INTEGRATION_HOST.md). The endpoint installs JavaScript source and runs it manually or on a schedule.
 Programs emit typed definitions, evidence, constraints, invocations, expiring facts, and external outcomes into bounded local storage.
 See [the typed observation example](../testing/integration/hosted/typed-observation.ts). The host derives logical keys and revision digests. Enforcement publication remains separate.
+
+## Hosted authoring helpers
+
+SDK 0.6 adds `OperationId`, `RequirementSpecification`, `NamedRequirement`, and typed v2 operation and assessment API contracts.
+`ControlId` and `Requirement` remain compatibility aliases. V1 `Obligation` remains a named assessment item, not proof of an actor's duty.
+`ipe.operationKey` uses the existing `control:` encoding; `ipe.controlKey` remains available with identical output.
+These additions do not introduce new emitted record kinds or network access from guest code.
+See the [domain type example](../testing/integration/hosted/domain-types.ts) and [v2 assessment guide](INTEGRATION_ASSESSMENTS.md#versioned-domain-apis).
+
+SDK source changes alter program and mapped record digests. Review assessment rule pins after an SDK update.
+
+SDK 0.7 adds source-backed governance descriptions through `ipe.governanceModel(record, {scope, claim})`.
+Use `ipe.observation` with successful native read receipts to emit the resulting model v2 envelope.
+Policies, contracts, controls, handoffs, principals, role assignments, and contact methods have separate typed fields.
+Existing `Model` and `Observation` types remain v1; `EmittedModel` and `EmittedObservation` include governance.
+See the [governance schema and limits](INTEGRATION_HOST.md#governance-extraction-and-execution-overlay) and [typed example](../testing/integration/hosted/governance-types.ts).
+The builder does not resolve principals, verify authority, or contact people. Native validation checks grants, receipts, references, and bounds.
+Existing stored records remain readable. Accepting a catalog and updating installed code remain separate operations.
+
+SDK 0.4 adds a bounded work plan and model helpers. Existing `step` programs remain supported.
+The SDK version and source contribute to the collector digest. Upgrading the SDK changes that digest, even without program edits.
+
+| Helper | Purpose |
+| --- | --- |
+| `tasks(state, options)` | Resume a JSON work plan with a bounded queue, deduplication, request IDs, response matching, and gap accounting. |
+| `observed(receipts, scope, claim).emit(entity, data)` | Build model envelopes with explicit scope and claim, using the supplied receipts. |
+| `readResult(responses, id)` | Return an error or a read result with `observations(scope, claim)` bound to its receipt. |
+| `project(record, fields, excluded)` | Select fields and retain other fields under `unmodeled`. Excluded fields are handled by the caller. |
+| `emitBatch(items, mapper, maximum)` | Map a bounded batch, then remove its items. A mapper failure leaves the input queue intact. |
+| `elapsed(start, end)` | Return milliseconds, or null for invalid timestamps or reversed intervals. |
+| `controlKey(control)` | Build the shared control identity used in dependency associations. |
+| `operationKey(operation)` | Build the same stored operation identity without implying an operating control. |
+| `executionKey(execution)` | Build the shared execution subject format. Native model validation still checks the identity. |
+
+The work plan defaults to 64 queued tasks, 80 dispatched tasks, depth four, and 40 retained gaps.
+Programs can lower these limits. Additional gaps increment `droppedGaps`; they do not disappear from the reported count.
+Provide stable task keys that include execution attempts and other identity fields relevant to the collector.
+Use `next()` once, then `request(task, operation, params)` and return an exchange.
+On the next step, call `receive(responses)` before dispatching another task. Store only `plan.state` in continuation state.
+The work plan is per-run state, not a durable checkpoint or an independent scheduler.
+
+`emitBatch` limits item count, not CPU cost or encoded bytes. Start with one expensive model per step.
+`project` keeps local references to avoid repeated JSON serialization. The exchange boundary validates the complete result.
+Do not store helper objects or functions in continuation state.
+
+The hosted context includes permitted operation parameter metadata and native limits.
+It does not include connection URLs, credentials, or ungranted operation metadata.
+A program can use this metadata to explain or narrow its read plan. Only native validation authorizes requests.
+
+Pass `plan.progress(phase, task)` as the fourth argument to `exchange` to report work progress.
+The host bounds and stores these reports with the native step number and timestamp.
+The monitor displays the latest reports separately from native read evidence. Program reports do not prove external work occurred.
+
+Read results include native pagination status and optional snapshot source identity.
+Receipt-bound builders do not prove completeness. Collection claims still require explicit scopes and native coverage verification.
+A failed or truncated read must not establish that a prior requirement was removed.
+
+The [GitHub collector](../testing/integration/hosted/github-actions.js) uses these helpers.
+Provider reference parsing, expression semantics, and contract interpretation remain authored JavaScript.
+Input-schema generation, a separate GitHub helper bundle, and general collection builders remain future work.
+
+SDK 0.5 adds the `association` entity and canonical control keys for [contextual evidence assessments](INTEGRATION_ASSESSMENTS.md).
+Request the `association` output grant when installing a collector that emits these records.
 
 ## GitHub contract spike
 

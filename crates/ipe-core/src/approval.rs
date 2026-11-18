@@ -3,7 +3,7 @@
 //! This module provides RocksDB-backed storage for approval records,
 //! enabling efficient lookup and set membership tests for authorization.
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
@@ -117,7 +117,7 @@ pub enum ApprovalError {
     NotFound { identity: String, resource: String, action: String },
 
     #[error("Approval expired at {expired_at}")]
-    Expired { expired_at: DateTime<Utc> },
+    Expired { expired_at: Timestamp },
 
     #[error("Invalid approval: {0}")]
     InvalidApproval(String),
@@ -173,7 +173,7 @@ impl Approval {
             resource: resource.into(),
             action: action.into(),
             granted_by: granted_by.into(),
-            granted_at: Utc::now().timestamp(),
+            granted_at: Timestamp::now().as_second(),
             expires_at: None,
             metadata: HashMap::new(),
             scope: Scope::Global,
@@ -190,13 +190,13 @@ impl Approval {
     /// Set TTL (also sets expires_at)
     pub fn with_ttl(mut self, ttl_seconds: i64) -> Self {
         self.ttl_seconds = Some(ttl_seconds);
-        self.expires_at = Some(Utc::now().timestamp() + ttl_seconds);
+        self.expires_at = Some(Timestamp::now().as_second() + ttl_seconds);
         self
     }
 
     /// Set expiration time (seconds from now)
     pub fn with_expiration(mut self, seconds: i64) -> Self {
-        self.expires_at = Some(Utc::now().timestamp() + seconds);
+        self.expires_at = Some(Timestamp::now().as_second() + seconds);
         self
     }
 
@@ -209,7 +209,7 @@ impl Approval {
     /// Check if approval is expired
     pub fn is_expired(&self) -> bool {
         if let Some(expires_at) = self.expires_at {
-            Utc::now().timestamp() >= expires_at
+            Timestamp::now().as_second() >= expires_at
         } else {
             false
         }
@@ -550,7 +550,7 @@ mod tests {
     #[test]
     fn test_approval_expired() {
         let mut approval = Approval::new("bot-123", "resource", "action", "admin");
-        approval.expires_at = Some(Utc::now().timestamp() - 100); // Expired 100s ago
+        approval.expires_at = Some(Timestamp::now().as_second() - 100); // Expired 100s ago
 
         assert!(approval.is_expired());
     }
@@ -618,7 +618,7 @@ mod tests {
     fn test_store_expired_approval() {
         let store = ApprovalStore::new_temp().unwrap();
         let mut approval = Approval::new("bot-123", "https://api.example.com/data", "GET", "admin");
-        approval.expires_at = Some(Utc::now().timestamp() - 100);
+        approval.expires_at = Some(Timestamp::now().as_second() - 100);
 
         store.grant_approval(approval).unwrap();
 

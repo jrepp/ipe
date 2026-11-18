@@ -27,11 +27,11 @@ echo "🧹 Running $SANITIZER_TYPE sanitizer tests..."
 
 # Run sanitizer
 # Optimize instrumented builds without changing the 100 ms guest deadline.
-# Profile settings also pass OPT_LEVEL=1 to native dependency build scripts.
-export CARGO_PROFILE_DEV_OPT_LEVEL=1
-export CARGO_PROFILE_TEST_OPT_LEVEL=1
-export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=1"
-export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=1"
+# Profile settings also pass OPT_LEVEL=2 to native dependency build scripts.
+export CARGO_PROFILE_DEV_OPT_LEVEL=2
+export CARGO_PROFILE_TEST_OPT_LEVEL=2
+export RUSTFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=2"
+export RUSTDOCFLAGS="-Z sanitizer=$SANITIZER_TYPE -C opt-level=2"
 # QuickJS adds native sanitizer instrumentation from CARGO_CFG_SANITIZE.
 # Use Clang for native code with the LLVM runtime supplied by Rust.
 native_target="${sanitizer_target//-/_}"
@@ -80,7 +80,9 @@ if [ "$SANITIZER_TYPE" = "thread" ]; then
     # ordinary production build. Rust supplies the sanitizer runtime at link time.
     cflags_name="CFLAGS_$native_target"
     cxxflags_name="CXXFLAGS_$native_target"
-    native_flags="-fsanitize=thread -fno-omit-frame-pointer -O1"
+    native_flags="-fsanitize=thread -fno-omit-frame-pointer -O2"
+    # Preserve RocksDB header compatibility when overriding Cargo target flags.
+    export "$cxxflags_name=${!cxxflags_name:-} -include cstdint"
     if [[ "$sanitizer_target" == aarch64-* ]]; then
         # Keep the production CRC workaround even when overriding target flags
         # from .cargo/config.toml to add native sanitizer instrumentation.

@@ -5,13 +5,21 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 pub(super) const VERSION: u16 = 1;
-pub(super) const KINDS: &[&str] =
-    &["definition", "evidence", "constraint", "invocation", "fact", "outcome"];
+pub(super) const KINDS: &[&str] = &[
+    "definition",
+    "evidence",
+    "constraint",
+    "invocation",
+    "fact",
+    "outcome",
+    "association",
+    "governance",
+];
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Model {
-    #[schemars(range(min = 1, max = 1))]
+    #[schemars(range(min = 1, max = 2))]
     pub schema_version: u16,
     pub scope: String,
     pub claim: Claim,
@@ -48,7 +56,7 @@ pub(super) struct Source {
     pub pointer: String,
 }
 impl Source {
-    fn validate(&self) -> bool {
+    pub(super) fn validate(&self) -> bool {
         self.definition.validate() && text(&self.revision) && pointer(&self.pointer)
     }
 }
@@ -185,6 +193,9 @@ pub(super) enum EvidenceMethod {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum Entity {
+    Governance {
+        record: Box<super::governance::GovernanceRecord>,
+    },
     Definition {
         source: Source,
         title: String,
@@ -220,6 +231,14 @@ pub(super) enum Entity {
         authority: String,
         execution: Option<ExecutionId>,
     },
+    Association {
+        subject: String,
+        predicate: String,
+        target: String,
+        context: std::collections::BTreeMap<String, String>,
+        authority: String,
+        resolution: Resolution,
+    },
     Outcome {
         execution: ExecutionId,
         definition: Source,
@@ -246,16 +265,19 @@ fn unique<'a>(items: impl Iterator<Item = &'a str>) -> bool {
 impl Model {
     pub fn kind(&self) -> &'static str {
         match self.entity {
+            Entity::Governance { .. } => "governance",
             Entity::Definition { .. } => "definition",
             Entity::Evidence { .. } => "evidence",
             Entity::Constraint { .. } => "constraint",
             Entity::Invocation { .. } => "invocation",
             Entity::Fact { .. } => "fact",
+            Entity::Association { .. } => "association",
             Entity::Outcome { .. } => "outcome",
         }
     }
     pub fn logical_key(&self) -> String {
         match &self.entity {
+            Entity::Governance { record } => record.logical_key(),
             Entity::Definition { source, .. } => source.definition.key(),
             Entity::Evidence { source, method, .. } => {
                 format!("evidence:{}", json!([source.definition, source.pointer, method]))
@@ -267,11 +289,22 @@ impl Model {
             Entity::Fact { subject, predicate, .. } => {
                 format!("fact:{}", json!([subject, predicate]))
             },
+            Entity::Association {
+                subject,
+                predicate,
+                target,
+                context,
+                authority,
+                ..
+            } => {
+                format!("association:{}", json!([subject, predicate, target, context, authority]))
+            },
             Entity::Outcome { execution, .. } => execution.key(),
         }
     }
     pub fn key(&self) -> String {
         let source = match &self.entity {
+            Entity::Governance { record } => Some(record.source()),
             Entity::Definition { source, .. }
             | Entity::Evidence { source, .. }
             | Entity::Constraint { source, .. } => Some(source),
@@ -289,10 +322,14 @@ impl Model {
         Ok(digest(&bytes))
     }
     pub fn validate(&self) -> Result<()> {
-        if self.schema_version != VERSION || !text(&self.scope) {
+        let version = if matches!(self.entity, Entity::Governance { .. }) { 2 } else { VERSION };
+        if self.schema_version != version || !text(&self.scope) {
             return Err("unsupported_model_schema");
         }
         let valid = match &self.entity {
+            Entity::Governance { record } => {
+                record.validate() && matches!(self.claim, Claim::Declared | Claim::ProviderReported)
+            },
             Entity::Definition { source, title, inputs, outputs } => {
                 source.validate()
                     && source.pointer.is_empty()
@@ -384,6 +421,24 @@ impl Model {
                     && execution.as_ref().is_none_or(|e| e.validate() && e.key() == *subject)
                     && self.claim == Claim::ProviderReported
             },
+            Entity::Association {
+                subject,
+                predicate,
+                target,
+                context,
+                authority,
+                resolution,
+            } => {
+                text(subject)
+                    && text(predicate)
+                    && text(target)
+                    && text(authority)
+                    && context.len() <= 8
+                    && context.iter().all(|(k, v)| text(k) && text(v))
+                    && matches!(self.claim, Claim::ProviderReported | Claim::Inferred)
+                    && (*resolution != Resolution::Resolved
+                        || self.claim == Claim::ProviderReported)
+            },
             Entity::Outcome {
                 execution,
                 definition,
@@ -415,6 +470,26 @@ impl Model {
 /// A resolved call must link to a definition actually captured in this transaction.
 pub(super) fn validate_graph(records: &[super::Record]) -> Result<()> {
     for record in records {
+        if let Some(Model {
+            entity: Entity::Governance { record: governance },
+            ..
+        }) = &record.model
+        {
+            if let super::governance::GovernanceRecord::RoleAssignment { role, .. } =
+                governance.as_ref()
+            {
+                if role.resolution == Resolution::Resolved && records.iter().any(|r| matches!(&r.model,
+                    Some(Model { entity: Entity::Governance { record: target }, .. })
+                    if role.matches(target) && !matches!(target.as_ref(), super::governance::GovernanceRecord::Principal { principal_kind: super::governance::PrincipalKind::Role | super::governance::PrincipalKind::Group, .. }))) {
+                    return Err("invalid_governance_role_target");
+                }
+            }
+            for reference in governance.references() {
+                if reference.resolution == Resolution::Resolved && !records.iter().any(|r| matches!(&r.model, Some(Model {entity: Entity::Governance {record: target}, ..}) if reference.matches(target))) {
+                    return Err("resolved_governance_missing");
+                }
+            }
+        }
         if let Some(Model {
             entity:
                 Entity::Invocation {
