@@ -111,3 +111,34 @@ test('combined product ship runner adds captured provenance contexts for the sin
   assert.equal(output.provenance.schema,'ipe.product-ship-provenance.v1');
   assert.equal(output.provenance.contexts.length,18);
 });
+
+test('provenance emits source evidence separately and constructs only its current batch',()=>{
+ const vm=require('node:vm');
+ const sdk=fs.readFileSync(path.resolve(dir,'../../../../crates/ipe-integration/sdk/index.js'),'utf8')
+   .replace('function observation(model, data, receipts) {','function observation(model, data, receipts) { __constructed++;');
+ const collector=fs.readFileSync(path.join(dir,'provenance-collector.js'),'utf8');
+ const context=fixture.contexts[0],input={control_id:context.control_id,observed_at:fixture.as_of};
+ let state=null,responses=[],total=0,sourceEmitted=false;
+ for(let index=0;index<8;index++){
+  const sandbox={__constructed:0,__args:JSON.stringify([{input},responses,state])};
+  const result=JSON.parse(vm.runInNewContext(`${sdk}\n${collector}\nJSON.stringify(step(...JSON.parse(__args)))`,sandbox,{timeout:1000}));
+  const observations=result.observations||[];
+  assert.equal(sandbox.__constructed,observations.length);
+  assert.ok(observations.length<=4);
+  if(observations.length&&!sourceEmitted){
+   assert.equal(observations.length,1);
+   assert.equal(observations[0].model.entity.kind,'evidence');
+   sourceEmitted=true;
+  }else assert.ok(observations.every(item=>item.model.schema_version===2));
+  total+=observations.length;
+  if('outputs'in result){
+   assert.equal(result.outputs.status,'available');
+   assert.equal(total,replayContext(context.control_id).observations.length);
+   return;
+  }
+  state=result.state;
+  if(state.phase==='emit')assert.equal(typeof state.snapshotJson,'string');
+  responses=(result.requests||[]).map(request=>({id:request.id,operation:request.operation,data:[{context}],receipt:'fixture:broker:context'}));
+ }
+ assert.fail('provenance did not complete within the fixture step budget');
+});
