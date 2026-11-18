@@ -15,6 +15,8 @@
 
 ## Design documentation
 
+The [workload and artifact guide](workloads.md) describes the current executables, modes, and distribution limits.
+
 The [design index](../docs-cms/README.md) contains structured requirements, proposals, and decisions.
 Existing guides and RFCs retain their paths. See [ADR 001](../docs-cms/adr/adr-001-hybrid-documentation.md) for the hybrid structure.
 

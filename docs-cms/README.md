@@ -68,3 +68,5 @@ The [configuration schema](docs-project.schema.json) supports mixed document typ
 Expand validation only after reviewing the target folder. Preserve historical content and report existing errors separately.
 
 [Shared platform research spike](memos/memo-004-shared-platform-spike.md) adds adoption order, source findings, and current dependency blockers to this survey.
+
+[Workload structure and documentation review](memos/memo-005-workload-structure.md) records the current artifact boundaries and a staged migration toward lowercase documentation paths.
