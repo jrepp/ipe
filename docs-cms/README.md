@@ -1,8 +1,10 @@
 # IPE design documentation
 
 Use this index for requirements, proposals, decisions, and findings.
-Use the [existing documentation index](../docs/INDEX.md) for implemented behavior, operations, and historical references.
+Use the [existing documentation index](../docs/documentation-index.md) for implemented behavior, operations, and historical references.
 The [hybrid documentation decision](adr/adr-001-hybrid-documentation.md) defines the boundary.
+
+Start with the [documentation map](wiki/pages/documentation-map.md) for a single route to guides, records, and operations.
 
 ## Project organization
 
@@ -20,13 +22,13 @@ Start with the [project map](PROJECTS.md) for principles, subway routes, depende
 | [PRD 004: Policy enforcement](prd/prd-004-policy-enforcement.md) | Draft | Snapshot evaluation, application gates, and active-revision reports. |
 | [PRD 005: Product site and delivery](prd/prd-005-product-site-and-delivery.md) | Draft | Product message, project navigation, and checked Pages publication. |
 
-No memos have been added yet. Draft designs do not establish implemented behavior.
+Draft designs do not establish implemented behavior.
 
 ## Where documents belong
 
 | Content | Location and rule |
 | --- | --- |
-| Implemented behavior and procedures | Keep in [docs](../docs/INDEX.md), [deployment](../deploy/README.md), and acceptance guides. |
+| Implemented behavior and procedures | Keep in [docs](../docs/documentation-index.md), [deployment](../deploy/README.md), and acceptance guides. |
 | Existing proposals | Keep [main RFCs](../rfcs/INDEX.md) and [historical retrieval proposal](../docs/rfcs/0003-fact-retrieval-api.md) at their current paths. |
 | New requirements | Use prd/ and the PRD template. Define stable requirement and acceptance IDs. |
 | New designs | Use rfcs/ and the RFC template. Reference the owning PRD with implements. |
@@ -34,7 +36,7 @@ No memos have been added yet. Draft designs do not establish implemented behavio
 | Findings | Use memos/ and the memo template. Record sources and limits. |
 | Agent workflow | Keep [AGENTS.md](../AGENTS.md) and [.agent guides](../.agent/repository.md). |
 
-Do not copy existing guides into this directory or retroactively change proposal status.
+Link to canonical guides instead of copying them. Do not retroactively change proposal status.
 Continue main RFC numbering across both locations; rfc-018 follows the existing RFC 017.
 Check both indexes before allocating the next number. Preserve the separate historical docs/rfcs numbering.
 
@@ -47,7 +49,7 @@ Check both indexes before allocating the next number. Preserve the separate hist
 Copy the appropriate file from templates/. Set its title, ID, project_id, creation date, and a fresh UUID v4.
 Keep the UUID stable. Use Draft for PRDs and RFCs, Proposed for unapproved ADRs, and no status for memos.
 Derive later modification dates from Git instead of adding updated frontmatter.
-Use [project vocabulary](../docs/VOCABULARY.md) and [writing guidance](../.agent/writing.md).
+Use [project vocabulary](../docs/vocabulary-guide.md) and [writing guidance](../.agent/writing.md).
 
 PRDs own requirements. RFCs reference them and record Covered, Deferred, or Unresolved design coverage.
 Keep unresolved decisions visible. A coverage table is not proof of working code.
@@ -59,12 +61,20 @@ uvx docuchango==1.20.0 validate --skip-build
 ```
 
 The check uses Docuchango 1.20.0 and [docs-project.yaml](docs-project.yaml).
-It validates configured ADR, RFC, memo, and PRD folders, including links and PRD/RFC traceability.
+It validates configured ADR, RFC, memo, and PRD folders, including links and PRD/RFC traceability. It also validates the wiki subproject pages.
 The root project map uses generic title, project, and UUID metadata and link validation without a numbered record ID.
 It does not scan every existing guide. Templates remain authoring support files. The project map is an unnumbered overview, not an ADR or PRD.
 Keep existing `make docs-check` site validation. No Docusaurus migration is required.
 
-The [configuration schema](docs-project.schema.json) supports mixed document types and subprojects for later adoption.
+The [configuration schema](docs-project.schema.json) supports mixed document types and the wiki subproject.
 Expand validation only after reviewing the target folder. Preserve historical content and report existing errors separately.
 
 [Shared platform research spike](memos/memo-004-shared-platform-spike.md) adds adoption order, source findings, and current dependency blockers to this survey.
+
+[Workload structure and documentation review](memos/memo-005-workload-structure.md) records the current artifact boundaries and a staged migration toward lowercase documentation paths.
+
+[Documentation unification](memos/memo-006-documentation-unification.md) records canonical guide names and compatibility paths.
+
+[Documentation archive review](memos/memo-007-documentation-archive.md) records the historical classification and its limits.
+
+[Ontology audit](memos/memo-008-ontology-audit.md) records domain mappings, code evidence, and open terminology decisions.

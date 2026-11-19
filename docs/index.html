@@ -131,20 +131,20 @@
     <div class="section-heading"><div><h2 id="foundations-heading">Current implementation</h2><p>The runtime and the integration host work separately today.</p></div></div>
     <div class="foundations">
       <article><h3>Evaluate a scoped request</h3><p>The Rust runtime reads an active policy and local facts from one snapshot. Each fact has an expiry time. The application must block the action after a deny or indeterminate result.</p>
-      <a href="doc.html?path=RUNTIME_DATA.md">Read the runtime guide</a></article>
+      <a href="doc.html?path=runtime-data.md">Read the runtime guide</a></article>
       <article><h3>Inspect source evidence</h3><p>The local integration host collects permitted source records. Reviewers can inspect an observation, its evidence assessment, and the run that produced it.</p>
-      <a href="doc.html?path=INTEGRATION_HOST.md">Read the integration guide</a></article>
+      <a href="doc.html?path=integration-host.md">Read the integration guide</a></article>
       <article><h3>First connected milestone</h3><p>The plan follows one action from a source observation to a policy decision and its recorded outcome. Missing or expired evidence must block the action.</p>
       <a href="doc.html?path=../docs-cms/PROJECTS.md#first-connected-milestone">Read the milestone</a></article>
     </div>
   </section>
   <section id="paths" aria-labelledby="paths-title">
-    <div class="section-heading"><h2 id="paths-title">Guides and references</h2><a href="doc.html?path=INDEX.md">Open the documentation index <span aria-hidden="true">→</span></a></div>
+    <div class="section-heading"><h2 id="paths-title">Guides and references</h2><a href="doc.html?path=documentation-index.md">Open the documentation index <span aria-hidden="true">→</span></a></div>
     <div class="paths">
       <article class="path" id="path-evaluate"><h3>Evaluate IPE</h3><a href="decision.html">Follow a decision</a><a href="status.html">Project status</a><a href="performance.html">Archived measurements</a></article>
-      <article class="path" id="path-integrate"><h3>Integrate a service</h3><a href="contract.html">Runtime contract</a><a href="integration-service.html">Integration service map</a><a href="doc.html?path=INTEGRATION_DISCOVERY.md">Source discovery</a></article>
-      <article class="path" id="path-author"><h3>Write a policy</h3><a href="doc.html?path=RUNTIME_DATA.md">Policy documents</a><a href="doc.html?path=../acceptance/runtime-data/README.md">Run the acceptance suite</a><a href="ast.html">Archived parser explorer</a></article>
-      <article class="path" id="path-internals"><h3>Contribute to IPE</h3><a href="doc.html?path=../docs-cms/README.md">Design documents</a><a href="doc.html?path=VOCABULARY.md">Project vocabulary</a><a href="doc.html?path=../rfcs/INDEX.md">RFC index</a></article>
+      <article class="path" id="path-integrate"><h3>Integrate a service</h3><a href="contract.html">Runtime contract</a><a href="integration-service.html">Integration service map</a><a href="doc.html?path=integration-discovery.md">Source discovery</a></article>
+      <article class="path" id="path-author"><h3>Write a policy</h3><a href="doc.html?path=runtime-data.md">Policy documents</a><a href="doc.html?path=../acceptance/runtime-data/README.md">Run the acceptance suite</a><a href="ast.html">Archived parser explorer</a></article>
+      <article class="path" id="path-internals"><h3>Contribute to IPE</h3><a href="doc.html?path=../docs-cms/README.md">Design documents</a><a href="doc.html?path=vocabulary-guide.md">Project vocabulary</a><a href="doc.html?path=../rfcs/INDEX.md">RFC index</a></article>
     </div>
   </section>
   <details class="archive"><summary>Explore an archived policy tree</summary>

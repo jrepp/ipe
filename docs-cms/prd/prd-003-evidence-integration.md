@@ -24,10 +24,10 @@ A successful collector run does not establish that a requirement is fulfilled.
 
 # Existing foundation
 
-The [integration host](../../docs/INTEGRATION_HOST.md) has brokered reads, sandboxed programs, schedules, records, and review catalogs.
-The [runtime](../../docs/RUNTIME_DATA.md) accepts authenticated push and pull fact updates.
+The [integration host](../../docs/integration-host.md) has brokered reads, sandboxed programs, schedules, records, and review catalogs.
+The [runtime](../../docs/runtime-data.md) accepts authenticated push and pull fact updates.
 The host does not currently publish enforcement facts. [RFC 014](../../rfcs/014-fact-publication-and-synchronization.md) owns that proposed delivery contract.
-[Assessments](../../docs/INTEGRATION_ASSESSMENTS.md) distinguish evidence checks from requirement fulfillment.
+[Assessments](../../docs/integration-assessments.md) distinguish evidence checks from requirement fulfillment.
 
 # Route and scope
 

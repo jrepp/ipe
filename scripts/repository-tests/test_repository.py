@@ -57,7 +57,7 @@ class RepositoryContract(unittest.TestCase):
         self.assertEqual(repository.check(self.root), [])
 
     def test_mapping_drift(self):
-        path = self.root / 'docs/REPOSITORY.md'
+        path = self.root / 'docs/repository-guide.md'
         original = path.read_text()
         cases = (
             original.replace('`crates/ipe-core`', '`crates/missing`'),

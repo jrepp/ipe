@@ -1,5 +1,7 @@
 # Idempotent Predicate Engine: MVP Implementation Plan
 
+> **Historical record.** This document describes an earlier plan or test run. See the [archive](docs/archive/index.md) and current guides.
+
 ## Executive Summary
 
 This document outlines the **Minimum Viable Product (MVP)** plan for the Idempotent Predicate Engine, a security-critical predicate evaluation engine built in Rust. Our approach prioritizes:

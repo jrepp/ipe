@@ -34,7 +34,7 @@ class Handler(BaseHTTPRequestHandler):
     def respond(self, head):
         path = urlsplit(self.path).path
         if path == "/planning.md":
-            file, mime = ROOT.parents[1] / "docs/ENTERPRISE_SCALE_PLANNING.md", "text/plain"
+            file, mime = ROOT.parents[1] / "docs/enterprise-scale-planning.md", "text/plain"
         elif path == "/model/evaluate.js":
             file, mime = MODEL / "product-ship.js", "text/javascript"
         elif path in ASSETS:

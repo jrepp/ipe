@@ -20,7 +20,7 @@ It is not an uncommitted source change or a configured submodule. Do not add an 
 
 The usability branch also contains a synthetic product ship policy network with nine child policies.
 SDK programs collect sample controls and evidence. Three interactive studies compare readiness, network navigation, and simulated enforcement.
-See [the demo guide](../docs/PRODUCT_SHIP_DEMO.md) for authoring and launch steps.
+See [the demo guide](../docs/product-ship-demo.md) for authoring and launch steps.
 The study does not activate policies or enforce a real release gate. The selected direction combines a policy/control checklist with a larger evidence workspace.
 A synthetic provenance pass adds ServiceNow source records, assigned roles, and email or Slack profile context.
 An agent evaluation preview adds per-step activity and illustrative token/time comparisons. Actual provider usage is not measured. Review it before integration into the monitor.
@@ -37,9 +37,9 @@ The usability branch contains these related changes:
 - GitHub environment and ruleset capture, governance descriptions, and source-backed handoff descriptions.
 - Vocabulary and model documentation, acceptance evidence, and local documentation packaging.
 
-The [host guide](../docs/INTEGRATION_HOST.md) describes implemented behavior and local restart steps.
+The [host guide](../docs/integration-host.md) describes implemented behavior and local restart steps.
 The [usability report](../acceptance/integration-host/usability/report.md) records checks and limits for each pass.
-The [domain review](../docs/INTEGRATION_DOMAIN_MODEL.md) identifies proposed lifecycle extensions.
+The [domain review](../docs/integration-domain-model.md) identifies proposed lifecycle extensions.
 
 Requirement fulfillment, handoff events, enforcement fact publication, and policy activation remain incomplete or proposed.
 Ticket and compliance evidence joins use synthetic providers. They do not establish live account integration.

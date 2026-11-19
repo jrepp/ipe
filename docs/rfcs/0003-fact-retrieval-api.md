@@ -23,7 +23,7 @@ Implementation references (symbols, rather than shifting line numbers):
 - [Fact storage](../../crates/ipe-core/src/runtime_facts.rs): `KeyState`,
   `FactSnapshot`, `FactSnapshot::get`, `take_revision`, `replace_snapshot`,
   and `cleanup_expired`.
-- [Runtime data contract](../RUNTIME_DATA.md): credential grants, TTLs,
+- [Runtime data contract](../runtime-data.md): credential grants, TTLs,
   connector generations, and local revision semantics.
 - [Runtime acceptance suite](../../acceptance/runtime-data/README.md).
 

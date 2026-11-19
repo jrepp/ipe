@@ -1,5 +1,7 @@
 # Relationship Model Implementation Summary
 
+> **Historical record.** This document describes an earlier plan or test run. See the [archive](archive/index.md) and current guides.
+
 ## Recorded Results
 
 This report records the relationship implementation and its test results on the branch listed here.

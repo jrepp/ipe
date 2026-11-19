@@ -6,7 +6,7 @@
 
 ## Scope
 
-**Initial implementation:** [standalone discovery slice](../docs/INTEGRATION_DISCOVERY.md).
+**Initial implementation:** [standalone discovery slice](../docs/integration-discovery.md).
 M1 uses an operator-configured HTTPS origin and secret environment references,
 one bearer-protected scope, a fixed metadata recipe, and bounded inventory without
 preselected tables. Opaque discovered IDs use a retained private HMAC key. The Rust

@@ -28,3 +28,6 @@ metadata:
   created: "2026-11-17"
   maintainers: [IPE maintainers]
   purpose: Structured design memory alongside existing operational documentation
+
+subprojects:
+  - path: wiki/docs-project.yaml

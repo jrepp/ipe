@@ -78,7 +78,7 @@ class DocsContract(unittest.TestCase):
                 with self.subTest(page=page.name, target=target):
                     self.assertTrue((page.parent / unquote(url.path)).exists())
                     if url.path == "doc.html":
-                        document = parse_qs(url.query).get("path", ["INDEX.md"])[0]
+                        document = parse_qs(url.query).get("path", ["documentation-index.md"])[0]
                         self.assertTrue((page.parent / document).is_file(), document)
 
     def test_packaged_data_matches_local_data(self):

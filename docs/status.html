@@ -24,7 +24,7 @@
     <div class="sidebar-group"><span class="sidebar-label">Start</span><a href="index.html">Overview</a><a href="decision.html">How it decides</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Reference</span><a href="contract.html">Contract</a><a href="status.html" aria-current="page">Project status</a><a href="performance.html">Performance</a><a href="ast.html">AST explorer</a></div>
     <div class="sidebar-group"><span class="sidebar-label">Tools</span></div>
-    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=ARCHITECTURE.md">Architecture</a><a href="doc.html?path=VOCABULARY.md">Project vocabulary</a><a href="doc.html?path=VOCABULARY_REVIEW.md">Vocabulary review</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="index.html#projects">Project map</a></div>
+    <div class="sidebar-group"><span class="sidebar-label">Internals</span><a href="doc.html?path=architecture-guide.md">Architecture</a><a href="doc.html?path=vocabulary-guide.md">Project vocabulary</a><a href="doc.html?path=vocabulary-review.md">Vocabulary review</a><a href="doc.html?path=../rfcs/INDEX.md">RFCs</a><a href="index.html#projects">Project map</a></div>
   </nav>
   <main class="content">
     <article class="article">
@@ -43,7 +43,7 @@
           <li><strong>Runtime facts</strong><span>push commits and pull connectors, every fact TTL-bounded</span></li>
           <li><strong>Snapshot</strong><span>one immutable scope snapshot per evaluation</span></li>
           <li><strong>Evaluate</strong><span>instruction/visit budgets, evidence deadlines</span></li>
-          <li><strong>Decision</strong><span>Allow · Deny · Indeterminate</span></li>
+          <li><strong>Decision</strong><span>Allow · Deny; status may be indeterminate</span></li>
         </ol>
       </section>
       <section class="section" id="components">
@@ -55,7 +55,7 @@
             <tr><td><strong>Runtime facts</strong></td><td><code>ipe-core::runtime_facts</code></td><td><span class="status status-">Implemented</span></td><td>Scoped, typed, TTL-bounded facts; atomic push commits, HTTPS pull snapshots, bounded RocksDB state.</td></tr>
             <tr><td><strong>Policy evaluation</strong></td><td><code>ipe-core::runtime_policy</code></td><td><span class="status status-">Implemented</span></td><td>Language-2 compiler and evaluator with budgets and evidence deadlines.</td></tr>
             <tr><td><strong>Policy documents</strong></td><td><code>ipe-core::policy_document</code></td><td><span class="status status-">Implemented</span></td><td>Immutable revisions, atomic activation, digests, external provenance, unsupported sections.</td></tr>
-            <tr><td><strong>HTTP runtime API</strong></td><td><code>ipe-server::runtime</code></td><td><span class="status status-experimental">Experimental</span></td><td>Axum server, scoped bearer credentials, loopback bind; <a href="doc.html?path=RUNTIME_DATA.md">RUNTIME_DATA</a> lists the limits.</td></tr>
+            <tr><td><strong>HTTP runtime API</strong></td><td><code>ipe-server::runtime</code></td><td><span class="status status-experimental">Experimental</span></td><td>Axum server, scoped bearer credentials, loopback bind; <a href="doc.html?path=runtime-data.md">RUNTIME_DATA</a> lists the limits.</td></tr>
             <tr><td><strong>Pull connectors</strong></td><td><code>ipe-server::runtime</code></td><td><span class="status status-">Implemented</span></td><td>Fixed HTTPS sources, sequential polling, whole-generation replacement.</td></tr>
             <tr><td><strong>Approvals and relationships</strong></td><td><code>feature approvals</code></td><td><span class="status status-">Implemented</span></td><td>RocksDB-backed embedded stores, separate from the runtime API.</td></tr>
           </tbody>
@@ -77,11 +77,11 @@
             <tr><td>Latency and throughput under production load</td><td>—</td><td class="muted">Not characterized; legacy interpreter targets were removed with that engine</td></tr>
           </tbody>
         </table></div>
-        <p class="small muted">See the <a href="doc.html?path=RUNTIME_DATA.md">runtime guide</a> for current behavior and the <a href="index.html#projects">project map</a> for planned work.</p>
+        <p class="small muted">See the <a href="doc.html?path=runtime-data.md">runtime guide</a> for current behavior and the <a href="index.html#projects">project map</a> for planned work.</p>
       </section>
       <nav class="continue" aria-label="Continue">
         <h2 class="small muted" style="margin:0;font-size:14px;font-weight:600">Continue</h2>
-        <div class="continue-grid"><a class="next" href="performance.html"><span>Evaluate: next</span><strong>Performance</strong></a><a class="next" href="doc.html?path=ARCHITECTURE.md"><span>Work on IPE: next</span><strong>Architecture</strong></a><a class="next" href="contract.html"><span>Integrate: done. Revisit</span><strong>Contract</strong></a></div>
+        <div class="continue-grid"><a class="next" href="performance.html"><span>Evaluate: next</span><strong>Performance</strong></a><a class="next" href="doc.html?path=architecture-guide.md"><span>Work on IPE: next</span><strong>Architecture</strong></a><a class="next" href="contract.html"><span>Integrate: done. Revisit</span><strong>Contract</strong></a></div>
       </nav>
     </article>
     <aside class="toc" aria-label="On this page"><span class="toc-label">On this page</span><a href="#pipeline">Pipeline</a><a href="#components">Components</a><a href="#limits">Known limits</a><a href="#requirements">Requirements</a></aside>

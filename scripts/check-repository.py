@@ -1,4 +1,4 @@
-"""Check the bounded repository contract documented in docs/REPOSITORY.md."""
+"""Check the bounded repository contract documented in docs/repository-guide.md."""
 from pathlib import Path
 import re
 import sys
@@ -8,7 +8,7 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 ENTRY_DOCS = (
     'README.md', 'QUICKSTART.md', 'CONTRIBUTING.md',
-    'docs/REPOSITORY.md', '.agent/repository.md',
+    'docs/repository-guide.md', '.agent/repository.md',
 )
 NODE_PACKAGES = ('docs', 'testing/integration', 'tools/integration-packages')
 
@@ -17,7 +17,7 @@ def check(root: Path) -> list[str]:
     errors = []
     manifest = tomllib.loads((root / 'Cargo.toml').read_text())
     members = manifest['workspace']['members']
-    mapping = (root / 'docs/REPOSITORY.md').read_text()
+    mapping = (root / 'docs/repository-guide.md').read_text()
     rows = re.findall(r'^\| `(crates/[^`]+)` \| ([^|]+) \| ([^|]+) \|', mapping, re.M)
     paths = [path for path, _, _ in rows]
     if len(paths) != len(set(paths)):

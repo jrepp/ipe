@@ -70,7 +70,7 @@
 <div class="landing-wrap">
   <header class="landing-header">
     <a class="landing-brand" href="index.html"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8fdcbc" stroke-width="1.8"><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v5M12 11 5 17M12 11l7 6"/></svg>ipe</a>
-    <nav class="landing-nav" aria-label="Documentation"><a href="index.html">Overview</a><a href="INTEGRATION_DISCOVERY.md">Integration docs</a><a href="INTEGRATION_SDK.md">SDK</a><a href="https://github.com/jrepp/ipe">GitHub</a></nav>
+    <nav class="landing-nav" aria-label="Documentation"><a href="index.html">Overview</a><a href="integration-discovery.md">Integration docs</a><a href="integration-sdk.md">SDK</a><a href="https://github.com/jrepp/ipe">GitHub</a></nav>
   </header>
   <main class="service-main">
     <section class="service-hero">
@@ -101,7 +101,7 @@
     <section class="service-section" aria-labelledby="limits-title"><h2 id="limits-title">Each run has a small budget</h2><div class="guardrails"><div class="guard"><strong>8</strong><span>guest steps per run</span></div><div class="guard"><strong>16</strong><span>requests total · 8 per step</span></div><div class="guard"><strong>16 MiB</strong><span>QuickJS heap · 1 MiB stack</span></div><div class="guard"><strong>100 ms</strong><span>interrupt deadline per guest step</span></div></div></section>
     <section class="service-section" aria-labelledby="boundary-title"><h2 id="boundary-title">Where authority lives</h2><div class="boundaries"><article class="boundary"><h3>Inside the guest</h3><ul><li>Pure JavaScript or TypeScript step logic</li><li>JSON state carried explicitly between fresh contexts</li><li>Named operation requests and mapped output data</li><li>No filesystem, network, environment, secrets or Node imports</li></ul></article><article class="boundary"><h3>Inside the trusted host</h3><ul><li>Operator allowlist, parameters, routes and selected fields</li><li>Credentials, HTTPS I/O, limits and response projection</li><li>Opaque run-local receipts and sanitized failures</li><li>Authentication for HTTP, CLI and MCP access</li></ul></article></div><p class="disclaimer">The animation is synthetic documentation. A real run uses operator configuration and provider data; this page never calls the integration service.</p></section>
   </main>
-  <footer class="landing-footer"><span>IPE · Integration service map</span><span><a href="INTEGRATION_DISCOVERY.md">Read implementation and deployment details</a></span></footer>
+  <footer class="landing-footer"><span>IPE · Integration service map</span><span><a href="integration-discovery.md">Read implementation and deployment details</a></span></footer>
 </div>
 <script>
 (() => {

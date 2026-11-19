@@ -21,8 +21,8 @@ No diagram or coverage row establishes a running service or a passed feature tes
 
 | Area | Current evidence | Boundary |
 | --- | --- | --- |
-| Runtime | [Runtime guide](../../docs/RUNTIME_DATA.md) and [fact storage](../../crates/ipe-core/src/runtime_facts.rs) | Scoped facts, expiry, immutable evaluation snapshots, and policy revisions exist. |
-| Integration | [Host guide](../../docs/INTEGRATION_HOST.md) | Collector runs, records, and review catalogs exist. The host does not publish enforcement facts. |
+| Runtime | [Runtime guide](../../docs/runtime-data.md) and [fact storage](../../crates/ipe-core/src/runtime_facts.rs) | Scoped facts, expiry, immutable evaluation snapshots, and policy revisions exist. |
+| Integration | [Host guide](../../docs/integration-host.md) | Collector runs, records, and review catalogs exist. The host does not publish enforcement facts. |
 | Governance | [Governance records](../../crates/ipe-integration/src/host/governance.rs) | Control mechanisms and some role validity fields exist; no complete hard/soft control lifecycle exists here. |
 | Preview | [Policy map source](../../tools/product-ship-mocks/app.js) | Sample policy dependencies and evidence details exist; no live service topology is established. |
 | Domain | [RFC 013](../../rfcs/013-domain-constraints-and-projections.md) | Owns source descriptions and projections. |
@@ -32,7 +32,7 @@ No diagram or coverage row establishes a running service or a passed feature tes
 
 This RFC owns the cross-system view and the proposed relationships needed by the requested features.
 It does not replace those transport, access, or audit contracts.
-The [project vocabulary](../../docs/VOCABULARY.md) remains the current term reference. New terms below are proposed.
+The [project vocabulary](../../docs/vocabulary-guide.md) remains the current term reference. New terms below are proposed.
 
 # System roles
 

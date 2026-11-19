@@ -9,7 +9,7 @@ python3 scripts/accept-runtime-data.py
 
 `make runtime-acceptance` builds and runs the same workflow. The
 `Runtime data acceptance` CI workflow runs it on pull requests and saves the JSON
-report as an artifact. See the [runtime guide](../../docs/RUNTIME_DATA.md) for the
+report as an artifact. See the [runtime guide](../../docs/runtime-data.md) for the
 implemented API and deployment limitations.
 
 Use `--binary PATH` to select another executable and `--report PATH` to change

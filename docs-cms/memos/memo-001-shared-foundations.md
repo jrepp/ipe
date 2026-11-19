@@ -15,8 +15,8 @@ Keep the current stack where it meets the contract. Evaluate a new package only 
 Do not add all shortlisted crates, upgrade to every latest release, or create a general shared framework from this survey.
 This memo responds to the project owner's shared-needs and reuse requests on 2026-11-17.
 
-The [project map](../PROJECTS.md) defines P1–P5. The [repository map](../../docs/REPOSITORY.md) identifies existing packages.
-The [integration audit](../../docs/INTEGRATION_STACK.md) retains its implementation decisions; this memo expands the survey across lanes.
+The [project map](../PROJECTS.md) defines P1–P5. The [repository map](../../docs/repository-guide.md) identifies existing packages.
+The [integration audit](../../docs/integration-stack.md) retains its implementation decisions; this memo expands the survey across lanes.
 No dependencies or runtime behavior change in this research slice.
 
 # Security follow-up, 2026-11-17

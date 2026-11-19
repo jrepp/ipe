@@ -8,7 +8,7 @@
 > The tier promotions, latency figures, and API calls below no longer describe
 > any shipped code.
 >
-> **For the current workflow, read [docs/RUNTIME_DATA.md](docs/RUNTIME_DATA.md)**
+> **For the current workflow, read [docs/runtime-data.md](docs/runtime-data.md)**
 > and the external acceptance suite in
 > [acceptance/runtime-data/README.md](acceptance/runtime-data/README.md):
 > publish a versioned policy document, commit TTL-bounded runtime facts (or pull

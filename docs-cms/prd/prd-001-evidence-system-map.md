@@ -24,7 +24,7 @@ The project owner requested these features in the design discussion on 2026-11-1
 This document records those requests. Detailed semantics remain proposed until reviewed.
 
 The current preview shows policy dependencies and sample evidence. It does not establish a live system map.
-See the [current runtime guide](../../docs/RUNTIME_DATA.md), [integration host guide](../../docs/INTEGRATION_HOST.md), and [design](../rfcs/rfc-018-evidence-system-map.md).
+See the [current runtime guide](../../docs/runtime-data.md), [integration host guide](../../docs/integration-host.md), and [design](../rfcs/rfc-018-evidence-system-map.md).
 
 # Users and outcomes
 

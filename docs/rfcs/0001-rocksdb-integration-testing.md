@@ -2,7 +2,7 @@
 
 > **Superseded.** The legacy engine this RFC tested against was removed; the
 > version-2 runtime is the shipping product. See [README.md](../../README.md)
-> and [docs/RUNTIME_DATA.md](../RUNTIME_DATA.md). Kept for historical context.
+> and [docs/runtime-data.md](../runtime-data.md). Kept for historical context.
 
 ## Status
 - **Status**: Draft

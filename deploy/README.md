@@ -3,7 +3,7 @@
 This directory contains deployment configurations for the IPE Policy Engine.
 
 For the standalone Integration Workload, use the
-[local discovery deployment](../docs/INTEGRATION_DISCOVERY.md):
+[local discovery deployment](../docs/integration-discovery.md):
 
 ```sh
 cargo build --locked -p ipe-integration --bins
@@ -15,7 +15,7 @@ API, CLI, and MCP. `--serve` keeps the deployment running for interactive use.
 This demonstration does not deploy an Enforcement Workload or contact ServiceNow.
 
 The Helm/TOML examples below describe the legacy server profile. The new
-[runtime data server](../docs/RUNTIME_DATA.md) requires `IPE_RUNTIME_CONFIG`,
+[runtime data server](../docs/runtime-data.md) requires `IPE_RUNTIME_CONFIG`,
 credential environment variables, and a loopback listener; these charts have not
 been migrated to that profile. Use the external acceptance workflow for a local
 runtime-2 deployment. Native remote serving and the former metrics listener are
