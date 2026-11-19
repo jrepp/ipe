@@ -66,3 +66,5 @@ Keep existing `make docs-check` site validation. No Docusaurus migration is requ
 
 The [configuration schema](docs-project.schema.json) supports mixed document types and subprojects for later adoption.
 Expand validation only after reviewing the target folder. Preserve historical content and report existing errors separately.
+
+[Shared platform research spike](memos/memo-004-shared-platform-spike.md) adds adoption order, source findings, and current dependency blockers to this survey.
