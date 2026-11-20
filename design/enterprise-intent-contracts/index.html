@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enterprise Intent Contracts — P1–P5</title>
+  <link rel="stylesheet" href="../../docs/site.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="modeling.css">
+  <link rel="stylesheet" href="projects.css">
+  <script src="vendor/d3.v7.9.0.min.js" defer></script>
+  <script src="diagram.js" defer></script>
+  <script src="modeling.js" defer></script>
+  <script src="projects.js" defer></script>
+</head>
+<body class="landing">
+<a class="skip-link" href="#main">Skip to content</a>
+<main class="landing-wrap" id="main">
+  <header class="page-header">
+    <h1>Enterprise Intent Contracts</h1>
+    <p class="project-key"><span class="p1">P1 · Policy</span><span class="p2">P2 · Evidence</span><span class="p3">P3 · Enforcement</span><span class="p4">P4 · Operations</span><span class="p5">P5 · Delivery</span></p>
+  </header>
+  <section class="modeling" aria-labelledby="modeling-title">
+    <header class="modeling-header">
+      <h2 id="modeling-title">P1 · Plan the work</h2>
+      <button type="button" id="modeling-run" class="decision-link">Play comparison <span aria-hidden="true">→</span></button>
+    </header>
+    <div class="pair">
+      <section class="panel" aria-labelledby="modeling-before-title">
+        <header class="panel-header"><p class="eyebrow">Before</p><h3 id="modeling-before-title">Discover by failing</h3></header>
+        <div class="canvas"><svg id="modeling-before" role="img" aria-labelledby="modeling-before-graph-title modeling-before-graph-desc"></svg></div>
+        <p class="result" id="modeling-before-result" role="status" aria-atomic="true">Blocked. Next step unknown.</p>
+      </section>
+      <section class="panel proposed p1" aria-labelledby="modeling-after-title">
+        <header class="panel-header"><p class="eyebrow">With policy + evidence</p><h3 id="modeling-after-title">See the next step</h3></header>
+        <div class="canvas"><svg id="modeling-after" role="img" aria-labelledby="modeling-after-graph-title modeling-after-graph-desc"></svg></div>
+        <p class="result" id="modeling-after-result" role="status" aria-atomic="true">Reviewer found. Approval pending.</p>
+      </section>
+    </div>
+  </section>
+  <section class="project-flow p2" id="projects-p2" aria-labelledby="projects-p2-title">
+    <h2 id="projects-p2-title"><span>P2</span> Connect the evidence</h2>
+    <svg role="img" aria-labelledby="projects-p2-title" aria-describedby="projects-p2-desc">
+      <desc id="projects-p2-desc">Connect a permitted source, observe it, assess the evidence, and publish facts with the original expiry for enforcement.</desc>
+    </svg>
+    <p>Planning uses observations. The dashed line shows planned fact publication for enforcement.</p>
+  </section>
+
+  <section class="enforcement" aria-labelledby="enforcement-title">
+    <header class="modeling-header">
+      <h2 id="enforcement-title">P3 · Control the action</h2>
+      <div class="controls" aria-label="Deployment trace controls">
+        <label for="evidence" class="visually-hidden">Approval evidence</label>
+        <select id="evidence">
+          <option value="approved">Approved</option><option value="rejected" selected>Not approved</option><option value="expired">Evidence expired</option><option value="missing">Evidence missing</option>
+        </select>
+        <button type="button" id="run" class="decision-link">Play comparison <span aria-hidden="true">→</span></button>
+      </div>
+    </header>
+    <div class="pair">
+      <section class="panel" aria-labelledby="before-title">
+        <header class="panel-header"><p class="eyebrow">Before</p><h3 id="before-title">Separate checks</h3></header>
+        <div class="canvas"><svg id="before" role="img" aria-labelledby="before-graph-title before-graph-desc"></svg></div>
+        <p class="result" id="before-result" role="status" aria-atomic="true">Local rules at each boundary.</p>
+      </section>
+      <section class="panel proposed p3" aria-labelledby="after-title">
+        <header class="panel-header"><p class="eyebrow">With shared policy decisions</p><h3 id="after-title">Connected checks</h3></header>
+        <div class="canvas"><svg id="after" role="img" aria-labelledby="after-graph-title after-graph-desc"></svg></div>
+        <p class="result" id="after-result" role="status" aria-atomic="true">One policy. Explicit action gates.</p>
+      </section>
+    </div>
+  </section>
+  <section class="project-flow p4" id="projects-p4" aria-labelledby="projects-p4-title">
+    <h2 id="projects-p4-title"><span>P4</span> Trace the outcome</h2>
+    <svg role="img" aria-labelledby="projects-p4-title" aria-describedby="projects-p4-desc">
+      <desc id="projects-p4-desc">Trace a decision and its applied outcome through the source evidence, time limits, and audit record.</desc>
+    </svg>
+    <p>Trace the applied outcome. Approved exceptions and access grants have a scope and expiry.</p>
+  </section>
+  <section class="project-flow p5" id="projects-p5" aria-labelledby="projects-p5-title">
+    <h2 id="projects-p5-title"><span>P5</span> Share the result</h2>
+    <svg role="img" aria-labelledby="projects-p5-title" aria-describedby="projects-p5-desc">
+      <desc id="projects-p5-desc">Explain the product, check the documentation, and publish the checked static site to GitHub Pages.</desc>
+    </svg>
+    <p>Failed checks stop publication.</p>
+  </section>
+
+  <details class="architecture-notes">
+    <summary>Architecture and source notes</summary>
+    <p>Both stacks retain sandboxing, the agent harness, identity, model access, memory, network restrictions, scoped credentials, integrations, native permissions, and audit records.</p>
+    <p>The modeling example has no recorded approval. P1 exposes the approval control and reviewer role. P2 supplies the source observation. The human decision remains pending.</p>
+    <p>P3 evaluates each request against an active policy and scoped facts. Tool, credential, and action gates apply the result. Missing or expired evidence blocks the action. The token broker supplies credentials separately from action traffic.</p>
+    <p><a href="../../docs-cms/PROJECTS.md">Project map</a> · <a href="../../docs-cms/memos/memo-002-agent-stack-diagram.md">Review and evidence limits</a> · <a href="README.md">Run and edit</a></p>
+  </details>
+  <p class="study-note">Sample scenario · Proposed connected workflow</p>
+  <noscript><p>Enable JavaScript to view the diagrams.</p></noscript>
+</main>
+</body>
+</html>

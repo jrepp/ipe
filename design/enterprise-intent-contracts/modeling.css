@@ -1,0 +1,75 @@
+.modeling {
+  border-bottom: 1px solid var(--line);
+  padding-block: 22px 24px;
+}
+
+.modeling-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modeling-header p {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0;
+}
+
+.modeling .panel-header h3 {
+  font-size: clamp(1.125rem, 2vw, 1.35rem);
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  margin: 0 0 5px;
+}
+
+.modeling svg .agent { --route: var(--muted); }
+.modeling svg .handoff { --route: var(--accent); }
+.modeling svg .rejection { --route: var(--deny); }
+
+.modeling-route {
+  fill: none;
+  stroke: var(--route);
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+.modeling-route.source {
+  stroke-dasharray: 3 6;
+  stroke-width: 2;
+}
+.modeling-junction { fill: var(--accent); stroke: var(--paper); stroke-width: 2; }
+
+.modeling-station .station-mark {
+  fill: var(--paper);
+  stroke: var(--route);
+  stroke-width: 3;
+}
+.modeling .station-glyph {
+  dominant-baseline: middle;
+  fill: var(--route);
+  font: 700 13px var(--mono);
+  text-anchor: middle;
+}
+.modeling .station-label,
+.modeling .station-note {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-linejoin: round;
+  stroke-width: 5px;
+  text-anchor: middle;
+}
+.modeling .station-note { fill: var(--muted); font-size: 12px; }
+.modeling .station-icon { fill: none; stroke: var(--route); stroke-linecap: round; stroke-width: 2; }
+
+.modeling-station.visited .station-mark { fill: var(--route); }
+.modeling-station.visited .station-glyph { fill: var(--paper); }
+.modeling-station.visited .station-icon { stroke: var(--paper); }
+.modeling .modeling-packet { fill: var(--route); }
+.modeling .result[data-outcome="pending"] { color: var(--accent); }
+.modeling .footnote { margin-top: 12px; }
+.modeling button:disabled { cursor: wait; opacity: .64; }

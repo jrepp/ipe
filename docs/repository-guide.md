@@ -30,6 +30,7 @@ Placeholder packages retain their paths and public module names. They contain no
 | [Integration fixtures](../testing/integration/README.md) | P2 | Synthetic source protocols and independent clients |
 | [Package cache](../tools/integration-packages/) | P2 | Build-side artifacts for the integration SDK |
 | [Product previews](../tools/product-ship-mocks/) | P1, P4 | Sample-data interfaces, not live enforcement |
+| [Agent stack diagram](../design/enterprise-intent-contracts/README.md) | P1, P2, P3, P5 | Editable Enterprise Intent Contracts comparison and repeatable visual checks; sample data only |
 | [Acceptance](../acceptance/) | P2, P3 | External service tests and fixtures |
 | [Site](README.md) | P5 | Static publication, archived measurements, and document viewer |
 | [Design records](../docs-cms/README.md) | P1–P5 | Requirements, proposals, decisions, and findings |
